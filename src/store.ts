@@ -55,8 +55,9 @@
 
  */
 
-import { model } from "helux" 
+import { model,HeluxApi } from "helux" 
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction"
+import { createActions } from './action';
 
 // Action必须返回一个同步更新函数用来更新state
 export type ActionUpdater<State=any> = (state:State)=>any
@@ -80,32 +81,10 @@ export function createStore<T extends CreateStoreOptions>(options:T){
     return  model((api) => { // api对象 有详细的类型提示        
         const stateCtx = api.shareState<typeof options['state'] >(options.state);
         const { state, setState,syncer,useState } = stateCtx
-        // 1. 定义Action
-        let actions:typeof options['actions'] = {}        
-        if(options.actions){
-            actions = Object.entries(options.actions).reduce((results,[key,action])=>{           
-                if(isAsyncFunction(action)){
-                    results[key] = api.action(state)<any>(async ({setState,args,draft})=>{
-                        const updater = action(args)
-                        if(updater instanceof Function){
-                            updater(draft)
-                        }else{
-                            console.warn('action must return a function similar to (state)=>state')
-                        }
-                    })
-                }else{
-                    results[key] = api.actionAsync(state)<any>(async ({setState,args})=>{
-                        const updater = await action(args)
-                        if(updater instanceof Function){
-                            setState(updater)
-                        }else{
-                            console.warn('action must return a function similar to (state)=>state')
-                        }
-                    })
-                }                
-                return results
-            },{})
-        } 
+        
+        // 1. 创建Action        
+        const actions:typeof options['actions'] = createActions(options.actions,state,api)!
+         
         // 2. 声明Computed属性
         if(options.computed){
 

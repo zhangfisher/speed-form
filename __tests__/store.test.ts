@@ -55,15 +55,15 @@ test("创建store",()=>{
 
 test("同步Action",()=>{
     const { addBook } = store.actions
-    return new Promise((resolve,reject)=>{
-        
+    return new Promise<void>((resolve)=>{
+
+        store.watch(()=>{
+            console.log("store.state.books.length",store.state.books)
+            expect(store.state.books.length).toBe(4)
+            resolve()
+        })
+        addBook('三国演义',100,'罗贯中')
+        store.state.books.push({name:'西游记',price:120,author:'吴承恩'})
     })
     
-    store.watch(()=>{
-
-    })
-    addBook('三国演义',100,'罗贯中')
-    expect(store.state.books.length).toBe(4)
-
-
 })
