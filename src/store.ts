@@ -6,7 +6,7 @@
                 id:'2123',
                 firstName:'tom',
                 lastName:'zhang',
-                fullname:"",
+                fullname:(state)=>state.user.firstName+state.user.lastName,
                 age:18,                
                 addresss:[
                     {city:'北京',street:'朝阳区'},
@@ -49,34 +49,26 @@
         }
 
     
-    } as const)
-
-
-
+    } as const) 
  */
 
 import { model,HeluxApi } from "helux" 
-import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction"
 import { createActions } from './action';
+import { Actions } from "./types";
+import { createComputed } from "./computed";
+ 
 
-// Action必须返回一个同步更新函数用来更新state
-export type ActionUpdater<State=any> = (state:State)=>any
-// Action声明,用来创建Action
-export type ActionDefine<State=any> = (...args:any)=>(ActionUpdater<State> | Promise<ActionUpdater<State>>)
-
-
-
-export interface CreateStoreOptions<Actions=Record<string,any>>{    
+export interface StoreOptions<ACTIONS extends Actions=Actions>{    
     state:Record<string,any>
-    actions?:Record<string,ActionDefine>
-    computed?:Record<string,any>   
+    computed?:Record<string,any>,
+    actions?:ACTIONS    
 }
 
 export interface HeluxStore{
 
 }
 
-export function createStore<T extends CreateStoreOptions>(options:T){
+export function createStore<T extends StoreOptions>(options:T){
 
     return  model((api) => { // api对象 有详细的类型提示        
         const stateCtx = api.shareState<typeof options['state'] >(options.state);
@@ -85,14 +77,13 @@ export function createStore<T extends CreateStoreOptions>(options:T){
         // 1. 创建Action        
         const actions:typeof options['actions'] = createActions(options.actions,state,api)!
          
-        // 2. 声明Computed属性
-        if(options.computed){
+        // 2. 创建Computed属性 
+        const computed:typeof options['computed'] = createComputed(options.computed,state,api)!
 
-        }
-  
         return {
           state,
           actions,
+          computed, 
           useState,
           setState,
           ...api

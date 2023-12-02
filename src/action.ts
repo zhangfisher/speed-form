@@ -1,10 +1,17 @@
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction"
 import { HeluxApi } from "helux" 
-import type { CreateStoreOptions } from "./store"
+import type { StoreOptions } from "./store"
 
-export type Actions = Record<string,any>
 
-export function createActions(actions:CreateStoreOptions['actions'],state:CreateStoreOptions['state'],api:HeluxApi){
+
+/**
+ * 创建Action
+ * @param actions 
+ * @param state 
+ * @param api 
+ * @returns 
+ */
+export function createActions(actions:StoreOptions['actions'],state:StoreOptions['state'],api:HeluxApi){
     if(!actions) return
     return Object.entries(actions).reduce((results,[key,action])=>{           
         if(isAsyncFunction(action)){
@@ -16,25 +23,29 @@ export function createActions(actions:CreateStoreOptions['actions'],state:Create
     },{})
 
 }
+
+
 export function createAction(action,state,api:HeluxApi){
     return api.action(state)<any>(async ({setState,args,draft})=>{
         const updater = action(...args)
         if(updater instanceof Function){
             updater(draft)
-        }else{
-            console.warn('action must return a function similar to (state)=>state')
         }
     })
 }
 
-
+/**
+ * 创建异步Action
+ * @param action 
+ * @param state 
+ * @param api 
+ * @returns  返回一个
+ */
 export function createAsyncAction(action,state,api:HeluxApi){
     return api.actionAsync(state)<any>(async ({setState,args})=>{
         const updater = await action(...args)
         if(updater instanceof Function){
             setState(updater)
-        }else{
-            console.warn('action must return a function similar to (state)=>state')
         }
     })
 }
