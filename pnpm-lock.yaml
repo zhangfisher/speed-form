@@ -485,7 +485,7 @@ packages:
       '@helux/hooks-impl': 3.4.23
       '@helux/types': 3.4.23
       '@helux/utils': 3.4.23
-      limu: 3.9.2
+      limu: 3.10.2
     dev: false
 
   /@helux/hooks-impl@3.4.23:
@@ -1721,8 +1721,8 @@ packages:
       type-check: 0.3.2
     dev: false
 
-  /limu@3.9.2:
-    resolution: {integrity: sha512-A2uVoCS15iF4T96qadrNKnVPL4UodHnoby+yC2JKpcdiAtXdDGMQ5JWjfDeyifilCR42/k1/YcVl75iVn8xzlA==}
+  /limu@3.10.2:
+    resolution: {integrity: sha512-KGZgbNd60W+75ch7YWnUbiHJIqiuSsTGFO+n19i+BbcJY6+6TUL28VTX+NLFgKnDkwPRsqbfsuDgJ6ar7EcJwg==}
     dev: false
     bundledDependencies: []
 
