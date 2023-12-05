@@ -1,6 +1,8 @@
-import { delay } from "flex-tools/async/delay"
 import { test,describe,expect,beforeEach,afterEach } from "vitest"
-import { createStore } from "../src/store"
+import { StoreOptions, createStore } from "../src/store"
+import { render, renderHook,screen,waitFor } from '@testing-library/react'
+import '@testing-library/jest-dom'
+import { delay } from "flex-tools/async/delay" 
 
 const storeDefine= {
     state:{
@@ -33,12 +35,12 @@ const storeDefine= {
         addBook(name:string,price:number,author:string){
             return state=>state.books.push({name,price,author})
         },
-        async addOrderAsync(book:string,count:number){
-            await delay(100)
-            return state=>state.orders.push({book,count})
+        async addBookAsync(name:string,price:number,author:string){
+            await delay(1)
+            return state=>state.books.push({name,price,author})
         }
     }
-}  
+}   
 
 
 
@@ -54,29 +56,34 @@ afterEach(() => {
 test("创建store",()=>{
     expect(store).toBeDefined()
 })
+describe("Action",()=>{
+    test("同步Action",()=>{
+        const { addBook } = store.actions
+        return new Promise<void>((resolve)=>{
 
-test("同步Action",()=>{
-    const { addBook } = store.actions
-    return new Promise<void>((resolve)=>{
-
-        store.watch(()=>{
-            expect(store.state.books.length).toBe(4)
-            resolve()
-        },()=>[store.state.books])
-        addBook('三国演义',100,'罗贯中')
-        expect(store.state.books.length).toBe(4)
+            store.watch(()=>{
+                expect(store.state.books.length).toBe(4)
+                resolve()
+            },()=>[store.state.books])
+            addBook('三国演义',100,'罗贯中')
+            store.state.books.push({name:'西游记',price:120,author:'吴承恩'})
+        })        
     })
-    
-})
 
-test("异步Action",async ()=>{
-    const { addBook } = store.actions
-    return new Promise<void>((resolve)=>{
-        store.watch(()=>{
-            expect(store.state.books.length).toBe(4)
-            resolve()
-        },()=>[store.state.books])
-        addBook('三国演义',100,'罗贯中')
+    test("异步Action",()=>{
+        const { addBookAsync } = store.actions
+        return new Promise<void>((resolve)=>{    
+            store.watch(()=>{
+                expect(store.state.books.length).toBe(4)               
+            },()=>[store.state.books])
+            addBookAsync('三国演义',100,'罗贯中').then(()=>{
+                expect(store.state.books.length).toBe(4)
+                resolve()
+            })
+        })
     })
-    
+
+
+
+
 })
