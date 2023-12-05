@@ -70,15 +70,17 @@ export interface HeluxStore{
 
 export function createStore<T extends StoreOptions>(options:T){
 
-    return  model((api) => { // api对象 有详细的类型提示        
-        const stateCtx = api.shareState<typeof options['state'] >(options.state);
+    return  model((api) => { // api对象 有详细的类型提示 
+        const stateCtx = api.shareState<typeof options['state'] >(options.state,{
+            enableDraftDep:true 
+        })
         const { state, setState,syncer,useState } = stateCtx
         
         // 1. 创建Action        
         const actions:typeof options['actions'] = createActions(options.actions,state,api)!
-         
-        // 2. 创建Computed属性 
-        const computed:typeof options['computed'] = createComputed(options.computed,state,api)!
+
+        // 2. 处理Computed属性 
+        const computed:typeof options['computed'] = createComputed<typeof options['state']>(options.computed,state,stateCtx,api)!
 
         return {
           state,

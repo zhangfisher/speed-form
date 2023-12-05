@@ -8,9 +8,9 @@ const storeDefine= {
     state:{
         user:{
             id:'2123',
-            firstName:'tom',
-            lastName:'zhang',
-            fullname:"",
+            firstName:'zhang',
+            lastName:'tom',
+            fullname:(draft)=>draft.user.firstName+draft.user.lastName,
             age:18,                
             addresss:[
                 {city:'北京',street:'朝阳区'},
@@ -84,6 +84,18 @@ describe("Action",()=>{
     })
 
 
+
+    test("声明在state中的计算属性",()=>{
+        return new Promise<void>((resolve)=>{    
+            store.watch(()=>{
+                expect(store.state.user.fullname).toBe('zhangtom')
+                resolve()
+            },()=>[store.state.user.fullname])
+            expect(store.state.user.fullname).toBe('zhangtom')
+            store.state.user.firstName='wang'
+            expect(store.state.user.fullname).toBe('wangtom') 
+        })
+    })
 
 
 })

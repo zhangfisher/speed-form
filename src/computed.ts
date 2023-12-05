@@ -3,9 +3,8 @@
  * 计算属性
  * 
  * 即派生属性
- * 
- * 钟正楷:
-@渔夫 
+  
+ 
 更新到 3.4.12，示例代码如下
 
 const [shared, setShared, ctx] = share({
@@ -21,6 +20,7 @@ const [shared, setShared, ctx] = share({
   }
 }, {
   stopArrDep: true,
+  enableDraftDep:true
 });
 
 // 记录是否已替换
@@ -48,18 +48,36 @@ import { getVal } from '@helux/utils';
  * 
  */
 
-import { HeluxApi } from "helux" 
+import { HeluxApi, ISharedCtx } from "helux" 
 import type { StoreOptions } from "./store";
+import { getVal } from '@helux/utils';
 
 /**
  * 创建计算属性
  * @param options 
  * @returns 
  */
-export function createComputed(computed:StoreOptions['computed'],state:StoreOptions['state'],api:HeluxApi){
-    if(!computed) return
-    return Object.entries(computed).reduce((results,[key,getter])=>{
-        results[key] = api.mutate(state)(getter)
-        return results
-    },{})
+export function createComputed<State>(computed:StoreOptions['computed'],state:StoreOptions['state'],stateCtx:ISharedCtx<State>,api:HeluxApi){
+  
+  // 为state中的计算属性自动创建mutate
+
+  const replacedMap: any = {};
+  stateCtx.setOnReadHook((params) => {
+    const key = params.fullKeyPath.join('.');
+    if (typeof params.value === 'function' && !replacedMap[key]) {
+      replacedMap[key] = true;
+      const witness = stateCtx.mutate((draft) => {
+        params.value(draft);
+      });
+      return getVal(witness.snap, params.fullKeyPath);
+    }
+  })
+
+  if(!computed) return  
+  // 创建计算属性
+  return Object.entries(computed).reduce((results,[key,getter])=>{
+      results[key] = api.mutate(state)(getter)
+      return results
+  },{})
+  
 }
