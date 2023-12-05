@@ -67,7 +67,7 @@ export function createComputed<State>(computed:StoreOptions['computed'],state:St
     if (typeof params.value === 'function' && !replacedMap[key]) {
       replacedMap[key] = true;
       const witness = stateCtx.mutate((draft) => {
-        params.value(draft);
+        params.value(draft,state);
       });
       return getVal(witness.snap, params.fullKeyPath);
     }
@@ -79,5 +79,5 @@ export function createComputed<State>(computed:StoreOptions['computed'],state:St
       results[key] = api.mutate(state)(getter)
       return results
   },{})
-  
+
 }

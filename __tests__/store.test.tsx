@@ -1,6 +1,7 @@
+import React from 'react'
 import { test,describe,expect,beforeEach,afterEach } from "vitest"
 import { StoreOptions, createStore } from "../src/store"
-import { render, renderHook,screen,waitFor } from '@testing-library/react'
+import { render, renderHook,screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { delay } from "flex-tools/async/delay" 
 
@@ -10,7 +11,7 @@ const storeDefine= {
             id:'2123',
             firstName:'zhang',
             lastName:'tom',
-            fullname:(draft)=>draft.user.firstName+draft.user.lastName,
+            fullname:(draft)=> (draft.user.firstName+draft.user.lastName) as string,
             age:18,                
             addresss:[
                 {city:'北京',street:'朝阳区'},
@@ -86,16 +87,13 @@ describe("Action",()=>{
 
 
     test("声明在state中的计算属性",()=>{
-        return new Promise<void>((resolve)=>{    
-            store.watch(()=>{
-                expect(store.state.user.fullname).toBe('zhangtom')
-                resolve()
-            },()=>[store.state.user.fullname])
-            expect(store.state.user.fullname).toBe('zhangtom')
-            store.state.user.firstName='wang'
-            expect(store.state.user.fullname).toBe('wangtom') 
-        })
+        const Cmp = ()=>{
+            const [state] = store.useState()
+            return <div data-testid='a'>{state.user.fullname}</div>
+        }
+        const { rerender } = render(<Cmp/>);
+        expect(screen.getByTestId('a')).toHaveTextContent('zhangtom')    
     })
-
+   
 
 })

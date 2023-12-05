@@ -54,7 +54,7 @@
 
 import { model,HeluxApi } from "helux" 
 import { createActions } from './action';
-import { Actions } from "./types";
+import { Actions, ComputedState } from "./types";
 import { createComputed } from "./computed";
  
 
@@ -71,16 +71,17 @@ export interface HeluxStore{
 export function createStore<T extends StoreOptions>(options:T){
 
     return  model((api) => { // api对象 有详细的类型提示 
-        const stateCtx = api.shareState<typeof options['state'] >(options.state,{
-            enableDraftDep:true 
+        const stateCtx = api.shareState<ComputedState<typeof options['state']>>(options.state as any,{
+            stopArrDep: true,
+            enableDraftDep:true             
         })
         const { state, setState,syncer,useState } = stateCtx
+        // 2. 处理Computed属性 
+        const computed:typeof options['computed'] = createComputed<typeof options['state']>(options.computed,state,stateCtx,api)!
         
         // 1. 创建Action        
         const actions:typeof options['actions'] = createActions(options.actions,state,api)!
 
-        // 2. 处理Computed属性 
-        const computed:typeof options['computed'] = createComputed<typeof options['state']>(options.computed,state,stateCtx,api)!
 
         return {
           state,
