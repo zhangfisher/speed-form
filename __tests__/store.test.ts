@@ -1,3 +1,4 @@
+import { delay } from "flex-tools/async/delay"
 import { test,describe,expect,beforeEach,afterEach } from "vitest"
 import { createStore } from "../src/store"
 
@@ -32,8 +33,9 @@ const storeDefine= {
         addBook(name:string,price:number,author:string){
             return state=>state.books.push({name,price,author})
         },
-        async addAsync(arg1,arg2){
-            return state=>state.count++
+        async addOrderAsync(book:string,count:number){
+            await delay(100)
+            return state=>state.orders.push({book,count})
         }
     }
 }  
@@ -62,7 +64,19 @@ test("同步Action",()=>{
             resolve()
         },()=>[store.state.books])
         addBook('三国演义',100,'罗贯中')
-        store.state.books.push({name:'西游记',price:120,author:'吴承恩'})
+        expect(store.state.books.length).toBe(4)
+    })
+    
+})
+
+test("异步Action",async ()=>{
+    const { addBook } = store.actions
+    return new Promise<void>((resolve)=>{
+        store.watch(()=>{
+            expect(store.state.books.length).toBe(4)
+            resolve()
+        },()=>[store.state.books])
+        addBook('三国演义',100,'罗贯中')
     })
     
 })

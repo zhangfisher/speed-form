@@ -10,7 +10,10 @@ dependencies:
     version: 1.3.45
   helux:
     specifier: ^3.1.2
-    version: 3.1.2(@types/react@18.2.37)(helux-core@3.1.4)(react@18.2.0)
+    version: 3.1.2(@types/react@18.2.37)(helux-core@3.1.6)(react@18.2.0)
+  helux-core:
+    specifier: ^3.1.6
+    version: 3.1.6(helux-hooks-impl@3.1.2)(helux-types@3.1.1)(helux-utils@3.1.2)(limu@3.8.4)
 
 devDependencies:
   vitest:
@@ -710,8 +713,8 @@ packages:
     hasBin: true
     dev: false
 
-  /helux-core@3.1.4(helux-hooks-impl@3.1.2)(helux-types@3.1.1)(helux-utils@3.1.2)(limu@3.8.4):
-    resolution: {integrity: sha512-Au4Ob8UYHJQ2Ssj6DK0ZrXVMtkqw+WhOqAmLIbMr1nWmDg8FCAVKp0OtQpOv2so2b54wx/vKqxW63k43WNR5TA==}
+  /helux-core@3.1.6(helux-hooks-impl@3.1.2)(helux-types@3.1.1)(helux-utils@3.1.2)(limu@3.8.4):
+    resolution: {integrity: sha512-mbFdc+5dGJzFMWqKHnbVmxz6/TyJSQ2+Bg3+aSJGiCGotAMxI+VnBoPfJnvVhzthzwAdHOcV3Itjr0dl+vbkMw==}
     peerDependencies:
       helux-hooks-impl: ^3.1.2
       helux-types: ^3.1.1
@@ -746,7 +749,7 @@ packages:
       helux-types: 3.1.1
     dev: false
 
-  /helux@3.1.2(@types/react@18.2.37)(helux-core@3.1.4)(react@18.2.0):
+  /helux@3.1.2(@types/react@18.2.37)(helux-core@3.1.6)(react@18.2.0):
     resolution: {integrity: sha512-cIUgtcQb+YU35aC8fauGtNnpLf9tKBUD8Ok+TR2AyHKNtRx5eSv0coWEabWzIvNsR1AqcmlVu7KovlbRfRmsyg==}
     peerDependencies:
       '@types/react': '>=16.8.0'
@@ -754,7 +757,7 @@ packages:
       react: '>=16.8.0'
     dependencies:
       '@types/react': 18.2.37
-      helux-core: 3.1.4(helux-hooks-impl@3.1.2)(helux-types@3.1.1)(helux-utils@3.1.2)(limu@3.8.4)
+      helux-core: 3.1.6(helux-hooks-impl@3.1.2)(helux-types@3.1.1)(helux-utils@3.1.2)(limu@3.8.4)
       react: 18.2.0
     dev: false
 

@@ -56,7 +56,6 @@
  */
 
 import { model,HeluxApi } from "helux" 
-import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction"
 import { createActions } from './action';
 
 // Action必须返回一个同步更新函数用来更新state
@@ -66,24 +65,32 @@ export type ActionDefine<State=any> = (...args:any)=>(ActionUpdater<State> | Pro
 
 
 
-export interface CreateStoreOptions<Actions=Record<string,any>>{    
+export interface CreateStoreOptions{    
     state:Record<string,any>
-    actions?:Record<string,ActionDefine>
+    actions?:Record<string,ActionDefine<CreateStoreOptions['state']>>
     computed?:Record<string,any>   
 }
 
+ 
+type ChangeReturns<T, R> = T extends (...args:infer P)=>any ? (...args:P) => R : never
+
+export type ChangeActionReturns<T extends Record<string, (...args:any)=>any>,State> = {
+    [key in keyof T] :  ChangeReturns<T[key],ActionUpdater<State>>
+}
+ 
 export interface HeluxStore{
 
 }
 
 export function createStore<T extends CreateStoreOptions>(options:T){
-
-    return  model((api) => { // api对象 有详细的类型提示        
+    
+    return  model((api:HeluxApi) => {     
         const stateCtx = api.shareState<typeof options['state'] >(options.state);
         const { state, setState,syncer,useState } = stateCtx
-        
-        // 1. 创建Action        
-        const actions:typeof options['actions'] = createActions(options.actions,state,api)!
+        type ActionsType=Exclude<typeof options['actions'],undefined>
+
+        // 1. 创建所有Actions        
+        const actions= createActions(options.actions,state,api) as ChangeActionReturns<ActionsType,typeof options['state']>
          
         // 2. 声明Computed属性
         if(options.computed){
