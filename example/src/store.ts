@@ -27,7 +27,7 @@ const storeDefine= {
         }          
     },
     computed:{
-        "users.":function(){}
+        "user.fullname":function(){}
     },
     actions:{
         addBook(name:string,price:number,author:string){
