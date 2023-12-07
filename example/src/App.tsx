@@ -4,7 +4,7 @@ import { store } from "./store"
 
 function App() {
   const [count, setCount] = useState(0)
-  const [state] = store.useState()
+  const [state] = store.useState()  
 
   return (
     <> 
@@ -17,11 +17,17 @@ function App() {
           Edit <code>src/App.tsx</code> and save to test HMR
         </p>
       </div>
-      <p className="read-the-docs">
-      <div>firstName={state.user.firstName}</div>
-      <div>lastName={state.user.lastName}</div>
-        <div>Fullname={state.user.fullName}</div>
-      </p>
+      <div className="read-the-docs">
+          <button onClick={()=>state.user.firstName="hello"}>改变firstName</button>
+          <div>firstName=<input value={state.user.firstName}></input></div>
+          <input value={state.user.firstName} onChange={store.sync(to=>{
+                  return to.user.firstName
+            })
+          } />;
+          <div>firstName=<input value={state.user.firstName}></input></div>
+          <div>lastName=<input value={state.user.lastName}></input></div>
+          <div>Fullname={state.user.fullName}</div>
+      </div>
     </>
   )
 }

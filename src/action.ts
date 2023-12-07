@@ -1,6 +1,7 @@
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction"
 import { HeluxApi } from "helux" 
 import type { StoreOptions } from "./store"
+import { Action, AsyncAction } from "."
 
 
 
@@ -15,16 +16,16 @@ export function createActions<Store extends StoreOptions<any>>(actions:Store['ac
     if(!actions) return {} 
     return Object.entries(actions).reduce((results,[key,action])=>{           
         if(isAsyncFunction(action)){
-            results[key] =createAsyncAction(action,state,api)
+            results[key] =createAsyncAction(action as AsyncAction<any>,state,api)
         }else{
-            results[key] =createAction(action,state,api)
+            results[key] =createAction(action as Action<any> ,state,api)
         }                
         return results
     },{}) as Store['actions']
 }
 
 
-export function createAction(action,state,api:HeluxApi){
+export function createAction(action: Action<any>  ,state,api:HeluxApi){
     return api.action(state)<any>(async ({setState,args,draft})=>{
         const updater = action(...args)
         if(updater instanceof Function){
@@ -40,7 +41,7 @@ export function createAction(action,state,api:HeluxApi){
  * @param api 
  * @returns  返回一个
  */
-export function createAsyncAction(action,state,api:HeluxApi){
+export function createAsyncAction(action:  AsyncAction<any>,state,api:HeluxApi){
     return api.actionAsync(state)<any>(async ({setState,args})=>{
         const updater = await action(...args)
         if(updater instanceof Function){
