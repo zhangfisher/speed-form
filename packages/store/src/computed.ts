@@ -58,7 +58,7 @@ import {set as setByPath} from "flex-tools/object/set"
  * @param options 
  * @returns 
  */
-export function createComputed<Store extends StoreOptions<any>>(computed:Store['computed'],state:Store['state'],stateCtx:ISharedCtx<Store['state']>,api:HeluxApi){
+export function createComputed<Store extends StoreOptions<any>>(computed:Store['computed'],stateCtx:ISharedCtx<Store['state']>,api:HeluxApi){
   
   // 1. 为state中的计算属性自动创建mutate
   const replacedMap: any = {};
@@ -76,8 +76,8 @@ export function createComputed<Store extends StoreOptions<any>>(computed:Store['
   if(!computed) return  
 
   // 2. 创建计算属性
-  return Object.entries(computed).reduce((results,[key,getter])=>{
-      results[key] = api.mutate(state)(getter)
+  return Object.entries(computed).reduce((results:any ,[key,getter])=>{
+      results[key] = api.mutate(stateCtx.state)(getter)
       return results
   },{})
 

@@ -73,13 +73,12 @@ export function createStore<T extends StoreOptions<any>>(options:T){
             stopArrDep: true,
             enableDraftDep:true             
         })
-        const { state, setState,syncer,useState,reactive,sync } = stateCtx
 
         // 1. 创建Actions        
-        const actions = createActions<T>(options.actions,state,api) 
+        const actions = createActions<T>(options.actions,stateCtx,api) 
 
         // 2. 处理Computed属性 
-        createComputed<T['state']>(options.computed,state,stateCtx,api)!
+        createComputed<T['state']>(options.computed,stateCtx,api)!
         
         return { 
           actions,               
