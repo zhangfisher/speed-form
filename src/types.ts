@@ -1,15 +1,18 @@
 export type StateUpdater<State=any> = (state:State)=>any
-export type Action = (...args:any[])=>StateUpdater
-export type AsyncAction = (...args:any[])=>Promise<StateUpdater>
-export type Actions  = Record<string,Action | AsyncAction>
+export type Action<State> = (...args:any[])=>StateUpdater<State>
+export type AsyncAction<State> = (...args:any[])=>Promise<StateUpdater<State>>
+export type Actions<State=any>  = Record<string,Action<State> | AsyncAction<State>>
 
-
+/**
+ * 返回函数的返回值类型
+ * 支持返回()=>Promise<R>中的R类型 
+ */
+export type AsyncReturnType<T extends (...args: any) => any> = T extends (...args: any) => Promise<infer R> ? R : (
+    T extends (...args: any) => infer R ? R : any)
+    
 // 将状态中的计算属性函数转换为计算属性函数的返回值
 export type ComputedState<T extends Record<string, any>> = {
-      [K in keyof T]: T[K] extends (...args:any) => any ? ReturnType<T[K]> : T[K] extends Record<string, any> ? ComputedState<T[K]> : T[K];
+      [K in keyof T]: T[K] extends (...args:any) => any ? AsyncReturnType<T[K]> : T[K] extends Record<string, any> ? ComputedState<T[K]> : T[K];
 };
 
 
-export type ExcludeComputedState<T extends Record<string, any>> = {
-      [K in keyof T]: T[K] extends (draft:T) => any ? never : T[K] extends Record<string, any> ? ExcludeComputedState<T[K]> : T[K];
-};

@@ -11,8 +11,8 @@ import type { StoreOptions } from "./store"
  * @param api 
  * @returns 
  */
-export function createActions(actions:StoreOptions['actions'],state:StoreOptions['state'],api:HeluxApi){
-    if(!actions) return
+export function createActions<Store extends StoreOptions<any>>(actions:Store['actions'],state:Store['state'],api:HeluxApi){
+    if(!actions) return {} 
     return Object.entries(actions).reduce((results,[key,action])=>{           
         if(isAsyncFunction(action)){
             results[key] =createAsyncAction(action,state,api)
@@ -20,8 +20,7 @@ export function createActions(actions:StoreOptions['actions'],state:StoreOptions
             results[key] =createAction(action,state,api)
         }                
         return results
-    },{})
-
+    },{}) as Store['actions']
 }
 
 

@@ -5,13 +5,39 @@ import { render, renderHook,screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { delay } from "flex-tools/async/delay" 
 
+type MyStateType = {
+    user: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      fullname: (draft: MyStateType) =>Promise<string>;
+      age: number;
+      addresss: {
+        city: string;
+        street: string;
+      }[];
+    };
+    books: {
+      name: string;
+      price: number;
+      author: string;
+    }[];
+    orders: ({id:number,bookId:string,price:number,count:number})[]
+    sales: {
+      total: number;
+    };
+  };
+   
+
 const storeDefine= {
     state:{
         user:{
             id:'2123',
             firstName:'zhang',
             lastName:'tom',
-            fullname:(draft)=> (draft.user.firstName+draft.user.lastName) as string,
+            fullname:async (draft:MyStateType)=> {
+               return (draft.user.firstName+draft.user.lastName) as string
+            },
             age:18,                
             addresss:[
                 {city:'北京',street:'朝阳区'},
@@ -29,23 +55,17 @@ const storeDefine= {
             total:0,
         }          
     },
-    computed:{
-        "users.":function(){}
-    },
     actions:{
         addBook(name:string,price:number,author:string){
-            return state=>state.books.push({name,price,author})
+            return (state:MyStateType)=>state.books.push({name,price,author})
         },
         async addBookAsync(name:string,price:number,author:string){
-            await delay(1)
-            return state=>state.books.push({name,price,author})
+            return (state:MyStateType)=>state.books.push({name,price,author})
         }
     }
 }   
 
-
-
-let store:ReturnType<typeof createStore<typeof storeDefine>>
+let store
 
 beforeEach(() => {
     store = createStore<typeof storeDefine>(storeDefine)  
@@ -89,7 +109,7 @@ describe("Action",()=>{
     test("声明在state中的计算属性",()=>{
         const Cmp = ()=>{
             const [state] = store.useState()
-            return <div data-testid='a'>{state.user.fullname}</div>
+            return <div data-testid='a'>{state.user.fullName}</div>
         }
         const { rerender } = render(<Cmp/>);
         expect(screen.getByTestId('a')).toHaveTextContent('zhangtom')    

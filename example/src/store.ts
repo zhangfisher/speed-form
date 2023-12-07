@@ -1,4 +1,28 @@
-import { createStore,ComputedState } from "helux-store"
+import { createStore  } from "helux-store"
+ 
+type MyStateType = {
+    user: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      fullName: (draft: MyStateType) =>string;
+      age: number;
+      addresss: {
+        city: string;
+        street: string;
+      }[];
+    };
+    books: {
+      name: string;
+      price: number;
+      author: string;
+    }[];
+    orders: ({id:number,bookId:string,price:number,count:number})[]
+    sales: {
+      total: number;
+    };
+  };
+   
 
 const storeDefine= {
     state:{
@@ -6,7 +30,7 @@ const storeDefine= {
             id:'2123',
             firstName:'zhang',
             lastName:'tom',
-            fullname:(draft)=> {
+            fullName:(draft:MyStateType)=> {
                return (draft.user.firstName+draft.user.lastName) as string
             },
             age:18,                
@@ -26,15 +50,12 @@ const storeDefine= {
             total:0,
         }          
     },
-    computed:{
-        "user.fullname":function(){}
-    },
     actions:{
         addBook(name:string,price:number,author:string){
-            return (state)=>state.books.push({name,price,author})
+            return (state:MyStateType)=>state.books.push({name,price,author})
         },
         async addBookAsync(name:string,price:number,author:string){
-            return state=>state.books.push({name,price,author})
+            return (state:MyStateType)=>state.books.push({name,price,author})
         }
     }
 }   
@@ -43,3 +64,6 @@ const storeDefine= {
 
  
 export const store =  createStore<typeof storeDefine>(storeDefine)  
+
+
+// store.state.user.firstName

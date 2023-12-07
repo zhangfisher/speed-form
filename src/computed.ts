@@ -51,30 +51,31 @@ import { getVal } from '@helux/utils';
 import { HeluxApi, ISharedCtx } from "helux" 
 import type { StoreOptions } from "./store";
 import { getVal } from '@helux/utils';
+import {set as setByPath} from "flex-tools/object/set"
 
 /**
  * 创建计算属性
  * @param options 
  * @returns 
  */
-export function createComputed<State>(computed:StoreOptions['computed'],state:StoreOptions['state'],stateCtx:ISharedCtx<State>,api:HeluxApi){
+export function createComputed<Store extends StoreOptions<any>>(computed:Store['computed'],state:Store['state'],stateCtx:ISharedCtx<Store['state']>,api:HeluxApi){
   
-  // 为state中的计算属性自动创建mutate
-
+  // 1. 为state中的计算属性自动创建mutate
   const replacedMap: any = {};
   stateCtx.setOnReadHook((params) => {
     const key = params.fullKeyPath.join('.');
     if (typeof params.value === 'function' && !replacedMap[key]) {
       replacedMap[key] = true;
       const witness = stateCtx.mutate((draft) => {
-        params.value(draft,state);
+        setByPath(draft,key,params.value(draft))
       });
       return getVal(witness.snap, params.fullKeyPath);
     }
   })
 
   if(!computed) return  
-  // 创建计算属性
+
+  // 2. 创建计算属性
   return Object.entries(computed).reduce((results,[key,getter])=>{
       results[key] = api.mutate(state)(getter)
       return results
