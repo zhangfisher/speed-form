@@ -41,6 +41,8 @@ function App() {
         <UserInfo/>
       </div>
       <div className="read-the-docs">
+          <div>Url=<input value={state.user.age} onChange={store.sync(["user","url"])}/></div>
+          
           <button onClick={()=>store.state.user.firstName="Zhang"}>恢复firstName</button>           
           <div>
             firstName=<input value={state.user.firstName} onChange={store.sync(["user","firstName"])}/>

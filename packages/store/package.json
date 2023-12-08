@@ -7,9 +7,9 @@
     "main": "dist/index.js",
     "module": "dist/index.mjs",
     "types": "dist/index.d.ts"
-  },  
+  },
   "scripts": {
-    "build":"tsup"
+    "build": "tsup"
   },
   "keywords": [],
   "author": "",
@@ -20,19 +20,19 @@
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
-    "@types/react": "^18.2.40",
-    "@vitejs/plugin-react": "^4.2.0",
+    "@types/react": "^18.2.42",
+    "@vitejs/plugin-react": "^4.2.1",
     "jsdom": "^23.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "vite": "^5.0.4",
+    "vite": "^5.0.6",
     "vitest": "^0.34.6"
   },
   "peerDependencies": {
-    "@types/react": "^18.2.40",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",    
     "@helux/utils": "^3.4.23",
-    "helux": "^3.5.1"
+    "@types/react": "^18.2.40",
+    "helux": "^3.5.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }

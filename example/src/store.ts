@@ -1,5 +1,5 @@
 import { createStore,computed  } from "helux-store"
- 
+import { delay }  from "flex-tools/async/delay"
    
 export interface UserLevel{
 
@@ -14,6 +14,8 @@ export type MyStateType = {
       age: number;
       level:number,
       sex: 1 | 0,
+      url:string
+      description:()=>string      
       addresss: {
         city: string;
         street: string;
@@ -47,10 +49,15 @@ const storeDefine= {
             fullName:(user:MyStateType['user'])=> {
                return (user.firstName+user.lastName) as string
             },
+            description:computed(async ([url]:[string])=>{
+              await delay(1000)
+              return "hello world :" + url
+            },["user.url"],{initial:"fisher"}),
             level:3,
             github:"https://github.com/zhangfisher",
             age:18,          
-            sex:1,      
+            sex:1,    
+            url:"https://www.baidu.com",
             addresss:[
                 {city:'北京',street:'朝阳区'},
                 {city:'上海',street:'浦东区'},
