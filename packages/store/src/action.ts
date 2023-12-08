@@ -13,8 +13,7 @@ import { Action, AsyncAction } from "."
  * @returns 
  */
 export function createActions<Store extends StoreOptions<any>>(actions:Store['actions'],ctx:ISharedCtx<Store['state']>,api:HeluxApi){
-    if(!actions) return {} 
-    return Object.entries(actions).reduce((results:any,[key,action])=>{           
+    return Object.entries(actions||{}).reduce((results:any,[key,action])=>{           
         if(isAsyncFunction(action)){
             results[key] =createAsyncAction(action as AsyncAction<any>,ctx.state,api)
         }else{

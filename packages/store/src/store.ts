@@ -64,13 +64,11 @@ export interface StoreOptions<State>{
     actions?:Actions<State>
 }
 
- 
-
 export function createStore<T extends StoreOptions<any>>(options:T){
     
     return  model((api) => { // api对象 有详细的类型提示 
         const stateCtx = api.shareState<ComputedState<T['state']>>(options.state as any,{
-            stopArrDep: true,
+            stopArrDep: false,
             enableDraftDep:true             
         })
 
@@ -82,7 +80,8 @@ export function createStore<T extends StoreOptions<any>>(options:T){
         
         return { 
           actions,               
-          ...stateCtx
+          ...stateCtx,
+          state:stateCtx.reactive
         }  
       });
       

@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "color": "^4.2.3",
     "helux": "^3.5.1",
     "helux-store": "workspace:^",
     "react": "^18.2.0",

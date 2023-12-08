@@ -1,12 +1,19 @@
-import { createStore  } from "helux-store"
+import { createStore,computed  } from "helux-store"
  
-type MyStateType = {
+   
+export interface UserLevel{
+
+}
+export type MyStateType = {
     user: {
       id: string;
       firstName: string;
       lastName: string;
-      fullName: (draft: MyStateType) =>string;
+      fullName: (user:any) =>string;
+      github:string
       age: number;
+      level:number,
+      sex: 1 | 0,
       addresss: {
         city: string;
         street: string;
@@ -16,6 +23,7 @@ type MyStateType = {
       name: string;
       price: number;
       author: string;
+      count:number
     }[];
     orders: ({id:number,bookId:string,price:number,count:number})[]
     sales: {
@@ -23,17 +31,26 @@ type MyStateType = {
     };
   };
    
+export type BookType =  {
+  name:string
+  price:number
+  author:string
+  count:number
+}
 
 const storeDefine= {
     state:{
         user:{
-            id:'2123',
+            id:'zhangfisher',
             firstName:'zhang',
             lastName:'tom',
-            fullName:(draft:MyStateType)=> {
-               return (draft.user.firstName+draft.user.lastName) as string
+            fullName:(user:MyStateType['user'])=> {
+               return (user.firstName+user.lastName) as string
             },
-            age:18,                
+            level:3,
+            github:"https://github.com/zhangfisher",
+            age:18,          
+            sex:1,      
             addresss:[
                 {city:'北京',street:'朝阳区'},
                 {city:'上海',street:'浦东区'},
@@ -41,9 +58,9 @@ const storeDefine= {
             ]        
         },
         books:[
-            {name:'张三',price:18,author:'tom'},
-            {name:'李四',price:19,author:'jack'},
-            {name:'王五',price:20,author:'bob'}                
+            {name:'张三',price:18,author:'tom',count:2,total:(book:BookType)=>book.price*book.count},
+            {name:'李四',price:19,author:'jack',count:3,total:(book:BookType)=>book.price*book.count},
+            {name:'王五',price:20,author:'bob',count:4,total:computed((draft:MyStateType)=>draft.books[2].price*draft.books[2].count)}                
         ],
         orders:[],
         sales:{
@@ -51,11 +68,11 @@ const storeDefine= {
         }          
     },
     actions:{
-        addBook(name:string,price:number,author:string){
-            return (state:MyStateType)=>state.books.push({name,price,author})
+        addBook(data:{name:string,price:number,author:string,count:number}){
+            return (state:MyStateType)=>state.books.push(data)
         },
-        async addBookAsync(name:string,price:number,author:string){
-            return (state:MyStateType)=>state.books.push({name,price,author})
+        async addBookAsync(data:{name:string,price:number,author:string,count:number}){
+            return (state:MyStateType)=>state.books.push(data)
         }
     }
 }   
@@ -63,7 +80,9 @@ const storeDefine= {
 
 
  
-export const store =  createStore<typeof storeDefine>(storeDefine)  
-
+const store =  createStore<typeof storeDefine>(storeDefine)  
+// @ts-ignore
+globalThis.Store = store
+export default store
 
 // store.state.user.firstName
