@@ -27,10 +27,6 @@ function App() {
     return ()=>clearInterval(tid)
   },[])
 
-  const addBook = useCallback(()=>{
-    store.actions.addBook(book)
-  },[])
-
   return (
     <> 
       <h1>Vite + React</h1>
@@ -41,7 +37,11 @@ function App() {
         <UserInfo/>
       </div>
       <div className="read-the-docs">
-          <div>Url=<input value={state.user.age} onChange={store.sync(["user","url"])}/></div>
+          <div>
+            RepoUrl=<input value={state.user.repo} onChange={store.sync(["user","repo"])}/>
+            <span>{JSON.stringify(state.user.projects)}</span>
+            <div>{state.user.repo}</div>
+          </div>
           
           <button onClick={()=>store.state.user.firstName="Zhang"}>恢复firstName</button>           
           <div>
@@ -50,7 +50,7 @@ function App() {
           </div>
           <ColorBlock name="LastName" value={state.user.lastName}/>
           <ColorBlock  name="FullName" value={state.user.fullName}/>
-          <button onClick={()=>store.state.user.age=100}>恢复age</button>      
+          <button onClick={()=>store.state.user.age=100}>恢复Age</button>      
           Age=<input value={state.user.age} onChange={store.sync(["user","age"])}/>
           <ColorBlock name="Age" value={$(state.user.age)}/>
           <h3>Books</h3>

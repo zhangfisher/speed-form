@@ -41,7 +41,7 @@ export function createAction(action: Action<any>  ,state:any,api:HeluxApi){
  * @returns  返回一个
  */
 export function createAsyncAction(action:  AsyncAction<any>,state:any,api:HeluxApi){
-    return api.actionAsync(state)<any>(async ({setState,args})=>{
+    return api.action(state)<any>(async ({setState,args})=>{
         const updater = await action(...args)
         if(updater instanceof Function){
             setState(updater)

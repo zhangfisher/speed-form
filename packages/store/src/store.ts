@@ -59,8 +59,7 @@ import { createComputed } from "./computed";
  
 
 export interface StoreOptions<State>{    
-    state:State
-    computed?:Record<string,any>
+    state:State 
     actions?:Actions<State>
 }
 
@@ -76,7 +75,7 @@ export function createStore<T extends StoreOptions<any>>(options:T){
         const actions = createActions<T>(options.actions,stateCtx,api) 
 
         // 2. 处理Computed属性 
-        createComputed<T['state']>(options.computed,stateCtx,api)!
+        createComputed<T['state']>(stateCtx,api)!
         
         return { 
           actions,               
