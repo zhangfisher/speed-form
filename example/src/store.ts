@@ -52,7 +52,7 @@ const storeDefine= {
             repo:"https://api.github.com/users/zhangfisher/repos",
             projects:computed<string>(async (repoUrl)=>{
               await delay(1000)
-              return "hello world :" + repoUrl
+              return "加载完成 :" + repoUrl
             },["user.repo"],{initial:"fisher"}),
             level:3,
             github:"https://github.com/zhangfisher",
@@ -90,6 +90,9 @@ const storeDefine= {
 const store =  createStore<typeof storeDefine>(storeDefine)  
 // @ts-ignore
 globalThis.Store = store
+
+store.state.user.fullName
+store.state.user.projects
 export default store
 
 // store.state.user.firstName

@@ -21,10 +21,11 @@ export type ComputedOptions = {
 export type ComputedDepends = string[] | ((draft: any) => any[]);
 export type ComputedGetter = ((context: any) => any) | ((depends:any[],context:any) => Promise<any>)
 
-export interface AsyncComputedObject{
+export interface AsyncComputedObject<Value=any>{
   loading:boolean
+  progress?:number
   error?:any
-  value?:any    
+  value:Value    
 }
 
 
@@ -66,13 +67,13 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
         initial,
         context
       }
-    }; 
+    }  
     // @ts-ignore
     fn.__ASYNC_COMPUTED__=true       
     return fn 
   }else{
-    return (parent: any,draft: any) => {
-      return getter(context === "state"  ? draft : parent) as R
+    return (parent: any,draft: any):R => {
+      return getter(context === "state"  ? draft : parent) 
     };
   }	
 } 
@@ -99,22 +100,18 @@ function createComputedMutate<Store extends StoreOptions<any>>(stateCtx: IShared
 function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams){
   const { fullKeyPath, value } = params;
   const {getter,depends,context,initial} = value()
-  const witness = stateCtx.mutate({
+  stateCtx.mutate({
     // 声明依赖
-    deps:()=>([["user","repo"]]),
-    // 初始运行一次
-    fn:(draft, depends:any)=>{
-      setVal(draft,fullKeyPath,{
-        value:initial,
-        loading:false,
-        error:null
-      })
-    },
+    deps:(state)=>depends.map((deps:any)=>getVal(state,deps.split("."))),
     // 此函数在依赖变化时执行，用来异步计算
     task:async ({draft,setState,input})=>{
       try{
+        // @ts-ignore
+        setState((draft)=>{
+          setVal(draft,[...fullKeyPath,'loading'],true)
+        })
         const result = await getter(input,draft) 
-          // @ts-ignore
+        // @ts-ignore
         setState((draft)=>{
           setVal(draft,[...fullKeyPath,'value'],result)
         })
@@ -123,12 +120,22 @@ function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: IS
         setState((draft)=>{
           setVal(draft,[...fullKeyPath,'error'],e)
         })
+      }finally{
+        // @ts-ignore
+        setState((draft)=>{
+          setVal(draft,[...fullKeyPath,'loading'],false)
+        })
       }      
     },
     immediate:true
 
   })
-  params.replaceValue(getVal(witness.snap, fullKeyPath));   
+  params.replaceValue({
+    value:initial,
+    loading:false,
+    error:null,
+    progress:0
+  })
 }
 
 

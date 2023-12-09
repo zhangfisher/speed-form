@@ -38,9 +38,12 @@ function App() {
       </div>
       <div className="read-the-docs">
           <div>
-            RepoUrl=<input value={state.user.repo} onChange={store.sync(["user","repo"])}/>
-            <span>{JSON.stringify(state.user.projects)}</span>
-            <div>{state.user.repo}</div>
+            <div>加载Github项目h</div>
+            <div>RepoUrl=<input value={state.user.repo} onChange={store.sync(["user","repo"])}/>
+            <button>加载</button>
+            <button>加载出错</button>
+            </div>
+            <div>{state.user.projects.loading ? '正在加载...' : state.user.projects.value}</div>            
           </div>
           
           <button onClick={()=>store.state.user.firstName="Zhang"}>恢复firstName</button>           
