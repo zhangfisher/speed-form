@@ -14,9 +14,6 @@ importers:
       flex-tools:
         specifier: ^1.3.50
         version: 1.3.50
-      helux:
-        specifier: ^3.5.1
-        version: 3.5.1(react@18.2.0)
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.1.5
@@ -2286,15 +2283,6 @@ packages:
   /he@1.2.0:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
-    dev: false
-
-  /helux@3.5.1(react@18.2.0):
-    resolution: {integrity: sha512-qZc8zMrYIUGz8dgOzXZsd9IC7DwmwKBMFuDoRUZ5ZsP/vaQvxHgrcHvCZmvGhQ9jBo2sKT+b53EhbnGcYqWIbQ==}
-    peerDependencies:
-      react: '>=16.8.0'
-    dependencies:
-      '@helux/core': 3.5.3
-      react: 18.2.0
     dev: false
 
   /helux@3.5.3(react@18.2.0):

@@ -44,8 +44,7 @@ function App() {
             <button>加载出错</button>
             </div>
             <div>{state.user.projects.loading ? '正在加载...' : state.user.projects.value}</div>            
-          </div>
-          
+          </div>          
           <button onClick={()=>store.state.user.firstName="Zhang"}>恢复firstName</button>           
           <div>
             firstName=<input value={state.user.firstName} onChange={store.sync(["user","firstName"])}/>

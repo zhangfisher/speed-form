@@ -19,15 +19,24 @@ export type ComputedOptions = {
 };
 
 export type ComputedDepends = string[] | ((draft: any) => any[]);
-export type ComputedGetter = ((context: any) => any) | ((depends:any[],context:any) => Promise<any>)
+export type ComputedGetter<R> = (context: any) => Exclude<R,Promise<any>>
+export type AsyncComputedGetter<R> = (depends:any[],context:any) => Promise<R>
 
-export interface AsyncComputedObject<Value=any>{
+export interface AsyncComputedObject<V=any>{
   loading:boolean
-  progress?:number
+  progress?:number      // 进度值
   error?:any
-  value:Value    
+  value:V    
 }
+export type ComputedReturns<R> = (...args:any)=> R
 
+export type AsyncComputedReturns<R> = (...args:any)=> AsyncComputedParams<R>
+export interface AsyncComputedParams<R>  {
+  getter:()=>Promise<R>
+  depends:ComputedDepends
+  context:"state" | "parent"
+  initial:R
+}
 
 /**
  * 用来封装状态的计算函数，使用计算函数的传入的是当前对象
@@ -53,10 +62,8 @@ export interface AsyncComputedObject<Value=any>{
  *
  * @param contextstate
  */
-
-
-export function computed<R=any>(getter:(depends:any[],context:any) => Promise<any>,depends:ComputedDepends,options?: ComputedOptions):Function 
-export function computed<R=any>(getter:(context: any) => Exclude<R,Promise<any>>,options?: ComputedOptions):Function
+export function computed<R=any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?: ComputedOptions):AsyncComputedReturns<R> 
+export function computed<R=any>(getter:ComputedGetter<R>,options?: ComputedOptions):ComputedReturns<R>
 export function computed<R=any>(getter:Function,depends:any,options?: ComputedOptions):Function {
 	const { context,initial } = Object.assign({ context: "state" }, options);
   if(arguments.length>=2 && isAsyncFunction(getter)){
@@ -70,7 +77,7 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
     }  
     // @ts-ignore
     fn.__ASYNC_COMPUTED__=true       
-    return fn 
+    return fn  as AsyncComputedReturns<R> 
   }else{
     return (parent: any,draft: any):R => {
       return getter(context === "state"  ? draft : parent) 
@@ -102,7 +109,7 @@ function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: IS
   const {getter,depends,context,initial} = value()
   stateCtx.mutate({
     // 声明依赖
-    deps:(state)=>depends.map((deps:any)=>getVal(state,deps.split("."))),
+    deps:(state: any)=>depends.map((deps:any)=>getVal(state,deps.split("."))),
     // 此函数在依赖变化时执行，用来异步计算
     task:async ({draft,setState,input})=>{
       try{
