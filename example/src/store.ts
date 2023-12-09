@@ -56,7 +56,7 @@ const storeDefine= {
             },["user.repo"],{initial:"fisher"}),
             level:3,
             github:"https://github.com/zhangfisher",
-            age:18,          
+            age:18, 
             sex:1,    
             addresss:[
                 {city:'北京',street:'朝阳区'},

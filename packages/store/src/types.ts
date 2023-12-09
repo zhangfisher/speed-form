@@ -10,14 +10,17 @@ import type { ComputedReturns,AsyncComputedReturns,AsyncComputedObject } from ".
 export type AsyncReturnType<T extends (...args: any) => any> = T extends (...args: any) => Promise<infer R> ? R : (
     T extends (...args: any) => infer R ? R : any)
     
-// 将状态中的计算属性函数转换为计算属性函数的返回值
+
 export type ComputedState1<T extends Record<string, any>> = {
       [K in keyof T]: T[K] extends (...args:any) => any ? AsyncReturnType<T[K]> : T[K] extends Record<string, any> ? ComputedState<T[K]> : T[K];
 };
 
 type PickComputedReturns<T> = T extends AsyncComputedReturns<infer X> ? AsyncComputedObject<X> : 
     (T extends ComputedReturns<infer X> ? X:T) 
-   
+
+
+
+// 转换状态中的计算属性函数
 export type ComputedState<T extends Record<string, any>> = {
       [K in keyof T]: T[K] extends (...args:any) => any ? PickComputedReturns<T[K]> : T[K] extends Record<string, any> ? ComputedState<T[K]> : T[K];
 };
