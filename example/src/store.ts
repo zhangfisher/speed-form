@@ -38,6 +38,7 @@ export type BookType =  {
   price:number
   author:string
   count:number
+  total:number
 }
 
 const storeDefine= {
@@ -62,7 +63,9 @@ const storeDefine= {
                 {city:'北京',street:'朝阳区'},
                 {city:'上海',street:'浦东区'},
                 {city:'广州',street:'天河区'},
-            ]        
+            ],
+            // 异步计算，由于没有指定依赖，所以只会运行一次,如果要重新计算需要手动调用
+            avatar:async ()=>{}        
         },
         books:[
             {name:'张三',price:18,author:'tom',count:2,total:(book:BookType)=>book.price*book.count},
@@ -92,7 +95,6 @@ const store =  createStore<typeof storeDefine>(storeDefine)
 globalThis.Store = store
 
 store.state.user.fullName
-store.state.user.projects
 export default store
 
 // store.state.user.firstName

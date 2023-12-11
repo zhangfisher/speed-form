@@ -25,8 +25,8 @@ export function createActions<Store extends StoreOptions<any>>(actions:Store['ac
 
 
 export function createAction(action: Action<any>  ,state:any,api:HeluxApi){
-    return api.action(state)<any>(async ({args,draft})=>{
-        const updater = action(...args)
+    return api.action(state)<any>(async ({payload,draft})=>{
+        const updater = action(...payload)
         if(updater instanceof Function){
             updater(draft)
         }
@@ -41,8 +41,8 @@ export function createAction(action: Action<any>  ,state:any,api:HeluxApi){
  * @returns  返回一个
  */
 export function createAsyncAction(action:  AsyncAction<any>,state:any,api:HeluxApi){
-    return api.action(state)<any>(async ({setState,args})=>{
-        const updater = await action(...args)
+    return api.action(state)<any>(async ({setState,payload})=>{
+        const updater = await action(...payload)
         if(updater instanceof Function){
             setState(updater)
         }

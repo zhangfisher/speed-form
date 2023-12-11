@@ -1,21 +1,23 @@
 import { useCallback, useEffect, useState } from 'react' 
 import './App.css'
-import store, { BookType } from "./store" 
+import store, { type BookType, } from "./store" 
 import ColorBlock from './ColorBlock'
 import { $, share } from "helux"
 import UserInfo from "./UserInfo"
-
-const [book,setBook,bookCtx]= share<BookType>({
-  name:"",
-  count:0,
-  price:0,
-  author:""
-})
-
+import { useStore } from "helux-store"
 
 function App() {
-  const [count, setCount] = useState(0)
-  const [state] = store.useState()    
+  const [state] = store.useState()   
+
+  const myStore = useStore<{state:BookType}>({
+    state:{
+      name:"",
+      price:0,
+      author:"",
+      count:0,
+      total:0
+    }
+  })
 
 
 
@@ -26,14 +28,11 @@ function App() {
     },2000)
     return ()=>clearInterval(tid)
   },[])
-
+  
   return (
     <> 
-      <h1>Vite + React</h1>
+      <h1>Helux-starter</h1>
       <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
         <UserInfo/>
       </div>
       <div className="read-the-docs">
@@ -43,7 +42,7 @@ function App() {
             <button>加载</button>
             <button>加载出错</button>
             </div>
-            <div>{state.user.projects.loading ? '正在加载...' : state.user.projects.value}</div>            
+            <div>{state.user.projects.loading ? '正在加载...' : state.user.projects.value  }</div>            
           </div>          
           <button onClick={()=>store.state.user.firstName="Zhang"}>恢复firstName</button>           
           <div>
@@ -76,7 +75,8 @@ function App() {
                 </div>
               })
             }
-            <div style={{width:'100%',display:'flex',flexDirection:"row"}}> 
+
+            <div style={{width:'100%',display:'flex',flexDirection:"row",paddingTop:'12px'}}> 
                 <input  style={{flexGrow:1}}  value={state.user.age} onChange={store.sync(["user","age"])}/>
                 <input  style={{width:80}} value={state.user.age} onChange={store.sync(["user","age"])}/>
                 <input  style={{width:80}} value={state.user.age} onChange={store.sync(["user","age"])}/>

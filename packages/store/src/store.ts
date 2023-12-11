@@ -52,10 +52,11 @@
     } as const) 
  */
 
-import { model } from "helux" 
+import { model, useEffect } from "helux" 
 import { createActions } from './action';
 import { Actions, ComputedState } from "./types";
 import { createComputed } from "./computed";
+import { useState } from "react";
  
 
 export interface StoreOptions<State>{    
@@ -69,8 +70,7 @@ export function createStore<T extends StoreOptions<any>>(options:T){
         const stateCtx = api.shareState<ComputedState<T['state']>>(options.state as any,{
             stopArrDep: false,
             enableDraftDep:true             
-        })
-
+        })        
         // 1. 创建Actions        
         const actions = createActions<T>(options.actions,stateCtx,api) 
 
@@ -87,5 +87,15 @@ export function createStore<T extends StoreOptions<any>>(options:T){
 }
 
 
-
- 
+/**
+ * 在组件中使用创建
+ * @param options 
+ * @returns 
+ */
+export function useStore<T extends StoreOptions<any>>(options:T){
+    const [store] = useState(()=>{
+        console.log("useStore create")
+        createStore<T>(options)
+    })
+    return store
+}
