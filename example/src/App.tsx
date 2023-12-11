@@ -2,32 +2,22 @@ import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 import store, { type BookType, } from "./store" 
 import ColorBlock from './ColorBlock'
-import { $, share } from "helux"
+import { $, useWatch } from "helux"
 import UserInfo from "./UserInfo"
 import { useStore } from "helux-store"
 
 function App() {
   const [state] = store.useState()   
+ 
+  
 
-  const myStore = useStore<{state:BookType}>({
-    state:{
-      name:"",
-      price:0,
-      author:"",
-      count:0,
-      total:0
-    }
-  })
-
-
-
-  useEffect(()=>{
-    const tid = setInterval(()=>{
-        store.state.books[0].count++
-        store.state.books[2].count++
-    },2000)
-    return ()=>clearInterval(tid)
-  },[])
+  // useEffect(()=>{
+  //   const tid = setInterval(()=>{
+  //       store.state.books[0].count++
+  //       store.state.books[2].count++
+  //   },2000)
+  //   return ()=>clearInterval(tid)
+  // },[])
   
   return (
     <> 
@@ -37,12 +27,14 @@ function App() {
       </div>
       <div className="read-the-docs">
           <div>
-            <div>加载Github项目h</div>
-            <div>RepoUrl=<input value={state.user.repo} onChange={store.sync(["user","repo"])}/>
-            <button>加载</button>
+            <h2>加载Github项目</h2>
+            <div>RepoUrl=<input value={state.user.repo} onChange={store.sync(["user","repo"])}/></div>
+            <button onClick={()=>store.state.user.repo = "https://www.fisher.com"}>加载项目</button>
             <button>加载出错</button>
+            <div>loading={store.state.user.repo}</div>
+            {$(store.state.user.projects.loading ? '正在加载...' : store.state.user.projects.value)}
             </div>
-            <div>{state.user.projects.loading ? '正在加载...' : state.user.projects.value  }</div>            
+            <ColorBlock name="项目" value={store.state.user.projects.loading ? '正在加载...' : state.user.projects.value}/>
           </div>          
           <button onClick={()=>store.state.user.firstName="Zhang"}>恢复firstName</button>           
           <div>
@@ -84,10 +76,9 @@ function App() {
                 <input  style={{width:80}} value={state.user.age} onChange={store.sync(["user","age"])}/>
             </div>
             <button onClick={()=>store.state.user.age=100}>添加书籍</button>  
+            
 
-
-          </div>
-      </div>
+          </div> 
     </>
   )
 }

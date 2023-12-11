@@ -52,7 +52,8 @@ const storeDefine= {
             },            
             repo:"https://api.github.com/users/zhangfisher/repos",
             projects:computed<string>(async (repoUrl)=>{
-              await delay(1000)
+              await delay(100)
+              console.log("加载完成 :" + repoUrl)
               return "加载完成 :" + repoUrl
             },["user.repo"],{initial:"fisher"}),
             level:3,
@@ -65,7 +66,10 @@ const storeDefine= {
                 {city:'广州',street:'天河区'},
             ],
             // 异步计算，由于没有指定依赖，所以只会运行一次,如果要重新计算需要手动调用
-            avatar:async ()=>{}        
+            avatar:async ()=>{
+              await delay(1000)
+              return "User Avatar"
+            }
         },
         books:[
             {name:'张三',price:18,author:'tom',count:2,total:(book:BookType)=>book.price*book.count},

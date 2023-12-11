@@ -8,7 +8,7 @@
  * 
  */
 
-import { HeluxApi, IOperateParams, ISharedCtx,getMutateLoading } from "helux";
+import { HeluxApi, IOperateParams, ISharedCtx } from "helux";
 import type { StoreOptions } from "./store";
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
@@ -32,7 +32,7 @@ export interface AsyncComputedObject<V=any>{
   value:V    
 }
 export type ComputedReturns<R> = (...args:any)=> R
-
+export type ComputedAsyncReturns<R> = (...args:any)=> Promise<R>
 export type AsyncComputedReturns<R> = (...args:any)=> AsyncComputedParams<R>
 export interface AsyncComputedParams<R>  {
   getter:()=>Promise<R>
@@ -72,7 +72,7 @@ export interface AsyncComputedParams<R>  {
 export function computed<R=any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?: ComputedOptions):AsyncComputedReturns<R> 
 export function computed<R=any>(getter:ComputedGetter<R>,options?: ComputedOptions):ComputedReturns<R>
 export function computed<R=any>(getter:Function,depends:any,options?: ComputedOptions):Function {
-	const { context,initial } = Object.assign({ context: 'current' }, options) as Required<ComputedOptions>
+	const { context,initial } = Object.assign({ context: 'root' }, options) as Required<ComputedOptions>
   if(arguments.length>=1 && isAsyncFunction(getter)){
     let fn =  () => {
       return {
@@ -117,7 +117,7 @@ function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: IS
   const {getter,depends,context,initial} = value()
   stateCtx.mutate({
     // 声明依赖
-    deps:(state: any)=>depends.map((deps:any)=>getVal(state,deps.split("."))),
+    deps:(state: any)=>(depends || []).map((deps:any)=>getVal(state,deps.split("."))),
     // 此函数在依赖变化时执行，用来异步计算
     task:async ({draft,setState,input})=>{
       // 指定传递给getter的第一个参数
@@ -176,12 +176,12 @@ export function createComputed<Store extends StoreOptions<any>>(stateCtx: IShare
       if(value.__ASYNC_COMPUTED__){   // 异步属性
         createAsyncComputedMutate<Store>(stateCtx,params)     
       }else if(isAsyncFunction(value)){
-        params.value = {
+        params.value =()=>({  // 为了支持异步计算属性，需要将函数转换为对象 {
           getter:value,
           depends:[],
           initial:undefined,
           context:'current'
-        }
+        })
         createAsyncComputedMutate<Store>(stateCtx,params)     
       }else{
         createComputedMutate<Store>(stateCtx,params)        

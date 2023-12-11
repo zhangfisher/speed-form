@@ -18,6 +18,8 @@ const UserInfo:ReactFC<React.PropsWithChildren> = ()=>{
                 <tr><td>性别:</td><td><ColorBlock value={state.user.sex}/></td></tr>
                 <tr><td>年龄:</td><td><ColorBlock value={state.user.age}/></td></tr>
                 <tr><td>级别:</td><td><ColorBlock value={state.user.level}/></td></tr>
+                <tr><td>头像:</td><td><ColorBlock value={state.user.avatar.loading ? "loading..." : state.user.avatar.value}/></td></tr>
+
             </tbody>
         </table>
         

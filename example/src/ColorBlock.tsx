@@ -3,7 +3,7 @@
  */
 
 
-import React, { useEffect, useState } from "react"
+import React from "react"
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
 import * as color from "color"
@@ -15,21 +15,31 @@ function getRandomColor(){
     return `#${c.padStart(6,'0')}`
 }
 const ColorBlock:ReactFC<React.PropsWithChildren<{value?:any,name?:string,inline?:boolean}>> = ({ name,value,inline,...props })=>{
-        const [backgroundColor, setBackgroundColor] = useState('');
-        const [textColor, setTextColor] = useState('block');
+        // const [backgroundColor, setBackgroundColor] = useState('');
+        // const [textColor, setTextColor] = useState('block');
 
-        useEffect(() => {
-          // 每次渲染时生成一个随机的背景颜色
-          const randomColor = getRandomColor()
-          setBackgroundColor(randomColor);
-          if(color.rgb(randomColor).isDark()){
-            setTextColor('white')
-            }else{
-                setTextColor("block")
-            }
+        // useEffect(() => {
+        //   // 每次渲染时生成一个随机的背景颜色
+        //   const randomColor = getRandomColor()
+        //   setBackgroundColor(randomColor);
+        //   if(color.rgb(randomColor).isDark()){
+        //     setTextColor('white')
+        //     }else{
+        //         setTextColor("block")
+        //     }
 
-        },[value]);
-      
+        // },[value]);
+        
+        const backgroundColor = getRandomColor()
+        let textColor = 'block'
+        if(color.rgb(backgroundColor).isDark()){
+          textColor = 'white'
+          }else{
+            textColor ="block"
+          }
+
+
+
         return (
           <div  {...props} style={{  backgroundColor,padding:'4px',color:textColor,display:inline? 'inline' : 'block',...props.style }}>
             {name ? (<span style={{padding:'2px'}}>{name}=</span>) : ''}<span style={{padding:'2px'}}>{String(value)}</span>
