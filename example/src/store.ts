@@ -55,7 +55,7 @@ const storeDefine= {
             projects:computed<Project[]>(async ([repoUrl])=>{
               await delay(1000)  
               return await getProjects(repoUrl) 
-            },["user.repo"],{initial:"fisher"}),
+            },["user.repo"],{initial:[]}),
             level:3,
             github:"https://github.com/zhangfisher",
             age:18, 

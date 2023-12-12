@@ -3,8 +3,7 @@
  * const MyComponent = ()=>{
  * 
  * // 用来保存表单数据
- * const addBookHandler = useStore({
- *      state:{
+ * const Book = useFrom({
  *          name:"书籍名称"
  *          author:{
  *              value:0,
@@ -17,59 +16,63 @@
  *          category:async((book)=>{
  *              return await getBookCategorys()              
  *          }),
- *          price:100               // 定价
- *          
- *      },
- *      actions:{
- *          async submit(url:string){
- *              // 提交数据
- *          },
- *          reset(){
- *              
- *          }
- *      }
+ *          price:100                
  * })
  * 
+ * 
  * return (
- *      <Form handler={addBookHandler}>
- *          <Field name={newBook.state.name}>  
+ *      <Book.Form handler={addBookHandler}>
+ *          <Book.Field name={newBook.state.name}>  
  *              {({value,enable,visible,default})=>{
  *                  return <input value={value}/>
  *              }}
- *          </Field>
- *          <Field name={newBook.state.price}>  
+ *          </Book.Field>
+ *          <Book.Field name={newBook.state.price}>  
  *               {({value,enable,visible,default})=>{
  *                  return <input value={value}/>
  *              }}
- *          </Field>
- *      </Form>
+ *          </Book.Field>
+ *      </Book.Form>
  *   )
  * }
  * 
  */
 
-import { ReactNode, useEffect } from "react";
+import React, { ReactNode, createContext, useContext, useEffect } from "react";
+import { useStore,type StoreOptions } from "./store";
+import { ComputedState } from "./types";
 
-export function useForm(){
-    
+export interface Form{
+  Form:React.FC<React.PropsWithChildren<FormProps>>
+  Field:React.FC<React.PropsWithChildren<FieldProps>>
 }
 
 
-export interface FormProps<State>{
+export function useForm<T extends Record<string,any>>(state:T){
+  // 创建一个响应式对象
+  const store = useStore<StoreOptions<T>>({state})
+  // 创建表单上下文
+  const context = createContext<ComputedState<T>>(store.state)
+  return {
+      Form:createForm<T>(context,store.state),
+      Field:createField(context,store),
+  }
+}
+
+
+export interface FormProps<State=any>{
     onSubmit?:(value:State)=>void
     onReset?:(value:State)=>void
 }
 
-export const Form:React.FC<React.PropsWithChildren<FormProps>> = (props)=>{
-    const { onFormChange, children } = props;
 
+function createForm<T>(context:React.Context<ComputedState<T>>,store:StoreOptions<T>):React.FC<React.PropsWithChildren<FormProps>>{   
+ return (props:React.PropsWithChildren<FormProps>)=>{
+    const {  children } = props;
     useEffect(() => {
       const handleFormChange = () => {
-        if (onFormChange) {
-          onFormChange();
-        }
-      };
-  
+         
+      };  
       const formElement = document.getElementById('form');
   
       if (formElement) {
@@ -81,9 +84,16 @@ export const Form:React.FC<React.PropsWithChildren<FormProps>> = (props)=>{
           formElement.removeEventListener('change', handleFormChange);
         }
       };
-    }, [onFormChange]);
+    }, []);
   
-    return <form id="form">{children}</form>;
+    return (
+      <context.Provider value={store}>
+        <form onSubmit={props.onSubmit} onReset={props.onReset}>
+          {children}
+        </form>
+      </context.Provider>
+    )
+  }
 }
 
 /**
@@ -101,13 +111,21 @@ export const Form:React.FC<React.PropsWithChildren<FormProps>> = (props)=>{
  *      </Field>
  * </Form>
  */
-export interface FieldProps<T>  {
+
+export interface FieldProps<T=any>  {
     name: T;
-    children: (props: { value: T; enable: boolean; visible: boolean }) => ReactNode;
+    children: (props: { value: T; enable: boolean; visible: boolean,validate:()=>boolean }) => ReactNode;
 }
-export const Field:React.FC<React.PropsWithChildren<FieldProps>> = (props)=>{
-    return <form>
-        {props.children}
-    </form>
+
+
+function createField(context:React.Context<any>,store:any){   
+  const ctx = useContext(context)
+  return (props)=>{    
+    store
+    return 
+    
+        {props.children()}
+    
+  }
 }
  

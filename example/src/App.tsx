@@ -1,12 +1,12 @@
 import { useState } from 'react' 
 import './App.css'
-import AccountCard from './AccountCard'
-import ComputedCard from './ComputedCard'
+import UseStateDemo from './UseStateDemo'
+import ComputedDemo from './ComputedDemo'
 import classnames from "classnames"
 
 const menuItems=[
-  {id:"render",title:"useState",component:<AccountCard/>},
-  {id:"computed",title:"计算属性",component:<ComputedCard/>},
+  {id:"render",title:"useState",component:<UseStateDemo/>},
+  {id:"computed",title:"计算属性",component:<ComputedDemo/>},
 ] 
 
 function App() { 

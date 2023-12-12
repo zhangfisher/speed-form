@@ -13,12 +13,12 @@ import type { StoreOptions } from "./store";
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 
-export type ComputedOptions = {
+export type ComputedOptions<T=any> = {
   // 默认上下文，0代表当前对象,1代表父对象，2代表祖先,....依次递归,
   // current： 指向当前对象，如state = {user:{first,last,fullName:(state:user)=>{user.first+user.last}}}
   // parent： 指向当前对象的父，如state = {user:{first,last,fullName:(state)=>{state.user.first+state.user.last}}}
 	context?:'root' | 'parent'  | 'current' | number
-  initial?:any
+  initial?:T
 };
 
 export type ComputedDepends = string[] | ((draft: any) => any[]);
@@ -70,10 +70,10 @@ export interface AsyncComputedParams<R>  {
  * @param contextstate
  */
 
-export function computed<R=any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?: ComputedOptions):AsyncComputedReturns<R> 
-export function computed<R=any>(getter:ComputedGetter<R>,options?: ComputedOptions):ComputedReturns<R>
-export function computed<R=any>(getter:Function,depends:any,options?: ComputedOptions):Function {
-	const { context,initial } = Object.assign({ context: 'root' }, options) as Required<ComputedOptions>
+export function computed<R=any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?: ComputedOptions<R>):AsyncComputedReturns<R> 
+export function computed<R=any>(getter:ComputedGetter<R>,options?: ComputedOptions<R>):ComputedReturns<R>
+export function computed<R=any>(getter:Function,depends:any,options?: ComputedOptions<R>):Function {
+	const { context,initial } = Object.assign({ context: 'root' }, options) as Required<ComputedOptions<R>>
   if(arguments.length>=1 && isAsyncFunction(getter)){
     let fn =  () => {
       return {
@@ -116,7 +116,7 @@ function createComputedMutate<Store extends StoreOptions<any>>(stateCtx: IShared
 function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams){
   const { fullKeyPath, keyPath,value } = params;
   const {getter,depends,context,initial} = value()
-  
+  const desc = depends.join("_")+"_computed"
   const snap = stateCtx.mutate({
     // 声明依赖
     deps:(state: any)=>(depends || []).map((deps:any)=>getVal(state,deps.split("."))),
@@ -127,7 +127,7 @@ function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: IS
         error:null,
         progress:0,
         reset:()=>{
-          console.log("reset computed mutate",stateCtx.runMutate(snap))
+          stateCtx.runMutateTask(desc)
         }
       })
     },
@@ -148,6 +148,7 @@ function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: IS
         // @ts-ignore
         setState((draft)=>{
           setVal(draft,[...fullKeyPath,'value'],result)
+          setVal(draft,[...fullKeyPath,'error'],null)
         })
       }catch(e){
          // @ts-ignore
@@ -161,10 +162,9 @@ function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: IS
         })
       }      
     },
-    immediate:true
+    immediate:true,
+    desc
   }) 
-
-
   // params.replaceValue({
   //   value:initial,
   //   loading:false,

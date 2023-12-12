@@ -50,7 +50,7 @@ const LoginInfo:ReactFC<React.PropsWithChildren> = React.memo(()=>{
 })
 
 
-const AccountCard:ReactFC<React.PropsWithChildren> = ()=>{   
+const UseStateDemo:ReactFC<React.PropsWithChildren> = ()=>{   
     const [state] = accountStore.useState()
     return (   
         <div style={{padding:"4px",border:"1px solid #666"}}>
@@ -70,4 +70,4 @@ const AccountCard:ReactFC<React.PropsWithChildren> = ()=>{
 };
       
 
-export default AccountCard
+export default UseStateDemo

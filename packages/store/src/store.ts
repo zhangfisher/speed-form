@@ -94,8 +94,7 @@ export function createStore<T extends StoreOptions<any>>(options:T){
  */
 export function useStore<T extends StoreOptions<any>>(options:T){
     const [store] = useState(()=>{
-        console.log("useStore create")
-        createStore<T>(options)
+        return createStore<T>(options)
     })
     return store
 }

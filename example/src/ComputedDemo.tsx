@@ -5,7 +5,7 @@ import Card from "./Card"
 import { Tips } from "./Tips"
 
  
-function ComputedCard() {
+function ComputedDemo() {
   const [state] = store.useState()   
  
  
@@ -15,8 +15,7 @@ function ComputedCard() {
   //       store.state.books[2].count++
   //   },2000)
   //   return ()=>clearInterval(tid)
-  // },[])
-  
+  // },[]) 
   return (    
       <div className="read-the-docs">
         
@@ -54,7 +53,7 @@ function ComputedCard() {
                     (
                         state.user.projects.error? (<tr><td colSpan={2}>加载错误:{state.user.projects.error.message}</td></tr>)
                         : (
-                            state.user.projects.value.map((project,index)=>{
+                          state.user.projects && state.user.projects.value.map((project,index)=>{
                                 return <tr key={index}><td>{project.name}</td><td>{project.stars}</td></tr>
                             })
                         )
@@ -105,4 +104,4 @@ function ComputedCard() {
   )
 }
 
-export default ComputedCard
+export default ComputedDemo
