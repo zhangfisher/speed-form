@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "axios": "^1.6.2",
+    "classnames": "^2.3.2",
     "color": "^4.2.3",
     "helux": "^3.5.4",
     "helux-store": "workspace:^",

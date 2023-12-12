@@ -56,7 +56,7 @@ import { model, useEffect } from "helux"
 import { createActions } from './action';
 import { Actions, ComputedState } from "./types";
 import { createComputed } from "./computed";
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
  
 
 export interface StoreOptions<State>{    
@@ -76,11 +76,11 @@ export function createStore<T extends StoreOptions<any>>(options:T){
 
         // 2. 处理Computed属性 
         createComputed<T['state']>(stateCtx,api)!
-        
         return { 
           actions,               
           ...stateCtx,
-          state:stateCtx.reactive
+          state:stateCtx.reactive,
+        //   useState
         }  
       });
       
@@ -99,3 +99,4 @@ export function useStore<T extends StoreOptions<any>>(options:T){
     })
     return store
 }
+

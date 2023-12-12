@@ -1,5 +1,6 @@
 import { createStore,computed  } from "helux-store"
 import { delay }  from "flex-tools/async/delay"
+import { getProjects,type Project } from "./api/getProjects";
    
 export interface UserLevel{
 
@@ -15,7 +16,7 @@ export type MyStateType = {
       level:number,
       sex: 1 | 0,
       repo:string
-      projects:()=>string      
+      projects:()=>Project[]      
       addresss: {
         city: string;
         street: string;
@@ -51,10 +52,9 @@ const storeDefine= {
                return (user.firstName+user.lastName) as string
             },            
             repo:"https://api.github.com/users/zhangfisher/repos",
-            projects:computed<string>(async (repoUrl)=>{
-              await delay(100)
-              console.log("加载完成 :" + repoUrl)
-              return "加载完成 :" + repoUrl
+            projects:computed<Project[]>(async ([repoUrl])=>{
+              await delay(1000)  
+              return await getProjects(repoUrl) 
             },["user.repo"],{initial:"fisher"}),
             level:3,
             github:"https://github.com/zhangfisher",

@@ -29,7 +29,8 @@ export interface AsyncComputedObject<V=any>{
   loading:boolean
   progress?:number      // 进度值
   error?:any
-  value:V    
+  value:V,
+  reset:()=>{}      // 重新执行任务    
 }
 export type ComputedReturns<R> = (...args:any)=> R
 export type ComputedAsyncReturns<R> = (...args:any)=> Promise<R>
@@ -115,9 +116,21 @@ function createComputedMutate<Store extends StoreOptions<any>>(stateCtx: IShared
 function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams){
   const { fullKeyPath, keyPath,value } = params;
   const {getter,depends,context,initial} = value()
-  stateCtx.mutate({
+  
+  const snap = stateCtx.mutate({
     // 声明依赖
     deps:(state: any)=>(depends || []).map((deps:any)=>getVal(state,deps.split("."))),
+    fn:(draft)=>{
+      setVal(draft,fullKeyPath,{
+        value:initial,
+        loading:false,
+        error:null,
+        progress:0,
+        reset:()=>{
+          console.log("reset computed mutate",stateCtx.runMutate(snap))
+        }
+      })
+    },
     // 此函数在依赖变化时执行，用来异步计算
     task:async ({draft,setState,input})=>{
       // 指定传递给getter的第一个参数
@@ -149,13 +162,15 @@ function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: IS
       }      
     },
     immediate:true
-  })
-  params.replaceValue({
-    value:initial,
-    loading:false,
-    error:null,
-    progress:0
-  })
+  }) 
+
+
+  // params.replaceValue({
+  //   value:initial,
+  //   loading:false,
+  //   error:null,
+  //   progress:0
+  // })
 }
 
 
