@@ -32,9 +32,12 @@ export interface AsyncComputedObject<V=any>{
   value:V,
   reset:()=>{}      // 重新执行任务    
 }
+
 export type ComputedReturns<R> = (...args:any)=> R
 export type ComputedAsyncReturns<R> = (...args:any)=> Promise<R>
 export type AsyncComputedReturns<R> = (...args:any)=> AsyncComputedParams<R>
+
+
 export interface AsyncComputedParams<R>  {
   getter:()=>Promise<R>
   depends:ComputedDepends

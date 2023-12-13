@@ -80,3 +80,13 @@ table.projects-list > thead > tr > td{
   padding:8px;
   font-weight: bold;
 }
+
+
+
+.panel{
+  position: relative;
+  padding:8px;
+  margin: 8px;
+  box-sizing: border-box;
+  background-color: #eaeaea;
+}
