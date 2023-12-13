@@ -1,5 +1,6 @@
 import { useForm,Field, ComputedField } from "helux-store"
 import Card from "./Card" 
+import { computed } from '../../packages/store/src/computed';
 
 
 type IP = `${number}.${number}.${number}.${number}`
@@ -31,73 +32,77 @@ const FieldRow:React.FC<React.PropsWithChildren<{label?:string,visible?:boolean}
     )
 }
 
-
+// 用来保存表单数据
+const formData ={
+    interface:{
+        value:"wifi",
+        title:"网卡类型",
+        select:()=>[{value:"wifi",title:"无线网卡"},{value:"ethernet",title:"有线网卡"}]
+    },
+    ip:{
+        value:"1.1.1.1"
+    },
+    gateway:"",
+    dhcp:{
+        title:"自动获取IP地址",
+        value:false,      
+        visible:computed<boolean>(()=>{return true})
+    },
+    dhcpStart:{
+        value:"192.168.1.2",
+        visible:(net:NetworkType)=>net.dhcp.value as boolean
+    },
+    dhcpEnd:{
+        value:"",
+        visible:(net:NetworkType)=>net.dhcp.value
+    }, 
+    wifi:{
+        title:"无线配置",
+        visible:(net:NetworkType)=>net.interface.value==="wifi",
+        ssid:"",
+        password:{
+            value:"",
+            validate:(net:NetworkType)=>net.wifi.password.value.length>0
+        }
+    },
+    dns:[""],
+    subnetMask:"",
+    mac:""        
+}
 export const FormDemo = ()=>{
     
-    // 用来保存表单数据
-    const Network = useForm<NetworkType>({
-        interface:{
-            value:"wifi",
-            title:"网卡类型",
-            enum:()=>[{value:"wifi",title:"无线网卡"},{value:"ethernet",title:"有线网卡"}]
-        },
-        ip:{
-            value:"1.1.1.1"
-        },
-        gateway:"",
-        dhcp:{
-            title:"自动获取IP地址",
-            value:false,            
-        },
-        dhcpStart:{
-            value:"192.168.1.2",
-            visible:(net:NetworkType)=>net.dhcp.value as boolean
-        },
-        dhcpEnd:{
-            value:"",
-            visible:(net:NetworkType)=>net.dhcp.value
-        }, 
-        wifi:{
-            title:"无线配置",
-            visible:(net:NetworkType)=>net.interface.value==="wifi",
-            ssid:"",
-            password:{
-                value:"",
-                validate:(net:NetworkType)=>net.wifi.password.value.length>0
-            }
-        },
-        dns:[""],
-        subnetMask:"",
-        mac:""        
-    })
     
+    const Network = useForm<typeof formData>(formData) 
+
     return (
         <Network.Form className="panel">
             <Card title="网络配置">
                 <Network.Field name="interface">                      
-                    {({title,value})=>{     
+                    {({title,value,select}:typeof Network.fields.interface)=>{     
                         return <FieldRow label={title}>
-                            <input value={value.value} onChange={()=>value.value}/>
+                          <select value={value}>
+                            {select.map((item, index) => (
+                                <option  key={index} value={item.value}>{item.title}</option>
+                            ))}
+                        </select>                            
                         </FieldRow>
                     }}
                 </Network.Field>
-                <Network.Field name="dhcp">                      
-                    {({title,value})=>{     
-                        return <FieldRow label={title}><input type='checkbox' value={value.value}/></FieldRow>
+                <Network.Field name="dhcp">                                       
+                    {({title,value,visible}:typeof Network.fields.dhcp)=>{    
+                        return <FieldRow visible={visible} label={title}><input type='checkbox' value={String(value)}/></FieldRow>
                     }}
                 </Network.Field>
-                <Network.Field name="dhcpStart">                      
-                    {({title,value,visible}:ComputedField<typeof Network.fields.interface>)=>{ 
-                    Network.fields.dhcpStart.value=""
-                    Network.fields.dhcpStart.visible
+                {/* <Network.Field name="dhcpStart">                      
+                    {({title,value,visible})=>{ 
                     return <FieldRow visible={visible} label={title}><input type='checkbox' value={value.value}/></FieldRow>
-                    }}
+                    } }
                 </Network.Field>
                 <Network.Field name="dhcpEnd">                      
                     {({title,value,visible})=>{     
                         return <FieldRow  visible={visible} label={title}><input type='checkbox' value={value.value}/></FieldRow>
                     }}
-                </Network.Field>
+                </Network.Field> */}
 
               
             </Card>

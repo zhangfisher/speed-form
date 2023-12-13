@@ -43,13 +43,17 @@ import { useStore, type StoreOptions } from "./store";
 import type { ComputedState, ReactFC, RequiredComputedState } from "./types";
 import { getVal } from "@helux/utils";
 import { AsyncComputedReturns, ComputedReturns } from "./computed";
-import { RequiredDeep } from "type-fest"
 
+export type FormData = Record<string, any>;
+
+
+export type FieldRender<Value=any> = (props: RequiredComputedState<Field<Value>>) => ReactNode
 
 export type FieldProps<Value=any> = {
-	name: string  
-	children: (props: RequiredDeep<ComputedState<Field<Value>>>) => ReactNode;
+	name: string
+	children: FieldRender<Value>;
 } & Record<string,any>
+
 
 // 用来声明表单字段的元数据
 export type FieldSchema<R=any> = R  | ComputedReturns<R> | AsyncComputedReturns<R>;
@@ -61,26 +65,27 @@ export type FieldComponent = React.FC<FieldProps>;
  
 export interface Field<Value = any> extends Record<string, any>{  
   value: Value;
-  title?: any;                              // 标题
-  default?: Value;                          // 默认值
-  tips?: string;                            // 提示信息
-  placeholder?: string;                     // 占位符
-  required?: FieldSchema<boolean>;          // 是否必填
-  readonly?: FieldSchema<boolean>;          // 是否只读
-  visible?: (...args:any)=>boolean;           // 是否可见
-  enable?: FieldSchema<boolean>;            // 是否可用
-  validate?: FieldSchema<boolean>;          // 验证
-  enum?: FieldSchema                        // 枚举值
+  title?      : string;                           // 标题
+  default?    : Value;                            // 默认值
+  tips?       : string;                           // 提示信息
+  placeholder?: string;                           // 占位符
+  required?   : (...args:any)=>boolean;           // 是否必填
+  readonly?   : (...args:any)=>boolean;           // 是否只读
+  visible?    : (...args:any)=>boolean;           // 是否可见
+  enable?     : (...args:any)=>boolean;           // 是否可用
+  validate?   : (...args:any)=>boolean;           // 验证
+  select?     : (...args:any)=>any[]                // 枚举值
 }
+ 
 
-export type ComputedField<T extends FormData> = RequiredDeep<RequiredComputedState<T>>
+
+
+export type ComputedField<T extends FormData> = RequiredComputedState<T>
     
-export type FormData = Record<string, any>;
 
-export type FormProps<State extends FormData = FormData> =
-	React.PropsWithChildren<{
-		onSubmit?: (value: ComputedState<State>) => void;
-		onReset?: (value: ComputedState<State>) => void;
+export type FormProps<State extends FormData = FormData> = React.PropsWithChildren<{
+		onSubmit?: (value: RequiredComputedState<State>) => void;
+		onReset?: (value: RequiredComputedState<State>) => void;
 	}>;
 
 // 表单组件
@@ -94,12 +99,13 @@ export interface FormObject<State extends Record<string, any>> {
 }
 
 export function useForm<State extends FormData>(state: State) {
-	// 创建响应式对象用来保存表单数据
-	const store = useStore<StoreOptions<State>>({ state });
+	// 创建响应式对象用来保存表单数据 
+	const store = useStore<StoreOptions<State>>({ state });  
+
 	return {
 		Form: createForm<State>(store),
-		Field: createField<ComputedState<State>>(store),
-    fields:store.state as RequiredComputedState<State>
+		Field: createField<RequiredComputedState<State>>(store),
+    fields:store.state  
 	};
 }
 
@@ -137,24 +143,28 @@ function createField<State extends FormData>(store: any) {
 		// 获取表单字段的值
 		const value = getVal(store.state, name.split("."));
     // 
-		let filedSchema 
-
+		let filedSchema : RequiredComputedState<Field>
 
 		if (isFieldSchema(value)) {
 			filedSchema = value;
 		}else {
 			filedSchema = {
 				value,        
-        title: name,
-        tips: "",
+        title      : name,
+        tips       : "",
+        default    : value,
+				visible        : true,
+        required   : false,
+        readonly   : false,
+				validate       : true,        
+				enable         : true,
         placeholder: "",        
-        default: value,
-				visible: true,
-				validate: true,        
-				enable: true,
-        enum: [],
+        enum       : [],
 			};
-			return props.children(filedSchema)
+			return (props.children as FieldRender<typeof props.ref>)(filedSchema)
 		}
 	};
 }
+
+
+ 

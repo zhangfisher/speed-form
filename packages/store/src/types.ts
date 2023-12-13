@@ -33,6 +33,8 @@ export type RequiredComputedState<T extends Record<string, any>> = {
 // type T= {count?:()=>boolean}
 // type CT = ComputedState<T>  // == { count?: (() => boolean) | undefined; }
 // type CTR = RequiredComputedState<T> // { count: boolean;}
+ 
+
 
 
 export type ReactFC<Props=unknown> = React.FC<React.PropsWithChildren<
