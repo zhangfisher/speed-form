@@ -16,8 +16,7 @@
     "helux": "^3.5.4",
     "helux-store": "workspace:^",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-json-prettify": "^0.2.0"
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.42",
