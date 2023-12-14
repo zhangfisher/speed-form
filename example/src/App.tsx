@@ -1,26 +1,19 @@
-import { useState } from 'react' 
 import './App.css'
-import UseStateDemo from './UseStateDemo'
-import ComputedDemo from './ComputedDemo'
+import { useState } from 'react' 
 import classnames from "classnames"
+// import UseStateDemo from './UseStateDemo'
+// import ComputedDemo from './ComputedDemo'
+import FormDemo from './FormDemo'
 
 const menuItems=[
-  {id:"render",title:"useState",component:<UseStateDemo/>},
-  {id:"computed",title:"计算属性",component:<ComputedDemo/>},
+  // {id:"render",title:"useState",component:<UseStateDemo/>},
+  // {id:"computed",title:"计算属性",component:<ComputedDemo/>},
+  {id:"form",title:"表单",component:<FormDemo/>},
 ] 
 
 function App() { 
-  const [menuItem,setMenuItem]= useState("computed")
-  
+  const [menuItem,setMenuItem]= useState("form") 
 
-  // useEffect(()=>{
-  //   const tid = setInterval(()=>{
-  //       store.state.books[0].count++
-  //       store.state.books[2].count++
-  //   },2000)
-  //   return ()=>clearInterval(tid)
-  // },[])
-  
   return (
     <div id="app">      
       <ul className="navbar">

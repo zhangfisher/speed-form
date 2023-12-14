@@ -39,10 +39,11 @@
  */
 
 import React, {	ReactNode, useCallback } from "react";
-import { useStore, type StoreOptions } from "./store";
-import type { ComputedState, ReactFC, RequiredComputedState } from "./types";
+import { type StoreOptions, createStore } from "./store";
+import type { ReactFC, RequiredComputedState } from "./types";
 import { getVal } from "@helux/utils";
 import { AsyncComputedReturns, ComputedReturns } from "./computed";
+import { useState } from 'react';
 
 export type FormData = Record<string, any>;
 
@@ -74,7 +75,7 @@ export interface Field<Value = any> extends Record<string, any>{
   visible?    : (...args:any)=>boolean;           // 是否可见
   enable?     : (...args:any)=>boolean;           // 是否可用
   validate?   : (...args:any)=>boolean;           // 验证
-  select?     : (...args:any)=>any[]                // 枚举值
+  select?     : (...args:any)=>any[]              // 枚举值
 }
  
 
@@ -95,36 +96,38 @@ export type FormComponent<State extends Record<string, any>> = ReactFC<FormProps
 export interface FormObject<State extends Record<string, any>> {
 	Form: FormComponent<State>;
 	Field: FieldComponent;
-  fields:State
+  	fields:State
+  	// 表单状态
+  	status:{
+    	valid:boolean			// 表单数据是否有效
+    	dirty:boolean			// 数据已经更新过
+  	}
 }
 
-export function useForm<State extends FormData>(state: State) {
-	// 创建响应式对象用来保存表单数据 
-	const store = useStore<StoreOptions<State>>({ state });  
-
+export function createForm<State extends FormData>(state: State) {
+	const store = createStore<StoreOptions<State>>({ state });  
 	return {
-		Form: createForm<State>(store),
-		Field: createField<RequiredComputedState<State>>(store),
-    fields:store.state  
+		Form: createFormElement<State>(store),
+		Field: createFieldElement(store),
+    	fields:store.state,
+		store:store    
 	};
 }
 
-function createForm<State extends FormData>(store: any): FormComponent<State> {
+function createFormElement<State extends FormData>(store: any): FormComponent<State> {
 	return (props: FormProps<State>) => {
 		const { children } = props;
-
+		const state = store.useState()
 		const onSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     
-    },[]);
-
+		},[]);
 		const onReset = useCallback((e: React.FormEvent<HTMLFormElement>) => {
 
-    },[]);
-
+		},[]);
 		return (
-				<form onSubmit={onSubmit} onReset={onReset}>
-					{children}
-				</form>
+			<form onSubmit={onSubmit} onReset={onReset}>
+				{children}
+			</form>
 		);
 	};
 }
@@ -137,7 +140,7 @@ function isFieldSchema(obj: any): boolean {
 	return typeof obj === "object" ? "value" in obj : false;
 }
 
-function createField<State extends FormData>(store: any) {
+function createFieldElement(store: any) {
 	return (props: FieldProps) => {
 		const { name } = props;
 		// 获取表单字段的值
@@ -150,21 +153,18 @@ function createField<State extends FormData>(store: any) {
 		}else {
 			filedSchema = {
 				value,        
-        title      : name,
-        tips       : "",
-        default    : value,
-				visible        : true,
-        required   : false,
-        readonly   : false,
-				validate       : true,        
-				enable         : true,
-        placeholder: "",        
-        enum       : [],
-			};
-			return (props.children as FieldRender<typeof props.ref>)(filedSchema)
+				title      : name,
+				tips       : "",
+				default    : value,
+				visible    : true,
+				required   : false,
+				readonly   : false,
+				validate   : true,        
+				enable     : true,
+				placeholder: "",        
+				select     : [],
+			};			
 		}
+		return props.children(filedSchema)
 	};
 }
-
-
- 

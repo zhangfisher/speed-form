@@ -14,13 +14,16 @@
   flex-direction: row;
   padding: 8px;
   height:40px;
-  border-bottom: 1px solid #999;
+  border-bottom: 1px solid #999;  
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 #app>ul.navbar>li{
   padding:4px 8px 4px 8px;
   cursor: pointer;
   list-style: none;
+  line-height: 200%;
 }
 #app>ul.navbar>li:hover{
   background-color: rgb(0, 117, 152);
@@ -34,6 +37,7 @@
 #app>.tabs{
   position: relative;
   flex-grow: 1;
+  background: #fafafa;
 }
 
 #app>.tabs>.tab{
