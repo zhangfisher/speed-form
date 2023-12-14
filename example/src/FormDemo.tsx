@@ -1,6 +1,5 @@
 import Card from "./Card"  
 import Network from  "./forms/network"
-import JSONPretty from "react-json-prettify"
  
 const FieldRow:React.FC<React.PropsWithChildren<{label?:string,visible?:boolean}>> = ({visible,label,children})=>{
     return (
@@ -54,8 +53,7 @@ const FieldRow:React.FC<React.PropsWithChildren<{label?:string,visible?:boolean}
                 </Card>
             </Network.Form>        
             </div>
-            <div style={{padding:"8px",margin:'8px',width:'50%'}}>
-                <JSONPretty id="json-pretty" data={{a:1}}/>  
+            <div style={{padding:"8px",margin:'8px',width:'50%'}}> 
                 {JSON.stringify(Network.fields)}
             </div>
         </div>
