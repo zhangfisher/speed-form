@@ -2,12 +2,12 @@ import './App.css'
 import { useState } from 'react' 
 import classnames from "classnames"
 // import UseStateDemo from './UseStateDemo'
-// import ComputedDemo from './ComputedDemo'
+import ComputedDemo from './ComputedDemo'
 import FormDemo from './FormDemo'
 
 const menuItems=[
   // {id:"render",title:"useState",component:<UseStateDemo/>},
-  // {id:"computed",title:"计算属性",component:<ComputedDemo/>},
+  {id:"computed",title:"计算属性",component:<ComputedDemo/>},
   {id:"form",title:"表单",component:<FormDemo/>},
 ] 
 

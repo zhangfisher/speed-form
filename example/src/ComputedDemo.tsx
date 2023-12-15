@@ -1,7 +1,7 @@
 import store  from "./store" 
-import ColorBlock from './ColorBlock'
+import ColorBlock from './components/ColorBlock'
 import { $  } from "helux" 
-import Card from "./Card" 
+import Card from "./components/Card" 
 import { Tips } from "./Tips"
 
  
@@ -22,7 +22,7 @@ function ComputedDemo() {
         <Card title="同步计算属性">
             <Tips text="修改{firstName}会引起同步计算属性{FullName}更新"/>
             <div>
-                <div>firstName=<input value={state.user.firstName} onChange={store.sync(["user","firstName"])}/>
+                <div>firstName=<input value={store.state.user.firstName} onChange={store.sync(["user","firstName"])}/>
                 <button onClick={()=>store.state.user.firstName="Zhang"}>恢复</button>
                 </div>
                 <ColorBlock name="FirstName" value={state.user.firstName}/>

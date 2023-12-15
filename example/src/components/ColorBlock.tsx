@@ -7,7 +7,7 @@ import React from "react"
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
 import * as color from "color"
-import { ReactFC } from "./types";
+import { ReactFC } from "../types";
 
 // const Colors:string[]=['#4bc703','#eb03c4','#1000eb',"#99170e991",'red','#778888999']
 function getRandomColor(){

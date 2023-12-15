@@ -9,7 +9,7 @@
  */
 
 import { HeluxApi, IOperateParams, ISharedCtx } from "helux";
-import type { StoreOptions } from "./store";
+import type { StoreDefine } from "./store";
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 
@@ -102,7 +102,7 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
  * @param stateCtx 
  * @param params 
  */
-function createComputedMutate<Store extends StoreOptions<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams){
+function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams){
   const { fullKeyPath, value:getter,keyPath } = params;
   const witness = stateCtx.mutate((draft) => {
       const ctxDraft = getVal(draft, keyPath)
@@ -116,7 +116,7 @@ function createComputedMutate<Store extends StoreOptions<any>>(stateCtx: IShared
  * @param stateCtx 
  * @param params 
  */
-function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams){
+function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams){
   const { fullKeyPath, keyPath,value } = params;
   const {getter,depends,context,initial} = value()
   const desc = depends.join("_")+"_computed"
@@ -182,7 +182,7 @@ function createAsyncComputedMutate<Store extends StoreOptions<any>>(stateCtx: IS
  * @param options
  * @returns
  */
-export function createComputed<Store extends StoreOptions<any>>(stateCtx: ISharedCtx<Store["state"]>,api: HeluxApi) {
+export function createComputed<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,api: HeluxApi) {
 	// 1. 为state中的计算属性自动创建mutate
 	const replacedMap: any = {};
 	stateCtx.setOnReadHook((params) => {

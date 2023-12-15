@@ -1,6 +1,6 @@
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction"
 import { HeluxApi,ISharedCtx } from "helux" 
-import type { StoreOptions } from "./store"
+import type { StoreDefine } from "./store"
 import { Action, AsyncAction } from "."
 
 
@@ -12,7 +12,7 @@ import { Action, AsyncAction } from "."
  * @param api 
  * @returns 
  */
-export function createActions<Store extends StoreOptions<any>>(actions:Store['actions'],ctx:ISharedCtx<Store['state']>,api:HeluxApi){
+export function createActions<Store extends StoreDefine<any>>(actions:Store['actions'],ctx:ISharedCtx<Store['state']>,api:HeluxApi){
     return Object.entries(actions||{}).reduce((results:any,[key,action])=>{           
         if(isAsyncFunction(action)){
             results[key] =createAsyncAction(action as AsyncAction<any>,ctx.state,api)

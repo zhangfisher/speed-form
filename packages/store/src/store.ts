@@ -58,20 +58,24 @@ import { Actions, ComputedState } from "./types";
 import { createComputed } from "./computed"; 
  
 
-export interface StoreOptions<State>{    
+export interface StoreDefine<State>{    
     state:State 
     actions?:Actions<State>
 }
 
-export function createStore<T extends StoreOptions<any>>(options:T){
+export interface StoreOptions{    
+    // 计算函数的默认上下文
+    defaultComputedContext:'root' | 'parent'  | 'current' | number
+}
+export function createStore<T extends StoreDefine<any>>(data:T){
     
     return  model((api) => { // api对象 有详细的类型提示 
-        const stateCtx = api.shareState<ComputedState<T['state']>>(options.state as any,{
+        const stateCtx = api.shareState<ComputedState<T['state']>>(data.state as any,{
             stopArrDep: false,
             enableDraftDep:true             
         })        
         // 1. 创建Actions        
-        const actions = createActions<T>(options.actions,stateCtx,api) 
+        const actions = createActions<T>(data.actions,stateCtx,api) 
 
         // 2. 处理Computed属性 
         createComputed<T['state']>(stateCtx,api)!

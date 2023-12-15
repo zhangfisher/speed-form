@@ -5,7 +5,7 @@
 
 import React from "react"
 import { ReactFC } from "./types"; 
-import ColorBlock from "./ColorBlock";
+import ColorBlock from "./components/ColorBlock";
 import { createStore } from "helux-store";
 
  

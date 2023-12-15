@@ -39,11 +39,10 @@
  */
 
 import React, {	ReactNode, useCallback } from "react";
-import { type StoreOptions, createStore } from "./store";
+import { type StoreDefine, createStore } from "./store";
 import type { ReactFC, RequiredComputedState } from "./types";
 import { getVal } from "@helux/utils";
-import { AsyncComputedReturns, ComputedReturns } from "./computed";
-import { useState } from 'react';
+import { AsyncComputedReturns, ComputedReturns } from "./computed"; 
 
 export type FormData = Record<string, any>;
 
@@ -51,8 +50,8 @@ export type FormData = Record<string, any>;
 export type FieldRender<Value=any> = (props: RequiredComputedState<Field<Value>>) => ReactNode
 
 export type FieldProps<Value=any> = {
-	name: string
-	children: FieldRender<Value>;
+	name: string 
+	children: FieldRender<Value> | FieldRender<Value>[];
 } & Record<string,any>
 
 
@@ -76,6 +75,7 @@ export interface Field<Value = any> extends Record<string, any>{
   enable?     : (...args:any)=>boolean;           // 是否可用
   validate?   : (...args:any)=>boolean;           // 验证
   select?     : (...args:any)=>any[]              // 枚举值
+  sync	  	  : ()=> ()=>void	   		  		  // 同步状态
 }
  
 
@@ -85,9 +85,9 @@ export type ComputedField<T extends FormData> = RequiredComputedState<T>
     
 
 export type FormProps<State extends FormData = FormData> = React.PropsWithChildren<{
-		onSubmit?: (value: RequiredComputedState<State>) => void;
-		onReset?: (value: RequiredComputedState<State>) => void;
-	}>;
+	onSubmit?: (value: RequiredComputedState<State>) => void;
+	onReset?: (value: RequiredComputedState<State>) => void;
+}>;
 
 // 表单组件
 export type FormComponent<State extends Record<string, any>> = ReactFC<FormProps<State>>;
@@ -105,10 +105,10 @@ export interface FormObject<State extends Record<string, any>> {
 }
 
 export function createForm<State extends FormData>(state: State) {
-	const store = createStore<StoreOptions<State>>({ state });  
+	const store = createStore<StoreDefine<State>>({ state });  
 	return {
 		Form: createFormElement<State>(store),
-		Field: createFieldElement(store),
+		Field: createFieldElement(store),	
     	fields:store.state,
 		store:store    
 	};
@@ -116,8 +116,7 @@ export function createForm<State extends FormData>(state: State) {
 
 function createFormElement<State extends FormData>(store: any): FormComponent<State> {
 	return (props: FormProps<State>) => {
-		const { children } = props;
-		const state = store.useState()
+		const { children } = props; 
 		const onSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
     
 		},[]);
@@ -133,29 +132,29 @@ function createFormElement<State extends FormData>(store: any): FormComponent<St
 }
 
 /**
- * 判断是否是表单字段元数据
+ * 判断是否是表单字段是否是一个简单的字段
+ * 
+ * 简单的字段没有{value:<>}形式
+
+
  * @param obj
  */
-function isFieldSchema(obj: any): boolean {
-	return typeof obj === "object" ? "value" in obj : false;
+function isSimpleField(obj: any): boolean {
+	return typeof obj === "object" ?  false : "value" in obj 
 }
 
 function createFieldElement(store: any) {
 	return (props: FieldProps) => {
-		const { name } = props;
-		// 获取表单字段的值
-		const value = getVal(store.state, name.split("."));
-    // 
-		let filedSchema : RequiredComputedState<Field>
-
-		if (isFieldSchema(value)) {
-			filedSchema = value;
-		}else {
-			filedSchema = {
-				value,        
+		const { name } = props; 
+		let filedContext : RequiredComputedState<Field> 				// value,        
+		const [state] = store.useState()
+		let value = getVal(state, name.split("."))
+		if (isSimpleField(value)) {
+			filedContext  ={				// value,        
+				value,
 				title      : name,
 				tips       : "",
-				default    : value,
+				default    : undefined,
 				visible    : true,
 				required   : false,
 				readonly   : false,
@@ -163,8 +162,13 @@ function createFieldElement(store: any) {
 				enable     : true,
 				placeholder: "",        
 				select     : [],
-			};			
-		}
-		return props.children(filedSchema)
+				sync     : ()=>{}
+			};	
+		}else {
+			filedContext = value
+		} 
+		return Array.isArray(props.children) ? 
+			props.children.map(children=>children(filedContext))
+			: props.children({...filedContext,sync:store.sync([...name.split("."),'value'])})
 	};
 }

@@ -6,7 +6,7 @@
 import React from "react"
 import { ReactFC } from "./types";
 import store from "./store"
-import ColorBlock from "./ColorBlock";
+import ColorBlock from "./components/ColorBlock";
 
 const UserInfo:ReactFC<React.PropsWithChildren> = ()=>{   
     const [state] = store.useState()

@@ -6,7 +6,7 @@
 import React from "react"
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 //@ts-ignore
-import { ReactFC } from "./types";
+import { ReactFC } from "../types";
 
 const Card:ReactFC<React.PropsWithChildren<{title?:string}>> = ({ title,...props })=>{
         return (

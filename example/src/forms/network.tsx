@@ -25,6 +25,11 @@ type NetworkType={
 
 // 声明表单数据
 const formDefine ={ 
+    title:{
+        value:"React-Helux-Form",
+        placeholder:"输入网络配置名称",
+        title:"标题"
+    },
     interface:{
         value:"wifi",
         title:"网卡类型",
@@ -39,15 +44,17 @@ const formDefine ={
     gateway:"",
     dhcp:{
         title:"自动获取IP地址",
-        value:false,      
+        value:true,      
         visible:computed<boolean>(()=>{return true})
     },
     dhcpStart:{
-        value:"192.168.1.2",
+        title:"起始地址",
+        value:"192.168.1.1",
         visible:(net:NetworkType)=>net.dhcp.value as boolean
     },
     dhcpEnd:{
-        value:"",
+        title:"结束地址",
+        value:"192.168.1.100",
         visible:(net:NetworkType)=>net.dhcp.value
     }, 
     wifi:{
