@@ -62,7 +62,9 @@ const formDefine ={
         visible:(net:NetworkType)=>net.interface.value==="wifi",
         ssid:"",
         password:{
-            value:"",
+            value:"123",
+            placeholder:"输入无线密码",
+            enable:(net:NetworkType)=>net.interface.value==="wifi",
             validate:(net:NetworkType)=>net.wifi.password.value.length>0
         }
     },

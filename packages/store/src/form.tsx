@@ -41,7 +41,7 @@
 import React, {	ReactNode, useCallback } from "react";
 import { type StoreDefine, createStore } from "./store";
 import type { ReactFC, RequiredComputedState } from "./types";
-import { getVal } from "@helux/utils";
+import { getVal, setVal } from "@helux/utils";
 import { AsyncComputedReturns, ComputedReturns } from "./computed"; 
 
 export type FormData = Record<string, any>;
@@ -75,7 +75,8 @@ export interface Field<Value = any> extends Record<string, any>{
   enable?     : (...args:any)=>boolean;           // 是否可用
   validate?   : (...args:any)=>boolean;           // 验证
   select?     : (...args:any)=>any[]              // 枚举值
-  sync	  	  : ()=> ()=>void	   		  		  // 同步状态
+  sync	  	  : ()=> ()=>void	   		  		        // 同步状态
+  update	  	: ()=> (value:Value)=>void	   		  		  // 更新值
 }
  
 
@@ -105,7 +106,7 @@ export interface FormObject<State extends Record<string, any>> {
 }
 
 export function createForm<State extends FormData>(state: State) {
-	const store = createStore<StoreDefine<State>>({ state });  
+	const store = createStore<StoreDefine<State>>({ state },{computedContext:'root'});  
 	return {
 		Form: createFormElement<State>(store),
 		Field: createFieldElement(store),	
@@ -139,18 +140,20 @@ function createFormElement<State extends FormData>(store: any): FormComponent<St
 
  * @param obj
  */
-function isSimpleField(obj: any): boolean {
-	return typeof obj === "object" ?  false : "value" in obj 
+function isSimpleField(value: any): boolean {
+	return !(typeof value === "object" && "value" in value)
 }
 
 function createFieldElement(store: any) {
 	return (props: FieldProps) => {
 		const { name } = props; 
-		let filedContext : RequiredComputedState<Field> 				// value,        
-		const [state] = store.useState()
-		let value = getVal(state, name.split("."))
-		if (isSimpleField(value)) {
-			filedContext  ={				// value,        
+		let filedContext : RequiredComputedState<Field> 				       
+		const [state,setState] = store.useState()
+		const value = getVal(state, name.split("."))
+    const isSimple = isSimpleField(value)
+    const valuePath = isSimple ?  name.split(".") :[...name.split("."),'value']
+		if (isSimple) {
+			filedContext  ={				      
 				value,
 				title      : name,
 				tips       : "",
@@ -162,13 +165,23 @@ function createFieldElement(store: any) {
 				enable     : true,
 				placeholder: "",        
 				select     : [],
-				sync     : ()=>{}
+				sync       : ()=>{},
+        update     : (value:any)=>{setState((draft:any)=>setVal(draft,valuePath,value))}
 			};	
 		}else {
 			filedContext = value
 		} 
 		return Array.isArray(props.children) ? 
-			props.children.map(children=>children(filedContext))
-			: props.children({...filedContext,sync:store.sync([...name.split("."),'value'])})
+			props.children.map(children=>children({
+          ...filedContext,
+          sync:store.sync(valuePath),
+          update:(value:any)=>{setState((draft:any)=>setVal(draft,valuePath,value)
+        )}
+      }))
+			: props.children({
+          ...filedContext,
+          sync:store.sync(valuePath),
+          update:(value:any)=>{setState((draft:any)=>setVal(draft,valuePath,value))}
+      })
 	};
 }

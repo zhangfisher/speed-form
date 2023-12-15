@@ -64,11 +64,12 @@ export interface StoreDefine<State>{
 }
 
 export interface StoreOptions{    
-    // 计算函数的默认上下文
-    defaultComputedContext:'root' | 'parent'  | 'current' | number
+    // 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象
+    // 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
+    computedContext?: 'root' | 'parent'  | 'current'
 }
-export function createStore<T extends StoreDefine<any>>(data:T){
-    
+export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
+    const opts = Object.assign({},options)
     return  model((api) => { // api对象 有详细的类型提示 
         const stateCtx = api.shareState<ComputedState<T['state']>>(data.state as any,{
             stopArrDep: false,
@@ -78,7 +79,7 @@ export function createStore<T extends StoreDefine<any>>(data:T){
         const actions = createActions<T>(data.actions,stateCtx,api) 
 
         // 2. 处理Computed属性 
-        createComputed<T['state']>(stateCtx,api)!
+        createComputed<T['state']>(stateCtx,api,opts)!
         return { 
           actions,               
           ...stateCtx,
