@@ -71,9 +71,8 @@ export interface StoreOptions{
 export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
     const opts = Object.assign({},options)
     return  model((api) => { // api对象 有详细的类型提示 
-        const stateCtx = api.shareState<ComputedState<T['state']>>(data.state as any,{
-            stopArrDep: false,
-            enableDraftDep:true             
+        const stateCtx = api.sharex<ComputedState<T['state']>>(data.state as any,{
+            stopArrDep: false           
         })        
         // 1. 创建Actions        
         const actions = createActions<T>(data.actions,stateCtx,api) 

@@ -1,10 +1,13 @@
 
 import { createForm,computed,type Field} from "helux-store"
+import { Project, getProjects } from "../api/getProjects"
+import { delay } from "flex-tools/async/delay"
 
 
 type IP = `${number}.${number}.${number}.${number}`
 
 type NetworkType={
+    title:Field<string>
     interface:Field<'wifi' | 'ethernet'>    
     ip:Field<IP>
     gateway:string
@@ -28,13 +31,13 @@ const formDefine ={
     title:{
         value:"React-Helux-Form",
         placeholder:"输入网络配置名称",
-        title:"标题"
+        title:"标题",
+        validate:(net:NetworkType)=>net.title.value.length>3
     },
     interface:{
         value:"wifi",
         title:"网卡类型",
-        select:(d:any)=>{
-            console.log("interface=",d)
+        select:()=>{
             return [{value:"wifi",title:"无线网卡"},{value:"ethernet",title:"有线网卡"}]
         }
     },
@@ -70,7 +73,23 @@ const formDefine ={
     },
     dns:[""],
     subnetMask:"",
-    mac:""        
+    mac:"",
+    openSource:{
+        repo:{
+            value:"",
+            title:"项目仓库地址",                        
+        },
+        project:{
+            value:"",
+            title:"项目名称",
+            select:computed<Project[]>(async ([repoUrl])=>{
+                await delay(1000)  
+                return await getProjects(repoUrl) 
+              },["openSource.repo"],{initial:[]})               
+        },
+
+        
+    }     
 }
 
 

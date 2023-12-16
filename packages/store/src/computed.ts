@@ -120,10 +120,15 @@ function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{contex
 function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,options:StoreOptions){
   const { fullKeyPath, value:getter,keyPath } = params;
   const { computedContext:context } = options
-  const witness = stateCtx.mutate((draft) => {        
-      const ctxDraft = getComputedContextDraft(draft,{context,fullKeyPath,keyPath}) 
-      setVal(draft,fullKeyPath,getter(ctxDraft,draft));
-  })  
+  const witness = stateCtx.mutate({
+    fn: (draft, params) => {
+      const ctxDraft = getComputedContextDraft(draft, { context, fullKeyPath, keyPath })
+        setVal(draft, fullKeyPath, getter(ctxDraft, draft));
+    },
+    desc: fullKeyPath.join('.'),
+    // 关闭死循环检测，信任开发者
+    checkDeadCycle: false,
+  })
   params.replaceValue(getVal(witness.snap, fullKeyPath));        
 }
 
@@ -140,6 +145,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     // 声明依赖
     deps:(state: any)=>(depends || []).map((deps:any)=>getVal(state,deps.split("."))),
     fn:(draft)=>{
+
       setVal(draft,fullKeyPath,{
         value:initial,
         __$COMPUTED__:true,

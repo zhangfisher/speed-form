@@ -8,11 +8,17 @@ import React from "react"
 //@ts-ignore
 import { ReactFC } from "../types";
 
-const Card:ReactFC<React.PropsWithChildren<{title?:string}>> = ({ title,...props })=>{
+export type CardProps = React.PropsWithChildren<{
+  title?:string
+  buttons?:ReactFC[]
+}>
+
+const Card:ReactFC<CardProps> = ({ buttons,title,...props })=>{
         return (
           <div {...props} style={{ border:"1px solid #bbb",background:"white",margin:"8px" }}>
-            <div  style={{ backgroundColor:"#ebebeb",padding:"6px",lineHeight:"150%"}}>
-                {title}
+            <div  style={{display:"flex",flexDirection:"row",backgroundColor:"#ebebeb",padding:"6px",lineHeight:"150%"}}>
+                <span>{title}</span>
+                {(buttons||[]).map(Btn=><Btn/>)}
             </div>
             <div style={{ padding:"12px" }}>
                 {props.children}
