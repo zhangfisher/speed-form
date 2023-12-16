@@ -112,13 +112,16 @@ importers:
 
   packages/form:
     dependencies:
-      '@helux/utils':
-        specifier: ^3.4.23
-        version: 3.5.8
       flex-tools:
         specifier: ^1.3.50
         version: 1.3.50
+      helux-store:
+        specifier: workspace:^
+        version: link:../store
     devDependencies:
+      '@helux/utils':
+        specifier: ^3.5.11
+        version: 3.5.11
       '@testing-library/jest-dom':
         specifier: ^6.1.5
         version: 6.1.5(vitest@0.34.6)
@@ -685,7 +688,7 @@ packages:
     dependencies:
       '@helux/hooks-impl': 3.5.8
       '@helux/types': 3.5.8
-      '@helux/utils': 3.5.8
+      '@helux/utils': 3.5.11
       limu: 3.11.10
     dev: true
 
@@ -711,6 +714,7 @@ packages:
 
   /@helux/types@3.5.8:
     resolution: {integrity: sha512-xJ4TAUwkSE3FsdcO2iXtFnB1a8sfr5HL7qelK/T2FhCyE+NQLzIxbmtTYsW5meks3IsHf0+nSjylenBnM5LdRA==}
+    dev: true
 
   /@helux/utils@3.5.1:
     resolution: {integrity: sha512-mcxGzsRWHJEhrApfQ+E491rBGo3r8tEGMvB5v+mW6fUaKx6hCUTOcl8q21kb5RDNccrWBq0XdyU/tEA94u8B0Q==}
@@ -722,11 +726,6 @@ packages:
     resolution: {integrity: sha512-vg66E89Dqr7QK5t8O1/aXGDWNNVmc2bK8kgX4TWbCeIjv78Kn3+1KO9ODCbyhpxdz3CQ81SI+GTjG6SyvlvAKw==}
     dependencies:
       '@helux/types': 3.5.11
-
-  /@helux/utils@3.5.8:
-    resolution: {integrity: sha512-3LIAZrNxNfT+w3+58TfMctR+gkUat2PwpHHpNAWAq3Gv4fAf62VK0AbdelSwwbFiqCqC1WcP2KP/DNaL+2JzHg==}
-    dependencies:
-      '@helux/types': 3.5.8
 
   /@humanwhocodes/config-array@0.11.13:
     resolution: {integrity: sha512-JSBDMiDKSzQVngfRjOdFXgFfklaXI4K9nLF49Auh21lmBWRLIK3+xTErTWD4KU54pb6coM6ESE7Awz/FNU3zgQ==}

@@ -1,0 +1,12 @@
+
+/**
+ * 判断是否是表单字段是否是一个简单的字段
+ * 
+ * 简单的字段没有{value:<>}形式
+
+
+ * @param obj
+ */
+export function isSimpleField(value: any): boolean {
+	return !(typeof value === "object" && "value" in value)
+}

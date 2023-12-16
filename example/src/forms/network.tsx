@@ -85,7 +85,7 @@ const formDefine ={
             select:computed<Project[]>(async ([repoUrl])=>{
                 await delay(1000)  
                 return await getProjects(repoUrl) 
-              },["openSource.repo"],{initial:[]})               
+              },["openSource.repo.value"],{initial:[]})               
         },
 
         

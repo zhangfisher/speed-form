@@ -15,9 +15,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "flex-tools": "^1.3.50"
+    "flex-tools": "^1.3.50",
+    "helux-store": "workspace:^"
   },
   "devDependencies": {
+    "@helux/utils": "^3.5.11",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@types/react": "^18.2.42",
@@ -31,9 +33,9 @@
     "vitest": "^0.34.6"
   },
   "peerDependencies": {
-    "@helux/utils": "^3.4.23",
+    "@helux/utils": "^3.5.11",
     "@types/react": "^18.2.40",
-    "helux": "^3.5.4",
+    "helux": "^3.5.8",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }
