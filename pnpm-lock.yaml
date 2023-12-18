@@ -61,8 +61,11 @@ importers:
         specifier: ^4.2.3
         version: 4.2.3
       helux:
-        specifier: ^3.5.11
-        version: 3.5.11(react@18.2.0)
+        specifier: ^3.5.15
+        version: 3.5.15(react@18.2.0)
+      helux-form:
+        specifier: workspace:^
+        version: link:../packages/form
       helux-store:
         specifier: workspace:^
         version: link:../packages/store
@@ -135,8 +138,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.6)
       helux:
-        specifier: ^3.5.8
-        version: 3.5.8(react@18.2.0)
+        specifier: ^3.5.15
+        version: 3.5.15(react@18.2.0)
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -178,8 +181,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.6)
       helux:
-        specifier: ^3.5.11
-        version: 3.5.11(react@18.2.0)
+        specifier: ^3.5.15
+        version: 3.5.15(react@18.2.0)
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -675,35 +678,19 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@helux/core@3.5.11:
-    resolution: {integrity: sha512-ObGthOmFsjPEDa+82mzZTLU5QNf/qjqGECoOfpbYb3uxT+VthYv2xaJen6cBQeDcWsJW6GPLSB4Awz4ubxRFTg==}
+  /@helux/core@3.5.15:
+    resolution: {integrity: sha512-oB5fBOoIG8JzB29Tea3luhIyRC4tEaTjVxCEVLCoM4egmmOjx0bpV/wb6rJHzHTtsy8OQ5XRZtjawNmyYTBZSw==}
     dependencies:
-      '@helux/hooks-impl': 3.5.11
-      '@helux/types': 3.5.11
-      '@helux/utils': 3.5.11
+      '@helux/hooks-impl': 3.5.15
+      '@helux/types': 3.5.15
+      '@helux/utils': 3.5.15
       limu: 3.11.10
 
-  /@helux/core@3.5.8:
-    resolution: {integrity: sha512-Mvzk/otWbQwcBk+buc92ttPv/WWPDy2xoMccj78RgTNNkSppCRCUqIMgo0cQ0qg84bJhhmvrxko5LbxYJ0s69g==}
+  /@helux/hooks-impl@3.5.15:
+    resolution: {integrity: sha512-qKQR0r5LHm/y62neDWpsPsLq8/qqrD8WumXTdTVU51ZoHg/xiAMH6ZsMRKTnGm/af/E7wwYWHJAt6mS0F6tV/A==}
     dependencies:
-      '@helux/hooks-impl': 3.5.8
-      '@helux/types': 3.5.8
-      '@helux/utils': 3.5.11
-      limu: 3.11.10
-    dev: true
-
-  /@helux/hooks-impl@3.5.11:
-    resolution: {integrity: sha512-7+AMFeS+oJ9kKDxNiUQhEJ4NOxEtb71qgdvTqh2wYfuezaR9yiNM2rwHNEYB8UdMIliGxr/eMsQCWX6SpyFIQg==}
-    dependencies:
-      '@helux/types': 3.5.11
-      '@helux/utils': 3.5.11
-
-  /@helux/hooks-impl@3.5.8:
-    resolution: {integrity: sha512-n1I/IohPAVEc9Q0Mz0xnW0x6ojyk0akCmdY/hoQrAh51LJvVr9vh9zOXSprNtyDoOsc6JJmPODK8erKAGG+/pg==}
-    dependencies:
-      '@helux/types': 3.5.11
-      '@helux/utils': 3.5.11
-    dev: true
+      '@helux/types': 3.5.15
+      '@helux/utils': 3.5.15
 
   /@helux/types@3.5.1:
     resolution: {integrity: sha512-2ZUH4YmTQWJIhQwtr2mkszaOchvmr30ikO0bdGoXJp0QiRJjOp+k8bfldBTUl3w0e54bmhUIoZ46KXI/9VMsrw==}
@@ -711,10 +698,10 @@ packages:
 
   /@helux/types@3.5.11:
     resolution: {integrity: sha512-oO7Ah5L6nBOe6Lu6hJR3VVnqBRH2tMAHib/Yw1MisIqgfVWKN0ETuMTyV7EAIW3L4Q3gMFI8SX1LuGToXUQQOg==}
-
-  /@helux/types@3.5.8:
-    resolution: {integrity: sha512-xJ4TAUwkSE3FsdcO2iXtFnB1a8sfr5HL7qelK/T2FhCyE+NQLzIxbmtTYsW5meks3IsHf0+nSjylenBnM5LdRA==}
     dev: true
+
+  /@helux/types@3.5.15:
+    resolution: {integrity: sha512-Xhw8WGFbkuYkxvUHAR0KgLIctEt9x76kAn4aOKQIvPZ7otBv9xzBpVAa0dT02KXvCdgAjUMgyn/Ehdq6OSmdsA==}
 
   /@helux/utils@3.5.1:
     resolution: {integrity: sha512-mcxGzsRWHJEhrApfQ+E491rBGo3r8tEGMvB5v+mW6fUaKx6hCUTOcl8q21kb5RDNccrWBq0XdyU/tEA94u8B0Q==}
@@ -726,6 +713,12 @@ packages:
     resolution: {integrity: sha512-vg66E89Dqr7QK5t8O1/aXGDWNNVmc2bK8kgX4TWbCeIjv78Kn3+1KO9ODCbyhpxdz3CQ81SI+GTjG6SyvlvAKw==}
     dependencies:
       '@helux/types': 3.5.11
+    dev: true
+
+  /@helux/utils@3.5.15:
+    resolution: {integrity: sha512-9bNgf/MB50uuAn3mVHVG7+hxNbJbz3oDG+nEnr4YsyDO0pqc7XF33G5n1nDMDb0BkpvkjoyakvWBi8jKNml3pA==}
+    dependencies:
+      '@helux/types': 3.5.15
 
   /@humanwhocodes/config-array@0.11.13:
     resolution: {integrity: sha512-JSBDMiDKSzQVngfRjOdFXgFfklaXI4K9nLF49Auh21lmBWRLIK3+xTErTWD4KU54pb6coM6ESE7Awz/FNU3zgQ==}
@@ -2398,22 +2391,13 @@ packages:
     hasBin: true
     dev: false
 
-  /helux@3.5.11(react@18.2.0):
-    resolution: {integrity: sha512-l8znePjLRlMUFEBqMI5O827DZSBdv2x+BJfUdX81ANyiy2wvreBymwDgQR0P1cbfRua9DfVjScTYDkUvMiLPNw==}
+  /helux@3.5.15(react@18.2.0):
+    resolution: {integrity: sha512-EG4j3RLKtMmcr2gdHhj1yS3lhgnwRJupPaM8QiB/gdktoY14viI6jXHC7LfN2/rszkuD0jmS+MbRiYZq4rSPeg==}
     peerDependencies:
       react: '>=16.8.0'
     dependencies:
-      '@helux/core': 3.5.11
+      '@helux/core': 3.5.15
       react: 18.2.0
-
-  /helux@3.5.8(react@18.2.0):
-    resolution: {integrity: sha512-ohAEhHIeKKw62hVRQtQh8ku3JodGXKhH8ZF3f38+VdcFU1cKF31BAYtt1oFrxnJ0geC/f0oNlwXtey2zuU5yLQ==}
-    peerDependencies:
-      react: '>=16.8.0'
-    dependencies:
-      '@helux/core': 3.5.8
-      react: 18.2.0
-    dev: true
 
   /html-encoding-sniffer@4.0.0:
     resolution: {integrity: sha512-Y22oTqIU4uuPgEemfz7NDJz6OeKf12Lsu+QC+s3BVpda64lTiMYCyGwg5ki4vFxkMwQdeZDl2adZoqUgdFuTgQ==}

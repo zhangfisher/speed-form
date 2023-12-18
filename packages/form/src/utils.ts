@@ -10,3 +10,14 @@
 export function isSimpleField(value: any): boolean {
 	return !(typeof value === "object" && "value" in value)
 }
+
+
+
+export function isAtomType(value:any){
+	const t = typeof(value)
+	if(t=='boolean'
+		|| t =='number'
+		|| t == 'string'
+		|| t == undefined	
+	) return true
+}

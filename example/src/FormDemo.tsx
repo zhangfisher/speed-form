@@ -61,7 +61,7 @@ const NetworkForm = ()=>{
                 {({title,value,select,sync})=>{     
                     return <FieldRow label={title}>
                         <select value={value} onChange={sync}>
-                            {select.map((item, index) => (
+                            {select.map((item:any, index:number) => (
                                 <option  key={index} value={item.value}>{item.title}</option>
                             ))}
                             {value}
@@ -137,6 +137,8 @@ const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.store.useState()
     JSON.stringify(state.interface.select)
+    JSON.stringify(state.interface.value)
+    JSON.stringify(state.dhcp.value)
 
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>

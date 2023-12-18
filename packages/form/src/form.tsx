@@ -39,7 +39,7 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreDefine, createStore,RequiredComputedState } from "helux-store";
+import { type StoreDefine, createStore,RequiredComputedState, AsyncComputedObject } from "helux-store";
 import type { ReactFC,  FormData} from "./types";
 import { FieldComponent,  createFieldComponent } from "./field"; 
 
@@ -48,6 +48,7 @@ export type FormProps<State extends FormData = FormData> = React.PropsWithChildr
 	onSubmit?: (value: RequiredComputedState<State>) => void;
 	onReset?: (value: RequiredComputedState<State>) => void;
 }>;
+
 
 // 表单组件
 export type FormComponent<State extends Record<string, any>> = ReactFC<FormProps<State>>;

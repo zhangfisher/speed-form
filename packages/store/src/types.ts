@@ -30,11 +30,6 @@ export type RequiredComputedState<T extends Record<string, any>> = {
     [K in keyof T]-?: Exclude<T[K],undefined> extends (...args:any) => any ? PickComputedReturns<Exclude<T[K],undefined>> : Required<T[K]>extends Record<string, any> ? ComputedState<Exclude<T[K],undefined> > : Exclude<T[K],undefined> ;
 };
 
-// type T= {count?:()=>boolean}
-// type CT = ComputedState<T>  // == { count?: (() => boolean) | undefined; }
-// type CTR = RequiredComputedState<T> // { count: boolean;}
- 
-
 
 
 export type ReactFC<Props=unknown> = React.FC<React.PropsWithChildren<
