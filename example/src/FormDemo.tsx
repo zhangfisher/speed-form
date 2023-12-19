@@ -114,9 +114,12 @@ const NetworkForm = ()=>{
             </Network.Field> 
              <FieldGroup title="开源项目"/>
                 <Network.Field<typeof Network.fields.openSource.project> name="openSource.project">                     
-                {({title,visible})=>{ 
+                {({title,visible,select,value})=>{ 
+                    console.log(select,value)
                     return <FieldRow visible={visible} label={title}>  
-                        <Network.Field name="dhcpStart">                      
+                                                            
+
+                        <Network.Field name="dhcpStart">  
                             {({value,sync})=>{ 
                                  return  <span><input value={value} onChange={sync}/></span>
                             } }
