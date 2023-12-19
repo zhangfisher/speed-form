@@ -2,7 +2,6 @@ import Card from "./components/Card"
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
 import { AsyncComputedObject } from "helux-store"; 
-import { field } from '../../packages/form/src/field';
 
 const FieldRow:React.FC<React.PropsWithChildren<{label?:string,visible?:boolean,enable?:boolean}>> = ({enable,visible,label,children})=>{
     return  (
@@ -50,17 +49,19 @@ const FieldGroup:React.FC<{title?:string}> = ({title})=>{
 const NetworkForm = ()=>{
     return <Network.Form className="panel">
         <Card title="网络配置">
-            <Network.Field name="title">                      
-                {({title,value,visible,validate,placeholder,sync})=>{ 
-                return <FieldRow visible={visible} label={title}>
-                    <input placeholder={placeholder} value={value} onChange={sync}/>
-                    <ValidResult result={validate}/>
+            <Network.Field<string> name="title">                      
+                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
+                    console.log(required,visible,validate,enable)
+                    return <FieldRow visible={visible} label={title}>
+                        <input placeholder={placeholder} value={value} onChange={sync}/>
+                        <ValidResult result={validate}/>
                     </FieldRow>
                 } }
             </Network.Field>
-            <Network.Field name="interface">                      
-                {({title,value,select,sync})=>{     
-                    return <FieldRow label={title}>
+            <Network.Field<typeof Network.fields.interface> name="interface">                      
+                {({title,required,visible,validate,enable,value,select,sync})=>{     
+                    console.log(required,visible,validate,enable)
+                    return <FieldRow label={title}>                        
                         <select value={value} onChange={sync}>
                             {select.map((item:any, index:number) => (
                                 <option  key={index} value={item.value}>{item.title}</option>
@@ -96,7 +97,7 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field>
-            <Network.Field name="dhcpStart">                      
+            <Network.Field<string> name="dhcpStart">                      
                 {({visible})=>{ 
                     return <FieldRow visible={visible} label="DHCP地址池">  
                         <Network.Field name="dhcpStart">                      
@@ -135,10 +136,11 @@ const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.store.useState()
     JSON.stringify(state.interface.select)
+    JSON.stringify(Network.fields.interface.select)
+    JSON.stringify(Network.fields.interface.value)
     JSON.stringify(state.interface.value)
     JSON.stringify(state.dhcp.value)
     JSON.stringify(state.openSource.project.select)
-    JSON.stringify(state.openSource.project2.select)
 
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>

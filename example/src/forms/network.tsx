@@ -27,19 +27,19 @@ type NetworkType={
 
 // 声明表单数据
 const formDefine ={ 
-    title:field({
+    title:{
         value:"React-Helux-Form",
         placeholder:"输入网络配置名称",
         title:"网络名称",
         validate:(net:NetworkType)=>net.title.value.length>3
-    }),
-    interface:field({
+    },
+    interface:{
         value:"wifi",
         title:"网卡类型",
         select:()=>{
             return [{value:"wifi",title:"无线网卡"},{value:"ethernet",title:"有线网卡"}]
         }
-    }),
+    },
     ip:field({
         value:"1.1.1.1"
     }),
@@ -63,30 +63,22 @@ const formDefine ={
         title:"无线配置",
         visible:(net:NetworkType)=>net.interface.value==="wifi",
         ssid:field(""),
-        password:field({
+        password:{
             value:"123",
             placeholder:"输入无线密码",
             enable:(net:NetworkType)=>net.interface.value==="wifi",
             validate:(net:NetworkType)=>net.wifi.password.value.length>0
-        })
+        }
     },
-    dns:field([]),
-    subnetMask:field(""),
-    mac:field(""),
+    dns:[],
+    subnetMask:"",
+    mac:"",
     openSource:{
         repo:field({
             value:"",
             title:"项目仓库地址",                        
         }),
-        project:field<string>({
-            value:"",
-            title:"项目名称",
-            select:computed<Project[]>(async ([repoUrl])=>{
-                await delay(1000)  
-                return await getProjects(repoUrl) 
-              },["openSource.repo.value"],{initial:[]})               
-        }), 
-        project2:{
+        project:{
             value:"",
             title:"项目名称",
             select:computed<Project[]>(async ([repoUrl])=>{
@@ -99,6 +91,8 @@ const formDefine ={
 
 
 const Network = createForm<typeof formDefine>(formDefine)
+
+ 
 // @ts-ignore
 globalThis.Network = Network
 export default Network
