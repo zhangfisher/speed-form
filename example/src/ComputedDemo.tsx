@@ -8,7 +8,6 @@ import { Tips } from "./Tips"
 function ComputedDemo() {
   const [state] = store.useState()   
  
- 
   // useEffect(()=>{
   //   const tid = setInterval(()=>{
   //       store.state.books[0].count++

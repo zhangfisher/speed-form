@@ -10,8 +10,8 @@ import type { ComputedReturns,ComputedAsyncReturns,AsyncComputedReturns,AsyncCom
 export type AsyncReturnType<T extends (...args: any) => any> = T extends (...args: any) => Promise<infer R> ? R : (
     T extends (...args: any) => infer R ? R : any)
     
-
-type PickComputedReturns<T> = T extends AsyncComputedReturns<infer X> ? AsyncComputedObject<X> : 
+// 用来提前计算属性函数的返回值
+export type PickComputedReturns<T> = T extends AsyncComputedReturns<infer X> ? AsyncComputedObject<X> : 
     (T extends ComputedAsyncReturns<infer X> ? AsyncComputedObject<X>: 
         (T extends ComputedReturns<infer R> ? R : T) ) 
     

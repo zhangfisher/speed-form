@@ -2,6 +2,7 @@ import Card from "./components/Card"
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
 import { AsyncComputedObject } from "helux-store"; 
+import { field } from '../../packages/form/src/field';
 
 const FieldRow:React.FC<React.PropsWithChildren<{label?:string,visible?:boolean,enable?:boolean}>> = ({enable,visible,label,children})=>{
     return  (
@@ -69,7 +70,6 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field>
-             
             
             <Network.Field name="wifi.ssid">                      
                 {({value,enable,sync})=>{ 
@@ -88,7 +88,7 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 } }
             </Network.Field>   
-            <Network.Field name="dhcp" >                                       
+            <Network.Field<boolean> name="dhcp" >                                       
                 {({title,value,visible,sync})=>{    
                     return <FieldRow visible={visible} label={title}>
                         <input type='checkbox' checked={value}  onChange={sync}/>
@@ -112,19 +112,14 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}            
             </Network.Field> 
-                <FieldGroup title="开源项目"/>
-                <Network.Field name="dhcpStart">                      
-                {({visible})=>{ 
-                    return <FieldRow visible={visible} label="DHCP地址池">  
+             <FieldGroup title="开源项目"/>
+                <Network.Field<typeof Network.fields.openSource.project> name="openSource.project">                     
+                {({title,visible})=>{ 
+                    return <FieldRow visible={visible} label={title}>  
                         <Network.Field name="dhcpStart">                      
                             {({value,sync})=>{ 
                                  return  <span><input value={value} onChange={sync}/></span>
                             } }
-                        </Network.Field>
-                        <Network.Field name="dhcpEnd">                      
-                            {({value,sync})=>{     
-                                return <><span style={{padding:"0 4px 0 4px"}}>-</span><span><input value={value} onChange={sync}/></span></>
-                            }}
                         </Network.Field>
                     </FieldRow>
                 }}            
@@ -139,6 +134,8 @@ const FormDemo:React.FC = ()=>{
     JSON.stringify(state.interface.select)
     JSON.stringify(state.interface.value)
     JSON.stringify(state.dhcp.value)
+    JSON.stringify(state.openSource.project.select)
+    JSON.stringify(state.openSource.project2.select)
 
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>

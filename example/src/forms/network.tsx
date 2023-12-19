@@ -86,6 +86,14 @@ const formDefine ={
                 return await getProjects(repoUrl) 
               },["openSource.repo.value"],{initial:[]})               
         }), 
+        project2:{
+            value:"",
+            title:"项目名称",
+            select:computed<Project[]>(async ([repoUrl])=>{
+                await delay(1000)  
+                return await getProjects(repoUrl) 
+              },["openSource.repo.value"],{initial:[]})               
+        } 
     }     
 }
 
