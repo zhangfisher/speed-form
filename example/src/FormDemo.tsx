@@ -49,7 +49,7 @@ const FieldGroup:React.FC<{title?:string}> = ({title})=>{
 const NetworkForm = ()=>{
     return <Network.Form className="panel">
         <Card title="网络配置">
-            <Network.Field<{value:number}> name="title">                      
+            <Network.Field<string> name="title">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync,update})=>{ 
                     console.log(required,visible,validate,enable,update)
                     return <FieldRow visible={visible} label={title}>
@@ -59,8 +59,8 @@ const NetworkForm = ()=>{
                 } }
             </Network.Field>
             <Network.Field<typeof Network.fields.interface> name="interface">                      
-                {({title,required,visible,validate,enable,value,select,sync})=>{     
-                    console.log(required,visible,validate,enable)
+                {({title,required,visible,validate,enable,value,defaultValue,select,sync})=>{     
+                    console.log(required,visible,validate,enable,defaultValue)
                     return <FieldRow label={title}>                        
                         <select value={value} onChange={sync}>
                             {select.map((item:any, index:number) => (
@@ -73,7 +73,8 @@ const NetworkForm = ()=>{
             </Network.Field>
             
             <Network.Field name="wifi.ssid">                      
-                {({value,enable,sync})=>{ 
+                {({value,required,visible,validate,enable,defaultValue,sync,update})=>{ 
+                    console.log(required,visible,validate,enable,update,defaultValue)
                     return  <FieldRow label="SSID" enable={enable}> 
                          <input value={value} onChange={sync} readOnly={!enable}/>
                     </FieldRow>
@@ -89,8 +90,9 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 } }
             </Network.Field>   
-            <Network.Field<boolean> name="dhcp" >                                       
-                {({title,value,visible,sync})=>{    
+            <Network.Field<typeof Network.fields.dhcp> name="dhcp" >                                       
+                {({title,value,visible,sync,defaultValue})=>{    
+                    console.log(defaultValue)
                     return <FieldRow visible={visible} label={title}>
                         <input type='checkbox' checked={value}  onChange={sync}/>
                         {value}
@@ -115,16 +117,10 @@ const NetworkForm = ()=>{
             </Network.Field> 
              <FieldGroup title="开源项目"/>
                 <Network.Field<typeof Network.fields.openSource.project> name="openSource.project">                     
-                {({title,visible,select,value})=>{ 
+                {({title,visible,select,value,sync})=>{ 
                     console.log(select,value)
                     return <FieldRow visible={visible} label={title}>  
-                                                            
-
-                        <Network.Field name="dhcpStart">  
-                            {({value,sync})=>{ 
-                                 return  <span><input value={value} onChange={sync}/></span>
-                            } }
-                        </Network.Field>
+                        <span><input value={value} onChange={sync}/></span>                            
                     </FieldRow>
                 }}            
             </Network.Field> 

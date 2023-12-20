@@ -1,61 +1,64 @@
 import React, {	ReactElement, ReactNode  } from "react";  
 import { getVal, setVal } from "@helux/utils";
-import {  AsyncComputedObject, AsyncComputedReturns, RequiredComputedState } from "helux-store"; 
+import {   RequiredComputedState } from "helux-store"; 
 import { isSimpleField } from "./utils";
-import {  FieldComputedProp, RequiredComputedAsyncField, RequiredComputedField } from "./types";  
+import {  FieldComputedProp } from "./types";  
  
 
 
 export type FPT = Record<string,any> // 字段属性类型集
 
 export interface FieldSchema<PropTypes extends FPT>{
-  value       : PropTypes['value'];
-  title?      : FieldComputedProp<PropTypes['title']>;                      // 标题
-  default?    : FieldComputedProp<PropTypes['value'] | undefined>;          // 默认值
-  help?       : FieldComputedProp<PropTypes['help']>;                       // 提示信息
-  placeholder?: FieldComputedProp<PropTypes['placeholder']>;                // 占位符
-  required?   : FieldComputedProp<PropTypes['required']>;                   // 是否必填
-  readonly?   : FieldComputedProp<PropTypes['readonly']>;                   // 是否只读
-  visible?    : FieldComputedProp<PropTypes['visible']>;                    // 是否可见
-  enable?     : FieldComputedProp<PropTypes['enable']>;                     // 是否可用
-  validate?   : FieldComputedProp<PropTypes['validate']>;                   // 验证
-  select?     : FieldComputedProp<PropTypes['select']>                      // 枚举值
+  value        : PropTypes['value'];
+  title?       : FieldComputedProp<PropTypes['title']>;                      // 标题
+  defaultValue?: FieldComputedProp<PropTypes['value'] | undefined>;          // 默认值
+  help?        : FieldComputedProp<PropTypes['help']>;                       // 提示信息
+  placeholder? : FieldComputedProp<PropTypes['placeholder']>;                // 占位符
+  required?    : FieldComputedProp<PropTypes['required']>;                   // 是否必填
+  readonly?    : FieldComputedProp<PropTypes['readonly']>;                   // 是否只读
+  visible?     : FieldComputedProp<PropTypes['visible']>;                    // 是否可见
+  enable?      : FieldComputedProp<PropTypes['enable']>;                     // 是否可用
+  validate?    : FieldComputedProp<PropTypes['validate']>;                   // 验证
+  select?      : FieldComputedProp<PropTypes['select']>                      // 枚举值
 
 }
 export type Field<PropTypes extends FPT = {
-  value:any
-  title?      : string;               // 标题
-  default?    : any;                  // 默认值
-  help?       : string;               // 提示信息
-  placeholder?: string;               // 占位符
-  required?   : boolean;              // 是否必填
-  readonly?   : boolean;              // 是否只读
-  visible?    : boolean;              // 是否可见
-  enable?     : boolean               // 是否可用
-  validate?   : boolean;              // 验证
-  select?     : any[]                 // 枚举值
+  value        : any
+  title?       : string;               // 标题
+  defaultValue?: any;                  // 默认值
+  help?        : string;               // 提示信息
+  placeholder? : string;               // 占位符
+  required?    : boolean;              // 是否必填
+  readonly?    : boolean;              // 是否只读
+  visible?     : boolean;              // 是否可见
+  enable?      : boolean               // 是否可用
+  validate?    : boolean;              // 验证
+  select?      : any[]                 // 枚举值
 }>=FieldSchema<PropTypes>
 
 
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
-  // value       : any
-  title?      : string;               // 标题
-  default?    : any;                  // 默认值
-  help?       : string;               // 提示信息
-  placeholder?: string;               // 占位符
-  required?   : boolean;              // 是否必填
-  readonly?   : boolean;              // 是否只读
-  visible?    : boolean;              // 是否可见
-  enable?     : boolean               // 是否可用
-  validate?   : boolean;              // 验证
-  // select?     : any[]                 // 枚举值
+  value        : any
+  title?       : string;               // 标题
+  help?        : string;               // 提示信息
+  placeholder? : string;               // 占位符
+  required?    : boolean;              // 是否必填
+  readonly?    : boolean;              // 是否只读
+  visible?     : boolean;              // 是否可见
+  enable?      : boolean               // 是否可用
+  validate?    : boolean;              // 验证
+  select?      : any[]                 // 枚举值
 } 
- 
+
+ // 完整的字段描述
+export type Value = {value:any}
+
 // 传递给字段组件的渲染参数
-export type FieldRenderProps<PropTypes extends FPT>= Required<Omit<DefaultFieldPropTypes, keyof PropTypes> & PropTypes> & {
-  sync	  	  : ()=>void	   		  		                    // 同步状态
-  update	  	: (value:PropTypes['value'])=>void	   	    // 更新值
+export type FieldRenderProps<PropTypes extends FPT>= Required<Omit<DefaultFieldPropTypes,keyof PropTypes> & PropTypes> & {
+  sync	  	    : ()=>void	   		  		                    // 同步状态
+  update	  	  : (value:PropTypes['value'])=>void	   	    // 更新值
+  defaultValue  : PropTypes['value'] | undefined
 } 
 
 // 用来传递给字段组件进行渲染
@@ -71,28 +74,15 @@ export type FieldProps<PropTypes extends FPT = FPT> = {
 
 export type FieldComponent = React.FC<FieldProps>;
 
-  
-export type ComputedField<T extends FormData> = RequiredComputedState<T>
-    
-export type DefaultFieldProps<Value=any,Select extends any[]=any[]> = FieldProps<DefaultFieldPropTypes>
-export type AsyncFieldProps<PropTypes extends FPT = FPT> = FieldProps<PropTypes>
-
-
-
-
-// 普通字段组件
-export type DefaultFieldComponent<Value=any,Select extends any[]=any[]> = ReactElement<RequiredComputedState<Field<DefaultFieldPropTypes>>>
-// 含异步字段属性的组件，如select是一个异步函数
-export type AsyncFieldComponent<PropTypes extends FPT = FPT> = ReactElement<Field<PropTypes>>
-
-// 完整的字段描述
-export type FValue = {value:any}
 
 export function createFieldComponent(store: any) {  
-    // function component<Value=any,Select extends any[]=any[]>(props: FieldProps<{value:Value,select:Select}>):ReactNode
-    // function component<PropTypes extends FPT>(props:FieldProps<PropTypes>):ReactNode
-    // function component(props: any): any  {
-  function component<T extends FPT = FPT>(props:FieldProps<T>):ReactNode{//T extends FValue ? AsyncFieldComponent<T> : DefaultFieldComponent<T>{
+  
+
+  // function component<Value=any,Select extends any[]=any[]>(props: FieldProps<{value:Value,select:Select}>):ReactNode
+  //   function component<PropTypes extends FPT>(props:FieldProps<PropTypes>):ReactNode
+  //   function component(props: any): any 
+    
+  function component<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode{//T extends FValue ? AsyncFieldComponent<T> : DefaultFieldComponent<T>{
 		const { name } = props; 
 		let filedContext:any 				       
 		const [state,setState] = store.useState()

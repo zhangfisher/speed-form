@@ -1,6 +1,6 @@
 
 import { computed} from "helux-store"
-import { createForm,type Field, field} from "helux-form"
+import { createForm,type Field} from "helux-form"
 import { Project, getProjects } from "../api/getProjects"
 import { delay } from "flex-tools/async/delay"
 
@@ -40,15 +40,15 @@ const formDefine ={
             return [{value:"wifi",title:"无线网卡"},{value:"ethernet",title:"有线网卡"}]
         }
     },
-    ip:field({
+    ip:{
         value:"1.1.1.1"
-    }),
-    gateway:field(""),
-    dhcp:field({
+    },
+    gateway:"",
+    dhcp:{
         title:"自动获取IP地址",
         value:true,      
         visible:computed<boolean>(()=>{return true})
-    }),
+    },
     dhcpStart:{
         title:"起始地址",
         value:"192.168.1.1",
@@ -62,7 +62,7 @@ const formDefine ={
     wifi:{
         title:"无线配置",
         visible:(net:NetworkType)=>net.interface.value==="wifi",
-        ssid:field(""),
+        ssid:"",
         password:{
             value:"123",
             placeholder:"输入无线密码",
@@ -74,10 +74,10 @@ const formDefine ={
     subnetMask:"",
     mac:"",
     openSource:{
-        repo:field({
+        repo:{
             value:"",
             title:"项目仓库地址",                        
-        }),
+        },
         project:{
             value:"",
             title:"项目名称",
