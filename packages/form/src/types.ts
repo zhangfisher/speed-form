@@ -29,20 +29,20 @@ export type FormData = Record<string, any>;
 
 
 
-export type PickFieldPropValue<T> = T extends (...args:any)=> Promise<infer R>  ? R : 
-    (T extends AsyncComputedReturns<infer R1> ? R1 :
-        (
-            T extends (...args:any)=> infer R2 ? R2 :
-            (
-            T extends AsyncComputedObject<infer R3> ? R3 : T
-            )
-        )
-)
+// export type PickFieldPropValue<T> = T extends (...args:any)=> Promise<infer R>  ? R : 
+//     (T extends AsyncComputedReturns<infer R1> ? R1 :
+//         (
+//             T extends (...args:any)=> infer R2 ? R2 :
+//             (
+//             T extends AsyncComputedObject<infer R3> ? R3 : T
+//             )
+//         )
+// )
 
-// 使字段中的所有字段都是必填的
-export type RequiredComputedField<T extends Record<string, any>> = {
-    [K in keyof T]-?: Exclude<T[K],undefined> extends FieldComputedProp<any> ? PickFieldPropValue<Exclude<T[K],undefined>> : Required<T[K]> extends Record<string, any> ? RequiredComputedState<Exclude<T[K],undefined> > : Exclude<T[K],undefined> ;
-};
+// // 使字段中的所有字段都是必填的
+// export type RequiredComputedField<T extends Record<string, any>> = {
+//     [K in keyof T]-?: Exclude<T[K],undefined> extends FieldComputedProp<any> ? PickFieldPropValue<Exclude<T[K],undefined>> : Required<T[K]> extends Record<string, any> ? RequiredComputedState<Exclude<T[K],undefined> > : Exclude<T[K],undefined> ;
+// };
 
 
 

@@ -21,6 +21,8 @@ export interface Field<Value=any,Select=any[]>{
   validate?    : FieldComputedProp<PropTypes['validate']>;                   // 验证
   select?      : FieldComputedProp<PropTypes['select']>                      // 枚举值
 }
+
+
 // export interface Field<Value=any,Select=any[]>{
 //   value        : PropTypes['value'];
 //   title?       : FieldComputedProp<PropTypes['title']>;                      // 标题
