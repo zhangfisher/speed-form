@@ -49,9 +49,9 @@ const FieldGroup:React.FC<{title?:string}> = ({title})=>{
 const NetworkForm = ()=>{
     return <Network.Form className="panel">
         <Card title="网络配置">
-            <Network.Field<string> name="title">                      
-                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
-                    console.log(required,visible,validate,enable)
+            <Network.Field<{value:number}> name="title">                      
+                {({title,value,required,visible,validate,enable,placeholder,sync,update})=>{ 
+                    console.log(required,visible,validate,enable,update)
                     return <FieldRow visible={visible} label={title}>
                         <input placeholder={placeholder} value={value} onChange={sync}/>
                         <ValidResult result={validate}/>

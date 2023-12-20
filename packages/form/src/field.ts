@@ -38,8 +38,8 @@ export type Field<PropTypes extends FPT = {
 
 
 // 默认同步字段属性
-export type DefaultFieldPropTypes<Value=any,Select extends any[]=any[]> ={
-  value:Value
+export interface DefaultFieldPropTypes{
+  // value       : any
   title?      : string;               // 标题
   default?    : any;                  // 默认值
   help?       : string;               // 提示信息
@@ -49,14 +49,14 @@ export type DefaultFieldPropTypes<Value=any,Select extends any[]=any[]> ={
   visible?    : boolean;              // 是否可见
   enable?     : boolean               // 是否可用
   validate?   : boolean;              // 验证
-  select?     : Select[]                 // 枚举值
+  // select?     : any[]                 // 枚举值
 } 
  
 // 传递给字段组件的渲染参数
-export type FieldRenderProps<PropTypes extends FPT>= RequiredComputedField<Field<PropTypes>> & {
-  sync	  	  : ()=>void	   		  		        // 同步状态
+export type FieldRenderProps<PropTypes extends FPT>= Required<Omit<DefaultFieldPropTypes, keyof PropTypes> & PropTypes> & {
+  sync	  	  : ()=>void	   		  		                    // 同步状态
   update	  	: (value:PropTypes['value'])=>void	   	    // 更新值
-}
+} 
 
 // 用来传递给字段组件进行渲染
 export type FieldRender<PropTypes extends FPT>= (props: FieldRenderProps<PropTypes>) => ReactNode
@@ -74,29 +74,31 @@ export type FieldComponent = React.FC<FieldProps>;
   
 export type ComputedField<T extends FormData> = RequiredComputedState<T>
     
-export type DefaultFieldProps<Value=any,Select extends any[]=any[]> = FieldProps<DefaultFieldPropTypes<Value,Select>>
+export type DefaultFieldProps<Value=any,Select extends any[]=any[]> = FieldProps<DefaultFieldPropTypes>
 export type AsyncFieldProps<PropTypes extends FPT = FPT> = FieldProps<PropTypes>
 
 
 
 
 // 普通字段组件
-export type DefaultFieldComponent<Value=any,Select extends any[]=any[]> = ReactElement<RequiredComputedState<Field<DefaultFieldPropTypes<{value:Value,select:Select}>>>>
+export type DefaultFieldComponent<Value=any,Select extends any[]=any[]> = ReactElement<RequiredComputedState<Field<DefaultFieldPropTypes>>>
 // 含异步字段属性的组件，如select是一个异步函数
 export type AsyncFieldComponent<PropTypes extends FPT = FPT> = ReactElement<Field<PropTypes>>
 
-
+// 完整的字段描述
+export type FValue = {value:any}
 
 export function createFieldComponent(store: any) {  
-    function component<Value=any,Select extends any[]=any[]>(props: DefaultFieldProps<Value,Select>):DefaultFieldComponent<Value,Select> 
-    function component<PropTypes extends FPT>(props:FieldProps<PropTypes>):AsyncFieldComponent<PropTypes> 
-    function component(props: any): any  {
+    // function component<Value=any,Select extends any[]=any[]>(props: FieldProps<{value:Value,select:Select}>):ReactNode
+    // function component<PropTypes extends FPT>(props:FieldProps<PropTypes>):ReactNode
+    // function component(props: any): any  {
+  function component<T extends FPT = FPT>(props:FieldProps<T>):ReactNode{//T extends FValue ? AsyncFieldComponent<T> : DefaultFieldComponent<T>{
 		const { name } = props; 
 		let filedContext:any 				       
 		const [state,setState] = store.useState()
 		const value = getVal(state, name.split("."))
-        const isSimple = isSimpleField(value)
-        const valuePath = isSimple ?  name.split(".") :[...name.split("."),'value']
+    const isSimple = isSimpleField(value)
+    const valuePath = isSimple ?  name.split(".") :[...name.split("."),'value']
     
 		if (isSimple) {
 			filedContext  ={	
