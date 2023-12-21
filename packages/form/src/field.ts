@@ -1,6 +1,5 @@
-import React, {	ReactElement, ReactNode  } from "react";  
+import React, {	 ReactNode  } from "react";  
 import { getVal, setVal } from "@helux/utils";
-import {   RequiredComputedState } from "helux-store"; 
 import { isSimpleField } from "./utils";
 import {  FieldComputedProp } from "./types";  
  
@@ -8,18 +7,57 @@ import {  FieldComputedProp } from "./types";
 
 export type FPT = Record<string,any> // 字段属性类型集
 
-export interface Field<Value=any,Select=any[]>{
-  value        : PropTypes['value'];
-  title?       : FieldComputedProp<PropTypes['title']>;                      // 标题
-  defaultValue?: FieldComputedProp<PropTypes['value'] | undefined>;          // 默认值
-  help?        : FieldComputedProp<PropTypes['help']>;                       // 提示信息
-  placeholder? : FieldComputedProp<PropTypes['placeholder']>;                // 占位符
-  required?    : FieldComputedProp<PropTypes['required']>;                   // 是否必填
-  readonly?    : FieldComputedProp<PropTypes['readonly']>;                   // 是否只读
-  visible?     : FieldComputedProp<PropTypes['visible']>;                    // 是否可见
-  enable?      : FieldComputedProp<PropTypes['enable']>;                     // 是否可用
-  validate?    : FieldComputedProp<PropTypes['validate']>;                   // 验证
-  select?      : FieldComputedProp<PropTypes['select']>                      // 枚举值
+// 默认同步字段属性
+export interface DefaultFieldPropTypes{
+  value        : any
+  title?       : string;               // 标题
+  help?        : string;               // 提示信息
+  placeholder? : string;               // 占位符
+  required?    : boolean;              // 是否必填
+  readonly?    : boolean;              // 是否只读
+  visible?     : boolean;              // 是否可见
+  enable?      : boolean               // 是否可用
+  validate?    : boolean;              // 验证
+  select?      : any[]                 // 枚举值
+} 
+
+// export interface Field<PropTypes extends FPT>{
+//   value        : PropTypes['value'];
+//   title?       : FieldComputedProp<PropTypes['title']>;                      // 标题
+//   defaultValue?: FieldComputedProp<PropTypes['value'] | undefined>;          // 默认值
+//   help?        : FieldComputedProp<PropTypes['help']>;                       // 提示信息
+//   placeholder? : FieldComputedProp<PropTypes['placeholder']>;                // 占位符
+//   required?    : FieldComputedProp<PropTypes['required']>;                   // 是否必填
+//   readonly?    : FieldComputedProp<PropTypes['readonly']>;                   // 是否只读
+//   visible?     : FieldComputedProp<PropTypes['visible']>;                    // 是否可见
+//   enable?      : FieldComputedProp<PropTypes['enable']>;                     // 是否可用
+//   validate?    : FieldComputedProp<PropTypes['validate']>;                   // 验证
+//   select?      : FieldComputedProp<PropTypes['select']>                      // 枚举值
+// }
+
+
+export interface Field{
+  value        : any;
+  title?       : FieldComputedProp<string>;                       // 标题
+  defaultValue?: FieldComputedProp<any>;                          // 默认值
+  help?        : FieldComputedProp<string>;                       // 提示信息
+  placeholder? : FieldComputedProp<string>;                       // 占位符
+  required?    : FieldComputedProp<boolean>;                      // 是否必填
+  readonly?    : FieldComputedProp<boolean>;                      // 是否只读
+  visible?     : FieldComputedProp<boolean>;                      // 是否可见
+  enable?      : FieldComputedProp<boolean>;                      // 是否可用
+  validate?    : FieldComputedProp<boolean>;                      // 验证
+  select?      : FieldComputedProp<any[]>                         // 枚举值
+}
+
+
+export type Group  = Omit<Field,'value' | 'defaultValue'> & Record<Exclude<string,keyof Field>,Field>
+
+/**
+ * 表单定义
+ */
+export type FormdDefine= {
+  [k:string ] : Field  | Group
 }
 
 
@@ -52,20 +90,6 @@ export interface Field<Value=any,Select=any[]>{
 //   select?      : any[]                 // 枚举值
 // }>=FieldSchema<PropTypes>
 
-
-// 默认同步字段属性
-export interface DefaultFieldPropTypes{
-  value        : any
-  title?       : string;               // 标题
-  help?        : string;               // 提示信息
-  placeholder? : string;               // 占位符
-  required?    : boolean;              // 是否必填
-  readonly?    : boolean;              // 是否只读
-  visible?     : boolean;              // 是否可见
-  enable?      : boolean               // 是否可用
-  validate?    : boolean;              // 验证
-  select?      : any[]                 // 枚举值
-} 
 
  // 完整的字段描述
 export type Value = {value:any}

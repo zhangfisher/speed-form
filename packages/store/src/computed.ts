@@ -90,7 +90,8 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
     return fn  as AsyncComputedReturns<R> 
   }else{  // 同步计算
     return (ctxDraft: any,draft: any):R => {
-      return getter(context === "root"  ? draft : ctxDraft) 
+      const ctx = context === "root"  ? draft : ctxDraft
+      return getter.call(draft,ctx) 
     };
   }	
 } 
@@ -123,7 +124,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
       const ctxDraft = getComputedContextDraft(draft, { context, fullKeyPath, keyPath })
-        setVal(draft, fullKeyPath, getter(ctxDraft, draft));
+        setVal(draft, fullKeyPath, getter.call(draft,ctxDraft, draft));
     },
     desc: fullKeyPath.join('.'),
     // 关闭死循环检测，信任开发者
@@ -165,7 +166,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
         setState((draft)=>{
           setVal(draft,[...fullKeyPath,'loading'],true)
         })
-        const result = await getter(input,ctxDraft,draft) 
+        const result = await getter.call(draft,input,ctxDraft,draft) 
         // @ts-ignore
         setState((draft)=>{
           setVal(draft,[...fullKeyPath,'value'],result)
