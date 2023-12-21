@@ -51,16 +51,6 @@ export interface Field{
 }
 
 
-export type Group  = Omit<Field,'value' | 'defaultValue'> & Record<Exclude<string,keyof Field>,Field>
-
-/**
- * 表单定义
- */
-export type FormdDefine= {
-  [k:string ] : Field  | Group
-}
-
-
 // export interface Field<Value=any,Select=any[]>{
 //   value        : PropTypes['value'];
 //   title?       : FieldComputedProp<PropTypes['title']>;                      // 标题
