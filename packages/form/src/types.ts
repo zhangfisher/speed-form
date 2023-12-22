@@ -13,6 +13,8 @@ export type ReactFC<Props=unknown> = React.FC<React.PropsWithChildren<
 
 export type FormData = Record<string, any>;
 
+export type Dict = Record<string,any> // 字段属性类型集
+
  
 
 // export type PickFieldPropValue<T> = T extends (...args:any)=> Promise<infer R1> ? R1 :

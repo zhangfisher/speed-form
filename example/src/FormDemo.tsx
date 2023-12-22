@@ -1,7 +1,7 @@
 import Card from "./components/Card"  
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
-import { AsyncComputedObject } from "helux-store"; 
+import { AsyncComputedObject } from "helux-store";  
 
 const FieldRow:React.FC<React.PropsWithChildren<{label?:string,visible?:boolean,enable?:boolean}>> = ({enable,visible,label,children})=>{
     return  (
@@ -59,8 +59,8 @@ const NetworkForm = ()=>{
                 } }
             </Network.Field>
             <Network.Field<typeof Network.fields.interface> name="interface">                      
-                {({title,required,visible,validate,enable,value,defaultValue,select,sync})=>{     
-                    console.log(required,visible,validate,enable,defaultValue)
+                {({title,required,visible,validate,enable,value,defaultValue,select,sync,update})=>{     
+                    console.log(required,visible,validate,enable,defaultValue,update)
                     return <FieldRow label={title}>                        
                         <select value={value} onChange={sync}>
                             {select.map((item:any, index:number) => (
@@ -68,10 +68,17 @@ const NetworkForm = ()=>{
                             ))}
                             {value}
                         </select>({value})                         
+                        {/* <button onClick={()=>update((inte)=>{
+
+                        })}></button> */}
                     </FieldRow>
                 }}
             </Network.Field>
-            
+            <Network.Group<typeof Network.fields.wifi> name="wifi">
+                {({required,visible,validate,enable,update})=>{ 
+                    return <></>
+                }}
+            </Network.Group>
             <Network.Field name="wifi.ssid">                      
                 {({value,required,visible,validate,enable,defaultValue,sync,update})=>{ 
                     console.log(required,visible,validate,enable,update,defaultValue)

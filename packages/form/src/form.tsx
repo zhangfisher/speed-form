@@ -40,8 +40,9 @@
 
 import React, {	useCallback } from "react";
 import { type StoreDefine, createStore,RequiredComputedState, AsyncComputedObject } from "helux-store";
-import type { ReactFC,  FormData} from "./types";
+import type { ReactFC,  FormData, Dict} from "./types";
 import { FieldComponent,  createFieldComponent } from "./field"; 
+import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 
 
 export type FormProps<State extends FormData = FormData> = React.PropsWithChildren<{
@@ -57,12 +58,16 @@ export type FormComponent<State extends Record<string, any>> = ReactFC<FormProps
 export interface FormObject<State extends Record<string, any>> {
 	Form: FormComponent<State>;
 	Field: FieldComponent;
+	Group: FieldGroupComponent
   	fields:State
+	submit:()=>void
+	reset:()=>{}
+	load:(data:Dict)=>void
   	// 表单状态
   	status:{
     	valid:boolean			// 表单数据是否有效
     	dirty:boolean			// 数据已经更新过
-  	}
+  	}	  
 }
 
 export function createForm<State extends FormData>(state: State) {
@@ -70,6 +75,7 @@ export function createForm<State extends FormData>(state: State) {
 	return {
 		Form: createFormComponent<State>(store),
 		Field: createFieldComponent(store),	
+		Group: createFieldGroupComponent(store),	
     	fields:store.state,
 		store:store    
 	};

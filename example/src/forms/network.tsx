@@ -43,7 +43,7 @@ const formSchema ={
         value:"1.1.1.1"
     },
     gateway:"",
-    dhcp:{
+    dhcp:{        
         title:"自动获取IP地址",
         value:true,      
         visible:computed<boolean>(()=>{return true})
@@ -61,7 +61,11 @@ const formSchema ={
     wifi:{
         title:"无线配置",
         visible:(net:any)=>(net as NetworkType).interface.value==="wifi",
-        ssid:"",
+        ssid:{
+            value:"fast",
+            placeholder:"无线网络",
+            validate:(net:any)=>(net as NetworkType).wifi.password.value.length>0
+        },
         password:{
             value:"123",
             placeholder:"输入无线密码",
