@@ -27,8 +27,8 @@ import { getVal } from "@helux/utils";
 
 export type DefaultFieldGroupPropTypes = Omit<DefaultFieldPropTypes,'value' | 'oldValue' | 'defaultValue' | 'validate'>
 
-export type FieldGroupRenderProps<PropTypes extends Dict>= Required<Omit<DefaultFieldGroupPropTypes,keyof PropTypes> & PropTypes> & {
-    update	  	  : (valueOrUpdater:PropTypes['value'] | ((updater:PropTypes)=>void))=>void	   	    // 更新值 
+export type FieldGroupRenderProps<PropTypes extends Dict>= Required<DefaultFieldGroupPropTypes & PropTypes> & {
+    update: (fn: (group: Required<DefaultFieldGroupPropTypes & PropTypes> )=>void)=>void	   	   
   } 
 
 export type FieldGroupRender<PropTypes extends Dict>= (props: FieldGroupRenderProps<PropTypes>) => ReactNode
@@ -45,8 +45,8 @@ export function createFieldGroupComponent(store: any) {
         const [state,setState] = store.useState()
         const valuePath =name.split(".")  
         const groupContext = getVal(state, valuePath)        
-        // 允许更新当前组信息
-        const updater = (updater:(group:T)=>void)=>{
+        // 更新当前组信息，如update(group=>group.enable=true)
+        const updater = (updater:(group:any)=>void)=>{
             setState((draft:any)=>{
                 updater.call(draft,getVal(draft,valuePath))
             })

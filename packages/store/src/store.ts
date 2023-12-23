@@ -63,10 +63,14 @@ export interface StoreDefine<State>{
     actions?:Actions<State>
 }
 
+// 指定Store中计算函数的上下文
+export type StoreComputedContext  = 'root' | 'parent'  | 'current'
 export interface StoreOptions{    
     // 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象
     // 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
-    computedContext?: 'root' | 'parent'  | 'current'
+    computedContext?: StoreComputedContext
+    // 当创建计算属性前调用
+    onCreateComputed?:(options:{keyPath:string[],getter:Function,context?:StoreComputedContext})=>{context?:StoreComputedContext,getter?:Function}
 }
 export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
     const opts = Object.assign({},options)

@@ -15,20 +15,7 @@ function getRandomColor(){
     return `#${c.padStart(6,'0')}`
 }
 const ColorBlock:ReactFC<React.PropsWithChildren<{value?:any,name?:string,inline?:boolean}>> = ({ name,value,inline,...props })=>{
-        // const [backgroundColor, setBackgroundColor] = useState('');
-        // const [textColor, setTextColor] = useState('block');
 
-        // useEffect(() => {
-        //   // 每次渲染时生成一个随机的背景颜色
-        //   const randomColor = getRandomColor()
-        //   setBackgroundColor(randomColor);
-        //   if(color.rgb(randomColor).isDark()){
-        //     setTextColor('white')
-        //     }else{
-        //         setTextColor("block")
-        //     }
-
-        // },[value]);
         
         const backgroundColor = getRandomColor()
         let textColor = 'block'

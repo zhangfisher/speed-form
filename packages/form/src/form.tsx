@@ -62,11 +62,11 @@ export interface FormObject<State extends Record<string, any>> {
   	fields:State
 	submit:()=>void
 	reset:()=>{}
-	load:(data:Dict)=>void
+	load:(data:Dict)=>void							// 加载表单数据
   	// 表单状态
   	status:{
-    	valid:boolean			// 表单数据是否有效
-    	dirty:boolean			// 数据已经更新过
+    	valid:boolean								// 表单数据是否有效
+    	dirty:boolean								// 数据已经更新过
   	}	  
 }
 

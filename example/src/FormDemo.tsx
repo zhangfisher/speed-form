@@ -2,6 +2,8 @@ import Card from "./components/Card"
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
 import { AsyncComputedObject } from "helux-store";  
+import Box from "./components/Box";
+import validator from "validator"
 
 const FieldRow:React.FC<React.PropsWithChildren<{label?:string,visible?:boolean,enable?:boolean}>> = ({enable,visible,label,children})=>{
     return  (
@@ -38,13 +40,6 @@ const ValidResult:React.FC<React.PropsWithChildren<{result:boolean | AsyncComput
     }</span>
 }
 
-const FieldGroup:React.FC<{title?:string}> = ({title})=>{
-    return (<div style={{
-        height: "36px",
-        borderBottom:"1px solid #eee",
-        marginBottom:"16px"
-    }}><h4 style={{position:'absolute',background:'white',padding:"4px",color:"#005bc3"}}>{title}</h4></div>)
-}
 
 const NetworkForm = ()=>{
     return <Network.Form className="panel">
@@ -75,28 +70,28 @@ const NetworkForm = ()=>{
                 }}
             </Network.Field>
             <Network.Group<typeof Network.fields.wifi> name="wifi">
-                {({required,visible,validate,enable,update})=>{ 
-                    return <></>
+                {({title,visible,enable,update})=>{ 
+                    return <Box title={title} visible={visible} enable={enable}>                    
+                        <Network.Field name="wifi.ssid">                      
+                            {({value,required,visible,validate,enable,defaultValue,sync,update})=>{ 
+                                console.log(required,visible,validate,enable,update,defaultValue)
+                                return  <FieldRow label="SSID" enable={enable}> 
+                                        <input value={value} onChange={sync} />
+                                </FieldRow>
+                            } }
+                        </Network.Field>      
+                        <Network.Field name="wifi.password">                      
+                            {({value,enable,placeholder,sync})=>{ 
+                                return  <FieldRow label="密码" enable={enable}> 
+                                        <input value={value} placeholder={placeholder} onChange={sync} readOnly={!enable}/>
+                                        {value}
+                                </FieldRow>
+                            } }
+                        </Network.Field>
+                        <button onClick={()=>update(group=>group.enable=!group.enable)}></button>
+                    </Box>
                 }}
-            </Network.Group>
-            <Network.Field name="wifi.ssid">                      
-                {({value,required,visible,validate,enable,defaultValue,sync,update})=>{ 
-                    console.log(required,visible,validate,enable,update,defaultValue)
-                    return  <FieldRow label="SSID" enable={enable}> 
-                         <input value={value} onChange={sync} readOnly={!enable}/>
-                    </FieldRow>
-
-                } }
-            </Network.Field>          
-            
-            <Network.Field name="wifi.password">                      
-                {({value,enable,placeholder,sync})=>{ 
-                    return  <FieldRow label="密码" enable={enable}> 
-                         <input value={value} placeholder={placeholder} onChange={sync} readOnly={!enable}/>
-                         {value}
-                    </FieldRow>
-                } }
-            </Network.Field>   
+            </Network.Group>              
             <Network.Field<typeof Network.fields.dhcp> name="dhcp" >                                       
                 {({title,value,visible,sync,defaultValue})=>{    
                     console.log(defaultValue)
@@ -122,18 +117,11 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}            
             </Network.Field> 
-             <FieldGroup title="开源项目"/>
-                <Network.Field<typeof Network.fields.openSource.project> name="openSource.project">                     
-                {({title,visible,select,value,sync})=>{ 
-                    console.log(select,value)
-                    return <FieldRow visible={visible} label={title}>  
-                        <span><input value={value} onChange={sync}/></span>                            
-                    </FieldRow>
-                }}            
-            </Network.Field> 
         </Card>
     </Network.Form>        
 }
+
+
 
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 

@@ -3,26 +3,7 @@ import { computed} from "helux-store"
 import { createForm } from "helux-form"
 import { Project, getProjects } from "../api/getProjects"
 import { delay } from "flex-tools/async/delay"
-
-
-
-// type NetworkType={
-//     title:Field<string>
-//     interface:Field<'wifi' | 'ethernet'>    
-//     ip:Field<IP>
-//     gateway:string
-//     dhcp:Field<boolean>
-//     dhcpStart:Field<string>
-//     dhcpEnd:Field<string>
-//     dns:string[]
-//     subnetMask:string
-//     mac:string
-//     wifi:{
-//         ssid:Field<string>
-//         password:Field<string>
-//     }
-// }
-
+import validator from "validator"
 
 // 声明表单数据
 const formSchema ={ 
@@ -51,7 +32,8 @@ const formSchema ={
     dhcpStart:{
         title:"起始地址",
         value:"192.168.1.1",
-        visible:(net:any)=>(net as NetworkType).dhcp.value as boolean
+        visible:(net:any)=>(net as NetworkType).dhcp.value as boolean,
+        validate:(value:any)=>validator.isIP(value)
     },
     dhcpEnd:{
         title:"结束地址",

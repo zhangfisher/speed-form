@@ -119,12 +119,20 @@ function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{contex
  * @param params 
  */
 function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,options:StoreOptions){
-  const { fullKeyPath, value:getter,keyPath } = params;
-  const { computedContext:context } = options
+  let { fullKeyPath, value:getter,keyPath } = params;
+  let { computedContext:context,onCreateComputed } = options
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
+      // 运行hook，允许重新指定computedContext，或者包装原始计算函数
+      if(typeof(onCreateComputed)=='function'){
+        const result = onCreateComputed.call(draft,{keyPath,context,getter})
+        if(result.context) context = result.context
+        if(typeof(result.getter)=='function') getter = result.getter        
+      }
+      // 根据配置参数获取计算属性的上下文
       const ctxDraft = getComputedContextDraft(draft, { context, fullKeyPath, keyPath })
-        setVal(draft, fullKeyPath, getter.call(draft,ctxDraft, draft));
+      // 第一次执行执行函数进行替换原始对象的值
+      setVal(draft, fullKeyPath, getter.call(draft,ctxDraft, draft));
     },
     desc: fullKeyPath.join('.'),
     // 关闭死循环检测，信任开发者
@@ -197,8 +205,8 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
  */
 export function createComputed<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,api: HeluxApi,options:StoreOptions) {
 	// 1. 为state中的计算属性自动创建mutate
-	const replacedMap: any = {};
-	stateCtx.setOnReadHook((params) => {
+	  const replacedMap: any = {};
+	  stateCtx.setOnReadHook((params) => {
 		const { fullKeyPath, value } = params;
 		const key = fullKeyPath.join(".");
 		if (typeof value === "function" && !replacedMap[key]) {
