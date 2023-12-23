@@ -2,8 +2,7 @@ import Card from "./components/Card"
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
 import { AsyncComputedObject } from "helux-store";  
-import Box from "./components/Box";
-import validator from "validator"
+import Box from "./components/Box"; 
 
 const FieldRow:React.FC<React.PropsWithChildren<{label?:string,visible?:boolean,enable?:boolean}>> = ({enable,visible,label,children})=>{
     return  (

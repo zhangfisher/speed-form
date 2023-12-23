@@ -71,7 +71,9 @@ export interface FormObject<State extends Record<string, any>> {
 }
 
 export function createForm<State extends FormData>(state: State) {
-	const store = createStore<StoreDefine<State>>({ state },{computedContext:'root'});  
+	const store = createStore<StoreDefine<State>>({ state },{
+		computedContext:'root' 
+	});  
 	return {
 		Form: createFormComponent<State>(store),
 		Field: createFieldComponent(store),	

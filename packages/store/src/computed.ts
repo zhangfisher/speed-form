@@ -45,6 +45,22 @@ export interface AsyncComputedParams<R>  {
   initial:R
 }
 
+/** 
+ * 根据输入的context参数获取计算属性的上下文
+ * @param draft 
+ * @param param1 
+ * @returns 
+ */
+function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{context?:string,keyPath:string[],fullKeyPath:string[]}){
+  try{
+    return context=='root' ? draft : 
+      ( context==undefined || context=='current' ? getVal(draft, keyPath) :     
+        (context=='parent' ?  getVal(draft,fullKeyPath.slice(0,keyPath.length-2)) :  draft))
+  }catch(e){
+        return draft
+  }
+}
+  
 /**
  * 用来封装状态的计算函数，使用计算函数的传入的是当前对象
  *
@@ -97,22 +113,6 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
 } 
 
 
-/** 
- * 根据输入的context参数获取计算属性的上下文
- * @param draft 
- * @param param1 
- * @returns 
- */
-function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{context?:string,keyPath:string[],fullKeyPath:string[]}){
-  try{
-    return context=='root' ? draft : 
-      ( context==undefined || context=='current' ? getVal(draft, keyPath) :     
-        (context=='parent' ?  getVal(draft,fullKeyPath.slice(0,keyPath.length-2)) :  draft))
-  }catch(e){
-        return draft
-  }
-}
- 
 /**
  * 为同步计算属性生成mutate
  * @param stateCtx 
@@ -126,8 +126,10 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
       // 运行hook，允许重新指定computedContext，或者包装原始计算函数
       if(typeof(onCreateComputed)=='function'){
         const result = onCreateComputed.call(draft,{keyPath,context,getter})
-        if(result.context) context = result.context
-        if(typeof(result.getter)=='function') getter = result.getter        
+        if(result){
+          if(result.context) context = result.context
+          if(typeof(result.getter)=='function') getter = result.getter        
+        }
       }
       // 根据配置参数获取计算属性的上下文
       const ctxDraft = getComputedContextDraft(draft, { context, fullKeyPath, keyPath })
@@ -146,7 +148,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
  * @param stateCtx 
  * @param params 
  */
-function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,options?:StoreOptions){
+function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,options:StoreOptions){
   const { fullKeyPath, keyPath,value } = params;
   const {getter,depends,context,initial} = value()
   const desc = depends.join("_")+"_computed"
@@ -154,7 +156,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     // 声明依赖
     deps:(state: any)=>(depends || []).map((deps:any)=>getVal(state,deps.split("."))),
     fn:(draft)=>{
-
+      // 将异步计算属性更一个计算属性对象
       setVal(draft,fullKeyPath,{
         value:initial,
         __$COMPUTED__:true,
@@ -207,19 +209,19 @@ export function createComputed<Store extends StoreDefine<any>>(stateCtx: IShared
 	// 1. 为state中的计算属性自动创建mutate
 	  const replacedMap: any = {};
 	  stateCtx.setOnReadHook((params) => {
-		const { fullKeyPath, value } = params;
+		const { fullKeyPath,keyPath, value } = params;
 		const key = fullKeyPath.join(".");
 		if (typeof value === "function" && !replacedMap[key]) {
 			replacedMap[key] = true;
       // 将声明在state里面的计算函数转换为helux的mutate
       if(value.__ASYNC_COMPUTED__){   // 异步属性
-        createAsyncComputedMutate<Store>(stateCtx,params)     
-      }else if(isAsyncFunction(value)){
-        params.value =()=>({  // 为了支持异步计算属性，需要将函数转换为对象 {
+        createAsyncComputedMutate<Store>(stateCtx,params,options)     
+      }else if(isAsyncFunction(value)){// 为了支持异步计算属性，需要将函数转换为对象 {
+        params.value =()=>({  
           getter:value,
-          depends:[],
-          initial:undefined,
-          context:options?.computedContext
+          depends:[],         // 未指定依赖
+          initial:undefined,  // 也没有初始化值
+          context:options.computedContext
         })
         createAsyncComputedMutate<Store>(stateCtx,params,options)     
       }else{
