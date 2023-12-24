@@ -62,9 +62,15 @@ export interface StoreDefine<State>{
     state:State 
     actions?:Actions<State>
 }
+export enum ComputedContextTarget{
+    Root = 0,
+    Current = 1,
+    Parent = 2
+}
 
-// 指定Store中计算函数的上下文
-export type StoreComputedContext  = 'root' | 'parent'  | 'current'
+// 指定Store中计算函数的上下文,如果是字符串代表是当前对象的指定键，如果是string[]，则代表是当前Store对象的完整路径
+export type StoreComputedContext  = ComputedContextTarget | string | string[] | ((state:any)=>string | string[] | ComputedContextTarget)
+
 export interface StoreOptions{    
     // 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象
     // 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root

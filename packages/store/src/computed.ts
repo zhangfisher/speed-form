@@ -9,7 +9,7 @@
  */
 
 import { HeluxApi, IOperateParams, ISharedCtx } from "helux";
-import type { StoreDefine, StoreOptions } from "./store";
+import { type StoreDefine, type StoreOptions,type StoreComputedContext, ComputedContextTarget } from "./store";
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 
@@ -40,8 +40,7 @@ export type AsyncComputedReturns<R> = (...args:any)=> AsyncComputedParams<R>
 export interface AsyncComputedParams<R>  {
   getter:()=>Promise<R>
   depends:ComputedDepends
-  // 默认上下文，0代表当前对象,1代表父对象，2代表祖先,....依次递归,
-  context:'root' | 'parent'  | 'current' |  number
+  context:StoreComputedContext 
   initial:R
 }
 
@@ -51,11 +50,24 @@ export interface AsyncComputedParams<R>  {
  * @param param1 
  * @returns 
  */
-function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{context?:string,keyPath:string[],fullKeyPath:string[]}){
+function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{context?:StoreComputedContext,keyPath:string[],fullKeyPath:string[]}){
   try{
-    return context=='root' ? draft : 
-      ( context==undefined || context=='current' ? getVal(draft, keyPath) :     
-        (context=='parent' ?  getVal(draft,fullKeyPath.slice(0,keyPath.length-2)) :  draft))
+    const ctx = typeof(context)=='function' ? context(draft) : context
+
+    if(ctx === ComputedContextTarget.Current){
+        return  getVal(draft, keyPath)
+    }else if(ctx === ComputedContextTarget.Parent){
+        return getVal(draft,fullKeyPath.slice(0,keyPath.length-2))
+    }else if(ctx === ComputedContextTarget.Root){
+        return draft
+    }else if(typeof(ctx)=='string'){
+      return getVal(draft,[...keyPath,...ctx.split(".")])
+    }else if(Array.isArray(ctx)){
+      return getVal(draft,ctx)
+    }else if(typeof(ctx)=='number'){
+      const endIndex = ctx > fullKeyPath.length-2 ? fullKeyPath.length-ctx-1 : 0
+      return endIndex==0 ? draft : getVal(draft,fullKeyPath.slice(0,endIndex))
+    } 
   }catch(e){
         return draft
   }
