@@ -16,8 +16,13 @@ import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 export type ComputedOptions<T=any> = {
   // current： 指向当前对象，如state = {user:{first,last,fullName:(state:user)=>{user.first+user.last}}}
   // parent： 指向当前对象的父，如state = {user:{first,last,fullName:(state)=>{state.user.first+state.user.last}}}
-	context?:'root' | 'parent'  | 'current' 
+	context?:StoreComputedContext
   initial?:T
+  // 异步计算,默认情况下，通过typeof(fn)=="async function"来判断是否是异步计算函数
+  // 但是在返回Promise等情况下，无法判断，此时需要手动指定async=true
+  async?:boolean 
+  // 指定依赖，例如["key","a.b.c"]等形式
+  depends?:any[]    
 };
 
 export type ComputedDepends = string[] | ((draft: any) => any[]);
@@ -91,37 +96,57 @@ function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{contex
  * ['url'],     // 指定依赖
  * {
  *    initial:<初始值>,
- *    dict:"" 
+ *    context:""      // 指定异步计算函数的传入的上下文
  * })
  * }
  * 
  * 
  *
- * @param contextstate
+ * @param getter
+ * @param depends
+ * @param options
+ * @returns
+ * 
  */
-
 export function computed<R=any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?: ComputedOptions<R>):AsyncComputedReturns<R> 
 export function computed<R=any>(getter:ComputedGetter<R>,options?: ComputedOptions<R>):ComputedReturns<R>
 export function computed<R=any>(getter:Function,depends:any,options?: ComputedOptions<R>):Function {
-	const { context,initial } = Object.assign({ context: 'root' }, options) as Required<ComputedOptions<R>>
-  if(arguments.length>=1 && isAsyncFunction(getter)){
-    let fn =  () => {
-      return {
-        getter,
-        depends,
-        initial,
-        context
+
+	if(typeof(getter)!="function") throw new Error("getter must be a function")
+  const opts =Object.assign({}, arguments.length >= 3 ? arguments[2] : (arguments.length==2 ? arguments[1] : {}))
+  const { context = ComputedContextTarget.Root, initial,async=false } = opts
+  
+  // 是否是异步计算函数
+  const isAsync = async===true || isAsyncFunction(getter)
+
+  if(arguments.length==1){
+    depends = []
+  }else if(arguments.length==2){  // 同步
+    if(isAsync){
+      if(!(Array.isArray(depends) || typeof(depends)=="function")){
+        throw new Error("async computed must specify depends")
       }
-    }  
-    // @ts-ignore
-    fn.__ASYNC_COMPUTED__=true       
-    return fn  as AsyncComputedReturns<R> 
-  }else{  // 同步计算
-    return (ctxDraft: any,draft: any):R => {
-      const ctx = context === "root"  ? draft : ctxDraft
-      return getter.call(draft,ctx) 
-    };
-  }	
+    }else{
+      depends = []
+    }
+  }
+
+  if(isAsync && depends.length==0) throw new Error("async computed must specify depends")
+
+  let fn =  () => {
+    return {
+      getter,
+      depends,
+      initial,
+      context,
+      async
+    }
+  }
+
+  // @ts-ignore
+  fn.__COMPUTED__ = isAsync ? 'async' : 'sync'
+
+  return fn
 } 
 
 
@@ -162,7 +187,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
  */
 function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,options:StoreOptions){
   const { fullKeyPath, keyPath,value } = params;
-  const {getter,depends,context,initial} = value()
+  const {getter,depends,context,initial } = value()
   const desc = depends.join("_")+"_computed"
   stateCtx.mutate({
     // 声明依赖
@@ -214,31 +239,41 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
 
 /**
  * 创建计算属性
+ * 为state中的计算属性自动创建mutate
  * @param options
  * @returns
  */
 export function createComputed<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,api: HeluxApi,options:StoreOptions) {
-	// 1. 为state中的计算属性自动创建mutate
+ 
 	  const replacedMap: any = {};
+    // 拦截读取state的操作，在第一次读取时，
+    // - 为计算函数创建mutate
+    // - 将原始属性替换为计算属性值或异步对象
 	  stateCtx.setOnReadHook((params) => {
-		const { fullKeyPath,keyPath, value } = params;
-		const key = fullKeyPath.join(".");
-		if (typeof value === "function" && !replacedMap[key]) {
-			replacedMap[key] = true;
-      // 将声明在state里面的计算函数转换为helux的mutate
-      if(value.__ASYNC_COMPUTED__){   // 异步属性
-        createAsyncComputedMutate<Store>(stateCtx,params,options)     
-      }else if(isAsyncFunction(value)){// 为了支持异步计算属性，需要将函数转换为对象 {
-        params.value =()=>({  
-          getter:value,
-          depends:[],         // 未指定依赖
-          initial:undefined,  // 也没有初始化值
-          context:options.computedContext
-        })
-        createAsyncComputedMutate<Store>(stateCtx,params,options)     
-      }else{
-        createComputedMutate<Store>(stateCtx,params,options)        
+      const { fullKeyPath,keyPath, value } = params;
+      const key = fullKeyPath.join(".");
+      if (typeof value === "function" && !replacedMap[key]) {
+        replacedMap[key] = true;
+        // 将声明在state里面的计算函数转换为helux的mutate
+        if(value.__COMPUTED__=='async'){   // 异步属性
+          createAsyncComputedMutate<Store>(stateCtx,params,options)     
+        }else if(isAsyncFunction(value)){   // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次          
+          params.value =()=>({  
+            getter:value,
+            depends:[],         // 未指定依赖
+            initial:undefined,  // 也没有初始化值
+            context:options.computedContext   // 只能指定默认上下文
+          })
+          createAsyncComputedMutate<Store>(stateCtx,params,options)     
+        }else if(value.__COMPUTED__=='sync'){    // 通过computed函数创建的同步计算属性，允许重新指定上下文
+          const {getter,context=options.computedContext } = value()
+          params.value = getter
+          createComputedMutate<Store>(stateCtx,params,Object.assign({},options,{
+            computedContext:context
+          }))
+        }else{                      
+          createComputedMutate<Store>(stateCtx,params,options)        
+        }
       }
-		}
-	}); 
+    }); 
 }
