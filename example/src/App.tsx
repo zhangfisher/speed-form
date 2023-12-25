@@ -7,7 +7,7 @@ import FormDemo from './FormDemo'
 
 const menuItems=[
   // {id:"render",title:"useState",component:<UseStateDemo/>},
-  {id:"computed",title:"计算属性",component:<ComputedDemo/>},
+  // {id:"computed",title:"计算属性",component:<ComputedDemo/>},
   {id:"form",title:"表单",component:<FormDemo/>},
 ] 
 
