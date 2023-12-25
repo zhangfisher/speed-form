@@ -20,6 +20,7 @@ const Box:ReactFC<BoxProps> = (props)=>{
     <div {...props} style={{ 
         display: visible ? 'flex' : 'none',
         position:"relative",
+        flexDirection:'column',
         padding:"8px",
         margin:"16px 4px 4px 4px",
         boxSizing:"border-box",

@@ -85,7 +85,10 @@ table.projects-list > thead > tr > td{
   font-weight: bold;
 }
 
-
+/* 无效 */
+input.invalid{
+  border: 1px solid red;
+}
 
 .panel{
   position: relative;

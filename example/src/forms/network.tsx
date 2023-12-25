@@ -1,5 +1,5 @@
 
-import { computed} from "helux-store"
+import { ComputedContextTarget, computed} from "helux-store"
 import { createForm } from "helux-form"
 import { Project, getProjects } from "../api/getProjects"
 import { delay } from "flex-tools/async/delay"
@@ -11,7 +11,7 @@ const formSchema ={
         value:"React-Helux-Form",
         placeholder:"输入网络配置名称",
         title:"网络名称",
-        validate:(net:any)=>(net as NetworkType).title.value.length>3
+        validate:(value:string)=>value.length>3
     },
     interface:{
         value:"wifi",
@@ -21,38 +21,42 @@ const formSchema ={
         }
     },
     ip:{
-        value:"1.1.1.1"
+        value:"1.1.1.1",
+        title:"IP地址"
     },
     gateway:"",
     dhcp:{        
-        title:"自动获取IP地址",
-        value:true,      
-        visible:computed<boolean>(()=>{return true})
+        enable:{        
+            title:"自动获取IP地址",
+            value:true
+        },        
+        start:{
+            title:"起始地址",
+            value:"192.168.1.1",
+            // visible:computed<boolean>((enable:any)=>enable.value,{context:ComputedContextTarget.Parent}),    
+            // validate:(value:any)=>validator.isIP(value)
+        },
+        end:{
+            title:"结束地址",
+            value:"192.168.1.100",
+            // visible:computed<boolean>((enable:any)=>enable.value,{context:ComputedContextTarget.Parent}),
+            // validate:(value:any)=>validator.isIP(value)
+        } 
     },
-    dhcpStart:{
-        title:"起始地址",
-        value:"192.168.1.1",
-        visible:(net:any)=>(net as NetworkType).dhcp.value as boolean,
-        validate:(value:any)=>validator.isIP(value)
-    },
-    dhcpEnd:{
-        title:"结束地址",
-        value:"192.168.1.100",
-        visible:(net:any)=>(net as NetworkType).dhcp.value
-    }, 
+    
     wifi:{
         title:"无线配置",
         visible:(net:any)=>(net as NetworkType).interface.value==="wifi",
         ssid:{
             value:"fast",
             placeholder:"无线网络",
-            validate:(net:any)=>(net as NetworkType).wifi.password.value.length>0
+            validate:(value:string)=>value.length>3
         },
         password:{
             value:"123",
             placeholder:"输入无线密码",
             enable:(net:any)=>(net as NetworkType).interface.value==="wifi",
-            validate:(net:any)=>(net as NetworkType).wifi.password.value.length>0
+            validate:(value:string)=>value.length>6
         }
     },
     dns:[],

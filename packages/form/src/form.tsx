@@ -39,7 +39,7 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreDefine, createStore,RequiredComputedState, AsyncComputedObject } from "helux-store";
+import { type StoreDefine, createStore,RequiredComputedState, AsyncComputedObject, ComputedContextTarget } from "helux-store";
 import type { ReactFC,  FormData, Dict} from "./types";
 import { FieldComponent,  createFieldComponent } from "./field"; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
@@ -72,7 +72,13 @@ export interface FormObject<State extends Record<string, any>> {
 
 export function createForm<State extends FormData>(state: State) {
 	const store = createStore<StoreDefine<State>>({ state },{
-		computedContext:'root' 
+		computedContext: ComputedContextTarget.Root,
+		onCreateComputed({keyPath,getter}) {
+			//将校验参数的计算上下文更改为
+			if(keyPath[keyPath.length-1]=='validate'){
+				return {context:"value"}
+			}
+		},
 	});  
 	return {
 		Form: createFormComponent<State>(store),

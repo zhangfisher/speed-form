@@ -79,7 +79,9 @@ export interface StoreOptions{
     onCreateComputed?:(options:{keyPath:string[],getter:Function,context?:StoreComputedContext})=>{context?:StoreComputedContext,getter?:Function} | void
 }
 export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
-    const opts = Object.assign({},options)
+    const opts = Object.assign({
+        computedContext:ComputedContextTarget.Current
+    },options)
     return  model((api) => { // api对象 有详细的类型提示 
         const stateCtx = api.sharex<ComputedState<T['state']>>(data.state as any,{
             stopArrDep: false           

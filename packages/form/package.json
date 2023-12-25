@@ -24,7 +24,7 @@
     "@testing-library/react": "^14.1.2",
     "@types/react": "^18.2.42",
     "@vitejs/plugin-react": "^4.2.1",
-    "helux": "^3.5.15",
+    "helux": "^3.5.20",
     "jsdom": "^23.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -34,8 +34,7 @@
   },
   "peerDependencies": {
     "@helux/utils": "^3.5.11",
-    "@types/react": "^18.2.40",
-    "helux": "^3.5.8",
+    "@types/react": "^18.2.40", 
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   }

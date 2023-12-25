@@ -2,6 +2,7 @@ import React, {	 ReactNode  } from "react";
 import { getVal, setVal } from "@helux/utils";
 import { isSimpleField } from "./utils";
 import {  Dict, FieldComputedProp } from "./types";  
+import { assignObject } from "flex-tools/object";
  
 
 
@@ -119,18 +120,23 @@ return <T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>)
         setState((draft:any)=>setVal(draft,valuePath,updater))
       }
     } 
+    // 提供默认值
+    const fieldProps = assignObject({
+      visible    : true,
+      required   : false,
+      readonly   : false,
+      validate   : true,        
+      enable     : true,
+      select     : []
+    },{
+      ...filedContext,
+      sync:store.sync(valuePath),
+      update:filedUpdater 
+    }) 
 
     return Array.isArray(props.children) ? 
-      props.children.map((children:any)=>children({
-              ...filedContext,
-              sync:store.sync(valuePath),
-              update:filedUpdater 
-      }))
-      : props.children({
-              ...filedContext,
-              sync:store.sync(valuePath),
-              update:filedUpdater
-      })
+      props.children.map((children:any)=>children(fieldProps))
+      : props.children(fieldProps as any)
 	} 
 }
 
