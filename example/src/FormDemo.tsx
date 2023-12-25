@@ -88,22 +88,22 @@ const NetworkForm = ()=>{
                         <button onClick={()=>update(group=>group.enable=!group.enable)}></button>
                     </Box>
                 }}
-            </Network.Group>     */}         
+            </Network.Group>    */}          
               <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp" >                                       
-                {({title,value,visible,validate,sync})=>{    
+                {({title,visible,value,validate,sync})=>{     
                     return <FieldRow visible={visible} label={title}>
                          <input className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync}/>
                     </FieldRow>
                 }}
             </Network.Field> 
-           <Network.Field name="dhcp.start">                      
+          {/*  <Network.Field name="dhcp.start">                      
                 {({value,validate,visible,title,sync})=>{ 
                     return  <FieldRow visible={visible} label={title}>
                         <input className={classnames({invalid:!validate})} value={value} onChange={sync}/>
                     </FieldRow>
                 } }
             </Network.Field>
-            {/* <Network.Field name="dhcp.end">                      
+            <Network.Field name="dhcp.end">                      
                 {({value,validate,visible,title,sync})=>{     
                     return <FieldRow visible={visible} label={title}>
                         <input className={classnames({invalid:!validate})} value={value} onChange={sync}/>
@@ -119,7 +119,7 @@ const NetworkForm = ()=>{
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.store.useState()
-    JSON.stringify(state.interface.select)
+    // JSON.stringify(state.interface.select)
 
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>

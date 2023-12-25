@@ -161,14 +161,14 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
   let { computedContext:context,onCreateComputed } = options
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
-      // 运行hook，允许重新指定computedContext，或者包装原始计算函数
-      if(typeof(onCreateComputed)=='function'){
-        const result = onCreateComputed.call(draft,{keyPath:fullKeyPath,context,getter})
-        if(result){
-          if(result.context) context = result.context
-          if(typeof(result.getter)=='function') getter = result.getter        
-        }
-      }
+      // // 运行hook，允许重新指定computedContext，或者包装原始计算函数
+      // if(typeof(onCreateComputed)=='function'){
+      //   const result = onCreateComputed.call(draft,{keyPath:fullKeyPath,context,getter})
+      //   if(result){
+      //     if(result.context) context = result.context
+      //     if(typeof(result.getter)=='function') getter = result.getter        
+      //   }
+      // }
       // 根据配置参数获取计算属性的上下文
       const ctxDraft = getComputedContextDraft(draft, { context, fullKeyPath, keyPath })
       // 第一次执行执行函数进行替换原始对象的值

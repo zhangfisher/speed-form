@@ -39,6 +39,7 @@ export interface DefaultFieldPropTypes{
 
 
 export interface Field{
+  name         : string
   value        : any;
   title?       : FieldComputedProp<string>;                       // 标题
   defaultValue?: FieldComputedProp<any>;                          // 默认值
@@ -79,9 +80,8 @@ export type FieldProps<PropTypes extends Dict = Dict> = {
 export type FieldComponent = React.FC<FieldProps>;
 
 
-export function createFieldComponent(store: any) {  
-  
-return <T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
+export function createFieldComponent(store: any) {    
+  return <T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
 		const { name } = props; 
 		let filedContext:any 				       
 		const [state,setState] = store.useState()
@@ -91,7 +91,8 @@ return <T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>)
     // 简单字段指的是仅仅指定值而未指定enable,visible等控制信息的字段，
 		if (isSimple) { 
 			filedContext  ={	
-        __HELUX_FIELD__:true,			      
+        name,
+        __FIELD__:true,			      
 				value,
 				title      : name,
 				help       : "",
@@ -122,6 +123,7 @@ return <T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>)
     } 
     // 提供默认值
     const fieldProps = assignObject({
+      name,
       visible    : true,
       required   : false,
       readonly   : false,
@@ -132,7 +134,8 @@ return <T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>)
       ...filedContext,
       sync:store.sync(valuePath),
       update:filedUpdater 
-    }) 
+    })  
+
 
     return Array.isArray(props.children) ? 
       props.children.map((children:any)=>children(fieldProps))
