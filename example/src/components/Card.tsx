@@ -20,7 +20,7 @@ const Card:ReactFC<CardProps> = (props)=>{
   const { title,enable=true,visible=true,buttons=[] } =props
 
         return (
-          <div {...props} style={{ 
+          <div style={{ 
               border:`1px solid #bbb`,
               background: enable ? "white" : 'gray',
               margin:"8px" ,

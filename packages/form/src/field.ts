@@ -1,8 +1,8 @@
-import React, {	 ReactNode  } from "react";  
+import React, {	 ReactNode, useCallback  } from "react";  
 import { getVal, setVal } from "@helux/utils";
-import { isSimpleField } from "./utils";
+import { isLiteField } from "./utils";
 import {  Dict, FieldComputedProp } from "./types";  
-import { assignObject } from "flex-tools/object";
+import { assignObject } from "flex-tools/object/assignObject";
  
 
 
@@ -81,18 +81,20 @@ export type FieldComponent = React.FC<FieldProps>;
 
 
 export function createFieldComponent(store: any) {    
-  return <T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
+  return function Field<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode{
 		const { name } = props; 
 		let filedContext:any 				       
 		const [state,setState] = store.useState()
 		const value = getVal(state, name.split("."))
-    const isSimple = isSimpleField(value)
-    const valuePath = isSimple ?  name.split(".") :[...name.split("."),'value']    
+    const isLite = isLiteField(value)
+    const valuePath = Array.isArray(name) ? name : name.split(".")  
+    if(!isLite) valuePath.push("value")
+    
     // 简单字段指的是仅仅指定值而未指定enable,visible等控制信息的字段，
-		if (isSimple) { 
+		if (isLite) { 
 			filedContext  ={	
         name,
-        __FIELD__:true,			      
+        __HELUX_FIELD__:true,			      
 				value,
 				title      : name,
 				help       : "",
@@ -112,7 +114,7 @@ export function createFieldComponent(store: any) {
 			filedContext = value
 		} 
 
-    const filedUpdater =(updater:any)=>{
+    const filedUpdater = useCallback((updater:any)=>{
       if(typeof(updater)=="function"){
         setState((draft:any)=>{
           updater.call(draft,getVal(draft,valuePath))
@@ -120,7 +122,8 @@ export function createFieldComponent(store: any) {
       }else{
         setState((draft:any)=>setVal(draft,valuePath,updater))
       }
-    } 
+    },[])
+
     // 提供默认值
     const fieldProps = assignObject({
       name,

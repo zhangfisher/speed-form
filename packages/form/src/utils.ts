@@ -7,7 +7,7 @@
 
  * @param obj
  */
-export function isSimpleField(value: any): boolean {
+export function isLiteField(value: any): boolean {
 	return !(typeof value === "object" && "value" in value)
 }
 

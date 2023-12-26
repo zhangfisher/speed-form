@@ -17,7 +17,7 @@ export type BoxProps = React.PropsWithChildren<{
 const Box:ReactFC<BoxProps> = (props)=>{
   const { title,enable=true,visible=true } =props
   return (
-    <div {...props} style={{ 
+    <div  style={{ 
         display: visible ? 'flex' : 'none',
         position:"relative",
         flexDirection:'column',

@@ -56,7 +56,7 @@
 }
 
 input{
-  padding:4px;
+  padding:6px;
 }
 
 
@@ -88,7 +88,19 @@ table.projects-list > thead > tr > td{
 /* 无效 */
 input.invalid{
   border: 1px solid red;
+  position: relative;
 }
+
+input.invalid::after{
+  position: absolute;
+  background: red;
+  content: ' ! ';
+  color:white;
+  top:0px;
+  left:100%;
+  z-index: 999;
+}
+ 
 
 .panel{
   position: relative;

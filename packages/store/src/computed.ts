@@ -55,14 +55,14 @@ export interface AsyncComputedParams<R>  {
  * @param param1 
  * @returns 
  */
-function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{context?:StoreComputedContext,keyPath:string[],fullKeyPath:string[]}){
+function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{context?:StoreComputedContext,keyPath:string[],fullKeyPath:string[],parent:any}){
   try{
     const ctx = typeof(context)=='function' ? context(draft) : context
 
     if(ctx === ComputedContextTarget.Current){
         return  getVal(draft, keyPath)
     }else if(ctx === ComputedContextTarget.Parent){
-        return getVal(draft,fullKeyPath.slice(0,keyPath.length-2))
+        return getVal(draft,fullKeyPath.slice(0,fullKeyPath.length-2))
     }else if(ctx === ComputedContextTarget.Root){
         return draft
     }else if(typeof(ctx)=='string'){
@@ -157,20 +157,26 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
  * @param params 
  */
 function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,options:StoreOptions){
-  let { fullKeyPath, value:getter,keyPath } = params;
+  let { fullKeyPath, value:getter,keyPath,parent } = params;
   let { computedContext:context,onCreateComputed } = options
+
+  // 排除掉所有非own属性,例如valueOf等
+  if(parent && !Object.hasOwn(parent,fullKeyPath[fullKeyPath.length-1])){
+    return 
+  }
+
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
-      // // 运行hook，允许重新指定computedContext，或者包装原始计算函数
-      // if(typeof(onCreateComputed)=='function'){
-      //   const result = onCreateComputed.call(draft,{keyPath:fullKeyPath,context,getter})
-      //   if(result){
-      //     if(result.context) context = result.context
-      //     if(typeof(result.getter)=='function') getter = result.getter        
-      //   }
-      // }
+      // 运行hook，允许重新指定computedContext，或者包装原始计算函数
+      if(typeof(onCreateComputed)=='function'){
+        const result = onCreateComputed.call(draft,{keyPath:fullKeyPath,context,getter})
+        if(result){
+          if(result.context) context = result.context
+          if(typeof(result.getter)=='function') getter = result.getter        
+        }
+      }
       // 根据配置参数获取计算属性的上下文
-      const ctxDraft = getComputedContextDraft(draft, { context, fullKeyPath, keyPath })
+      const ctxDraft = getComputedContextDraft(draft, { context, fullKeyPath, keyPath ,parent})
       // 第一次执行执行函数进行替换原始对象的值
       setVal(draft, fullKeyPath, getter.call(draft,ctxDraft));
     },
@@ -187,7 +193,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
  * @param params 
  */
 function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,options:StoreOptions){
-  const { fullKeyPath, keyPath,value } = params;
+  const { fullKeyPath, keyPath,value ,parent} = params;
   const {getter,depends,context,initial } = value()
   const desc = depends.join("_")+"_computed"
   stateCtx.mutate({
@@ -208,7 +214,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     },
     // 此函数在依赖变化时执行，用来异步计算
     task:async ({draft,setState,input})=>{      
-      const ctxDraft = getComputedContextDraft(draft,{context,fullKeyPath,keyPath}) 
+      const ctxDraft = getComputedContextDraft(draft,{context,fullKeyPath,keyPath,parent}) 
       try{
         // @ts-ignore
         setState((draft)=>{

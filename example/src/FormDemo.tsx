@@ -2,17 +2,17 @@ import Card from "./components/Card"
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
 import { AsyncComputedObject } from "helux-store";  
-import Box from "./components/Box"; 
 import classnames from 'classnames';
+import { ReactFC } from "./types";
 
-const FieldRow:React.FC<React.PropsWithChildren<{label?:string,visible?:boolean,enable?:boolean}>> = ({enable,visible,label,children})=>{
+const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({enable,visible,label,children})=>{
     return  (
         <div  className="field"  style={{
-                display: visible===false ? 'none' : 'flex',
-                boxSizing:"border-box",
-                flexDirection:"row",
-                width:'100%',
-                padding:"8px"
+            display: visible===false ? 'none' : 'flex',
+            boxSizing:"border-box",
+            flexDirection:"row",
+            width:'100%',
+            padding:"8px"
         }}>
             <label  className="field-label"  style={{
                 minWidth:'160px',
@@ -28,7 +28,8 @@ const FieldRow:React.FC<React.PropsWithChildren<{label?:string,visible?:boolean,
         </div>   
     )
 }
-const ValidResult:React.FC<React.PropsWithChildren<{result:boolean | AsyncComputedObject}>> = ({result})=>{
+
+const ValidResult:React.FC<React.PropsWithChildren<{result:boolean | AsyncComputedObject,help?:string}>> = ({result,help})=>{
     const isValid = typeof(result)=='boolean' ? result : result.value
     const isAsyncValid = typeof(result)!='boolean'
     const isValiding = typeof(result)!='boolean' && result.loading
@@ -36,7 +37,7 @@ const ValidResult:React.FC<React.PropsWithChildren<{result:boolean | AsyncComput
         color:'red',
         display: isValiding || !isValid ? 'flex' : 'none'
     }}>{
-        isAsyncValid ? (isValiding ? '正在校验...' : result.error) : "错误"
+        isAsyncValid ? (isValiding ? '正在校验...' : `${help}:${result.error}` ) : help
     }</span>
 }
 
@@ -44,7 +45,7 @@ const ValidResult:React.FC<React.PropsWithChildren<{result:boolean | AsyncComput
 const NetworkForm = ()=>{
     return <Network.Form className="panel">
         <Card title="网络配置">
-            {/* <Network.Field<string> name="title">                      
+           <Network.Field<string> name="title">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <FieldRow visible={visible} label={title}>
@@ -66,10 +67,11 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field>
-           <Network.Group<typeof Network.fields.wifi> name="wifi">
-                {({title,visible,enable,update})=>{ 
-                    return <Box title={title} visible={visible} enable={enable}>                    
-                        <Network.Field name="wifi.ssid">                      
+         <Network.Group<typeof Network.fields.wifi> name="wifi">
+            {({title,visible} )=>{ 
+                return (
+                <Card title={title}  visible={visible}>
+                    <Network.Field name="wifi.ssid">                      
                             {({value,required,visible,validate,enable,defaultValue,sync})=>{ 
                                 console.log(required,visible,validate,enable,defaultValue)
                                 return  <FieldRow label="SSID" enable={enable}> 
@@ -78,38 +80,44 @@ const NetworkForm = ()=>{
                             } }
                         </Network.Field>      
                         <Network.Field name="wifi.password">                      
-                            {({value,enable,validate,placeholder,sync})=>{ 
-                                return  <FieldRow label="密码" enable={enable}> 
-                                         <input className={classnames({invalid:!validate})} value={value} placeholder={placeholder} onChange={sync} readOnly={!enable}/>
-                                        {value}
+                            {({value,enable,validate,placeholder,help,sync})=>{ 
+                                return  <FieldRow label="密码" enable={enable} className={classnames({invalid:!validate})} > 
+                                         <input className={classnames({invalid:!validate})} data-help={help} value={value} placeholder={placeholder} onChange={sync} readOnly={!enable}/>                               
+                                         <ValidResult help={help} result={validate}/>
                                 </FieldRow>
                             } }
-                        </Network.Field>
-                        <button onClick={()=>update(group=>group.enable=!group.enable)}></button>
-                    </Box>
-                }}
-            </Network.Group>    */}          
-              <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp" >                                       
+                        </Network.Field> 
+                </Card>)
+            }}
+         </Network.Group>  
+               
+                    
+                        
+                        {/* //<button onClick={()=>update(group=>group.enable=!group.enable)}></button>
+                        // <Box title={title} visible={visible} enable={enable}>    </Box> */}
+           
+             
+               <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp" >                                       
                 {({title,visible,value,validate,sync})=>{     
                     return <FieldRow visible={visible} label={title}>
                          <input className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync}/>
                     </FieldRow>
                 }}
             </Network.Field> 
-          {/*  <Network.Field name="dhcp.start">                      
+           <Network.Field<typeof Network.fields.dhcp.start> name="dhcp.start">                      
                 {({value,validate,visible,title,sync})=>{ 
                     return  <FieldRow visible={visible} label={title}>
                         <input className={classnames({invalid:!validate})} value={value} onChange={sync}/>
                     </FieldRow>
                 } }
             </Network.Field>
-            <Network.Field name="dhcp.end">                      
+            <Network.Field<typeof Network.fields.dhcp.end> name="dhcp.end">                      
                 {({value,validate,visible,title,sync})=>{     
                     return <FieldRow visible={visible} label={title}>
                         <input className={classnames({invalid:!validate})} value={value} onChange={sync}/>
                     </FieldRow>
                 }}
-            </Network.Field> */}
+            </Network.Field>  
         </Card>
     </Network.Form>        
 }
@@ -119,7 +127,7 @@ const NetworkForm = ()=>{
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.store.useState()
-    // JSON.stringify(state.interface.select)
+    JSON.stringify(state.interface.select)
 
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>
