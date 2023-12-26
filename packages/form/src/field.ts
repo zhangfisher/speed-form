@@ -21,22 +21,7 @@ export interface DefaultFieldPropTypes{
   enable?      : boolean               // 是否可用
   validate?    : boolean;              // 验证
   select?      : any[]                 // 枚举值
-} 
-
-// export interface Field<PropTypes extends Dict>{
-//   value        : PropTypes['value'];
-//   title?       : FieldComputedProp<PropTypes['title']>;                      // 标题
-//   defaultValue?: FieldComputedProp<PropTypes['value'] | undefined>;          // 默认值
-//   help?        : FieldComputedProp<PropTypes['help']>;                       // 提示信息
-//   placeholder? : FieldComputedProp<PropTypes['placeholder']>;                // 占位符
-//   required?    : FieldComputedProp<PropTypes['required']>;                   // 是否必填
-//   readonly?    : FieldComputedProp<PropTypes['readonly']>;                   // 是否只读
-//   visible?     : FieldComputedProp<PropTypes['visible']>;                    // 是否可见
-//   enable?      : FieldComputedProp<PropTypes['enable']>;                     // 是否可用
-//   validate?    : FieldComputedProp<PropTypes['validate']>;                   // 验证
-//   select?      : FieldComputedProp<PropTypes['select']>                      // 枚举值
-// }
-
+}  
 
 export interface Field{
   name         : string

@@ -45,7 +45,7 @@ const ValidResult:React.FC<React.PropsWithChildren<{result:boolean | AsyncComput
 const NetworkForm = ()=>{
     return <Network.Form className="panel">
         <Card title="网络配置">
-           {/* <Network.Field<string> name="title">                      
+           <Network.Field<string> name="title">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <FieldRow visible={visible} label={title}>
@@ -90,11 +90,6 @@ const NetworkForm = ()=>{
                 </Card>)
             }}
          </Network.Group>  
-                */}
-                    
-                        
-                        {/* //<button onClick={()=>update(group=>group.enable=!group.enable)}></button>
-                        // <Box title={title} visible={visible} enable={enable}>    </Box> */}
            
              
                <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp.enable" >                                       
@@ -128,6 +123,7 @@ const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.store.useState()
     JSON.stringify(state.interface.select)
+    state.dhcp.start.validate.value
 
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>

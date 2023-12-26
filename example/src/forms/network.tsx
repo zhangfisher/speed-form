@@ -20,11 +20,14 @@ const formSchema ={
             return [{value:"wifi",title:"无线网卡"},{value:"ethernet",title:"有线网卡"}]
         }
     },
-    // ip:{
-    //     value:"1.1.1.1",
-    //     title:"IP地址"
-    // },
-    // gateway:"",
+    ip:{
+        value:"1.1.1.1",
+        title:"IP地址"
+    },    
+    gateway:{
+        value:"1.1.1.1",
+        title:"网关地址"
+    },
     dhcp:{        
         enable:{        
             title:"自动获取IP地址",
@@ -42,9 +45,9 @@ const formSchema ={
             title:"结束地址",
             value:"192.168.1.100",
             // 将visible的context指向父对象即dhcp
-            visible:computed<boolean>((dhcp:any)=>{
-                return dhcp.enable.value
-            },{context:ComputedContextTarget.Parent}),
+            visible:computed<boolean>((state:any)=>{
+                return state.dhcp.enable.value
+            },{context:ComputedContextTarget.Root}),
             validate:(value:any)=>validator.isIP(value)
         } 
     },

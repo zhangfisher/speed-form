@@ -72,3 +72,13 @@ export type RequiredComputedAsyncField<T extends Record<string, any>> = {
         ? PickComputedReturns<Exclude<T[K],undefined>> 
         : (Required<T[K]> extends Record<string, any> ? RequiredComputedAsyncField<Exclude<T[K],undefined> > : Exclude<T[K],undefined>)
 };
+
+
+
+/**
+ * 遍历对象将对象里面的名称为key的字段转换为指定的类型
+ */
+export type ChangeFieldType<T extends Record<string, any>, Key extends string, NewType = any> = {
+    [K in keyof T]: K extends Key ? NewType : (T[K] extends Record<string, any> ? ChangeFieldType<T[K], Key, NewType> : T[K])
+  };
+  

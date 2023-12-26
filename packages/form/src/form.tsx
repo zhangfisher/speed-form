@@ -40,7 +40,7 @@
 
 import React, {	useCallback } from "react";
 import { type StoreDefine, createStore,RequiredComputedState, AsyncComputedObject, ComputedContextTarget } from "helux-store";
-import type { ReactFC,  FormData, Dict} from "./types";
+import type { ReactFC,  FormData, Dict, ChangeFieldType} from "./types";
 import { FieldComponent,  createFieldComponent } from "./field"; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 
@@ -74,9 +74,32 @@ export function createForm<State extends FormData>(state: State) {
 	const store = createStore<StoreDefine<State>>({ state },{
 		computedContext: ComputedContextTarget.Root,
 		onCreateComputed({keyPath,getter}) {
-			//将校验参数的计算上下文更改为
+			//将校验参数的计算上下文更改为			
 			if(keyPath[keyPath.length-1]=='validate'){
-				return {context:"value"}
+				const r = {context:"value"}
+				// 将同步校验处理成与异步计算相同的返回值，以便在Field组件中统一处理 
+				if(typeof(getter)=='function'){					
+					// @ts-ignore
+					const computedType = getter.__COMPUTED__ 					
+					if(computedType!=="async"){						
+						// @ts-ignore
+						r.getter = function(this:any,...args:any){
+							const result =  {
+								value:true,
+								loading:false,
+								process:100,
+								error:null
+							}
+							try{
+								result.value = getter.call(this,...args)								
+							}catch(e:any){
+								result.error=e.message
+							}
+							return result							
+						} 
+					}
+				}
+				return r
 			}
 		},
 	});  
