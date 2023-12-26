@@ -45,7 +45,7 @@ const ValidResult:React.FC<React.PropsWithChildren<{result:boolean | AsyncComput
 const NetworkForm = ()=>{
     return <Network.Form className="panel">
         <Card title="网络配置">
-           <Network.Field<string> name="title">                      
+           {/* <Network.Field<string> name="title">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <FieldRow visible={visible} label={title}>
@@ -90,14 +90,14 @@ const NetworkForm = ()=>{
                 </Card>)
             }}
          </Network.Group>  
-               
+                */}
                     
                         
                         {/* //<button onClick={()=>update(group=>group.enable=!group.enable)}></button>
                         // <Box title={title} visible={visible} enable={enable}>    </Box> */}
            
              
-               <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp" >                                       
+               <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp.enable" >                                       
                 {({title,visible,value,validate,sync})=>{     
                     return <FieldRow visible={visible} label={title}>
                          <input className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync}/>

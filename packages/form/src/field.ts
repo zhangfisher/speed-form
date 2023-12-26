@@ -84,11 +84,15 @@ export function createFieldComponent(store: any) {
   return function Field<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode{
 		const { name } = props; 
 		let filedContext:any 				       
-		const [state,setState] = store.useState()
-		const value = getVal(state, name.split("."))
-    const isLite = isLiteField(value)
     const valuePath = Array.isArray(name) ? name : name.split(".")  
-    if(!isLite) valuePath.push("value")
+		const [state,setState] = store.useState()
+		let value = getVal(state,valuePath)
+    const isLite = isLiteField(value)
+    if(!isLite) {
+      valuePath.push("value") 
+    }
+
+
     
     // 简单字段指的是仅仅指定值而未指定enable,visible等控制信息的字段，
 		if (isLite) { 

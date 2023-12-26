@@ -77,6 +77,7 @@ export interface StoreOptions{
     computedContext?: StoreComputedContext
     // 当创建计算属性前调用
     onCreateComputed?:(options:{keyPath:string[],getter:Function,context?:StoreComputedContext})=>{context?:StoreComputedContext,getter?:Function} | void
+    
 }
 export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
     const opts = Object.assign({
