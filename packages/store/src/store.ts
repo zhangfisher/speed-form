@@ -55,7 +55,7 @@
 import { model  } from "helux" 
 import { createActions } from './action';
 import { Actions, ComputedState } from "./types";
-import { createComputed } from "./computed"; 
+import { AsyncComputedObject, createComputed } from "./computed"; 
  
 
 export interface StoreDefine<State>{    

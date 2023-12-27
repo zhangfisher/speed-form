@@ -9,7 +9,8 @@
  */
 
 import { HeluxApi, IOperateParams, ISharedCtx } from "helux";
-import { type StoreDefine, type StoreOptions,type StoreComputedContext, ComputedContextTarget } from "./store";
+import type { StoreDefine, StoreComputedContext, StoreOptions } from './store';
+import { ComputedContextTarget } from './store';
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 
@@ -23,6 +24,8 @@ export type ComputedOptions<T=any> = {
   async?:boolean 
   // 指定依赖，例如["key","a.b.c"]等形式
   depends?:any[]    
+  // 当执行计算getter函数出错时的回回调
+  onError?:(e:Error)=>void 
 };
 
 export type ComputedDepends = string[] | ((draft: any) => any[]);
@@ -46,7 +49,7 @@ export interface AsyncComputedParams<R>  {
   getter:()=>Promise<R>
   depends:ComputedDepends
   context:StoreComputedContext 
-  initial:R
+  initial:R  
 }
 
 /** 
@@ -116,7 +119,7 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
 
 	if(typeof(getter)!="function") throw new Error("getter must be a function")
   const opts =Object.assign({}, arguments.length >= 3 ? arguments[2] : (arguments.length==2 ? arguments[1] : {}))
-  const { context = ComputedContextTarget.Root, initial,async=false } = opts
+  const { async=false } = opts
   
   // 是否是异步计算函数
   const isAsync = async===true || isAsyncFunction(getter)
@@ -138,10 +141,7 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
   const fn =  () => {
     return {
       getter,
-      depends,
-      initial,
-      context,
-      async
+      options:opts      
     }
   }
 
@@ -152,13 +152,40 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
 } 
 
 /**
+ * 
+ * 计算函数的context可以在全局Store中通过computedContext参数指定
+ * 也可以在computed(fn,{context})函数中指定
+ * 
+ * computed配置的context优先级高于store配置的context
+ * 
+ * 
+ * 
+ * @param state 
+ * @param computedContext 
+ * @param storeContext 
+ */
+function getFinalContext(state:any,computedContext?:StoreComputedContext ,storeContext?:StoreComputedContext){
+  let ctx = computedContext || storeContext
+  if(typeof(ctx)=='function'){
+    try{
+      ctx = ctx.call(state,state)
+    }catch{}    
+  }
+  return ctx || storeContext || ComputedContextTarget.Root
+}
+
+
+
+/**
  * 为同步计算属性生成mutate
  * @param stateCtx 
  * @param params 
  */
-function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,options:StoreOptions){
+function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,computedOptions: ComputedOptions,storeOptions:StoreOptions){
   let { fullKeyPath, value:getter,keyPath,parent } = params;
-  let { computedContext:context,onCreateComputed } = options
+  let { context,onError,initial } = computedOptions
+  const { computedContext,onCreateComputed } = storeOptions
+
 
   // 排除掉所有非own属性,例如valueOf等
   if(parent && !Object.hasOwn(parent,fullKeyPath[fullKeyPath.length-1])){
@@ -167,7 +194,8 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
 
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
-      // 运行hook，允许重新指定computedContext，或者包装原始计算函数
+      // 1. 运行hook，本Hook的目的是允许重新指定computedContext或者重新包装原始计算函数
+      // 比如在form中为validate重新指定为value
       if(typeof(onCreateComputed)=='function'){
         const result = onCreateComputed.call(draft,{keyPath:fullKeyPath,context,getter})
         if(result){
@@ -175,10 +203,23 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
           if(typeof(result.getter)=='function') getter = result.getter        
         }
       }
-      // 根据配置参数获取计算属性的上下文
-      const ctxDraft = getComputedContextDraft(draft, { context, fullKeyPath, keyPath ,parent})
-      // 第一次执行执行函数进行替换原始对象的值
-      setVal(draft, fullKeyPath, getter.call(draft,ctxDraft));
+      // 2. 根据配置参数获取计算属性的上下文对象
+      const ctx = getFinalContext(draft,context,computedContext)      
+      const ctxDraft = getComputedContextDraft(draft, { context:ctx, fullKeyPath, keyPath ,parent})
+
+      // 3. 执行getter函数
+      let computedValue = initial
+      try{
+        computedValue = getter.call(draft,ctxDraft)
+      }catch(e:any){ 
+        // 如果执行计算函数出错,则调用
+        if(typeof(onError)){
+          onError?.call(ctxDraft,e)
+        }
+      }
+      // 4. 将getter的返回值替换到状态中的,完成移花接木
+      setVal(draft, fullKeyPath,computedValue);
+      
     },
     desc: fullKeyPath.join('.'),
     // 关闭死循环检测，信任开发者
@@ -192,15 +233,18 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
  * @param stateCtx 
  * @param params 
  */
-function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,options:StoreOptions){
+function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,storeOptions:StoreOptions){
   const { fullKeyPath, keyPath,value ,parent} = params;
-  const {getter,depends,context,initial } = value()
+  const {getter,options:computedOptions } = value()
+  const { depends,context,onError,initial }  = computedOptions
+
   const desc = depends.join("_")+"_computed"
+
   stateCtx.mutate({
     // 声明依赖
     deps:(state: any)=>(depends || []).map((deps:any)=>getVal(state,deps.split("."))),
     fn:(draft)=>{
-      // 将异步计算属性更一个计算属性对象
+      // 将异步计算属性转换为一个计算属性对象
       setVal(draft,fullKeyPath,{
         value:initial,
         __$COMPUTED__:true,
@@ -213,29 +257,26 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
       })
     },
     // 此函数在依赖变化时执行，用来异步计算
-    task:async ({draft,setState,input})=>{      
-      const ctxDraft = getComputedContextDraft(draft,{context,fullKeyPath,keyPath,parent}) 
+    task:async ({draft,setState,input})=>{    
+      const ctx = getFinalContext(draft,context,storeOptions.computedContext)
+      const ctxDraft = getComputedContextDraft(draft,{context:ctx,fullKeyPath,keyPath,parent}) 
       try{
         // @ts-ignore
-        setState((draft)=>{
-          setVal(draft,[...fullKeyPath,'loading'],true)
-        })
-        const result = await getter.call(draft,input,ctxDraft) 
+        setState((draft)=>setVal(draft,[...fullKeyPath,'loading'],true))
+        const result = await getter.call(draft,input,ctxDraft)     
         // @ts-ignore
         setState((draft)=>{
           setVal(draft,[...fullKeyPath,'value'],result)
           setVal(draft,[...fullKeyPath,'error'],null)
         })
       }catch(e){
+        if(typeof(onError)=='function'){
+        }
          // @ts-ignore
-        setState((draft)=>{
-          setVal(draft,[...fullKeyPath,'error'],e)
-        })
+        setState((draft)=>setVal(draft,[...fullKeyPath,'error'],e))
       }finally{
         // @ts-ignore
-        setState((draft)=>{
-          setVal(draft,[...fullKeyPath,'loading'],false)
-        })
+        setState((draft)=>setVal(draft,[...fullKeyPath,'loading'],false))
       }      
     },
     immediate:true,
@@ -267,19 +308,19 @@ export function createComputed<Store extends StoreDefine<any>>(stateCtx: IShared
         }else if(isAsyncFunction(value)){   // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次          
           params.value =()=>({  
             getter:value,
-            depends:[],         // 未指定依赖
-            initial:undefined,  // 也没有初始化值
-            context:options.computedContext   // 只能指定默认上下文
+            options:{
+              depends:[],         // 未指定依赖
+              initial:undefined,  // 也没有初始化值
+              context:options.computedContext   // 只能指定默认上下文
+            }
           })
           createAsyncComputedMutate<Store>(stateCtx,params,options)     
         }else if(value.__COMPUTED__=='sync'){    // 通过computed函数创建的同步计算属性，允许重新指定上下文
-          const {getter,context = options.computedContext } = value()
+          const {getter,options:computedOptions } = value()
           params.value = getter
-          createComputedMutate<Store>(stateCtx,params,Object.assign({},options,{
-            computedContext:context
-          }))
+          createComputedMutate<Store>(stateCtx,params,computedOptions,options)
         }else{                // 直接声明同步计算函数,使用全局配置的计算上下文        
-          createComputedMutate<Store>(stateCtx,params,options)        
+          createComputedMutate<Store>(stateCtx,params,{},options)        
         }
       }
     }); 

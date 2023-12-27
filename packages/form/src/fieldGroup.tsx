@@ -24,6 +24,7 @@ import { ReactNode, useCallback } from "react";
 import { DefaultFieldPropTypes } from "./field";
 import { Dict } from "./types";
 import { getVal } from "@helux/utils";
+import React from "react";
 
 export type DefaultFieldGroupPropTypes = Omit<DefaultFieldPropTypes,'value' | 'oldValue' | 'defaultValue' | 'validate'>
 
@@ -40,7 +41,7 @@ export type FieldGroupProps<PropTypes extends Dict = Dict> = {
 export type FieldGroupComponent = React.FC<FieldGroupProps>;
   
 export function createFieldGroupComponent(store: any) {
-    return function FieldGroup<T extends Dict=Dict>(props: FieldGroupProps<T>):ReactNode{
+    return React.memo(function FieldGroup<T extends Dict=Dict>(props: FieldGroupProps<T>):ReactNode{
         const { name } = props;  	       
         const [state,setState] = store.useState()
         const valuePath = Array.isArray(name) ? name : name.split(".")  
@@ -61,5 +62,5 @@ export function createFieldGroupComponent(store: any) {
         return Array.isArray(props.children) ? 
             props.children.map((children:any)=>children(ctx))
             : props.children(ctx)
-    } 
+    }) as (<T extends Dict=Dict>(props: FieldGroupProps<T>)=>ReactNode)
 }

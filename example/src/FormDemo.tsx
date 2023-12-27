@@ -3,7 +3,7 @@ import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
 import { AsyncComputedObject } from "helux-store";  
 import classnames from 'classnames';
-import { ReactFC } from "./types";
+import { ReactFC } from "./types"; 
 
 const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({enable,visible,label,children})=>{
     return  (
@@ -67,6 +67,24 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field>
+            <Network.Field<typeof Network.fields.ip> name="ip">                      
+                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
+                    console.log(required,visible,validate,enable)
+                    return <FieldRow visible={visible} label={title}>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync}/>
+                        <ValidResult result={validate}/>
+                    </FieldRow>
+                } }
+            </Network.Field>
+            <Network.Field<typeof Network.fields.gateway> name="gateway">                      
+                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
+                    console.log(required,visible,validate,enable)
+                    return <FieldRow visible={visible} label={title}>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync}/>
+                        <ValidResult result={validate}/>
+                    </FieldRow>
+                } }
+            </Network.Field>
          <Network.Group<typeof Network.fields.wifi> name="wifi">
             {({title,visible} )=>{ 
                 return (
@@ -90,9 +108,18 @@ const NetworkForm = ()=>{
                 </Card>)
             }}
          </Network.Group>  
-           
+         <Network.Field<typeof Network.fields.dhcp.enable> 
+            name="dhcp.enable"
+            render={({title,visible,value,validate,sync})=>{     
+                    return <FieldRow visible={visible} label={title}>
+                         <input className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync}/>
+                    </FieldRow>
+                }}            
+            >                                       
+            
+            </Network.Field> 
              
-               <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp.enable" >                                       
+           <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp.enable" >                                       
                 {({title,visible,value,validate,sync})=>{     
                     return <FieldRow visible={visible} label={title}>
                          <input className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync}/>
@@ -122,8 +149,11 @@ const NetworkForm = ()=>{
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.store.useState()
-    JSON.stringify(state.interface.select)
-    state.dhcp.start.validate.value
+    // useEffect(()=>{
+    //  JSON.stringify(state.interface.select)
+    // })
+    
+    // state.dhcp.start.validate.value
 
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>

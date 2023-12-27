@@ -1,8 +1,9 @@
 import React, {	 ReactNode, useCallback  } from "react";  
 import { getVal, setVal } from "@helux/utils";
 import { isLiteField } from "./utils";
-import {  Dict, FieldComputedProp } from "./types";  
+import {  ChangeFieldType, Dict, FieldComputedProp } from "./types";  
 import { assignObject } from "flex-tools/object/assignObject";
+import { AsyncComputedObject } from "helux-store";
  
 
 
@@ -53,12 +54,16 @@ export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultField
   oldValue      : PropTypes['value'] 
 } 
 
+// 将字段里面的validate属性转换为异步计算属性,以实现同步和异步校验的统一
+export type XFieldRenderProps<PropTypes extends Dict> = ChangeFieldType<FieldRenderProps<PropTypes>,'validate',AsyncComputedObject<boolean>>
+
 // 用来传递给字段组件进行渲染
-export type FieldRender<PropTypes extends Dict>= (props: FieldRenderProps<PropTypes>) => ReactNode
+export type FieldRender<PropTypes extends Dict>= (props: XFieldRenderProps<PropTypes>) => ReactNode
 
 export type FieldProps<PropTypes extends Dict = Dict> = {
 	name: string 
-	children: FieldRender<PropTypes> | FieldRender<PropTypes>[];
+  render?:FieldRender<PropTypes> 
+	children?: FieldRender<PropTypes> | FieldRender<PropTypes>[];
 } 
       
 
@@ -66,11 +71,12 @@ export type FieldComponent = React.FC<FieldProps>;
 
 
 export function createFieldComponent(store: any) {    
-  return function Field<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode{
+  return React.memo(<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
 		const { name } = props; 
 		let filedContext:any 				       
     const valuePath = Array.isArray(name) ? name : name.split(".")  
 		const [state,setState] = store.useState()
+    
 		let value = getVal(state,valuePath)
     const isLite = isLiteField(value)
     if(!isLite) {
@@ -105,9 +111,7 @@ export function createFieldComponent(store: any) {
 
     const filedUpdater = useCallback((updater:any)=>{
       if(typeof(updater)=="function"){
-        setState((draft:any)=>{
-          updater.call(draft,getVal(draft,valuePath))
-        })
+        setState((draft:any)=>updater.call(draft,getVal(draft,valuePath)))
       }else{
         setState((draft:any)=>setVal(draft,valuePath,updater))
       }
@@ -128,11 +132,20 @@ export function createFieldComponent(store: any) {
       update:filedUpdater 
     })  
 
-
-    return Array.isArray(props.children) ? 
-      props.children.map((children:any)=>children(fieldProps))
-      : props.children(fieldProps as any)
-	} 
+    if(props.render){ 
+      return  props.render(fieldProps as any)
+    }else{
+      if(props.children){
+        return Array.isArray(props.children) ? 
+          props.children.map((children:any)=>children(fieldProps as any) )
+          : props.children(fieldProps as any) 
+      }else{
+        return 
+      }      
+    }
+  }) as {
+    <T = Value>(props: T extends Value ? FieldProps<T> : FieldProps<{ value: T }>): React.ReactNode;
+  };
 }
 
  

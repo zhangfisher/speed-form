@@ -70,8 +70,16 @@ export interface FormObject<State extends Record<string, any>> {
   	}	  
 }
 
-export function createForm<State extends FormData>(state: State) {
-	const store = createStore<StoreDefine<State>>({ state },{
+export interface FormOptions{
+	// 何时进行数据验证, once=实时校验, lost-focus=失去焦点时校验, submit=提交时校验
+	validateAt?: 'once' | 'lost-focus' | 'submit'
+}
+
+
+export function createForm<State extends FormData>(state: State,options?:FormOptions) {
+	// StoreDefine<ChangeFieldType<State,'validate',AsyncComputedObject<boolean>>>
+	//<StoreDefine<State>>
+	const store = createStore<StoreDefine<ChangeFieldType<State,'validate',AsyncComputedObject<boolean>>>>({ state },{
 		computedContext: ComputedContextTarget.Root,
 		onCreateComputed({keyPath,getter}) {
 			//将校验参数的计算上下文更改为			

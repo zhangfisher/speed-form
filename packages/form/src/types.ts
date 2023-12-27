@@ -78,7 +78,10 @@ export type RequiredComputedAsyncField<T extends Record<string, any>> = {
 /**
  * 遍历对象将对象里面的名称为key的字段转换为指定的类型
  */
-export type ChangeFieldType<T extends Record<string, any>, Key extends string, NewType = any> = {
-    [K in keyof T]: K extends Key ? NewType : (T[K] extends Record<string, any> ? ChangeFieldType<T[K], Key, NewType> : T[K])
-  };
-  
+export type ChangeFieldType<T extends Dict, Key extends string, NewType = any> = {
+    [K in keyof T]: K extends Key ? NewType : 
+      (
+        T[K] extends Function ? T[K] :
+          (T[K] extends Record<string, any>  ? ChangeFieldType<T[K], Key, NewType> : T[K])
+      )
+};

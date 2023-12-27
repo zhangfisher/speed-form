@@ -22,11 +22,13 @@ const formSchema ={
     },
     ip:{
         value:"1.1.1.1",
-        title:"IP地址"
+        title:"IP地址",
+        validate:async (value:any)=>validator.isIP(value)
     },    
     gateway:{
         value:"1.1.1.1",
-        title:"网关地址"
+        title:"网关地址",
+        validate:async (value:any)=>validator.isIP(value)
     },
     dhcp:{        
         enable:{        

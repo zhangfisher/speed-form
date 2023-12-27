@@ -1,7 +1,7 @@
 {
-  "name": "magicform",
+  "name": "speedform",
   "version": "0.0.1",
-  "description": "",
+  "description": "high-performance and easy-to-use final form management for react",
   "main": "src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
