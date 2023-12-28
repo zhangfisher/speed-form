@@ -1,9 +1,9 @@
 
-import { ComputedContextTarget, computed} from "helux-store"
+import { ComputedContextRef, computed} from "helux-store"
 import { createForm } from "helux-form"
 import { Project, getProjects } from "../api/getProjects"
 import { delay } from "flex-tools/async/delay"
-import validate from "validate"
+import validator from "validator"
 
 // 声明表单数据
 const formSchema ={ 
@@ -23,12 +23,15 @@ const formSchema ={
     ip:{
         value:"1.1.1.1",
         title:"IP地址",
-        validate:async (value:any)=>validate.isIP(value)
+        validate:async ([value]:any)=>{
+            await delay(2000)
+            return validator.isIP(value)
+        }
     },    
     gateway:{
         value:"1.1.1.1",
-        title:"网关地址",
-        validate:async (value:any)=>validate.isIP(value)
+        title:"网关地址",        
+        validate:(value:any)=>validator.isIP(value)
     },
     dhcp:{        
         enable:{        
@@ -40,8 +43,8 @@ const formSchema ={
             value:"192.168.1.1",
             visible:computed<boolean>((dhcp:any)=>{
                 return dhcp.enable.value
-            },{context:ComputedContextTarget.Parent}),
-            validate:(value:any)=>validate.isIP(value)
+            },{context:ComputedContextRef.Parent}),
+            validate:(value:any)=>validator.isIP(value)
         },
         end:{
             title:"结束地址",
@@ -49,8 +52,8 @@ const formSchema ={
             // 将visible的context指向父对象即dhcp
             visible:computed<boolean>((state:any)=>{
                 return state.dhcp.enable.value
-            },{context:ComputedContextTarget.Root}),
-            validate:(value:any)=>validate.isIP(value)
+            },{context:ComputedContextRef.Root}),
+            validate:(value:any)=>validator.isIP(value)
         } 
     },
     

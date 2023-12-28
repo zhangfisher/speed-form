@@ -5,6 +5,8 @@ import { AsyncComputedObject } from "helux-store";
 import classnames from 'classnames';
 import { ReactFC } from "./types"; 
 import { Value } from '../../packages/form/src/field';
+import ColorBlock from "./components/ColorBlock";
+import Loader from 'react-loaders'
 
 const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({enable,visible,label,children})=>{
     return  (
@@ -25,7 +27,10 @@ const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({ena
                 display:'flex',
                 flexDirection:'row',
                 color: enable===false ? 'gray' : 'inherit'
-            }}>{children}</span>            
+            }}>{children}</span>    
+            {/* //@ts-ignore  */}
+
+            <ColorBlock value=""></ColorBlock>         
         </div>   
     )
 }
@@ -46,7 +51,7 @@ const ValidResult:React.FC<React.PropsWithChildren<{validate: boolean | AsyncCom
         display: isValiding || !isValid ? 'flex'  : 'none' 
     }}>        
     {/* @ts-ignore */}
-    <div data-loading="circle-side" active={isValiding}></div>
+    <Loader type="ball-clip-rotate-multiple" active={true}/> 
     { !isValiding && (isValid ?  '' : invalidTips ) }
 </span>
 }
@@ -55,11 +60,11 @@ const ValidResult:React.FC<React.PropsWithChildren<{validate: boolean | AsyncCom
 const NetworkForm = ()=>{
     return <Network.Form className="panel">
         <Card title="网络配置">
-           <Network.Field<string> name="title">                      
+           {/* <Network.Field<string> name="title">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <FieldRow visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate.value})} placeholder={placeholder} value={value} onChange={sync}/>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync}/>
                         <ValidResult validate={validate}/>
                     </FieldRow>
                 } }
@@ -76,7 +81,7 @@ const NetworkForm = ()=>{
                         </select>({value})       
                     </FieldRow>
                 }}
-            </Network.Field>
+            </Network.Field> */}
             <Network.Field<typeof Network.fields.ip> name="ip">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
@@ -86,11 +91,11 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 } }
             </Network.Field>
-            <Network.Field<typeof Network.fields.gateway> name="gateway">                      
+            {/* <Network.Field<typeof Network.fields.gateway> name="gateway">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <FieldRow visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate.value})} placeholder={placeholder} value={value} onChange={sync}/>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync}/>
                         <ValidResult validate={validate}/>
                     </FieldRow>
                 } }
@@ -149,7 +154,7 @@ const NetworkForm = ()=>{
                         <input className={classnames({invalid:!validate})} value={value} onChange={sync}/>
                     </FieldRow>
                 }}
-            </Network.Field>  
+            </Network.Field>   */}
         </Card>
     </Network.Form>        
 }

@@ -39,8 +39,8 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreDefine, createStore,RequiredComputedState, AsyncComputedObject, ComputedContextTarget, ComputedOptions } from "helux-store";
-import type { ReactFC,  FormData, Dict, ChangeFieldType} from "./types";
+import { type StoreDefine, createStore,RequiredComputedState, ComputedContextRef, ComputedOptions } from "helux-store";
+import type { ReactFC,  FormData, Dict} from "./types";
 import { FieldComponent,  createFieldComponent } from "./field"; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 
@@ -97,14 +97,15 @@ function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOp
 		options.depends = deps
 	}else{//同步计算函数
 		//同步计算函数将从默认的根状态对象更改为当前字段的值
-		options.context = 'value'  // == 上下文总是指向当前字段的值
+		options.context = 'value'  // == 上下文总是指向当前字段的值		
 	}  
+	options.initial = true	// 初始化true
 }
 
 
 export function createForm<State extends FormData>(state: State,options?:FormOptions) {
 	const store = createStore<StoreDefine<State>>({ state },{
-		computedContext: ComputedContextTarget.Root,
+		computedContext: ComputedContextRef.Root,
 		onCreateComputed(keyPath,getter,options) {
 			// 只对validator进行处理
 			if(keyPath[keyPath.length-1]=='validate'){

@@ -62,14 +62,14 @@ export interface StoreDefine<State>{
     state:State 
     actions?:Actions<State>
 }
-export enum ComputedContextTarget{
+export enum ComputedContextRef{
     Root = 0,
     Current = 1,
     Parent = 2
 }
 
 // 指定Store中计算函数的上下文,如果是字符串代表是当前对象的指定键，如果是string[]，则代表是当前Store对象的完整路径
-export type StoreComputedContext  = ComputedContextTarget | string | string[] | ((state:any)=>string | string[] | ComputedContextTarget)
+export type StoreComputedContext  = ComputedContextRef | string | string[] | ((state:any)=>string | string[] | ComputedContextRef)
 
 export interface StoreOptions{    
     // 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象
@@ -81,7 +81,7 @@ export interface StoreOptions{
 }
 export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
     const opts = Object.assign({
-        computedContext:ComputedContextTarget.Current
+        computedContext:ComputedContextRef.Current
     },options)
     return  model((api) => { // api对象 有详细的类型提示 
         const stateCtx = api.sharex<ComputedState<T['state']>>(data.state as any,{

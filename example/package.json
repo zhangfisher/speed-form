@@ -13,13 +13,14 @@
     "axios": "^1.6.2",
     "classnames": "^2.3.2",
     "color": "^4.2.3",
-    "css-loading": "^1.4.0",
-    "helux": "^3.5.20",
+    "helux": "^3.5.21",
     "helux-form": "workspace:^",
     "helux-store": "workspace:^",
+    "loaders.css": "^0.1.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-json-tree": "^0.18.0",
+    "react-loaders": "^3.0.1",
     "validator": "^13.11.0"
   },
   "devDependencies": {

@@ -60,18 +60,18 @@ importers:
       color:
         specifier: ^4.2.3
         version: 4.2.3
-      css-loading:
-        specifier: ^1.4.0
-        version: 1.4.0
       helux:
-        specifier: ^3.5.20
-        version: 3.5.20(react@18.2.0)
+        specifier: ^3.5.21
+        version: 3.5.21(react@18.2.0)
       helux-form:
         specifier: workspace:^
         version: link:../packages/form
       helux-store:
         specifier: workspace:^
         version: link:../packages/store
+      loaders.css:
+        specifier: ^0.1.2
+        version: 0.1.2
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -81,6 +81,9 @@ importers:
       react-json-tree:
         specifier: ^0.18.0
         version: 0.18.0(@types/react@18.2.42)(react@18.2.0)
+      react-loaders:
+        specifier: ^3.0.1
+        version: 3.0.1(prop-types@15.8.1)(react@18.2.0)
       validator:
         specifier: ^13.11.0
         version: 13.11.0
@@ -147,8 +150,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.6)
       helux:
-        specifier: ^3.5.20
-        version: 3.5.20(react@18.2.0)
+        specifier: ^3.5.21
+        version: 3.5.21(react@18.2.0)
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -190,8 +193,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.6)
       helux:
-        specifier: ^3.5.20
-        version: 3.5.20(react@18.2.0)
+        specifier: ^3.5.21
+        version: 3.5.21(react@18.2.0)
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -704,19 +707,19 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@helux/core@3.5.20:
-    resolution: {integrity: sha512-9Z5L/6HlzY+Z6oWIq9Wl029hly4Liyl1pPq6ZOOZK7PP1kCQbk2u72hRNvp+bDwLJokRqtqUoLHisEa/KsXAkA==}
+  /@helux/core@3.5.21:
+    resolution: {integrity: sha512-mpvS8CoZcx3weDPjFe8SKxr4shiafCGOYuJKnw4mbR0cg0uWauvO6/FL9Z3LGh0q2Fwtm+8z1kFqwVTLCmBAEA==}
     dependencies:
-      '@helux/hooks-impl': 3.5.20
-      '@helux/types': 3.5.20
-      '@helux/utils': 3.5.20
+      '@helux/hooks-impl': 3.5.21
+      '@helux/types': 3.5.21
+      '@helux/utils': 3.5.21
       limu: 3.11.10
 
-  /@helux/hooks-impl@3.5.20:
-    resolution: {integrity: sha512-ZbEBPit5sU3ZrcLs68SN6WKVAhwcjcvhLm2JXUK2UeNatQq2Q5CQ2C1tiR6ubs8jL9uVnUOGybOcHv0/8L1VTw==}
+  /@helux/hooks-impl@3.5.21:
+    resolution: {integrity: sha512-Bxm3+Zy5bBHRR4vBFQzCzoZTC9QUSdJNFmo6Hl6gpqT5YZWmVp6RoXoWjddXG5UbFEWLKKXHeIlO+n9K1eVfjA==}
     dependencies:
-      '@helux/types': 3.5.20
-      '@helux/utils': 3.5.20
+      '@helux/types': 3.5.21
+      '@helux/utils': 3.5.21
 
   /@helux/types@3.5.1:
     resolution: {integrity: sha512-2ZUH4YmTQWJIhQwtr2mkszaOchvmr30ikO0bdGoXJp0QiRJjOp+k8bfldBTUl3w0e54bmhUIoZ46KXI/9VMsrw==}
@@ -726,8 +729,8 @@ packages:
     resolution: {integrity: sha512-oO7Ah5L6nBOe6Lu6hJR3VVnqBRH2tMAHib/Yw1MisIqgfVWKN0ETuMTyV7EAIW3L4Q3gMFI8SX1LuGToXUQQOg==}
     dev: true
 
-  /@helux/types@3.5.20:
-    resolution: {integrity: sha512-qUrK5jKwA3UE5NyxCAjnkMuaXXNhBg7ed8Yxf5jpcw0CtH+3iuUO+/+Sn54vRgz6N8tit47CpThAEvmFB+StMQ==}
+  /@helux/types@3.5.21:
+    resolution: {integrity: sha512-5XkOg7TXj42O4mal3UZCrMWZVYM4fnsPzq6BwyDUUch31gw1AOdjAEKrV72GDXY4QalHZdvFgIL6r+H+tM2Lmw==}
 
   /@helux/utils@3.5.1:
     resolution: {integrity: sha512-mcxGzsRWHJEhrApfQ+E491rBGo3r8tEGMvB5v+mW6fUaKx6hCUTOcl8q21kb5RDNccrWBq0XdyU/tEA94u8B0Q==}
@@ -741,10 +744,10 @@ packages:
       '@helux/types': 3.5.11
     dev: true
 
-  /@helux/utils@3.5.20:
-    resolution: {integrity: sha512-4j6L18cQ9/VkLIImzJ2cNK4fOrjO1p6GskcvxIWQ65R15ayAYh13Ij0axmBNCX087NBR+ZXI15kVMku/J4DuTQ==}
+  /@helux/utils@3.5.21:
+    resolution: {integrity: sha512-0elpIm9y4ap2FhszfS28FHY7/WlaeH4TxjOmsK5AvuZcsRSTUule1Yp4OpIJRwXxsHvXv29XeX62NMejffV5Bg==}
     dependencies:
-      '@helux/types': 3.5.20
+      '@helux/types': 3.5.21
 
   /@humanwhocodes/config-array@0.11.13:
     resolution: {integrity: sha512-JSBDMiDKSzQVngfRjOdFXgFfklaXI4K9nLF49Auh21lmBWRLIK3+xTErTWD4KU54pb6coM6ESE7Awz/FNU3zgQ==}
@@ -1795,10 +1798,6 @@ packages:
       shebang-command: 2.0.0
       which: 2.0.2
 
-  /css-loading@1.4.0:
-    resolution: {integrity: sha512-wSu0NL6obs+xgQ1yBAjPNX9WvEJgQwtKnuWzAZgU6ayVfoLnDjDi5Hg/KWBQIRoScFZZR8R37Ts74YO8I7ujWQ==}
-    dev: false
-
   /css.escape@1.5.1:
     resolution: {integrity: sha512-YUifsXXuknHlUsmlgyY0PKzgPOr7/FjCePfHNt0jxm83wHZi44VDMQ7/fGNkjY3/jV1MC+1CmZbaHzugyeRtpg==}
     dev: true
@@ -2432,12 +2431,12 @@ packages:
     hasBin: true
     dev: false
 
-  /helux@3.5.20(react@18.2.0):
-    resolution: {integrity: sha512-jgFWu6aVfQFKpWAkrT3GM1LV2ijy1v+ijh5Tz0MiwkkoQ5opfO4doHalNQ6ovQg1pq1kKmIEYauLJo4SwQz+Xw==}
+  /helux@3.5.21(react@18.2.0):
+    resolution: {integrity: sha512-HqffFa/cbU35RBo6RwR+fyDtOHonqLm5fcy9JOdnOxaAeIio5dhB+fmb44o+z1B1DbBNS5uNcTthJzezQDsCbg==}
     peerDependencies:
       react: '>=16.8.0'
     dependencies:
-      '@helux/core': 3.5.20
+      '@helux/core': 3.5.21
       react: 18.2.0
 
   /html-encoding-sniffer@4.0.0:
@@ -2830,6 +2829,10 @@ packages:
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dev: true
 
+  /loaders.css@0.1.2:
+    resolution: {integrity: sha512-Rhowlq24ey1VOeor+3wYOt9+MjaxBOJm1u4KlQgNC3+0xJ0LS4wq4iG57D/BPzvuD/7HHDGQOWJ+81oR2EI9bQ==}
+    dev: false
+
   /local-pkg@0.4.3:
     resolution: {integrity: sha512-SFppqq5p42fe2qcZQqqEOiVRXl+WCP1MdT6k7BDEW1j++sp5fIY+/fdRQitvKgB5BrBcmrs5m/L0v2FrU5MY1g==}
     engines: {node: '>=14'}
@@ -3025,7 +3028,6 @@ packages:
   /object-assign@4.1.1:
     resolution: {integrity: sha512-rJgTQnkUnH1sFw8yT6VSU3zD3sWmu6sZhIseY8VX+GRu3P6F7Fu+JNDoXfklElbLJSnc3FUQHVe4cU5hj+BcUg==}
     engines: {node: '>=0.10.0'}
-    dev: true
 
   /object-inspect@1.13.1:
     resolution: {integrity: sha512-5qoj1RUiKOMsCCNLV1CBiPYE10sziTsnmNxkAI/rZhiD63CF7IqdFGC/XzjWjpSgLf0LxXX3bDFIh0E18f6UhQ==}
@@ -3241,6 +3243,14 @@ packages:
       react-is: 18.2.0
     dev: true
 
+  /prop-types@15.8.1:
+    resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
+    dependencies:
+      loose-envify: 1.4.0
+      object-assign: 4.1.1
+      react-is: 16.13.1
+    dev: false
+
   /proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
     dev: false
@@ -3283,6 +3293,10 @@ packages:
       react: 18.2.0
       scheduler: 0.23.0
 
+  /react-is@16.13.1:
+    resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
+    dev: false
+
   /react-is@17.0.2:
     resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
     dev: true
@@ -3302,6 +3316,17 @@ packages:
       '@types/react': 18.2.42
       react: 18.2.0
       react-base16-styling: 0.9.1
+    dev: false
+
+  /react-loaders@3.0.1(prop-types@15.8.1)(react@18.2.0):
+    resolution: {integrity: sha512-4igMNqs9Fb3d4Z+0UHIGQNJsw/37gX0nUO8QxupnEKRn1dtyYC1LGwk5GuaoDciMQCQc/MmPwb4Fn6ZfdoX1FQ==}
+    peerDependencies:
+      prop-types: '>=15.6.0'
+      react: '>=15'
+    dependencies:
+      classnames: 2.3.2
+      prop-types: 15.8.1
+      react: 18.2.0
     dev: false
 
   /react-refresh@0.14.0:

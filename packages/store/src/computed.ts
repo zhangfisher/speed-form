@@ -10,7 +10,7 @@
 
 import { HeluxApi, IOperateParams, ISharedCtx } from "helux";
 import type { StoreDefine, StoreComputedContext, StoreOptions } from './store';
-import { ComputedContextTarget } from './store';
+import { ComputedContextRef } from './store';
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 
@@ -37,6 +37,7 @@ export interface AsyncComputedObject<V=any>{
   progress?:number            // 进度值
   error?:any
   value:V,
+  keyPath?:string[]
   reset:()=>{}                // 重新执行任务    
 }
 
@@ -62,11 +63,11 @@ function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{contex
   try{
     const ctx = typeof(context)=='function' ? context(draft) : context
 
-    if(ctx === ComputedContextTarget.Current){
+    if(ctx === ComputedContextRef.Current){
         return  getVal(draft, keyPath)
-    }else if(ctx === ComputedContextTarget.Parent){
+    }else if(ctx === ComputedContextRef.Parent){
         return getVal(draft,fullKeyPath.slice(0,fullKeyPath.length-2))
-    }else if(ctx === ComputedContextTarget.Root){
+    }else if(ctx === ComputedContextRef.Root){
         return draft
     }else if(typeof(ctx)=='string'){
       return getVal(draft,[...keyPath,...ctx.split(".")])
@@ -172,7 +173,7 @@ function getFinalContext(state:any,computedContext?:StoreComputedContext ,storeC
       ctx = ctx.call(state,state)
     }catch{}    
   }
-  return ctx || storeContext || ComputedContextTarget.Root
+  return ctx || storeContext || ComputedContextRef.Root
 }
  
 
@@ -239,6 +240,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     return 
   }  
   let {getter,options:computedOptions } = value()
+  computedOptions.async = true
 
   // 在创建computed前运行,允许拦截更改计算函数的依赖,上下文,以及getter等
   if(typeof(onCreateComputed)=='function' && typeof(getter)==='function'){
@@ -257,7 +259,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
       // 将异步计算属性转换为一个计算属性对象
       setVal(draft,fullKeyPath,{
         value:initial,
-        __COMPUTED__:fullKeyPath,
+        keyPath:fullKeyPath,
         loading:false,
         error:null,
         progress:0,
