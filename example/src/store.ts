@@ -2,9 +2,7 @@ import { createStore,computed  } from "helux-store"
 import { delay }  from "flex-tools/async/delay"
 import { getProjects,type Project } from "./api/getProjects";
    
-export interface UserLevel{
-
-}
+ 
 export type MyStateType = {
     user: {
       id: string;

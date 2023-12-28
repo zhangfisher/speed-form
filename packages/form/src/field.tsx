@@ -20,7 +20,7 @@ export interface DefaultFieldPropTypes{
   readonly?    : boolean;              // 是否只读
   visible?     : boolean;              // 是否可见
   enable?      : boolean               // 是否可用
-  validate?    : boolean;              // 验证
+  validator?    : boolean;              // 验证
   select?      : any[]                 // 枚举值
 }  
 
@@ -36,7 +36,7 @@ export interface Field{
   readonly?    : FieldComputedProp<boolean>;                      // 是否只读
   visible?     : FieldComputedProp<boolean>;                      // 是否可见
   enable?      : FieldComputedProp<boolean>;                      // 是否可用
-  validate?    : FieldComputedProp<boolean>;                      // 验证
+  validator?    : FieldComputedProp<boolean>;                      // 验证
   select?      : FieldComputedProp<any[]>                         // 枚举值
 }
 
@@ -55,7 +55,7 @@ export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultField
 } 
 
 // 将字段里面的validate属性转换为异步计算属性,以实现同步和异步校验的统一
-export type XFieldRenderProps<PropTypes extends Dict> = ChangeFieldType<FieldRenderProps<PropTypes>,'validate',AsyncComputedObject<boolean>>
+export type XFieldRenderProps<PropTypes extends Dict> = ChangeFieldType<FieldRenderProps<PropTypes>,'validator',AsyncComputedObject<boolean>>
 
 // 用来传递给字段组件进行渲染
 export type FieldRender<PropTypes extends Dict>= (props: XFieldRenderProps<PropTypes>) => ReactNode
@@ -98,7 +98,7 @@ export function createFieldComponent(store: any) {
 				visible    : true,
 				required   : false,
 				readonly   : false,
-				validate   : true,        
+				validator   : true,        
 				enable     : true,
 				placeholder: "",        
 				select     : [] as any,
@@ -123,7 +123,7 @@ export function createFieldComponent(store: any) {
       visible    : true,
       required   : false,
       readonly   : false,
-      validate   : true,        
+      validator   : true,        
       enable     : true,
       select     : []
     },{

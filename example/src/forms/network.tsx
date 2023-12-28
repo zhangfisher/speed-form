@@ -11,7 +11,7 @@ const formSchema ={
         value:"React-Helux-Form",
         placeholder:"输入网络配置名称",
         title:"网络名称",
-        validate:(value:string)=>value.length>3
+        validator:(value:string)=>value.length>3
     },
     interface:{
         value:"wifi",
@@ -23,12 +23,12 @@ const formSchema ={
     ip:{
         value:"1.1.1.1",
         title:"IP地址",
-        validate:async (value:any)=>validator.isIP(value)
+        validator:async (value:any)=>validator.isIP(value)
     },    
     gateway:{
         value:"1.1.1.1",
         title:"网关地址",
-        validate:async (value:any)=>validator.isIP(value)
+        validator:async (value:any)=>validator.isIP(value)
     },
     dhcp:{        
         enable:{        
@@ -41,7 +41,7 @@ const formSchema ={
             visible:computed<boolean>((dhcp:any)=>{
                 return dhcp.enable.value
             },{context:ComputedContextTarget.Parent}),
-            validate:(value:any)=>validator.isIP(value)
+            validator:(value:any)=>validator.isIP(value)
         },
         end:{
             title:"结束地址",
@@ -50,7 +50,7 @@ const formSchema ={
             visible:computed<boolean>((state:any)=>{
                 return state.dhcp.enable.value
             },{context:ComputedContextTarget.Root}),
-            validate:(value:any)=>validator.isIP(value)
+            validator:(value:any)=>validator.isIP(value)
         } 
     },
     
@@ -60,14 +60,14 @@ const formSchema ={
         ssid:{
             value:"fast",
             placeholder:"无线网络",
-            validate:(value:string)=>value.length>3
+            validator:(value:string)=>value.length>3
         },
         password:{
             value:"123",
             placeholder:"输入无线密码",
             help:"密码长度应不小于6位",
             enable:(net:any)=>(net as NetworkType).interface.value==="wifi",
-            validate:(value:string)=>value.length>6
+            validator:(value:string)=>value.length>6
         }
     },
     // dns:[],

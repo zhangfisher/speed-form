@@ -55,7 +55,7 @@
 import { model  } from "helux" 
 import { createActions } from './action';
 import { Actions, ComputedState } from "./types";
-import { AsyncComputedObject, createComputed } from "./computed"; 
+import { type ComputedOptions, createComputed } from "./computed"; 
  
 
 export interface StoreDefine<State>{    
@@ -76,7 +76,7 @@ export interface StoreOptions{
     // 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
     computedContext?: StoreComputedContext
     // 当创建计算属性前调用
-    onCreateComputed?:(options:{keyPath:string[],getter:Function,context?:StoreComputedContext})=>{context?:StoreComputedContext,getter?:Function} | void
+    onCreateComputed?:(keyPath:string[],getter:Function,options:ComputedOptions)=>Function | void
     
 }
 export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){

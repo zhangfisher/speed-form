@@ -39,7 +39,7 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreDefine, createStore,RequiredComputedState, AsyncComputedObject, ComputedContextTarget } from "helux-store";
+import { type StoreDefine, createStore,RequiredComputedState, AsyncComputedObject, ComputedContextTarget, ComputedOptions } from "helux-store";
 import type { ReactFC,  FormData, Dict, ChangeFieldType} from "./types";
 import { FieldComponent,  createFieldComponent } from "./field"; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
@@ -76,38 +76,63 @@ export interface FormOptions{
 }
 
 
+/**
+ * 对表单字段中的validator属性进行处理,使用该属性的传入参数总是当前字段的值
+ * 
+ * 经过处理后
+ * 
+ * 如果validator是由computed函数创建的,由于computed函数可以指定依赖和计算上下文,有较强的自由度,因此不做任何处理
+ * 仅当validator是一个普通的同步函数和异步函数时,才进行处理
+ * 
+ * 处理方式:
+ *  - validator的第一个入参总是当前字段的值,第二个入参是当前字段的上下文对象
+ *  - 异步函数的依赖总是指向当前字段的值value
+ * 
+ */
+function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOptions){	
+	
+	if(options.async){	// 异步计算函数
+		// 异步计算的输入参数是([depends],ctx)
+		// 如果异步计算函数使用computed声明的,
+		// 
+		options.context = 'value'  
+		// 声明其依赖指向		
+		options.depends = [[...keyPath.slice(0,keyPath.length-1),'value']]
+		// == 上下文总是指向当前字段的值
+		return function(this:any,...args:any){
+			const result =  {
+				__COMPUTED__:keyPath,
+				value:true,
+				loading:false,
+				process:100,
+				error:null
+			}
+			try{
+				result.value = getter.call(this,...args)								
+			}catch(e:any){
+				result.error=e
+			}
+			return result							
+		}  
+		
+	}else{//同步计算函数
+		//同步计算函数将从默认的根状态对象更改为当前字段的值
+		options.context = 'value'  // == 上下文总是指向当前字段的值
+	}  
+}
+
+
+
+
 export function createForm<State extends FormData>(state: State,options?:FormOptions) {
 	// StoreDefine<ChangeFieldType<State,'validate',AsyncComputedObject<boolean>>>
 	//<StoreDefine<State>>
 	const store = createStore<StoreDefine<ChangeFieldType<State,'validate',AsyncComputedObject<boolean>>>>({ state },{
 		computedContext: ComputedContextTarget.Root,
-		onCreateComputed({keyPath,getter}) {
-			//将校验参数的计算上下文更改为			
-			if(keyPath[keyPath.length-1]=='validate'){
-				const r = {context:"value"}
-				// 将同步校验处理成与异步计算相同的返回值，以便在Field组件中统一处理 
-				if(typeof(getter)=='function'){					
-					// @ts-ignore
-					const computedType = getter.__COMPUTED__ 					
-					if(computedType!=="async"){						
-						// @ts-ignore
-						r.getter = function(this:any,...args:any){
-							const result =  {
-								value:true,
-								loading:false,
-								process:100,
-								error:null
-							}
-							try{
-								result.value = getter.call(this,...args)								
-							}catch(e:any){
-								result.error=e.message
-							}
-							return result							
-						} 
-					}
-				}
-				return r
+		onCreateComputed(keyPath,getter,options) {
+			// 只对validator进行处理
+			if(keyPath[keyPath.length-1]=='validator'){
+				return createValidatorHook(keyPath,getter,options)
 			}
 		},
 	});  
