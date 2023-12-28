@@ -1,5 +1,5 @@
 {
-  "name": "silky-form",
+  "name": "speed-form",
   "version": "0.0.1",
   "description": "high-performance and easy-to-use final form management for react",
   "main": "src/index.ts",
