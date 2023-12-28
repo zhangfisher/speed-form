@@ -11,7 +11,7 @@
   "license": "ISC",
   "dependencies": {
     "@helux/utils": "^3.5.1",
-    "flex-tools": "^1.3.50"
+    "flex-tools": "^1.3.52"
   },
   "files": [
     "readme.md"

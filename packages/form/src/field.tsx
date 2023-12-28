@@ -1,13 +1,9 @@
 import React, {	 ReactNode, useCallback  } from "react";  
 import { getVal, setVal } from "@helux/utils";
 import { isLiteField } from "./utils";
-import {  ChangeFieldType, Dict, FieldComputedProp } from "./types";  
+import { Dict, FieldComputedProp } from "./types";  
 import { assignObject } from "flex-tools/object/assignObject";
-import { AsyncComputedObject } from "helux-store";
  
-
-
-
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
   value        : any
@@ -20,7 +16,7 @@ export interface DefaultFieldPropTypes{
   readonly?    : boolean;              // 是否只读
   visible?     : boolean;              // 是否可见
   enable?      : boolean               // 是否可用
-  validator?    : boolean;              // 验证
+  validate?    : boolean;              // 验证
   select?      : any[]                 // 枚举值
 }  
 
@@ -36,7 +32,7 @@ export interface Field{
   readonly?    : FieldComputedProp<boolean>;                      // 是否只读
   visible?     : FieldComputedProp<boolean>;                      // 是否可见
   enable?      : FieldComputedProp<boolean>;                      // 是否可用
-  validator?    : FieldComputedProp<boolean>;                      // 验证
+  validate?    : FieldComputedProp<boolean>;                      // 验证
   select?      : FieldComputedProp<any[]>                         // 枚举值
 }
 
@@ -54,11 +50,9 @@ export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultField
   oldValue      : PropTypes['value'] 
 } 
 
-// 将字段里面的validate属性转换为异步计算属性,以实现同步和异步校验的统一
-export type XFieldRenderProps<PropTypes extends Dict> = ChangeFieldType<FieldRenderProps<PropTypes>,'validator',AsyncComputedObject<boolean>>
 
 // 用来传递给字段组件进行渲染
-export type FieldRender<PropTypes extends Dict>= (props: XFieldRenderProps<PropTypes>) => ReactNode
+export type FieldRender<PropTypes extends Dict>= (props: FieldRenderProps<PropTypes>) => ReactNode
 
 export type FieldProps<PropTypes extends Dict = Dict> = {
 	name: string 
@@ -83,8 +77,6 @@ export function createFieldComponent(store: any) {
       valuePath.push("value") 
     }
 
-
-    
     // 简单字段指的是仅仅指定值而未指定enable,visible等控制信息的字段，
 		if (isLite) { 
 			filedContext  ={	
@@ -98,7 +90,7 @@ export function createFieldComponent(store: any) {
 				visible    : true,
 				required   : false,
 				readonly   : false,
-				validator   : true,        
+				validate   : true,        
 				enable     : true,
 				placeholder: "",        
 				select     : [] as any,
@@ -123,7 +115,7 @@ export function createFieldComponent(store: any) {
       visible    : true,
       required   : false,
       readonly   : false,
-      validator   : true,        
+      validate   : true,        
       enable     : true,
       select     : []
     },{

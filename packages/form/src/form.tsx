@@ -85,36 +85,16 @@ export interface FormOptions{
  * 仅当validator是一个普通的同步函数和异步函数时,才进行处理
  * 
  * 处理方式:
- *  - validator的第一个入参总是当前字段的值,第二个入参是当前字段的上下文对象
- *  - 异步函数的依赖总是指向当前字段的值value
+ *  - 同步计算函数的context指向当前字段值
+ *  - 异步函数的第一个依赖指向当前字段的值value
  * 
  */
-function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOptions){	
-	
+function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOptions){		
 	if(options.async){	// 异步计算函数
-		// 异步计算的输入参数是([depends],ctx)
-		// 如果异步计算函数使用computed声明的,
-		// 
-		options.context = 'value'  
-		// 声明其依赖指向		
-		options.depends = [[...keyPath.slice(0,keyPath.length-1),'value']]
-		// == 上下文总是指向当前字段的值
-		return function(this:any,...args:any){
-			const result =  {
-				__COMPUTED__:keyPath,
-				value:true,
-				loading:false,
-				process:100,
-				error:null
-			}
-			try{
-				result.value = getter.call(this,...args)								
-			}catch(e:any){
-				result.error=e
-			}
-			return result							
-		}  
-		
+		// 异步计算的输入参数是([depends],ctx),如果异步计算函数不是使用computed声明的,没有指定依赖，则自动将对对段值value作为第一个依赖
+		const deps = options.depends || []
+		if(Array.isArray(deps)) deps.splice(0,0,[...keyPath.slice(0,keyPath.length-1),'value'])
+		options.depends = deps
 	}else{//同步计算函数
 		//同步计算函数将从默认的根状态对象更改为当前字段的值
 		options.context = 'value'  // == 上下文总是指向当前字段的值
@@ -122,16 +102,12 @@ function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOp
 }
 
 
-
-
 export function createForm<State extends FormData>(state: State,options?:FormOptions) {
-	// StoreDefine<ChangeFieldType<State,'validate',AsyncComputedObject<boolean>>>
-	//<StoreDefine<State>>
-	const store = createStore<StoreDefine<ChangeFieldType<State,'validate',AsyncComputedObject<boolean>>>>({ state },{
+	const store = createStore<StoreDefine<State>>({ state },{
 		computedContext: ComputedContextTarget.Root,
 		onCreateComputed(keyPath,getter,options) {
 			// 只对validator进行处理
-			if(keyPath[keyPath.length-1]=='validator'){
+			if(keyPath[keyPath.length-1]=='validate'){
 				return createValidatorHook(keyPath,getter,options)
 			}
 		},

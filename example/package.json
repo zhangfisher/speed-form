@@ -13,6 +13,7 @@
     "axios": "^1.6.2",
     "classnames": "^2.3.2",
     "color": "^4.2.3",
+    "css-loading": "^1.4.0",
     "helux": "^3.5.20",
     "helux-form": "workspace:^",
     "helux-store": "workspace:^",
