@@ -26,6 +26,8 @@ export type ComputedOptions<T=any> = {
   depends?:any[]    
   // 当执行计算getter函数出错时的回回调
   onError?:(e:Error)=>void 
+  //
+  
 };
 
 export type ComputedDepends = Array<string> | Array<Array<string>> | ((draft: any) => any[])

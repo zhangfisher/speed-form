@@ -4,9 +4,8 @@ import JsonViewer from "./components/JsonViewer"
 import { AsyncComputedObject } from "helux-store";  
 import classnames from 'classnames';
 import { ReactFC } from "./types"; 
-import { Value } from '../../packages/form/src/field';
 import ColorBlock from "./components/ColorBlock";
-import Loader from 'react-loaders'
+import { Loading } from "./components/Loading";
 
 const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({enable,visible,label,children})=>{
     return  (
@@ -28,9 +27,6 @@ const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({ena
                 flexDirection:'row',
                 color: enable===false ? 'gray' : 'inherit'
             }}>{children}</span>    
-            {/* //@ts-ignore  */}
-
-            <ColorBlock value=""></ColorBlock>         
         </div>   
     )
 }
@@ -45,13 +41,11 @@ const ValidResult:React.FC<React.PropsWithChildren<{validate: boolean | AsyncCom
     
     // 无效时的提示
     const invalidTips:string= isAsycValidate ? validate.error : help
-
     return <span style={{
         color:'red',
         display: isValiding || !isValid ? 'flex'  : 'none' 
-    }}>        
-    {/* @ts-ignore */}
-    <Loader type="ball-clip-rotate-multiple" active={true}/> 
+    }}>         
+    <Loading visible={isValiding} tips="正在验证..."/>
     { !isValiding && (isValid ?  '' : invalidTips ) }
 </span>
 }
@@ -59,6 +53,7 @@ const ValidResult:React.FC<React.PropsWithChildren<{validate: boolean | AsyncCom
 
 const NetworkForm = ()=>{
     return <Network.Form className="panel">
+       <div data-loader="circle"></div>
         <Card title="网络配置">
            {/* <Network.Field<string> name="title">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
@@ -83,24 +78,24 @@ const NetworkForm = ()=>{
                 }}
             </Network.Field> */}
             <Network.Field<typeof Network.fields.ip> name="ip">                      
+                {({title,value,visible,validate,placeholder,sync})=>{ 
+                    return <FieldRow visible={visible} label={title}>
+                         <input className={classnames({invalid:!validate.value})} placeholder={placeholder} value={value} onChange={sync(100)}/>
+                        <ValidResult validate={validate}/>                        
+                        <ColorBlock/>      
+                    </FieldRow> 
+                } }
+            </Network.Field>
+            <Network.Field<typeof Network.fields.gateway> name="gateway">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <FieldRow visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate.value})} placeholder={placeholder} value={value} onChange={sync}/>
-                        <ValidResult validate={validate}/>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                        <ValidResult validate={validate}/><ColorBlock/>
                     </FieldRow>
                 } }
             </Network.Field>
-            {/* <Network.Field<typeof Network.fields.gateway> name="gateway">                      
-                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
-                    console.log(required,visible,validate,enable)
-                    return <FieldRow visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync}/>
-                        <ValidResult validate={validate}/>
-                    </FieldRow>
-                } }
-            </Network.Field>
-         <Network.Group<typeof Network.fields.wifi> name="wifi">
+         {/* <Network.Group<typeof Network.fields.wifi> name="wifi">
             {({title,visible} )=>{ 
                 return (
                 <Card title={title}  visible={visible}>
@@ -174,7 +169,7 @@ const FormDemo:React.FC = ()=>{
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>
             <div style={{padding:"8px",margin:'8px',width:'60%'}}>
                 <NetworkForm/>
-                <NetworkForm/>
+                {/* <NetworkForm/> */}
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单数据">

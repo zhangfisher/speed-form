@@ -1,6 +1,6 @@
-import React, {	 ReactNode, useCallback  } from "react";  
+import React, {	 ChangeEventHandler, ReactNode, useCallback, useEffect,useRef,useState  } from "react";  
 import { getVal, setVal } from "@helux/utils";
-import { isLiteField } from "./utils";
+import { isLiteField, debounce as debounceWrapper, debounce } from './utils';
 import { Dict, FieldComputedProp } from "./types";  
 import { assignObject } from "flex-tools/object/assignObject";
  
@@ -44,8 +44,8 @@ export type Value = {value:any}
 
 // 传递给字段组件的渲染参数
 export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultFieldPropTypes,keyof PropTypes> & PropTypes> & {
-  sync	  	    : ()=>void	   		  		                    // 同步状态
-  update	  	  : (valueOrUpdater:PropTypes['value'] | ((field:PropTypes)=>void))=>void	  	    // 更新值
+  sync	  	    : (debounce?:number)=>ChangeEventHandler	   		  		                    // 同步状态表单计算
+  update	  	  : (valueOrUpdater:PropTypes['value'] | ((field:PropTypes)=>void))=>void	  	   
   defaultValue  : PropTypes['value'] | undefined
   oldValue      : PropTypes['value'] 
 } 
@@ -64,43 +64,83 @@ export type FieldProps<PropTypes extends Dict = Dict> = {
 export type FieldComponent = React.FC<FieldProps>;
 
 
+function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
+  
+  const isLite = isLiteField(value)
+
+  return assignObject({
+    name,
+    help       : "",
+    defaultValue: undefined,
+    oldValue   : undefined,
+    visible    : true,
+    required   : false,
+    readonly   : false,
+    validate   : true,        
+    enable     : true,
+    placeholder: "",        
+    select     : [] as any,
+    sync       : ()=>{},
+  },{
+    ...isLite ? {value} : value,
+    sync:syncer,
+    update:filedUpdater 
+  })   
+}
+
+function useFieldSyncer(store: any,valuePath:string[]){
+  const sync = useRef<null | Function>(null)
+  return useCallback((debounce:number=0)=>{      
+    if(sync.current==null){
+      const syncFn = store.sync(valuePath)
+      sync.current  = debounce==0 ? syncFn :debounceWrapper(syncFn,debounce)
+    }
+    return sync.current      
+  },[]) 
+}
+
+/**
+ * 
+ * 字段更新器，用来对表单数据进行更新
+ * 
+ * 在更新表单时支持两种调用方式
+ * 传入一个函数: update((state)=>state.xxx.xxx)
+ * 传入一个值: update(value) 
+ * 
+ * @param store 
+ * @param valuePath 
+ * @param setState 
+ * @returns 
+ */
+function useFieldUpdater(store: any,valuePath:string[],setState:any){
+  const update = useRef<null | Function>(null)
+  if(update.current==null){
+    const updateFn = (updater:any,options?:{debounce:number})=>{
+      if(typeof(updater)=="function"){
+          setState((draft:any)=>updater.call(draft,getVal(draft,valuePath)))
+      }else{
+        setState((draft:any)=>setVal(draft,valuePath,updater))
+      }
+    }
+    update.current = options.debounce > 0 ? updateFn : debounceWrapper(updateFn,options.debounce)
+  }
+  return update.current 
+}
+
+
 export function createFieldComponent(store: any) {    
   return React.memo(<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
 		const { name } = props; 
-		let filedContext:any 				       
     const valuePath = Array.isArray(name) ? name : name.split(".")  
 		const [state,setState] = store.useState()
-    
-		let value = getVal(state,valuePath)
+		const value = getVal(state,valuePath)
     const isLite = isLiteField(value)
+    console.log("field render",name)
     if(!isLite) {
       valuePath.push("value") 
     }
 
-    // 简单字段指的是仅仅指定值而未指定enable,visible等控制信息的字段，
-		if (isLite) { 
-			filedContext  ={	
-        name,
-        __HELUX_FIELD__:true,			      
-				value,
-				title      : name,
-				help       : "",
-				defaultValue: undefined,
-        oldValue   : undefined,
-				visible    : true,
-				required   : false,
-				readonly   : false,
-				validate   : true,        
-				enable     : true,
-				placeholder: "",        
-				select     : [] as any,
-				sync       : ()=>{},
-        update     : (value:any)=>{setState((draft:any)=>setVal(draft,valuePath,value))}
-			};	
-		}else {
-			filedContext = value
-		} 
-
+    // 更新当前字段信息，如update(field=>field.enable=true)
     const filedUpdater = useCallback((updater:any)=>{
       if(typeof(updater)=="function"){
         setState((draft:any)=>updater.call(draft,getVal(draft,valuePath)))
@@ -109,21 +149,16 @@ export function createFieldComponent(store: any) {
       }
     },[])
 
-    // 提供默认值
-    const fieldProps = assignObject({
-      name,
-      visible    : true,
-      required   : false,
-      readonly   : false,
-      validate   : true,        
-      enable     : true,
-      select     : []
-    },{
-      ...filedContext,
-      sync:store.sync(valuePath),
-      update:filedUpdater 
-    })  
+    // 表单字段同步，允许指定防抖参数
+    const syncer = useFieldSyncer(store,valuePath)
 
+    const [fieldProps,setFieldProps] = useState(()=>createFieldProps(name,value,syncer,filedUpdater))
+ 
+    useEffect(()=>{
+      setFieldProps(createFieldProps(name,value,syncer,filedUpdater))
+    },[value])
+ 
+    // 调用渲染字段UI 
     if(props.render){ 
       return  props.render(fieldProps as any)
     }else{
@@ -135,6 +170,8 @@ export function createFieldComponent(store: any) {
         return 
       }      
     }
+  },(oldProps:any, newProps:any)=>{
+      return oldProps.name === newProps.name
   }) as {
     <T = Value>(props: T extends Value ? FieldProps<T> : FieldProps<{ value: T }>): React.ReactNode;
   };

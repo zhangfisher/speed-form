@@ -16,11 +16,10 @@
     "helux": "^3.5.21",
     "helux-form": "workspace:^",
     "helux-store": "workspace:^",
-    "loaders.css": "^0.1.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-json-tree": "^0.18.0",
-    "react-loaders": "^3.0.1",
+    "react-loader-spinner": "^6.1.6",
     "validator": "^13.11.0"
   },
   "devDependencies": {
