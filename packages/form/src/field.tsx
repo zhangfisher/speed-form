@@ -20,11 +20,12 @@ export interface DefaultFieldPropTypes{
   select?      : any[]                 // 枚举值
 }  
 
-export interface Field{
+export interface Field<T=any>{
+  __SPEED_FORM_FIELD__:boolean
   name         : string
-  value        : any;
+  value        : T;
   title?       : FieldComputedProp<string>;                       // 标题
-  defaultValue?: FieldComputedProp<any>;                          // 默认值
+  defaultValue?: FieldComputedProp<T>;                          // 默认值
   oldValue?    : FieldComputedProp<any>;                          // 默认值
   help?        : FieldComputedProp<string>;                       // 提示信息
   placeholder? : FieldComputedProp<string>;                       // 占位符
@@ -33,10 +34,18 @@ export interface Field{
   visible?     : FieldComputedProp<boolean>;                      // 是否可见
   enable?      : FieldComputedProp<boolean>;                      // 是否可用
   validate?    : FieldComputedProp<boolean>;                      // 验证
-  select?      : FieldComputedProp<any[]>                         // 枚举值
+  select?      : FieldComputedProp<any[]>                         // 枚举值  
 }
 
- 
+/**
+ * 用来声明一个字段
+ * @param data 
+ * @returns 
+ */
+export function field<Value=any>(data:Field<Value>):Field<Value>{
+  data.__SPEED_FORM_FIELD__= true     // 用来指示这是一个字段
+  return data
+} 
 
  // 完整的字段描述
 export type Value = {value:any}
@@ -45,7 +54,7 @@ export type Value = {value:any}
 // 传递给字段组件的渲染参数
 export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultFieldPropTypes,keyof PropTypes> & PropTypes> & {
   sync	  	    : (debounce?:number)=>ChangeEventHandler	   		  		                    // 同步状态表单计算
-  update	  	  : (valueOrUpdater:PropTypes['value'] | ((field:PropTypes)=>void))=>void	  	   
+  update	  	  : (valueOrUpdater:PropTypes['value'] | ((field:PropTypes)=>void),options?:{debounce?:number})=>void	  	   
   defaultValue  : PropTypes['value'] | undefined
   oldValue      : PropTypes['value'] 
 } 
@@ -105,7 +114,7 @@ function useFieldSyncer(store: any,valuePath:string[]){
  * 
  * 在更新表单时支持两种调用方式
  * 传入一个函数: update((state)=>state.xxx.xxx)
- * 传入一个值: update(value) 
+ * 传入一个值: update(value,{debounce:100}) 指定防抖参数
  * 
  * @param store 
  * @param valuePath 
@@ -113,18 +122,23 @@ function useFieldSyncer(store: any,valuePath:string[]){
  * @returns 
  */
 function useFieldUpdater(store: any,valuePath:string[],setState:any){
-  const update = useRef<null | Function>(null)
-  if(update.current==null){
-    const updateFn = (updater:any,options?:{debounce:number})=>{
-      if(typeof(updater)=="function"){
-          setState((draft:any)=>updater.call(draft,getVal(draft,valuePath)))
-      }else{
-        setState((draft:any)=>setVal(draft,valuePath,updater))
-      }
-    }
-    update.current = options.debounce > 0 ? updateFn : debounceWrapper(updateFn,options.debounce)
-  }
-  return update.current 
+  const update = useRef<null | ((updater:Function | Record<string,any>)=>void)>(null)  
+  const [debounceValue,setDebounce] = useState(0)
+  return useCallback(function(updater:any,options?:{debounce:number}){      
+    const { debounce } = Object.assign({debounce:0},options)
+    if(update.current==null || debounceValue!==debounce){
+      if(debounceValue!==debounce && debounce>0) setDebounce(debounce)
+      const updateFn = (updater:any)=>{
+        if(typeof(updater)=="function"){
+          setState((draft:any)=>updater.call(draft,draft))
+        }else{
+          setState((draft:any)=>setVal(draft,valuePath,updater))
+        } 
+      }        
+      update.current = debounce > 0 ? updateFn : debounceWrapper(updateFn,debounce)      
+    }      
+    return update.current(updater)
+  },[])
 }
 
 
@@ -141,13 +155,7 @@ export function createFieldComponent(store: any) {
     }
 
     // 更新当前字段信息，如update(field=>field.enable=true)
-    const filedUpdater = useCallback((updater:any)=>{
-      if(typeof(updater)=="function"){
-        setState((draft:any)=>updater.call(draft,getVal(draft,valuePath)))
-      }else{
-        setState((draft:any)=>setVal(draft,valuePath,updater))
-      }
-    },[])
+    const filedUpdater = useFieldUpdater(store,valuePath,setState)
 
     // 表单字段同步，允许指定防抖参数
     const syncer = useFieldSyncer(store,valuePath)

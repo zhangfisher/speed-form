@@ -125,8 +125,8 @@ export function createForm<State extends FormData>(state: State,options?:FormOpt
 function createFormComponent<State extends FormData>(store: any): FormComponent<State> {
 	return (props: FormProps<State>) => {
 		const { children } = props; 
-		const onSubmit = useCallback((e: React.FormEvent<HTMLFormElement>) => {
-    
+		const onSubmit = useCallback((ev: React.FormEvent<HTMLFormElement>) => {
+			console.log("submit:",ev)
 		},[]);
 		const onReset = useCallback((e: React.FormEvent<HTMLFormElement>) => {
 

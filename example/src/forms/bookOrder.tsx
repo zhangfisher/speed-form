@@ -1,6 +1,6 @@
 
 import { computed} from "helux-store"
-import { createForm } from "helux-form"
+import { createForm } from "speed-form"
 import { Project, getProjects } from "../api/getProjects"
 import { delay } from "flex-tools/async/delay"
 

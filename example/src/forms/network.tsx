@@ -1,18 +1,18 @@
 
 import { ComputedContextRef, computed} from "helux-store"
-import { createForm } from "helux-form"
+import { createForm } from "speed-form"
 import { Project, getProjects } from "../api/getProjects"
 import { delay } from "flex-tools/async/delay"
 import validator from "validator"
 
 // 声明表单数据
 const formSchema ={ 
-    // title:{
-    //     value:"React-Helux-Form",
-    //     placeholder:"输入网络配置名称",
-    //     title:"网络名称",
-    //     validate:(value:string)=>value.length>3
-    // },
+    title:field({
+        value:"React-Helux-Form",
+        placeholder:"输入网络配置名称",
+        title:"网络名称",
+        validate:(value:string)=>value.length>3
+    }),
     // interface:{
     //     value:"wifi",
     //     title:"网卡类型",

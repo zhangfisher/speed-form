@@ -46,15 +46,7 @@ export type Dict = Record<string,any> // 字段属性类型集
 //     [K in keyof T]-?: Exclude<T[K],undefined> extends FieldComputedProp<any> ? PickFieldPropValue<Exclude<T[K],undefined>> : Required<T[K]> extends Record<string, any> ? RequiredComputedState<Exclude<T[K],undefined> > : Exclude<T[K],undefined> ;
 // };
 
-
-
-
-
-export type FieldCrop<R=unknown> = ((...args:any)=>R)  
-  | ((...args:any)=>Promise<R>)
-  | AsyncComputedObject<R>
-  | AsyncComputedReturns<R> 
-
+ 
 
 // 
 export type PickAsyncFieldPropValue<T> = T extends (...args:any)=> Promise<infer R>  ? AsyncComputedObject<R> : 
@@ -75,13 +67,13 @@ export type RequiredComputedAsyncField<T extends Record<string, any>> = {
 
 
 
-/**
- * 遍历对象将对象里面的名称为key的字段转换为指定的类型
- */
-export type ChangeFieldType<T extends Dict, Key extends string, NewType = any> = {
-    [K in keyof T]: K extends Key ? NewType : 
-      (
-        T[K] extends Function ? T[K] :
-          (T[K] extends Record<string, any>  ? ChangeFieldType<T[K], Key, NewType> : T[K])
-      )
-};
+// /**
+//  * 遍历对象将对象里面的名称为key的字段转换为指定的类型
+//  */
+// export type ChangeFieldType<T extends Dict, Key extends string, NewType = any> = {
+//     [K in keyof T]: K extends Key ? NewType : 
+//       (
+//         T[K] extends Function ? T[K] :
+//           (T[K] extends Record<string, any>  ? ChangeFieldType<T[K], Key, NewType> : T[K])
+//       )
+// };
