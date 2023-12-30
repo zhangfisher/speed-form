@@ -1,8 +1,9 @@
 import React, {	 ChangeEventHandler, ReactNode, useCallback, useEffect,useRef,useState  } from "react";  
 import { getVal, setVal } from "@helux/utils";
-import { isLiteField, debounce as debounceWrapper, debounce } from './utils';
-import { Dict, FieldComputedProp } from "./types";  
+import { isLiteField, debounce as debounceWrapper,  isPrimitive } from './utils';
+import { Dict, FieldComputedProp, Primitive } from "./types";  
 import { assignObject } from "flex-tools/object/assignObject";
+import { isPlainObject } from "flex-tools/typecheck/isPlainObject";
  
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
@@ -21,8 +22,8 @@ export interface DefaultFieldPropTypes{
 }  
 
 export interface Field<T=any>{
-  __SPEED_FORM_FIELD__:boolean
-  name         : string
+  __SPEED_FORM_FIELD__?:boolean
+  name?         : string
   value        : T;
   title?       : FieldComputedProp<string>;                       // 标题
   defaultValue?: FieldComputedProp<T>;                          // 默认值
@@ -39,12 +40,20 @@ export interface Field<T=any>{
 
 /**
  * 用来声明一个字段
+ * field()
+ * field("")
+ * field({value:any})
+ * 
  * @param data 
  * @returns 
  */
-export function field<Value=any>(data:Field<Value>):Field<Value>{
-  data.__SPEED_FORM_FIELD__= true     // 用来指示这是一个字段
-  return data
+export function field<Value=any>(valueOrSchema?:Primitive | Field<Value>):Field<Value>{  
+  const schema = Object.assign({__SPEED_FORM_FIELD__:true,value:null},
+    isPrimitive(valueOrSchema) 
+      ? {value:valueOrSchema} 
+      : (isPlainObject(valueOrSchema) ? valueOrSchema : {}) 
+    ) as Field<Value>  
+  return schema
 } 
 
  // 完整的字段描述

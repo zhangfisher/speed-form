@@ -77,3 +77,4 @@ export type RequiredComputedAsyncField<T extends Record<string, any>> = {
 //           (T[K] extends Record<string, any>  ? ChangeFieldType<T[K], Key, NewType> : T[K])
 //       )
 // };
+export type Primitive = number | boolean | string | null | undefined 

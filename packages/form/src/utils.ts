@@ -13,14 +13,15 @@ export function isLiteField(value: any): boolean {
 
 
 
-export function isAtomType(value:any){
+/**
+ * 判定一个值是否是原子类型
+ * @param value 
+ * @returns 
+ */
+export function isPrimitive(value:any){
 	const t = typeof(value)
-	if(t=='boolean'
-		|| t =='number'
-		|| t == 'string'
-		|| t == undefined	
-	) return true
-}
+	return value==undefined || t =='boolean' || t =='number' || t == 'string' || t == null	
+} 
 
 
 /**

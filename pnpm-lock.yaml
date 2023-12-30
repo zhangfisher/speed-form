@@ -64,11 +64,8 @@ importers:
         specifier: ^4.2.3
         version: 4.2.3
       helux:
-        specifier: ^3.5.21
-        version: 3.5.21(react@18.2.0)
-      speed-form:
-        specifier: workspace:^
-        version: link:../packages/form
+        specifier: ^3.5.23
+        version: 3.5.23(react@18.2.0)
       helux-store:
         specifier: workspace:^
         version: link:../packages/store
@@ -84,6 +81,9 @@ importers:
       react-loader-spinner:
         specifier: ^6.1.6
         version: 6.1.6(react-dom@18.2.0)(react@18.2.0)
+      speed-form:
+        specifier: workspace:^
+        version: link:../packages/form
       validator:
         specifier: ^13.11.0
         version: 13.11.0
@@ -150,8 +150,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.6)
       helux:
-        specifier: ^3.5.21
-        version: 3.5.21(react@18.2.0)
+        specifier: ^3.5.23
+        version: 3.5.23(react@18.2.0)
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -193,8 +193,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.6)
       helux:
-        specifier: ^3.5.21
-        version: 3.5.21(react@18.2.0)
+        specifier: ^3.5.23
+        version: 3.5.23(react@18.2.0)
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -928,19 +928,19 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@helux/core@3.5.21:
-    resolution: {integrity: sha512-mpvS8CoZcx3weDPjFe8SKxr4shiafCGOYuJKnw4mbR0cg0uWauvO6/FL9Z3LGh0q2Fwtm+8z1kFqwVTLCmBAEA==}
+  /@helux/core@3.5.23:
+    resolution: {integrity: sha512-LVTJn7O9xvRVflsjH2BjjDNz53Ra82bZFhfg4Yeh1SMvqgbPlPr2xM2Ektblwsyc9uEYdF2WbYhxoKO0mMPNFA==}
     dependencies:
-      '@helux/hooks-impl': 3.5.21
-      '@helux/types': 3.5.21
-      '@helux/utils': 3.5.21
+      '@helux/hooks-impl': 3.5.23
+      '@helux/types': 3.5.23
+      '@helux/utils': 3.5.23
       limu: 3.11.10
 
-  /@helux/hooks-impl@3.5.21:
-    resolution: {integrity: sha512-Bxm3+Zy5bBHRR4vBFQzCzoZTC9QUSdJNFmo6Hl6gpqT5YZWmVp6RoXoWjddXG5UbFEWLKKXHeIlO+n9K1eVfjA==}
+  /@helux/hooks-impl@3.5.23:
+    resolution: {integrity: sha512-NqNwPsQaTEx6fMz4Dn1gL8kIQWeG1itOCq9StO9JEUyiKTgwlJUMzx32xGiZk56UYByGIHBis44ONvcTNCewwA==}
     dependencies:
-      '@helux/types': 3.5.21
-      '@helux/utils': 3.5.21
+      '@helux/types': 3.5.23
+      '@helux/utils': 3.5.23
 
   /@helux/types@3.5.1:
     resolution: {integrity: sha512-2ZUH4YmTQWJIhQwtr2mkszaOchvmr30ikO0bdGoXJp0QiRJjOp+k8bfldBTUl3w0e54bmhUIoZ46KXI/9VMsrw==}
@@ -950,8 +950,8 @@ packages:
     resolution: {integrity: sha512-oO7Ah5L6nBOe6Lu6hJR3VVnqBRH2tMAHib/Yw1MisIqgfVWKN0ETuMTyV7EAIW3L4Q3gMFI8SX1LuGToXUQQOg==}
     dev: true
 
-  /@helux/types@3.5.21:
-    resolution: {integrity: sha512-5XkOg7TXj42O4mal3UZCrMWZVYM4fnsPzq6BwyDUUch31gw1AOdjAEKrV72GDXY4QalHZdvFgIL6r+H+tM2Lmw==}
+  /@helux/types@3.5.23:
+    resolution: {integrity: sha512-Wp1H8S1UbxLRYSGI0GSq8oaCigb1nleMYgO1MKDessGTBmA3wYUNoH2h7RgNETT7KCEh/Cgn+PkcjIYJx6wXcA==}
 
   /@helux/utils@3.5.1:
     resolution: {integrity: sha512-mcxGzsRWHJEhrApfQ+E491rBGo3r8tEGMvB5v+mW6fUaKx6hCUTOcl8q21kb5RDNccrWBq0XdyU/tEA94u8B0Q==}
@@ -965,10 +965,10 @@ packages:
       '@helux/types': 3.5.11
     dev: true
 
-  /@helux/utils@3.5.21:
-    resolution: {integrity: sha512-0elpIm9y4ap2FhszfS28FHY7/WlaeH4TxjOmsK5AvuZcsRSTUule1Yp4OpIJRwXxsHvXv29XeX62NMejffV5Bg==}
+  /@helux/utils@3.5.23:
+    resolution: {integrity: sha512-ckFq9Ul0p9QTm9foi7jdEhSg8rnOt3qDHFp2BnCXak+/rKyMCsJELtv0fp1XpQJLEFNnold9q3d19weaE8X5IQ==}
     dependencies:
-      '@helux/types': 3.5.21
+      '@helux/types': 3.5.23
 
   /@humanwhocodes/config-array@0.11.13:
     resolution: {integrity: sha512-JSBDMiDKSzQVngfRjOdFXgFfklaXI4K9nLF49Auh21lmBWRLIK3+xTErTWD4KU54pb6coM6ESE7Awz/FNU3zgQ==}
@@ -2714,12 +2714,12 @@ packages:
     hasBin: true
     dev: false
 
-  /helux@3.5.21(react@18.2.0):
-    resolution: {integrity: sha512-HqffFa/cbU35RBo6RwR+fyDtOHonqLm5fcy9JOdnOxaAeIio5dhB+fmb44o+z1B1DbBNS5uNcTthJzezQDsCbg==}
+  /helux@3.5.23(react@18.2.0):
+    resolution: {integrity: sha512-uqJsOWGTJauVWZW86jiklRk4YepCd0JgeQa1L/8n1wkhEfi2nDCiDqfD3+Sh4VEIIbrGlZZ4eCOsQH5LsdiTVw==}
     peerDependencies:
       react: '>=16.8.0'
     dependencies:
-      '@helux/core': 3.5.21
+      '@helux/core': 3.5.23
       react: 18.2.0
 
   /html-encoding-sniffer@4.0.0:
