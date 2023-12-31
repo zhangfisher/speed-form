@@ -3,7 +3,6 @@ import { defineConfig } from 'dumi';
 export default defineConfig({
   outputPath: 'dist',
   themeConfig: {
-    name: 'SpeedForm',
   },
   logo:"/logo.png",
   locales: [

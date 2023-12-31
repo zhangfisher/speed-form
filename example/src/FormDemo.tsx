@@ -16,7 +16,7 @@ const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({ena
             flexDirection:"row",
             width:'100%',
             padding:"8px"
-        }}>
+        }}>   <ColorBlock  title="渲染计数"/>   
             <label  className="field-label"  style={{
                 minWidth:'160px',
                 fontWeight:'bold',
@@ -52,7 +52,7 @@ const ValidResult:React.FC<React.PropsWithChildren<{validate: boolean | AsyncCom
 }
 
 
-const NetworkForm = ()=>{
+const NetworkForm = ()=>{    
     return <Network.Form className="panel">
        <div data-loader="circle"></div>
         <Card title="网络配置">
@@ -60,16 +60,16 @@ const NetworkForm = ()=>{
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <FieldRow visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync}/>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
                         <ValidResult validate={validate}/>
                     </FieldRow>
                 } }
             </Network.Field>
-             {/* <Network.Field<typeof Network.fields.interface> name="interface">                      
+             <Network.Field<typeof Network.fields.interface> name="interface">                      
                 {({title,required,visible,validate,enable,value,defaultValue,select,sync})=>{     
                     console.log(required,visible,validate,enable,defaultValue)
                     return <FieldRow label={title}>                        
-                        <select value={value} onChange={sync}>
+                        <select value={value} onChange={sync()}>
                             {select.map((item:any, index:number) => (
                                 <option  key={index} value={item.value}>{item.title}</option>
                             ))}
@@ -77,13 +77,12 @@ const NetworkForm = ()=>{
                         </select>({value})       
                     </FieldRow>
                 }}
-            </Network.Field> */}
+            </Network.Field> 
             <Network.Field<typeof Network.fields.ip> name="ip">                      
                 {({title,value,visible,validate,placeholder,sync})=>{ 
                     return <FieldRow visible={visible} label={title}>
                          <input className={classnames({invalid:!validate.value})} placeholder={placeholder} value={value} onChange={sync(100)}/>
-                        <ValidResult validate={validate}/>                        
-                        <ColorBlock/>      
+                        <ValidResult validate={validate}/> 
                     </FieldRow> 
                 } }
             </Network.Field>
@@ -102,11 +101,11 @@ const NetworkForm = ()=>{
                             update('192.168.1.1');
                             event.preventDefault(); 
                         }}>更新值</button>
-                        <ValidResult validate={validate}/><ColorBlock/>
+                        <ValidResult validate={validate}/>
                     </FieldRow>
                 } }
             </Network.Field>
-         {/* <Network.Group<typeof Network.fields.wifi> name="wifi">
+          <Network.Group<typeof Network.fields.wifi> name="wifi">
             {({title,visible} )=>{ 
                 return (
                 <Card title={title}  visible={visible}>
@@ -114,14 +113,14 @@ const NetworkForm = ()=>{
                             {({value,required,visible,validate,enable,defaultValue,sync})=>{ 
                                 console.log(required,visible,validate,enable,defaultValue)
                                 return  <FieldRow label="SSID" enable={enable}> 
-                                         <input className={classnames({invalid:!validate})} value={value} onChange={sync} />
+                                         <input className={classnames({invalid:!validate})} value={value} onChange={sync()} />
                                 </FieldRow>
                             } }
                         </Network.Field>      
                         <Network.Field name="wifi.password">                      
                             {({value,enable,validate,placeholder,help,sync})=>{ 
                                 return  <FieldRow label="密码" enable={enable} className={classnames({invalid:!validate})} > 
-                                         <input className={classnames({invalid:!validate})} data-help={help} value={value} placeholder={placeholder} onChange={sync} readOnly={!enable}/>                               
+                                         <input className={classnames({invalid:!validate})} data-help={help} value={value} placeholder={placeholder} onChange={sync()} readOnly={!enable}/>                               
                                          <ValidResult help={help} validate={validate}/>
                                 </FieldRow>
                             } }
@@ -133,7 +132,7 @@ const NetworkForm = ()=>{
             name="dhcp.enable"
             render={({title,visible,value,validate,sync})=>{     
                     return <FieldRow visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync}/>
+                         <input className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync()}/>
                     </FieldRow>
                 }}            
             >                                       
@@ -143,24 +142,24 @@ const NetworkForm = ()=>{
            <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp.enable" >                                       
                 {({title,visible,value,validate,sync})=>{     
                     return <FieldRow visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync}/>
+                         <input className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync()}/>
                     </FieldRow>
                 }}
             </Network.Field> 
            <Network.Field<typeof Network.fields.dhcp.start> name="dhcp.start">                      
                 {({value,validate,visible,title,sync})=>{ 
                     return  <FieldRow visible={visible} label={title}>
-                        <input className={classnames({invalid:!validate})} value={value} onChange={sync}/>
+                        <input className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                     </FieldRow>
                 } }
             </Network.Field>
             <Network.Field<typeof Network.fields.dhcp.end> name="dhcp.end">                      
                 {({value,validate,visible,title,sync})=>{     
                     return <FieldRow visible={visible} label={title}>
-                        <input className={classnames({invalid:!validate})} value={value} onChange={sync}/>
+                        <input className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                     </FieldRow>
                 }}
-            </Network.Field>   */}
+            </Network.Field>   
         </Card>
     </Network.Form>        
 }

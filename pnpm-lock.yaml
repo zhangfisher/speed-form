@@ -64,8 +64,8 @@ importers:
         specifier: ^4.2.3
         version: 4.2.3
       helux:
-        specifier: ^3.5.23
-        version: 3.5.23(react@18.2.0)
+        specifier: ^3.6.1
+        version: 3.6.1(react@18.2.0)
       helux-store:
         specifier: workspace:^
         version: link:../packages/store
@@ -150,8 +150,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.6)
       helux:
-        specifier: ^3.5.23
-        version: 3.5.23(react@18.2.0)
+        specifier: ^3.6.1
+        version: 3.6.1(react@18.2.0)
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -193,8 +193,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.6)
       helux:
-        specifier: ^3.5.23
-        version: 3.5.23(react@18.2.0)
+        specifier: ^3.6.1
+        version: 3.6.1(react@18.2.0)
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -256,10 +256,10 @@ packages:
       '@babel/helper-compilation-targets': 7.22.15
       '@babel/helper-module-transforms': 7.23.3(@babel/core@7.23.5)
       '@babel/helpers': 7.23.5
-      '@babel/parser': 7.23.5
+      '@babel/parser': 7.23.6
       '@babel/template': 7.22.15
       '@babel/traverse': 7.23.5
-      '@babel/types': 7.23.5
+      '@babel/types': 7.23.6
       convert-source-map: 2.0.0
       debug: 4.3.4
       gensync: 1.0.0-beta.2
@@ -273,7 +273,7 @@ packages:
     resolution: {integrity: sha512-BPssCHrBD+0YrxviOa3QzpqwhNIXKEtOa2jQrm4FlmkC2apYgRnQcmPWiGZDlGxiNtltnUFolMe8497Esry+jA==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/types': 7.23.5
+      '@babel/types': 7.23.6
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.20
       jsesc: 2.5.2
@@ -371,7 +371,7 @@ packages:
     dependencies:
       '@babel/template': 7.22.15
       '@babel/traverse': 7.23.5
-      '@babel/types': 7.23.5
+      '@babel/types': 7.23.6
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -383,14 +383,6 @@ packages:
       '@babel/helper-validator-identifier': 7.22.20
       chalk: 2.4.2
       js-tokens: 4.0.0
-    dev: true
-
-  /@babel/parser@7.23.5:
-    resolution: {integrity: sha512-hOOqoiNXrmGdFbhgCzu6GiURxUgM27Xwd/aPuu8RfHEZPBzL1Z54okAHAQjXfcQNwvrlkAmAp4SlRTZ45vlthQ==}
-    engines: {node: '>=6.0.0'}
-    hasBin: true
-    dependencies:
-      '@babel/types': 7.23.5
     dev: true
 
   /@babel/parser@7.23.6:
@@ -446,21 +438,12 @@ packages:
       '@babel/helper-function-name': 7.23.0
       '@babel/helper-hoist-variables': 7.22.5
       '@babel/helper-split-export-declaration': 7.22.6
-      '@babel/parser': 7.23.5
-      '@babel/types': 7.23.5
+      '@babel/parser': 7.23.6
+      '@babel/types': 7.23.6
       debug: 4.3.4
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
-    dev: true
-
-  /@babel/types@7.23.5:
-    resolution: {integrity: sha512-ON5kSOJwVO6xXVRTvOI0eOnWe7VdUcIpsovGo9U/Br4Ie4UVFQTboO2cYnDhAGU6Fp+UxSiT+pMft0SMHfuq6w==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/helper-string-parser': 7.23.4
-      '@babel/helper-validator-identifier': 7.22.20
-      to-fast-properties: 2.0.0
     dev: true
 
   /@babel/types@7.23.6:
@@ -928,19 +911,19 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@helux/core@3.5.23:
-    resolution: {integrity: sha512-LVTJn7O9xvRVflsjH2BjjDNz53Ra82bZFhfg4Yeh1SMvqgbPlPr2xM2Ektblwsyc9uEYdF2WbYhxoKO0mMPNFA==}
+  /@helux/core@3.6.1:
+    resolution: {integrity: sha512-R1gFOwTlcTpDQYix1EjkQCpGlEYdigp9MS5DiRZXF7RTokPw47A9bO4R5JTlmlAPLOB0SpIcLDcwRFNFzbq4yQ==}
     dependencies:
-      '@helux/hooks-impl': 3.5.23
-      '@helux/types': 3.5.23
-      '@helux/utils': 3.5.23
+      '@helux/hooks-impl': 3.6.1
+      '@helux/types': 3.6.1
+      '@helux/utils': 3.6.1
       limu: 3.11.10
 
-  /@helux/hooks-impl@3.5.23:
-    resolution: {integrity: sha512-NqNwPsQaTEx6fMz4Dn1gL8kIQWeG1itOCq9StO9JEUyiKTgwlJUMzx32xGiZk56UYByGIHBis44ONvcTNCewwA==}
+  /@helux/hooks-impl@3.6.1:
+    resolution: {integrity: sha512-J34Sd/0pyF56sIkv4kSNS+kAv9e99jNNWG8pOGLqB+f68DZA/MFVcLEgOmDw1PY70XTnKk8vmE1kfmLkoOXKlQ==}
     dependencies:
-      '@helux/types': 3.5.23
-      '@helux/utils': 3.5.23
+      '@helux/types': 3.6.1
+      '@helux/utils': 3.6.1
 
   /@helux/types@3.5.1:
     resolution: {integrity: sha512-2ZUH4YmTQWJIhQwtr2mkszaOchvmr30ikO0bdGoXJp0QiRJjOp+k8bfldBTUl3w0e54bmhUIoZ46KXI/9VMsrw==}
@@ -950,8 +933,8 @@ packages:
     resolution: {integrity: sha512-oO7Ah5L6nBOe6Lu6hJR3VVnqBRH2tMAHib/Yw1MisIqgfVWKN0ETuMTyV7EAIW3L4Q3gMFI8SX1LuGToXUQQOg==}
     dev: true
 
-  /@helux/types@3.5.23:
-    resolution: {integrity: sha512-Wp1H8S1UbxLRYSGI0GSq8oaCigb1nleMYgO1MKDessGTBmA3wYUNoH2h7RgNETT7KCEh/Cgn+PkcjIYJx6wXcA==}
+  /@helux/types@3.6.1:
+    resolution: {integrity: sha512-TisjO+YHBKF1azQH9ns2JgSiW6Rn9BI3qIuOhLKxOkshxbhLZ0a7FE+7y4SdquW2xCewefioZtBrxhq0nSAR/g==}
 
   /@helux/utils@3.5.1:
     resolution: {integrity: sha512-mcxGzsRWHJEhrApfQ+E491rBGo3r8tEGMvB5v+mW6fUaKx6hCUTOcl8q21kb5RDNccrWBq0XdyU/tEA94u8B0Q==}
@@ -965,10 +948,10 @@ packages:
       '@helux/types': 3.5.11
     dev: true
 
-  /@helux/utils@3.5.23:
-    resolution: {integrity: sha512-ckFq9Ul0p9QTm9foi7jdEhSg8rnOt3qDHFp2BnCXak+/rKyMCsJELtv0fp1XpQJLEFNnold9q3d19weaE8X5IQ==}
+  /@helux/utils@3.6.1:
+    resolution: {integrity: sha512-J6QMxAOf9vawIkcQjKKa6/FGrJ4GbnPXlnvj+ncC9tklYhsbfHZ8x1kamUsUB4lP89xTlwx+Fu1mbSe0SLH/jQ==}
     dependencies:
-      '@helux/types': 3.5.23
+      '@helux/types': 3.6.1
 
   /@humanwhocodes/config-array@0.11.13:
     resolution: {integrity: sha512-JSBDMiDKSzQVngfRjOdFXgFfklaXI4K9nLF49Auh21lmBWRLIK3+xTErTWD4KU54pb6coM6ESE7Awz/FNU3zgQ==}
@@ -2714,12 +2697,12 @@ packages:
     hasBin: true
     dev: false
 
-  /helux@3.5.23(react@18.2.0):
-    resolution: {integrity: sha512-uqJsOWGTJauVWZW86jiklRk4YepCd0JgeQa1L/8n1wkhEfi2nDCiDqfD3+Sh4VEIIbrGlZZ4eCOsQH5LsdiTVw==}
+  /helux@3.6.1(react@18.2.0):
+    resolution: {integrity: sha512-JX964diaF55KgczdWaZOCRs2nOgaX5PHFCUCqEEDQ8/rHEYAtsOuKt0yes4bVPpw1QIN3ogdhkZkDpC6RLFxoQ==}
     peerDependencies:
       react: '>=16.8.0'
     dependencies:
-      '@helux/core': 3.5.23
+      '@helux/core': 3.6.1
       react: 18.2.0
 
   /html-encoding-sniffer@4.0.0:

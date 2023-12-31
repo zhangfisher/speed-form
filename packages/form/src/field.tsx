@@ -1,9 +1,9 @@
 import React, {	 ChangeEventHandler, ReactNode, useCallback, useEffect,useRef,useState  } from "react";  
 import { getVal, setVal } from "@helux/utils";
-import { isLiteField, debounce as debounceWrapper,  isPrimitive } from './utils';
-import { Dict, FieldComputedProp, Primitive } from "./types";  
-import { assignObject } from "flex-tools/object/assignObject";
-import { isPlainObject } from "flex-tools/typecheck/isPlainObject";
+import { isLiteField, debounce as debounceWrapper } from './utils';
+import { Dict } from "./types";  
+import { assignObject } from "flex-tools/object/assignObject"; 
+import type { FormOptions } from "./form";
  
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
@@ -21,40 +21,6 @@ export interface DefaultFieldPropTypes{
   select?      : any[]                 // 枚举值
 }  
 
-export interface Field<T=any>{
-  __SPEED_FORM_FIELD__?:boolean
-  name?         : string
-  value        : T;
-  title?       : FieldComputedProp<string>;                       // 标题
-  defaultValue?: FieldComputedProp<T>;                          // 默认值
-  oldValue?    : FieldComputedProp<any>;                          // 默认值
-  help?        : FieldComputedProp<string>;                       // 提示信息
-  placeholder? : FieldComputedProp<string>;                       // 占位符
-  required?    : FieldComputedProp<boolean>;                      // 是否必填
-  readonly?    : FieldComputedProp<boolean>;                      // 是否只读
-  visible?     : FieldComputedProp<boolean>;                      // 是否可见
-  enable?      : FieldComputedProp<boolean>;                      // 是否可用
-  validate?    : FieldComputedProp<boolean>;                      // 验证
-  select?      : FieldComputedProp<any[]>                         // 枚举值  
-}
-
-/**
- * 用来声明一个字段
- * field()
- * field("")
- * field({value:any})
- * 
- * @param data 
- * @returns 
- */
-export function field<Value=any>(valueOrSchema?:Primitive | Field<Value>):Field<Value>{  
-  const schema = Object.assign({__SPEED_FORM_FIELD__:true,value:null},
-    isPrimitive(valueOrSchema) 
-      ? {value:valueOrSchema} 
-      : (isPlainObject(valueOrSchema) ? valueOrSchema : {}) 
-    ) as Field<Value>  
-  return schema
-} 
 
  // 完整的字段描述
 export type Value = {value:any}
@@ -73,7 +39,7 @@ export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultField
 export type FieldRender<PropTypes extends Dict>= (props: FieldRenderProps<PropTypes>) => ReactNode
 
 export type FieldProps<PropTypes extends Dict = Dict> = {
-	name: string 
+	name: string | string[]
   render?:FieldRender<PropTypes> 
 	children?: FieldRender<PropTypes> | FieldRender<PropTypes>[];
 } 
@@ -82,10 +48,8 @@ export type FieldProps<PropTypes extends Dict = Dict> = {
 export type FieldComponent = React.FC<FieldProps>;
 
 
-function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
-  
+function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){  
   const isLite = isLiteField(value)
-
   return assignObject({
     name,
     help       : "",
@@ -151,14 +115,16 @@ function useFieldUpdater(store: any,valuePath:string[],setState:any){
 }
 
 
-export function createFieldComponent(store: any) {    
+export function createFieldComponent(this:FormOptions,store: any) {    
+  const self = this
   return React.memo(<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
 		const { name } = props; 
     const valuePath = Array.isArray(name) ? name : name.split(".")  
 		const [state,setState] = store.useState()
 		const value = getVal(state,valuePath)
-    const isLite = isLiteField(value)
-    console.log("field render",name)
+
+    const isLite = isLiteField(value) 
+
     if(!isLite) {
       valuePath.push("value") 
     }
@@ -169,10 +135,10 @@ export function createFieldComponent(store: any) {
     // 表单字段同步，允许指定防抖参数
     const syncer = useFieldSyncer(store,valuePath)
 
-    const [fieldProps,setFieldProps] = useState(()=>createFieldProps(name,value,syncer,filedUpdater))
+    const [fieldProps,setFieldProps] = useState(()=>createFieldProps(self.getFieldName(valuePath),value,syncer,filedUpdater))
  
     useEffect(()=>{
-      setFieldProps(createFieldProps(name,value,syncer,filedUpdater))
+      setFieldProps(createFieldProps(self.getFieldName(valuePath),value,syncer,filedUpdater))
     },[value])
  
     // 调用渲染字段UI 
@@ -195,3 +161,37 @@ export function createFieldComponent(store: any) {
 }
 
  
+
+
+
+// export interface Field<T=any>{
+//   __SPEED_FORM_FIELD__?:boolean
+//   name?         : string
+//   value        : T;
+//   title?       : FieldComputedProp<string>;                       // 标题
+//   defaultValue?: FieldComputedProp<T>;                          // 默认值
+//   oldValue?    : FieldComputedProp<T>;                          // 默认值
+//   help?        : FieldComputedProp<string>;                       // 提示信息
+//   placeholder? : FieldComputedProp<string>;                       // 占位符
+//   required?    : FieldComputedProp<boolean>;                      // 是否必填
+//   readonly?    : FieldComputedProp<boolean>;                      // 是否只读
+//   visible?     : FieldComputedProp<boolean>;                      // 是否可见
+//   enable?      : FieldComputedProp<boolean>;                      // 是否可用
+//   validate?    : FieldComputedProp<boolean>;                      // 验证
+//   select?      : FieldComputedProp<any[]>                         // 枚举值  
+// }
+
+// /**
+//  * 用来声明一个字段
+//  * field()
+//  * field("")
+//  * field({value:any})
+//  * 
+//  * @param data 
+//  * @returns 
+//  */
+// export function field<Value=any>(valueOrSchema?:Primitive | Field<Value>):Field<Value>{  
+//   const schema = Object.assign({__SPEED_FORM_FIELD__:true,value:null},
+//     isPrimitive(valueOrSchema)   ? {value:valueOrSchema}  : valueOrSchema ) as Field<Value>  
+//   return schema
+// } 

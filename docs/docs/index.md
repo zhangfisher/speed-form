@@ -1,7 +1,7 @@
 ---
 hero:
   title: SpeedForm
-  description: high-performance and easy-to-use final form management for react
+  description: 无 以 伦 比 的 React 表 单 开 发 体 验
   actions:
     - text: 指南
       link: /
