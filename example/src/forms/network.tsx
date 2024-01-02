@@ -1,5 +1,5 @@
 
-import { ComputedContextRef, computed} from "helux-store"
+import { ComputedScopeRef, computed} from "helux-store"
 import { createForm } from "speed-form"
 import { Project, getProjects } from "../api/getProjects"
 import { delay } from "flex-tools/async/delay"
@@ -43,7 +43,7 @@ const formSchema ={
             value:"192.168.1.1",
             visible:computed<boolean>((dhcp:any)=>{
                 return dhcp.enable.value
-            },{context:ComputedContextRef.Parent}),
+            },{context:ComputedScopeRef.Parent}),
             validate:(value:any)=>validator.isIP(value)
         },
         end:{
@@ -52,7 +52,7 @@ const formSchema ={
             // 将visible的context指向父对象即dhcp
             visible:computed<boolean>((state:any)=>{
                 return state.dhcp.enable.value
-            },{context:ComputedContextRef.Root}),
+            },{context:ComputedScopeRef.Root}),
             validate:(value:any)=>validator.isIP(value)
         } 
     },    
@@ -88,11 +88,21 @@ const formSchema ={
     //             return await getProjects(repoUrl) 
     //         },["openSource.repo.value"],{initial:[]}),
     //     } 
-    // }     
+    // }     network.actions.ping.run.loading
 }  
 
 type NetworkType = typeof formSchema
-const Network = createForm<NetworkType>(formSchema)
+const Network = createForm<NetworkType>(formSchema,{
+    actions:{
+        ping:{
+            title:"测试网络连通性", 
+            scope:"wifi",// 表示该动作的上下文是wifi这个子表单
+            run:async (a:NetworkType,{scope,submit,reset})=>{
+                await submit(a)
+            }
+        }
+    }
+})
 
 
 // @ts-ignore

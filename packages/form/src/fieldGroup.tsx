@@ -63,19 +63,25 @@ function createFieldGroupProps(name:string,value:any,fieldGroupUpdater:any){
     },value)
 
 }
-export function createFieldGroupComponent(this:FormOptions,store: any) {
+
+
+
+export function createFieldGroupComponent(this:Required<FormOptions>,store: any) {
     const self = this
     return React.memo(function FieldGroup<T extends Dict=Dict>(props: FieldGroupProps<T>):ReactNode{
         const { name } = props;  	       
         const [state,setState] = store.useState()
-        const valuePath = Array.isArray(name) ? name : name.split(".")  
-        const groupValue = getVal(state, valuePath)        
+        const groupPath = Array.isArray(name) ? name : name.split(".")   
+        // 含fields前缀的字段路径,代表的是完整的路径
+        const fullGroupPath:string[] = ['fields',...groupPath]
+
+        const groupValue = getVal(state, fullGroupPath)        
         // 更新当前组信息，如update(group=>group.enable=true)
-        const fieldGroupUpdater = useFieldGroupUpdater(valuePath,setState)
-        const [fieldGroupProps,setfieldGroupProps] = useState(()=>createFieldGroupProps(self.getFieldName(valuePath),groupValue,fieldGroupUpdater))
+        const fieldGroupUpdater = useFieldGroupUpdater(fullGroupPath,setState)
+        const [fieldGroupProps,setfieldGroupProps] = useState(()=>createFieldGroupProps(self.getFieldName(groupPath),groupValue,fieldGroupUpdater))
 
         useEffect(()=>{
-            setfieldGroupProps(createFieldGroupProps(self.getFieldName(valuePath),groupValue,fieldGroupUpdater))
+            setfieldGroupProps(createFieldGroupProps(self.getFieldName(groupPath),groupValue,fieldGroupUpdater))
           },[groupValue])
  
         // 执行渲染

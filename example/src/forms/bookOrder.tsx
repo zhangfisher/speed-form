@@ -25,7 +25,7 @@ import { delay } from "flex-tools/async/delay"
 
 
 // 声明表单数据
-const formSchema ={ 
+const orderFormSchema ={ 
     title:{
         value:"React-Helux-Form",
         placeholder:"订单名称",
@@ -41,20 +41,37 @@ const formSchema ={
     }, 
     orders:[
         {
-            book:{title:"书名"},
-            count:{title:"数量"},
-            prict:{title:"单价"},
-            sum:{title:"小计"}
-        }
-    ],    
+            url:"wwww.ddd",
+            valid:"",
+            fields:{
+                book:{title:"书名"},
+                count:{title:"数量"},
+                prict:{title:"单价"},
+                sum:{title:"小计"}
+            }            
+        },  
+    ],  
     total:{
         title:"总金额",
         value:100
     }     
 } 
 
-type BookOrdersType = typeof formSchema
-const BookOrders = createForm<BookOrdersType>(formSchema)
+type BookOrdersType = typeof orderFormSchema
+const BookOrders = createForm<BookOrdersType>(orderFormSchema,{
+    actions:{
+        addOrder:{
+            title:"添加订单",
+            scope:"orders.[0].fields",
+            visible:(orders:any)=>(orders as BookOrdersType).orders.length<10,
+            enable:(orders:any)=>(orders as BookOrdersType).orders.length<10,                        
+            submit:async (order:any)=>{
+                await delay(1000)
+                // post(order)
+            }
+        }
+    }
+})
 
 
 // @ts-ignore

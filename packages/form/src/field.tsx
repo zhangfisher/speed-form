@@ -115,30 +115,35 @@ function useFieldUpdater(store: any,valuePath:string[],setState:any){
 }
 
 
-export function createFieldComponent(this:FormOptions,store: any) {    
+export function createFieldComponent(this:Required<FormOptions>,store: any) {    
   const self = this
   return React.memo(<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
 		const { name } = props; 
-    const valuePath = Array.isArray(name) ? name : name.split(".")  
-		const [state,setState] = store.useState()
-		const value = getVal(state,valuePath)
+    // 不含fields前缀的字段路径
+    const fieldPath = Array.isArray(name) ? name : name.split(".")  
+    // 含fields前缀的字段路径
+    const fullFieldPath:string[] = ['fields',...fieldPath]
 
+		const [state,setState] = store.useState() 
+
+		const value = getVal(state,fullFieldPath)
+
+    // 简单字段,即除了值没有任何控制属性
     const isLite = isLiteField(value) 
-
     if(!isLite) {
-      valuePath.push("value") 
+      fieldPath.push("value") 
     }
 
     // 更新当前字段信息，如update(field=>field.enable=true)
-    const filedUpdater = useFieldUpdater(store,valuePath,setState)
+    const filedUpdater = useFieldUpdater(store,fullFieldPath,setState)
 
     // 表单字段同步，允许指定防抖参数
-    const syncer = useFieldSyncer(store,valuePath)
+    const syncer = useFieldSyncer(store,fullFieldPath)
 
-    const [fieldProps,setFieldProps] = useState(()=>createFieldProps(self.getFieldName(valuePath),value,syncer,filedUpdater))
+    const [fieldProps,setFieldProps] = useState(()=>createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater))
  
     useEffect(()=>{
-      setFieldProps(createFieldProps(self.getFieldName(valuePath),value,syncer,filedUpdater))
+      setFieldProps(createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater))
     },[value])
  
     // 调用渲染字段UI 

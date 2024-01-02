@@ -9,15 +9,15 @@
  */
 
 import { HeluxApi, IOperateParams, ISharedCtx } from "helux";
-import type { StoreDefine, StoreComputedContext, StoreOptions } from './store';
-import { ComputedContextRef } from './store';
+import type { StoreDefine, StoreComputedScope, StoreOptions } from './store';
+import { ComputedScopeRef } from './store';
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 
 export type ComputedOptions<T=any> = {
   // current： 指向当前对象，如state = {user:{first,last,fullName:(state:user)=>{user.first+user.last}}}
   // parent： 指向当前对象的父，如state = {user:{first,last,fullName:(state)=>{state.user.first+state.user.last}}}
-	context?:StoreComputedContext
+	context?:StoreComputedScope
   initial?:T
   // 异步计算,默认情况下，通过typeof(fn)=="async function"来判断是否是异步计算函数
   // 但是在返回Promise等情况下，无法判断，此时需要手动指定async=true
@@ -51,7 +51,7 @@ export type AsyncComputedReturns<R> = (...args:any)=> AsyncComputedParams<R>
 export interface AsyncComputedParams<R>  {
   getter:()=>Promise<R>
   depends:ComputedDepends
-  context:StoreComputedContext 
+  context:StoreComputedScope 
   initial:R  
 }
 
@@ -61,15 +61,15 @@ export interface AsyncComputedParams<R>  {
  * @param param1 
  * @returns 
  */
-function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{context?:StoreComputedContext,keyPath:string[],fullKeyPath:string[],parent:any}){
+function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{context?:StoreComputedScope,keyPath:string[],fullKeyPath:string[],parent:any}){
   try{
     const ctx = typeof(context)=='function' ? context(draft) : context
 
-    if(ctx === ComputedContextRef.Current){
+    if(ctx === ComputedScopeRef.Current){
         return  getVal(draft, keyPath)
-    }else if(ctx === ComputedContextRef.Parent){
+    }else if(ctx === ComputedScopeRef.Parent){
         return getVal(draft,fullKeyPath.slice(0,fullKeyPath.length-2))
-    }else if(ctx === ComputedContextRef.Root){
+    }else if(ctx === ComputedScopeRef.Root){
         return draft
     }else if(typeof(ctx)=='string'){
       return getVal(draft,[...keyPath,...ctx.split(".")])
@@ -157,7 +157,7 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
 
 /**
  * 
- * 计算函数的context可以在全局Store中通过computedContext参数指定
+ * 计算函数的context可以在全局Store中通过computedThis参数指定
  * 也可以在computed(fn,{context})函数中指定
  * 
  * computed配置的context优先级高于store配置的context
@@ -165,17 +165,17 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
  * 
  * 
  * @param state 
- * @param computedContext 
+ * @param computedThis 
  * @param storeContext 
  */
-function getFinalContext(state:any,computedContext?:StoreComputedContext ,storeContext?:StoreComputedContext){
-  let ctx = computedContext || storeContext
+function getFinalContext(state:any,computedThis?:StoreComputedScope ,storeContext?:StoreComputedScope){
+  let ctx = computedThis || storeContext
   if(typeof(ctx)=='function'){
     try{
       ctx = ctx.call(state,state)
     }catch{}    
   }
-  return ctx || storeContext || ComputedContextRef.Root
+  return ctx || storeContext || ComputedScopeRef.Root
 }
  
 
@@ -186,13 +186,13 @@ function getFinalContext(state:any,computedContext?:StoreComputedContext ,storeC
  */
 function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,computedOptions: ComputedOptions,storeOptions:StoreOptions){
   let { fullKeyPath, value:getter,keyPath,parent } = params;
-  const { computedContext,onCreateComputed } = storeOptions
+  const { computedThis,onCreateComputed } = storeOptions
 
   // 排除掉所有非own属性,例如valueOf等
   if(parent && !Object.hasOwn(parent,fullKeyPath[fullKeyPath.length-1])){
     return 
   }
-  // 当创建计算属性前时运行hook，本Hook的目的是允许重新指定computedContext或者重新包装原始计算函数
+  // 当创建计算属性前时运行hook，本Hook的目的是允许重新指定computedThis或者重新包装原始计算函数
   if(typeof(onCreateComputed)=='function' && typeof(getter)==='function'){
     const newGetter = onCreateComputed.call(stateCtx,fullKeyPath,getter,computedOptions)    
     if(typeof(newGetter)=='function') getter = newGetter 
@@ -204,7 +204,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
     fn: (draft, params) => {
 
       // 2. 根据配置参数获取计算属性的上下文对象
-      const ctx = getFinalContext(draft,context,computedContext)      
+      const ctx = getFinalContext(draft,context,computedThis)      
       const ctxDraft = getComputedContextDraft(draft, { context:ctx, fullKeyPath, keyPath ,parent})
 
       // 3. 执行getter函数
@@ -272,7 +272,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     },
     // 此函数在依赖变化时执行，用来异步计算
     task:async ({draft,setState,input})=>{    
-      const ctx = getFinalContext(draft,context,storeOptions.computedContext)
+      const ctx = getFinalContext(draft,context,storeOptions.computedThis)
       const ctxDraft = getComputedContextDraft(draft,{context:ctx,fullKeyPath,keyPath,parent}) 
       try{
         // @ts-ignore
@@ -332,7 +332,7 @@ export function createComputed<Store extends StoreDefine<any>>(stateCtx: IShared
             options:{
               depends:[],                       // 未指定依赖
               initial:undefined,                // 也没有初始化值
-              context:options.computedContext   // 指定默认上下文
+              context:options.computedThis   // 指定默认上下文
             }
           })
           createAsyncComputedMutate<Store>(stateCtx,params,options)     
