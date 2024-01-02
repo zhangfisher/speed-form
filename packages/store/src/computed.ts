@@ -168,8 +168,8 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
  * @param computedThis 
  * @param storeContext 
  */
-function getFinalContext(state:any,computedThis?:StoreComputedScope ,storeContext?:StoreComputedScope){
-  let ctx = computedThis || storeContext
+function getContextOption(state:any,computedContext?:StoreComputedScope ,storeContext?:StoreComputedScope){
+  let ctx = computedContext || storeContext
   if(typeof(ctx)=='function'){
     try{
       ctx = ctx.call(state,state)
@@ -186,7 +186,7 @@ function getFinalContext(state:any,computedThis?:StoreComputedScope ,storeContex
  */
 function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,computedOptions: ComputedOptions,storeOptions:StoreOptions){
   let { fullKeyPath, value:getter,keyPath,parent } = params;
-  const { computedThis,onCreateComputed } = storeOptions
+  const { computedThis,computedScope,onCreateComputed } = storeOptions
 
   // 排除掉所有非own属性,例如valueOf等
   if(parent && !Object.hasOwn(parent,fullKeyPath[fullKeyPath.length-1])){
@@ -203,18 +203,18 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
 
-      // 2. 根据配置参数获取计算属性的上下文对象
-      const ctx = getFinalContext(draft,context,computedThis)      
-      const ctxDraft = getComputedContextDraft(draft, { context:ctx, fullKeyPath, keyPath ,parent})
+      // 2. 根据配置参数获取计算函数的上下文对象
+      const thisDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedThis), fullKeyPath, keyPath ,parent})
+      const scopeDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedScope), fullKeyPath, keyPath ,parent})
 
       // 3. 执行getter函数
       let computedValue = initial
       try{
-        computedValue = getter.call(draft,ctxDraft)
+        computedValue = getter.call(thisDraft,scopeDraft)
       }catch(e:any){ 
         // 如果执行计算函数出错,则调用
         if(typeof(onError)==='function'){
-          try{onError?.call(ctxDraft,e)}catch{}
+          try{onError?.call(thisDraft,e)}catch{}
         }
       }
       // 4. 将getter的返回值替换到状态中的,完成移花接木
@@ -235,7 +235,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
  */
 function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,storeOptions:StoreOptions){
   const { fullKeyPath, keyPath,value ,parent} = params;
-  const { onCreateComputed } = storeOptions
+  const { onCreateComputed,computedThis,computedScope } = storeOptions
 
   // 排除掉所有非own属性,例如valueOf等
   if(parent && !Object.hasOwn(parent,fullKeyPath[fullKeyPath.length-1])){
@@ -272,12 +272,14 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     },
     // 此函数在依赖变化时执行，用来异步计算
     task:async ({draft,setState,input})=>{    
-      const ctx = getFinalContext(draft,context,storeOptions.computedThis)
-      const ctxDraft = getComputedContextDraft(draft,{context:ctx,fullKeyPath,keyPath,parent}) 
+
+      const thisDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedThis), fullKeyPath, keyPath ,parent})
+      const scopeDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedScope), fullKeyPath, keyPath ,parent})
+
       try{
         // @ts-ignore
         setState((draft)=>setVal(draft,[...fullKeyPath,'loading'],true))
-        const result = await getter.call(draft,input,ctxDraft)     
+        const result = await getter.call(thisDraft,input,scopeDraft)     
         // @ts-ignore
         setState((draft)=>{
           setVal(draft,[...fullKeyPath,'value'],result)
@@ -285,7 +287,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
         })
       }catch(e){
         if(typeof(onError)=='function'){
-          try{onError.call(ctxDraft,e)}catch{}
+          try{onError.call(thisDraft,e)}catch{}
         }
          // @ts-ignore
         setState((draft)=>setVal(draft,[...fullKeyPath,'error'],e))

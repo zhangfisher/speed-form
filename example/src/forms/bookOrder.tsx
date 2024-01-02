@@ -62,7 +62,7 @@ const BookOrders = createForm<BookOrdersType>(orderFormSchema,{
     actions:{
         addOrder:{
             title:"添加订单",
-            scope:"orders.[0].fields",
+            scope:()=>['orders'],
             visible:(orders:any)=>(orders as BookOrdersType).orders.length<10,
             enable:(orders:any)=>(orders as BookOrdersType).orders.length<10,                        
             submit:async (order:any)=>{

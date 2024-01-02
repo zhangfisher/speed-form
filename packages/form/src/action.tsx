@@ -1,18 +1,30 @@
 /**
  * 
  *   表单动作
- * <Network.Form<typeof Network.wifi> scope="wifi">
+ * <Network.Form>
  * 	   <Network.Field name="ssid"></Network.Field>			// 声明字段
- *  //  自定义渲染
- * 	   <Network.Action type="submit" params={}>
- *        {({type,title,enable,visible,ref,tips,params})=>{
- * 			retrun <button ref={ref} onClick={execute((scope,params)=>{})}></button>
+ * 	   <Network.Action type="submit" scope="current" params={}>
+ *        {({type,title,enable,visible,tips,params,submit,reset,scope})=>{
+ * 			retrun <button ref={ref} onClick={submit()}></button>
+ *        }}
+ *     </Network.Action> 
+ * 	   <Network.Action type="reset" scope="current" params={}>
+ *        {({type,title,enable,visible,tips,params,submit,reset,scope})=>{
+ * 			retrun <button ref={ref} onClick={submit()}></button>
  *        }}
  *     </Network.Action>
- *  // 默认渲染*      
- *      <Network.Action type="submit" scope="current" params={}/>
- * 
- * </Network.Form>			// 声明子表单
+ *     <Network.Action type="addOrder" scope="orders.[1]">
+ *        {({type,title,enable,visible,tips,params,submit,reset,scope})=>{
+ * 			retrun <button ref={ref} onClick={submit()}></button>
+ *        }}
+ *     </Network.Action>
+ *     // 当scope变化时重新渲染
+ *     <Network.Action type="addOrder">
+ *        {({type,title,enable,visible,tips,params,submit,reset,scope})=>{
+ * 			retrun <button ref={ref} onClick={submit()}></button>
+ *        }}
+ *     </Network.Action>
+* </Network.Form>		
  * 
  * 
  */
@@ -24,8 +36,7 @@ import { getVal } from "@helux/utils";
 import React from "react";
 import { assignObject } from "flex-tools/object/assignObject";
 import type { FormOptions } from "./form";
-import { AsyncComputedObject, AsyncComputedReturns } from "helux-store";
-import { Element } from "./element"
+import { AsyncComputedObject, AsyncComputedReturns } from "helux-store"; 
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
   | ((fields:Fields)=>Promise<R>)
@@ -79,14 +90,9 @@ export type ActionProps<PropTypes extends Dict = Dict,Params extends Dict = Dict
     // 动作类型名称
     type:string  
     // 动作作用域
-    scope?:string | string[]
-    // HTML元素标签名称，如果为空则需要完全自渲染
-    tagName?:string  
-    // 动作元素引用
-    ref: RefObject<HTMLElement>
+    scope?:string | string[] | (()=>(string | string[]))
     // 当执行动作时用来传递给表单的额外参数
     params?:Dict                       
-
     children: ActionRender<PropTypes,Params>  
 } 
   
@@ -126,8 +132,9 @@ export function createActionComponent(this:Required<FormOptions>,store: any) {
         const [state,setState] = store.useState()  
 
         const { type,scope = [],params } = props 
+        let scopePath = typeof(scope)=="function" ? scope() : scope
+        scopePath = ['fields',...Array.isArray(scope) ? scope : String(scope).split(".")]                
 
-        const scopePath = ['fields',...Array.isArray(scope) ? scope : scope.split(".")]                
         const fieldScopeValue =scopePath.length==0 ? state : getVal(state,scopePath)
         const actionValue =  getVal(state,['actions',type])
 
@@ -144,16 +151,12 @@ export function createActionComponent(this:Required<FormOptions>,store: any) {
           },[actionValue,fieldScopeValue,scope,params])
  
 
-        // 执行渲染
-        return <Element type="div" ref={ref} className="speed-form-action">
-            {  props.children && props.children(ActionProps as any) }
-        </Element>
+        // 执行渲染动作组件
+        return  <>{ props.children && props.children(ActionProps as any) }</>
 
     }
-
-
     return React.memo(Action,(oldProps:any, newProps:any)=>{
-        return oldProps.name === newProps.name
+        return oldProps.type === newProps.type || oldProps.scope === newProps.scope
     }) as (<T extends Dict=Dict>(props: ActionProps<T>)=>ReactNode)
 }
 

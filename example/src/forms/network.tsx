@@ -97,7 +97,7 @@ const Network = createForm<NetworkType>(formSchema,{
         ping:{
             title:"测试网络连通性", 
             scope:"wifi",// 表示该动作的上下文是wifi这个子表单
-            run:async (a:NetworkType,{scope,submit,reset})=>{
+            submit:async (a:NetworkType,{scope,submit,reset})=>{
                 await submit(a)
             }
         }
