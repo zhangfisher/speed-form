@@ -9,8 +9,14 @@
     "paths": {
       "@@/*": [".dumi/tmp/*"],
       "speedform-docs": ["src"],
-      "speedform-docs/*": ["src/*", "*"]
+      "speedform-docs/*": ["src/*", "*"],
+      "speed-form": ["node_modules/speed-form/src"],
+      "speed-form/*": ["node_modules/speed-form/src/*", "*"]
     }
   },
-  "include": [".dumirc.ts", "src/**/*"]
+  "include": [
+    ".dumirc.ts",
+    "src/**/*",
+    "node_modules/speed-form/src/**/*",
+  ]
 }

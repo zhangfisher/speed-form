@@ -14,10 +14,14 @@ import { ComputedScopeRef } from './store';
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 
-export type ComputedOptions<T=any> = {
-  // current： 指向当前对象，如state = {user:{first,last,fullName:(state:user)=>{user.first+user.last}}}
-  // parent： 指向当前对象的父，如state = {user:{first,last,fullName:(state)=>{state.user.first+state.user.last}}}
-	context?:StoreComputedScope
+export interface ComputedParams extends Record<string,any>{
+  // 获取一个进度条，用来显示异步计算的进度
+  getProgressbar?:(progress:number)=>void
+}
+
+export type ComputedOptions<T=any,Params extends ComputedParams= ComputedParams> = { 
+  context?:StoreComputedScope             // 计算函数的this
+  scope?:StoreComputedScope               // 计算函数的第一个参数
   initial?:T
   // 异步计算,默认情况下，通过typeof(fn)=="async function"来判断是否是异步计算函数
   // 但是在返回Promise等情况下，无法判断，此时需要手动指定async=true
@@ -26,13 +30,13 @@ export type ComputedOptions<T=any> = {
   depends?:any[]    
   // 当执行计算getter函数出错时的回回调
   onError?:(e:Error)=>void 
-  //
-  
+  // 作为计算函数的第二个参数传入
+  params?:Params
 };
 
 export type ComputedDepends = Array<string> | Array<Array<string>> | ((draft: any) => any[])
-export type ComputedGetter<R> = (ctxDraft: any) => Exclude<R,Promise<any>>
-export type AsyncComputedGetter<R> = (depends:any[],ctxDraft:any) => Promise<R>
+export type ComputedGetter<R> = (scopeDraft: any) => Exclude<R,Promise<any>>
+export type AsyncComputedGetter<R> = (scopeDraft:any,options:ComputedParams) => Promise<R>
 
 export interface AsyncComputedObject<V=any>{
   loading:boolean
@@ -50,9 +54,12 @@ export type AsyncComputedReturns<R> = (...args:any)=> AsyncComputedParams<R>
 
 export interface AsyncComputedParams<R>  {
   getter:()=>Promise<R>
-  depends:ComputedDepends
-  context:StoreComputedScope 
-  initial:R  
+  options:{
+    depends:ComputedDepends
+    context:StoreComputedScope 
+    scope:StoreComputedScope 
+    initial:R  
+  }  
 }
 
 /** 
@@ -61,7 +68,7 @@ export interface AsyncComputedParams<R>  {
  * @param param1 
  * @returns 
  */
-function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{context?:StoreComputedScope,keyPath:string[],fullKeyPath:string[],parent:any}){
+function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath,depends}:{context?:StoreComputedScope,keyPath:string[],fullKeyPath:string[],parent:any,depends?:any[]}){
   try{
     const ctx = typeof(context)=='function' ? context(draft) : context
 
@@ -71,6 +78,8 @@ function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath}:{contex
         return getVal(draft,fullKeyPath.slice(0,fullKeyPath.length-2))
     }else if(ctx === ComputedScopeRef.Root){
         return draft
+    }else if(ctx === ComputedScopeRef.Depends){ // 异步计算的依赖值
+      return depends  
     }else if(typeof(ctx)=='string'){
       return getVal(draft,[...keyPath,...ctx.split(".")])
     }else if(Array.isArray(ctx)){
@@ -197,7 +206,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
     const newGetter = onCreateComputed.call(stateCtx,fullKeyPath,getter,computedOptions)    
     if(typeof(newGetter)=='function') getter = newGetter 
   }  
-  const { context,onError,initial } = computedOptions
+  const { context,scope,onError,initial,params:computedParams } = computedOptions
 
 
   const witness = stateCtx.mutate({
@@ -205,12 +214,12 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
 
       // 2. 根据配置参数获取计算函数的上下文对象
       const thisDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedThis), fullKeyPath, keyPath ,parent})
-      const scopeDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedScope), fullKeyPath, keyPath ,parent})
+      const scopeDraft = getComputedContextDraft(draft, { context:getContextOption(draft,scope,computedScope), fullKeyPath, keyPath ,parent})
 
       // 3. 执行getter函数
       let computedValue = initial
       try{
-        computedValue = getter.call(thisDraft,scopeDraft)
+        computedValue = getter.call(thisDraft,scopeDraft,computedParams)
       }catch(e:any){ 
         // 如果执行计算函数出错,则调用
         if(typeof(onError)==='function'){
@@ -250,7 +259,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     if(typeof(newGetter)=='function') getter = newGetter 
   }  
 
-  const { depends,context,onError,initial }  = computedOptions
+  const { depends,context,scope,onError,initial,params:computedParams  }  = computedOptions
 
   const desc = depends.join("_")+"_computed"
 
@@ -273,13 +282,13 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     // 此函数在依赖变化时执行，用来异步计算
     task:async ({draft,setState,input})=>{    
 
-      const thisDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedThis), fullKeyPath, keyPath ,parent})
-      const scopeDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedScope), fullKeyPath, keyPath ,parent})
+      const thisDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedThis), fullKeyPath, keyPath ,parent,depends:input})
+      const scopeDraft = getComputedContextDraft(draft, { context:getContextOption(draft,scope,computedScope), fullKeyPath, keyPath ,parent,depends:input})
 
       try{
         // @ts-ignore
         setState((draft)=>setVal(draft,[...fullKeyPath,'loading'],true))
-        const result = await getter.call(thisDraft,input,scopeDraft)     
+        const result = await getter.call(thisDraft,scopeDraft,computedParams)     
         // @ts-ignore
         setState((draft)=>{
           setVal(draft,[...fullKeyPath,'value'],result)
@@ -334,7 +343,8 @@ export function createComputed<Store extends StoreDefine<any>>(stateCtx: IShared
             options:{
               depends:[],                       // 未指定依赖
               initial:undefined,                // 也没有初始化值
-              context:options.computedThis   // 指定默认上下文
+              context:options.computedThis,     // 指定默认上下文
+              scope:ComputedScopeRef.Current    // 
             }
           })
           createAsyncComputedMutate<Store>(stateCtx,params,options)     

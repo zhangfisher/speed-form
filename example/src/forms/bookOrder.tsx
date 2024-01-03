@@ -41,37 +41,53 @@ const orderFormSchema ={
     }, 
     orders:[
         {
-            url:"wwww.ddd",
-            valid:"",
-            fields:{
-                book:{title:"书名"},
-                count:{title:"数量"},
-                prict:{title:"单价"},
-                sum:{title:"小计"}
-            }            
-        },  
+            book:{value:""},
+            count:{title:"数量",value:1},
+            prict:{title:"单价",value:12},
+            sum:{title:"小计",value:12}
+        },{
+            visible:(orders:any)=>(orders as BookOrdersType).orders.length<10
+        }  
     ],  
     total:{
         title:"总金额",
         value:100
     }     
 } 
-
 type BookOrdersType = typeof orderFormSchema
+ 
+
+
 const BookOrders = createForm<BookOrdersType>(orderFormSchema,{
+    title:"订单管理",
+    visible:(orders:any)=>(orders as BookOrdersType).orders.length<10,
+    enable:(orders:any)=>(orders as BookOrdersType).orders.length<10,
+    valid:(orders:any)=>(orders as BookOrdersType).orders.length<10,
+    readonly:(orders:any)=>(orders as BookOrdersType).orders.length<10,    
     actions:{
-        addOrder:{
+        addBook:{
+            title:"添加书籍",
+            execute:(scope)=>{
+                console.log(scope)
+            }
+        },
+        submit:{
             title:"添加订单",
-            scope:()=>['orders'],
-            visible:(orders:any)=>(orders as BookOrdersType).orders.length<10,
-            enable:(orders:any)=>(orders as BookOrdersType).orders.length<10,                        
-            submit:async (order:any)=>{
+            visible:(scope:any)=>(scope as BookOrdersType).orders.length<10,
+            enable:(scope:any)=>(scope as BookOrdersType).orders.length<10,       
+            // 动作正在执行，如果是数字代表是倒计时，否则会在submit提交完成后变成false         
+            loading:true,                                 
+            error:null,
+            // 提交数据
+            execute:async (scope:any)=>{
                 await delay(1000)
-                // post(order)
+                await fetch(scope)
             }
         }
     }
 })
+BookOrders.actions
+
 
 
 // @ts-ignore

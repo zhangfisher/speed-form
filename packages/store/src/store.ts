@@ -66,7 +66,8 @@ export interface StoreDefine<State>{
 export enum ComputedScopeRef{
     Root = 0,
     Current = 1,
-    Parent = 2
+    Parent = 2,
+    Depends = 3             // 指向异步计算的依赖数组，仅在异步计算时生效
 }
 
 // 指定Store中计算函数的上下文,如果是字符串代表是当前对象的指定键，如果是string[]，则代表是当前Store对象的完整路径

@@ -31,6 +31,4 @@ export type RequiredComputedState<T extends Record<string, any>> = {
 };
 
 
-
-export type ReactFC<Props=unknown> = React.FC<React.PropsWithChildren<
-    Pick<React.HTMLAttributes<HTMLElement>,'className' | 'style'> & Props>> 
+ 

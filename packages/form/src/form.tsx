@@ -44,7 +44,7 @@ import type { ReactFC, Dict, ComputedAttr } from "./types";
 import { FieldComponent,  createFieldComponent } from "./field"; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import { FormAction, FormActions, createActionComponent } from "./action";
+import { ActionComputedAttr, FormAction, FormActions, createActionComponent } from "./action";
 
 
 export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{
@@ -78,6 +78,15 @@ export interface FormObject<State extends Record<string, any>> {
 
 
 export interface FormOptions<Fields extends Dict = Dict>{
+	// 表单数据
+	title?:ActionComputedAttr<string>					    // 动作标题    
+    help?:ActionComputedAttr<string>					    // 动作帮助
+    tips?:ActionComputedAttr<string>					    // 动作提示
+ 	visible?:ActionComputedAttr<boolean>					// 是否可见
+	enable?:ActionComputedAttr<boolean>						// 是否可用		
+	valid?:ActionComputedAttr<boolean>						// 是否有效
+	readonly?:ActionComputedAttr<boolean>				    // 是否只读	
+	actions?:FormActions<Fields>							// 声明表单动作
 	// 何时进行数据验证, once=实时校验, lost-focus=失去焦点时校验, submit=提交时校验
 	validAt?: 'once' | 'lost-focus' | 'submit'	
 	/**
@@ -87,10 +96,9 @@ export interface FormOptions<Fields extends Dict = Dict>{
 	* @param valuePath 
 	* @returns  {string}
 	*/
-	getFieldName?:(valuePath:string[])=>string
-	// 声明表单动作，如{submit:{title:"提交"}}
-	actions?:FormActions<Fields>
+	getFieldName?:(valuePath:string[])=>string	
 }
+
 
 
 export type FormStatus = 'idle' 
@@ -152,6 +160,12 @@ function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOp
 
 export function createForm<Fields extends Dict>(fields: Fields,options?:FormOptions<Fields>) {
 	const opts = assignObject({
+		title:"",
+		help:"",
+		visible:true,
+		enable:true,
+		readonly:false,
+		actions:{},
 		getFieldName:(valuePath:string[])=>valuePath.join(".")
 	},options) as Required<FormOptions>
 
@@ -171,12 +185,10 @@ export function createForm<Fields extends Dict>(fields: Fields,options?:FormOpti
 		computedScope: ['fields'],
 		// 对validator进行特殊处理
 		onCreateComputed(keyPath,getter,options) {		
-			// 只对validator进行处理	
-			if(keyPath[keyPath.length-1]=='validate'){	
+			// 只对validator进行处理,目的是使validate函数的第一个参数指向当前字段的值
+			if(keyPath.length>=2 && keyPath[0]=='fields' && keyPath[keyPath.length-1]=='validate'){	
 				createValidatorHook(keyPath,getter,options)
-			}else if(keyPath.length==1 && keyPath[0]=='actions'){
-				//createValidatorHook(keyPath,getter,options)
-			}
+			} 
 			
 		},
 	});  
