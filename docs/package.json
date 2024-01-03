@@ -10,7 +10,7 @@
     "build": "father build",
     "build:watch": "father dev",
     "docs:build": "dumi build",
-    "prepare": "husky install && dumi setup",
+    "prepare": "dumi setup",
     "doctor": "father doctor",
     "lint": "npm run lint:es && npm run lint:css",
     "lint:css": "stylelint \"{src,test}/**/*.{css,less}\"",
@@ -72,6 +72,8 @@
     "stylelint": "^16.1.0"
   },
   "dependencies": {
+    "helux": "^3.6.1",
+    "helux-store": "workspace:^",
     "speed-form": "workspace:^"
   }
 }

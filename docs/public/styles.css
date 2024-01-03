@@ -5,3 +5,9 @@
 .dumi-default-logo{
   font-weight: lighter!important;
 }
+
+.dumi-default-previewer-demo button{
+  padding: 8px;
+  margin: 4px;
+  cursor: pointer;
+}
