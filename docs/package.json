@@ -2,8 +2,7 @@
   "name": "speedform-docs",
   "version": "0.0.1",
   "description": "high-performance and easy-to-use final form management for react",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "src/index.ts",
   "scripts": {
     "start": "npm run dev",
     "dev": "dumi dev",
@@ -72,6 +71,7 @@
     "stylelint": "^16.1.0"
   },
   "dependencies": {
+    "color": "^4.2.3",
     "helux": "^3.6.1",
     "helux-store": "workspace:^",
     "speed-form": "workspace:^"
