@@ -73,7 +73,7 @@ function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath,depends}
     const ctx = typeof(context)=='function' ? context(draft) : context
 
     if(ctx === ComputedScopeRef.Current){
-        return  getVal(draft, keyPath)
+        return  keyPath.length==0 ? draft : getVal(draft, keyPath)
     }else if(ctx === ComputedScopeRef.Parent){
         return getVal(draft,fullKeyPath.slice(0,fullKeyPath.length-2))
     }else if(ctx === ComputedScopeRef.Root){

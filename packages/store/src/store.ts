@@ -56,6 +56,7 @@ import { model  } from "helux"
 import { createActions } from './action';
 import { Actions, ComputedState } from "./types";
 import { type ComputedOptions, createComputed } from "./computed"; 
+import { deepClone } from "flex-tools/object/deepClone";
  
 
 export interface StoreDefine<State>{    
@@ -81,19 +82,24 @@ export interface StoreOptions{
     computedScope?: StoreComputedScope
     // 当创建计算属性前调用
     onCreateComputed?:(keyPath:string[],getter:Function,options:ComputedOptions)=>Function | void
+    // 是否是单例模式，如果是单例模式，那么所有的计算属性都是共享的，否则每个实例都有自己的计算属性
+    // =false时会对传入的data进行深度克隆，这样就可以创建多个互相不干扰的实例
+    singleton?:boolean
     
 }
 export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
     const opts = Object.assign({
         computedThis:ComputedScopeRef.Root,
-        computedScope:ComputedScopeRef.Current
+        computedScope:ComputedScopeRef.Current,
+        singleton:true
     },options) as Required<StoreOptions>
+    const storeData = opts.singleton ? data : deepClone(data)
     return  model((api) => { // api对象 有详细的类型提示 
-        const stateCtx = api.sharex<ComputedState<T['state']>>(data.state as any,{
+        const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any,{
             stopArrDep: false           
         })        
         // 1. 创建Actions        
-        const actions = createActions<T>(data.actions,stateCtx,api) 
+        const actions = createActions<T>(storeData.actions,stateCtx,api) 
 
         // 2. 处理Computed属性 
         createComputed<T['state']>(stateCtx,api,opts)!
