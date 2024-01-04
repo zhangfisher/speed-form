@@ -3,6 +3,9 @@ import { defineConfig } from 'dumi';
 export default defineConfig({
   outputPath: 'dist',
   themeConfig: {
+    demo:{
+
+    }
   },
   logo:"/logo.png",
   locales: [

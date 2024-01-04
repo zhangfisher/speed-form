@@ -3,6 +3,8 @@ group:
   title: 高级
   order: 2
 order: 0  
+demo:
+  tocDepth: 5
 ---
 
 # 响应式系统
@@ -31,21 +33,45 @@ order: 0
 
 `helux-store`提供了`createStore`方法用来创建`Store`对象。
 
-```ts
-
+```ts 
+const user = {
+  firstName:"Zhang",
+  lastName:"Fisher",
+  age:18
+}
+ 
 const store = createStore({
-  state:{},       // 声明状态数据
+  state:user,       // 声明状态数据
   actions:{},     // 声明状态数据更新方法
+},{
+  // ...配置参数
 })
 
 ```
+
+### 配置
+
+`createStore`方法的第二个参数是配置，用来配置`Store`的行为。
+
+```ts
+export interface StoreOptions{    
+    // 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象
+    // 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
+    computedThis?: StoreComputedContext
+    computedScope?: StoreComputedScope
+    // 当创建计算属性前调用
+    onCreateComputed?:(keyPath:string[],getter:Function,options:ComputedOptions)=>Function | void    
+}
+```
+
 ## 状态
 
 ### 状态存取
 
 当创建好`Store`后,你可以在存取`State`用来驱动组件细粒度渲染。
 
-`Store`对象提供了`useState`方法，用来在组件中访问和更新`Store`的状态数据。
+`Store`对象提供了`useState`方法，用来在组件中访问和更新`Store`的状态数据。其使用方式与`React`的`useState`方法类似。
+
 
 ```tsx
 import { createStore } from 'helux-store';
@@ -63,7 +89,7 @@ export default () => {
   return <div>
       <div>Hello :{state.firstName}{' '}{state.lastName}</div>
       <div>Age :{state.age}</div>
-      <button onClick={()=>setState(draft=>draft.age+=1)}>+Age</button>
+      <button onClick={()=>setState(state=>state.age+=1)}>+Age</button>
     </div>
 }
 
@@ -71,12 +97,11 @@ export default () => {
 
 ### 响应式读写
 
-除了使用`useState`方法读写状态外，`Store`对象还提供了`state`属性用来读取状态。
+除了使用`useState`方法读写状态外，`sotre.state`返回的是一个`reactive`响应式对象，你可以直接读写它的属性。
 
-`sotre.state`返回的是一个`reactive`响应式对象，你可以直接读写它的属性。
-
-所谓的`响应式对象`指的是可以对该对象进行读取，其修改行为会触发内部的依赖收集，相关计算属性的运行，当然也会自动触发组件的重新渲染。
-
+:::info
+`响应式对象`指的是可以对该对象进行读取，其修改行为会触发内部的依赖收集，相关计算属性的运行，当然也会自动触发组件的重新渲染。因此，当您使用`store.state.xxx=<value>`直接修改状态时，就绕过了通过`Action`修改`State`的限制。
+:::
 
 
 ```tsx
@@ -85,6 +110,8 @@ export default () => {
 * description: 通过`store.state.firstName`直接读取状态,不通过`useState`方法
 */
 import { createStore } from 'helux-store';
+import { $ } from "helux"
+
 const state = {
   firstName:"Zhang",
   lastName:"Fisher",
@@ -94,18 +121,66 @@ const state = {
 const store = createStore<typeof state>({state})
 
 export default () => {
+
   return <div>
       <div>Hello :{store.state.firstName}{' '}{store.state.lastName}</div>
+      {/* 引入Signal机制，可以局部更新Age */}
+      <div>Age+Signal :{$(store.state.age)}</div>
+      {/* 当直接更新Age时，仅在组件当重新渲染时更新 */}
       <div>Age :{store.state.age}</div>
-      <button onClick={()=>setState(draft=>draft.age+=1)}>+Age</button>
+      <button onClick={()=>store.state.age=store.state.age+1}>+Age</button>
     </div>
 }
 
 ``` 
 
+利用响应式更新状态，可以实现组件的细粒度渲染，做为对比，我们先看一个典型的`Context`的渲染更新例子。
+
+```tsx
+import { createStore } from 'helux-store';
+import React,{createContext,useContext,useState} from "react"
+import { ColorBlock } from "speedform-docs"
+ 
+const ctx = createContext({
+  firstName:"Zhang",
+  lastName:"Fisher",
+  age:18
+})
+
+const Child = React.memo((props)=>{
+    const context=useContext(ctx)
+    return <ColorBlock name={`子组件:${props.name}`}>
+      <div>Hello :{context.firstName}{' '}{context.lastName}</div> 
+    </ColorBlock>
+})
+let count:number = 0
+export default ()=>{
+  const [user,setUser] = useState({
+    firstName:"Zhang",
+    lastName:"Fisher",
+    age:18
+  })
+  return <ctx.Provider value={user}>
+      <div>根组件</div>
+      <div>Hello :{user.firstName}{' '}{user.lastName}</div>
+      <div>Age :{user.age}</div>
+      <button onClick={()=>{
+        setUser({firstName:"Zhang",lastName:"Fisher",age:++count})
+      }}>+Age</button>
+      <Child name="A"/>
+      <Child name="B"/>
+    </ctx.Provider>
+}
+
+```
+从上面的例子可看到，当更新`Context.age`时，所有的子组件都会重新渲染，而这是这是不必要的，因为子组件并没有使用到`Context`的数据。
+
+> **最大的问题在于，当更新根Context时，所有的子组件都会重新渲染，这是不必要的，因为子组件并没有使用到根Context的数据。我们希望能实现更细粒度的渲染，只有当子组件使用到的数据发生变化时，才会重新渲染。**
+
+
 ### 信号
 
-直接通过`store.state.firstName`的方式来读取状态数据，当状态变化时并不会导致组件重新渲染，这是因为`store.state.firstName`并不是一个响应式的数据，它只是一个普通的数据。此时可以使用`helux`提供的信号机制来实现组件的细粒度渲染。
+直接通过`store.state.firstName`的方式来读取状态数据，当状态变化时并不会导致组件重新渲染，此时可以使用`helux`提供的信号机制来实现组件的细粒度渲染。
 
 ```tsx
 import { createStore } from 'helux-store';
@@ -150,7 +225,7 @@ export default () => {
 
 ## 计算属性
 
-细心的朋友可能发现，在上面的`createStore`中我们没有声明任何的计算属性，但这并不是不支持计算属性，而是`helux-store`提供了**独特的计算属性的声明方式*。`helux-store`提供的计算属性的声明方式是`SpeedForm`之所以能提供无以伦比用户开发体验的关键。
+细心的朋友可能发现，在上面的`createStore`中我们没有声明任何的计算属性，但这并不是不支持计算属性，而是`helux-store`提供了**独特的计算属性的声明方式**。`helux-store`提供的计算属性的声明方式是`SpeedForm`之所以能提供无以伦比用户开发体验的关键。
 
 ### 基本原理
 
