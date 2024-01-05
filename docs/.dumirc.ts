@@ -9,12 +9,12 @@ export default defineConfig({
 
     }
   },
-  logo:"logo.png",
+  logo:"/speed-form/logo.png",
   locales: [
     { id: 'zh-CN', name: '中文' },
     { id: 'en-US', name: 'EN' },
   ],
   styles:[
-    "styles.css"
+    "/speed-form/styles.css"
   ]
 });
