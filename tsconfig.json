@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "jsx": "react",
+    "baseUrl": "./",
+    "paths": {
+      "@@/*": [".dumi/tmp/*"],
+      "speedform-docs": ["src"],
+      "speedform-docs/*": ["src/*", "*"],
+      "speed-form": ["node_modules/speed-form/src"],
+      "helux-store": ["node_modules/speed-form/src"]
+    }
+  },
+  "include": [
+    ".dumirc.ts",
+    "src/**/*",
+    "node_modules/speed-form/src/**/*",
+    "node_modules/helux-store/src/**/*",
+  ]
+}
