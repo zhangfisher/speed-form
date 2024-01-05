@@ -2,6 +2,7 @@ import { defineConfig } from 'dumi';
 
 export default defineConfig({
   base:"/speed-form/",
+  publicPath:"/speed-form/",
   outputPath: 'dist',
   themeConfig: {
     demo:{
