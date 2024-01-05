@@ -68,12 +68,15 @@ export enum ComputedScopeRef{
     Root = 0,
     Current = 1,
     Parent = 2,
-    Depends = 3             // 指向异步计算的依赖数组，仅在异步计算时生效
+    Depends = 3          // 指向依赖数组   
 }
-
+export type NonDependsScopeRef = Exclude<ComputedScopeRef, ComputedScopeRef.Depends>;
 // 指定Store中计算函数的上下文,如果是字符串代表是当前对象的指定键，如果是string[]，则代表是当前Store对象的完整路径
-export type StoreComputedScope  = ComputedScopeRef | string | string[] | ((state:any)=>string | string[] | ComputedScopeRef)
-export type StoreComputedContext  = StoreComputedScope
+export type StoreComputedScope  =  ComputedScopeRef | string | string[] | ((state:any)=>string | string[] | ComputedScopeRef)
+export type StoreComputedContext  = NonDependsScopeRef | string | string[] | ((state:any)=>string | string[] | NonDependsScopeRef)
+
+
+ 
 
 export interface StoreOptions{    
     // 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象

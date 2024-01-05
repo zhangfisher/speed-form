@@ -9,7 +9,7 @@
  */
 
 import { HeluxApi, IOperateParams, ISharedCtx } from "helux";
-import type { StoreDefine, StoreComputedScope, StoreOptions } from './store';
+import type { StoreDefine, StoreComputedScope, StoreOptions, StoreComputedContext } from './store';
 import { ComputedScopeRef } from './store';
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
@@ -20,7 +20,7 @@ export interface ComputedParams extends Record<string,any>{
 }
 
 export type ComputedOptions<T=any,Params extends ComputedParams= ComputedParams> = { 
-  context?:StoreComputedScope             // 计算函数的this
+  context?:StoreComputedContext             // 计算函数的this
   scope?:StoreComputedScope               // 计算函数的第一个参数
   initial?:T
   // 异步计算,默认情况下，通过typeof(fn)=="async function"来判断是否是异步计算函数
@@ -68,25 +68,27 @@ export interface AsyncComputedParams<R>  {
  * @param param1 
  * @returns 
  */
-function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath,depends}:{context?:StoreComputedScope,keyPath:string[],fullKeyPath:string[],parent:any,depends?:any[]}){
+function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath,depends}:{context?:StoreComputedScope,keyPath:string[],fullKeyPath:string[],parent:any,depends?:readonly any[]}){
   try{
     const ctx = typeof(context)=='function' ? context(draft) : context
 
     if(ctx === ComputedScopeRef.Current){
         return  keyPath.length==0 ? draft : getVal(draft, keyPath)
     }else if(ctx === ComputedScopeRef.Parent){
-        return getVal(draft,fullKeyPath.slice(0,fullKeyPath.length-2))
+      const paths = fullKeyPath.slice(0,fullKeyPath.length-2)
+        return paths.length > 0 ? getVal(draft,paths) : draft
     }else if(ctx === ComputedScopeRef.Root){
         return draft
     }else if(ctx === ComputedScopeRef.Depends){ // 异步计算的依赖值
-      return depends  
-    }else if(typeof(ctx)=='string'){
+      return Array.isArray(depends) ? depends : [] 
+    }else if(typeof(ctx)=='string'){ // 当前对象的指定键
       return getVal(draft,[...keyPath,...ctx.split(".")])
     }else if(Array.isArray(ctx)){
-      return getVal(draft,ctx)
+      return ctx.length > 0 ? getVal(draft,ctx) : draft
     }else if(typeof(ctx)=='number'){
       const endIndex = ctx > fullKeyPath.length-2 ? fullKeyPath.length-ctx-1 : 0
-      return endIndex==0 ? draft : getVal(draft,fullKeyPath.slice(0,endIndex))
+      const paths =   fullKeyPath.slice(0,endIndex)
+      return paths.length>0 ?  getVal(draft,paths) : draft
     }else{
       return draft
     }
@@ -206,15 +208,15 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
     const newGetter = onCreateComputed.call(stateCtx,fullKeyPath,getter,computedOptions)    
     if(typeof(newGetter)=='function') getter = newGetter 
   }  
-  const { context,scope,onError,initial,params:computedParams } = computedOptions
+  const { context,scope,onError,initial,params:computedParams,depends } = computedOptions
 
 
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
-
+      const { input } = params
       // 2. 根据配置参数获取计算函数的上下文对象
-      const thisDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedThis), fullKeyPath, keyPath ,parent})
-      const scopeDraft = getComputedContextDraft(draft, { context:getContextOption(draft,scope,computedScope), fullKeyPath, keyPath ,parent})
+      const thisDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedThis), fullKeyPath, keyPath ,parent,depends:input})
+      const scopeDraft = getComputedContextDraft(draft, { context:getContextOption(draft,scope,computedScope), fullKeyPath, keyPath ,parent,depends:input})
 
       // 3. 执行getter函数
       let computedValue = initial
@@ -229,7 +231,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
       // 4. 将getter的返回值替换到状态中的,完成移花接木
       setVal(draft, fullKeyPath,computedValue);
       
-    },
+    }, 
     desc: fullKeyPath.join('.'),
     // 关闭死循环检测，信任开发者
     checkDeadCycle: false,
