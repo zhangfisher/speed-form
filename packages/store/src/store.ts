@@ -52,7 +52,7 @@
     } as const) 
  */
 
-import { model  } from "helux" 
+import { ISharedCtx, model  } from "helux" 
 import { createActions } from './action';
 import { Actions, ComputedState } from "./types";
 import { type ComputedOptions, createComputed } from "./computed"; 
@@ -75,6 +75,25 @@ export type NonDependsScopeRef = Exclude<ComputedScopeRef, ComputedScopeRef.Depe
 export type StoreComputedScope  =  ComputedScopeRef | string | string[] | ((state:any)=>string | string[] | ComputedScopeRef)
 export type StoreComputedContext  = NonDependsScopeRef | string | string[] | ((state:any)=>string | string[] | NonDependsScopeRef)
 
+export type SetStateGetter<State,R> = (state:State)=>R
+
+/**
+ * 增强setState，支持传入函数返回
+ *  
+ *  [ fullName,setFullName ] = setState((state)=>state.user.firstName)
+ * 
+ * 
+ * @param setState 
+ */
+function wrapperSetState<T extends StoreDefine<any>>(stateCtx:ISharedCtx<ComputedState<T["state"]>>){
+    return function<T>(getter:((state:ComputedState<T["state"]>)=>T )){
+        if(typeof(setState) === 'function'){
+            return stateCtx.setState(setState)
+        }else{
+            return stateCtx.setState(()=>setState)
+        }
+    }
+}
 
  
 
