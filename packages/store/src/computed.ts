@@ -9,7 +9,7 @@
  */
 
 import { HeluxApi, IOperateParams, ISharedCtx } from "helux";
-import type { StoreDefine, StoreComputedScope, StoreOptions, StoreComputedContext } from './store';
+import type { StoreDefine, StoreComputedScope, StoreOptions } from './store';
 import { ComputedScopeRef } from './store';
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
@@ -20,7 +20,7 @@ export interface ComputedParams extends Record<string,any>{
 }
 
 export type ComputedOptions<T=any,Params extends ComputedParams= ComputedParams> = { 
-  context?:StoreComputedContext             // 计算函数的this
+  context?:StoreComputedScope             // 计算函数的this
   scope?:StoreComputedScope               // 计算函数的第一个参数
   initial?:T
   // 异步计算,默认情况下，通过typeof(fn)=="async function"来判断是否是异步计算函数
@@ -148,9 +148,7 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
     }else{
       depends = []
     }
-  }
-
-  if(isAsync && depends.length==0) throw new Error("async computed must specify depends")
+  } 
   opts.async = isAsync
 
   const fn =  () => {
@@ -161,7 +159,7 @@ export function computed<R=any>(getter:Function,depends:any,options?: ComputedOp
   }
 
   // @ts-ignore
-  fn.__COMPUTED__ = isAsync ? 'async' : 'sync'
+  fn.__COMPUTED__ = 'async' //isAsync ? 'async' : 'sync'
 
   return fn
 } 
@@ -327,6 +325,8 @@ export function createComputed<Store extends StoreDefine<any>>(stateCtx: IShared
     // - 将原始属性替换为计算属性值或异步对象
 	  stateCtx.setOnReadHook((params) => {
       const { fullKeyPath, value } = params;
+      if(fullKeyPath[fullKeyPath.length-1]=='fullNameX') debugger
+
       const key = fullKeyPath.join(".");
       if (typeof value === "function" && !replacedMap[key]) {
         replacedMap[key] = true;

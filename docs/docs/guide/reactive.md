@@ -87,7 +87,7 @@ export interface StoreOptions{
 - `Action`：通过派发执行`Action`来更新状态。
 
 
-### 状态存取
+### 读写状态
 
 当创建好`Store`后,你可以在存取`State`用来驱动组件细粒度渲染。
 
@@ -115,6 +115,49 @@ export default () => {
 }
 
 ``` 
+
+`useState`还可以接受`getter` 和`setter`两个函数参数，用来获取和设置`State`中的某个属性。
+
+
+```tsx 
+import { createStore } from 'helux-store';
+import { ColorBlock }  from "speedform-docs"
+const state = {
+  firstName:"Zhang",
+  lastName:"Fisher",
+  fullName:(state)=>state.firstName+state.lastName,
+}
+const store = createStore<typeof state>({state})
+
+const FirstName = React.memo(()=>{
+  const [first] = store.useState((state)=>state.firstName)
+  return <ColorBlock name="FirstName" value={first}/>
+})
+const LastName = React.memo(()=>{
+  const [last] = store.useState((state)=>state.lastName)
+  return <ColorBlock name="LastName" value={last}></ColorBlock>
+})
+
+export default () => { 
+  const [firstName,setFirstName] = store.useState((state)=>state.firstName,(state,firstName)=>state.firstName=firstName)
+  const [fullName,setFullName] = store.useState<string,[string,string]>(
+      (state)=>state.fullName,       // getter
+      (state,[first,last])=>{        // 可选,setter
+        state.firstName=first
+        state.lastName=last
+      }
+  )
+  return <div>
+      <FirstName/>
+      <LastName/> 
+      <div>FullName :{fullName}</div>
+      <button onClick={()=>setFirstName(firstName+'r')}>change FirstName</button>
+      <button onClick={()=>setFullName(["Hello","Voerkai18n"])}>change FullName</button>
+    </div>
+}
+
+``` 
+
 
 ### 响应式读写
 
@@ -598,6 +641,10 @@ export default ()=>{
 
 同步计算属性直接声明在状态中，本质上是一个普通的函数，当状态变化时，会自动重新计算。
 
+要声明同步计算属性，可以有两种方式：
+
+#### 直接在`State`中声明同步计算函数
+
 ```ts
 const state = {
   user:{
@@ -613,16 +660,18 @@ const state = {
 - `fullName`的第一个参数(即`作用域`)是由`createStore`时指定的`computedScope`指定的,默认指定的`ComputedScopeRef.Current`。因此，`fullName`的第一个参数是`user`对象。
 - 如果同步计算函数是一个普通函数而不是箭头函数，那么`this`指向是由`createStore`时指定的`computedThis`确定的。
 
-:::info
-如果我们想更改同步计算函数的第一个参数(即`作用域`)或者`this`，则需要通过`computed`来创建同步计算属性。
-:::
+
+#### 使用`computed`函数声明**
+
+直接在`State`中声明同步计算函数的方式，有一个缺点，就是无法指定计算函数的`this`和`作用域`，因此`helux-store`提供了`computed`函数来声明同步计算函数,允许做更多的控制。
+
 
 ```ts {6,9}
 const state = {
   user:{
     firstName:"Zhang",
     lastName:"Fisher",
-    fullName:computed((state)=>{
+    fullName:computed<string>((state)=>{
       return state.user.firstName+state.user.lastName
     },{
       context:ComputedScopeRef.Root             // 计算函数的this
@@ -686,3 +735,89 @@ export default ()=>{
 
 ### 异步计算
 
+异步计算属性是一个异步函数，当状态变化时，会自动重新计算。跟同步计算属性有一个很大的不同在于：
+
+#### 理解异步计算
+
+- 同步计算属性会将计算结果回写到状态中的原位置，如下
+
+```ts {11}
+const state = {
+  user:{
+    firstName:"Zhang",
+    lastName:"Fisher",
+    fullName: (user)=>{
+      return user.firstName+user.lastName
+    }
+  }
+}  
+const store = createStore<typeof state>({state})
+store.state.user.fullName=="ZhangFisher" // 计算结果
+typeof()
+```
+
+- 而异步计算属性则会在状态的原位置写入一个`AsyncComputedObject`对象，通过该对象可以读取到异步计算的进度以及结果等，如下
+
+```ts {13-20}
+const state = {
+  user:{
+    firstName:"Zhang",
+    lastName:"Fisher",
+    fullName: async (user)=>{
+      // await some async code
+      return user.firstName+user.lastName
+    } 
+  }
+}  
+const store = createStore<typeof state>({state})
+// 此时的fullName是一个AsyncComputedObject对象
+store.state.user.fullName={
+  loading:false,        // 是否正在计算
+  error:null,           // 计算错误信息
+  value:"ZhangFisher",  // 计算结果
+  progress:0,           // 计算进度
+  keyPath:["fullName"]  // 计算属性的路径
+  reset:()=>{},         // 重新执行计算
+}
+```
+
+以下是一个异步计算的例子：
+
+
+```tsx
+import { createStore,computed } from 'helux-store';
+const delay = (ms:number=2000)=>new Promise(resolve=>setTimeout(resolve,ms))
+const state = {
+  user:{
+    firstName:"Zhang",
+    lastName:"Fisher",
+    fullName: computed(async (user)=>{
+      await delay()
+      return user.firstName+user.lastName
+    },["user.firstName","user.lastName"]) 
+  }
+}  
+const store = createStore<typeof state>({state})
+
+export default ()=>{
+  const [state,setState] = store.useState()
+  return (<div>
+    <div>FirstName:{state.user.firstName}</div>
+    <div>LastName:{state.user.lastName}</div>
+    <div>FullName:{state.user.fullName.loading ? '正在计算' : state.user.fullName.value}</div>
+    <div>error:{state.user.fullName.error}</div>
+    <button onClick={setState((state)=>state.user.firstName=state.user.firstName+'.')}>修改FirstName</button>
+    <button onClick={()=>state.user.fullName.reset()}>重新计算</button>
+  </div>)
+}
+```
+ 
+
+
+#### 直接在`State`中声明异步计算函数
+
+
+#### 使用`computed`中声明异步计算函数
+
+
+### computed函数

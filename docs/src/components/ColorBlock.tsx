@@ -21,18 +21,18 @@ const ColorBlock:ReactFC<React.PropsWithChildren<{value?:any,name?:string,title?
   let textColor = 'block'
   if(color.rgb(backgroundColor).isDark()){
     textColor = 'white'
-    }else{
-      textColor ="block"
-    }
-
-    useEffect(()=>{
-      renderCount.current++
-    })
+  }else{
+    textColor ="block"
+  }
+  useEffect(()=>{
+    renderCount.current++
+  })
 
   return (
-    <div  {...props} style={{  backgroundColor,padding:'4px',color:textColor,display:inline? 'inline' : 'block',...props.style }}>
-      {name ? (<span style={{padding:'2px'}}>{name}=</span>) : ''}<span style={{padding:'2px'}}>{String(value)}</span>{renderCount.current}
+    <div  {...props} style={{ position:"relative", backgroundColor,padding:'4px',color:textColor,display:inline? 'inline' : 'block',...props.style || {} }}>
+      {name ? (<span style={{padding:'2px'}}>{name}=</span>) : ''}<span style={{padding:'2px'}}>{String(value)}</span>
       {props.children}
+      <span title='渲染计数' style={{width:"32px",fontSize:"10px",position:'absolute',top:"calc(50% - 8px)",left:"100%",marginLeft:"-32px"}}>{renderCount.current}</span>
     </div>
   );
 };

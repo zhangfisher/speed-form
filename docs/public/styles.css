@@ -30,3 +30,7 @@
 .dumi-default-previewer-demo table tr:nth-child(even) {
   background-color: #f2f2f2;
 }
+
+ul.dumi-default-toc>li[data-depth='2']{
+  font-weight: bold;
+}
