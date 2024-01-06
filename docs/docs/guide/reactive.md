@@ -791,10 +791,10 @@ const state = {
   user:{
     firstName:"Zhang",
     lastName:"Fisher",
-    fullName: computed(async (user)=>{
+    fullNameX: computed(async (user)=>{
       await delay()
-      return user.firstName+user.lastName
-    },["user.firstName","user.lastName"]) 
+      return "user.firstName+user.lastName"  
+    },["user.firstName"]) 
   }
 }  
 const store = createStore<typeof state>({state})
@@ -804,10 +804,10 @@ export default ()=>{
   return (<div>
     <div>FirstName:{state.user.firstName}</div>
     <div>LastName:{state.user.lastName}</div>
-    <div>FullName:{state.user.fullName.loading ? '正在计算' : state.user.fullName.value}</div>
-    <div>error:{state.user.fullName.error}</div>
+    <div>FullName:{state.user.fullNameX.loading ? '正在计算' : state.user.fullNameX.value}</div>
+    {/* <div>error:{state.user.fullName.error}</div> */}
     <button onClick={setState((state)=>state.user.firstName=state.user.firstName+'.')}>修改FirstName</button>
-    <button onClick={()=>state.user.fullName.reset()}>重新计算</button>
+    <button onClick={()=>state.user.fullNameX.reset()}>重新计算</button>
   </div>)
 }
 ```

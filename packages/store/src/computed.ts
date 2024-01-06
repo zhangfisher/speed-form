@@ -1,11 +1,11 @@
 /**
- * 
+ *
  * 计算属性
- * 
+ *
  * 即派生属性
-   
 
- * 
+
+ *
  */
 
 import { HeluxApi, IOperateParams, ISharedCtx } from "helux";
@@ -13,23 +13,24 @@ import type { StoreDefine, StoreComputedScope, StoreOptions } from './store';
 import { ComputedScopeRef } from './store';
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
+import { isPlainObject } from "flex-tools/typecheck/isPlainObject";
 
 export interface ComputedParams extends Record<string,any>{
   // 获取一个进度条，用来显示异步计算的进度
   getProgressbar?:(progress:number)=>void
 }
 
-export type ComputedOptions<T=any,Params extends ComputedParams= ComputedParams> = { 
+export type ComputedOptions<T=any,Params extends ComputedParams= ComputedParams> = {
   context?:StoreComputedScope             // 计算函数的this
   scope?:StoreComputedScope               // 计算函数的第一个参数
   initial?:T
   // 异步计算,默认情况下，通过typeof(fn)=="async function"来判断是否是异步计算函数
   // 但是在返回Promise等情况下，无法判断，此时需要手动指定async=true
-  async?:boolean 
+  async?:boolean
   // 指定依赖，例如["key","a.b.c"]等形式
-  depends?:any[]    
+  depends?:string[]
   // 当执行计算getter函数出错时的回回调
-  onError?:(e:Error)=>void 
+  onError?:(e:Error)=>void
   // 作为计算函数的第二个参数传入
   params?:Params
 };
@@ -44,29 +45,31 @@ export interface AsyncComputedObject<V=any>{
   error?:any
   value:V,
   keyPath?:string[]
-  reset:()=>{}                // 重新执行任务    
+  reset:()=>{}                // 重新执行任务
 }
 
-export type ComputedReturns<R> = (...args:any)=> R
-export type ComputedAsyncReturns<R> = (...args:any)=> Promise<R>
-export type AsyncComputedReturns<R> = (...args:any)=> AsyncComputedParams<R>
+
 
 
 export interface AsyncComputedParams<R>  {
-  getter:()=>Promise<R>
+  getter:()=>Promise<R> | R
   options:{
+    async:true
     depends:ComputedDepends
-    context:StoreComputedScope 
-    scope:StoreComputedScope 
-    initial:R  
-  }  
+    context:StoreComputedScope
+    scope:StoreComputedScope
+    initial:R
+  }
 }
+export type ComputedReturns<R> = (...args:any)=> AsyncComputedParams<R>
+export type ComputedAsyncReturns<R> = (...args:any)=> Promise<R>
+export type AsyncComputedReturns<R> = (...args:any)=> AsyncComputedParams<R>
 
-/** 
+/**
  * 根据输入的context参数获取计算属性的上下文
- * @param draft 
- * @param param1 
- * @returns 
+ * @param draft
+ * @param param1
+ * @returns
  */
 function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath,depends}:{context?:StoreComputedScope,keyPath:string[],fullKeyPath:string[],parent:any,depends?:readonly any[]}){
   try{
@@ -80,7 +83,7 @@ function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath,depends}
     }else if(ctx === ComputedScopeRef.Root){
         return draft
     }else if(ctx === ComputedScopeRef.Depends){ // 异步计算的依赖值
-      return Array.isArray(depends) ? depends : [] 
+      return Array.isArray(depends) ? depends : []
     }else if(typeof(ctx)=='string'){ // 当前对象的指定键
       return getVal(draft,[...keyPath,...ctx.split(".")])
     }else if(Array.isArray(ctx)){
@@ -96,102 +99,84 @@ function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath,depends}
         return draft
   }
 }
-  
+
 /**
  * 用来封装状态的计算函数，使用计算函数的传入的是当前对象
  *
- * {
- *  books:[
- *     {name,price,count,total:computed(draft=>draft.books[0].price*draft.books[0].count)}
- 
- *     第2个参数，可以进行异步计算
- *     {name,price,count,total:computed(draft=>draft.books[0].price*draft.books[0].count),async ()=>{}}
- *  ],
- *  url:"",
- *  data:computed(async (url)=>{ 
- *    当url变化时从网络加载数据，然后放到data
- *    return await load(url)  
- * },
- * ['url'],     // 指定依赖
- * {
- *    initial:<初始值>,
- *    context:""      // 指定异步计算函数的传入的上下文
- * })
- * }
- * 
- * 
  *
  * @param getter
  * @param depends
  * @param options
  * @returns
- * 
+ *
  */
-export function computed<R=any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?: ComputedOptions<R>):AsyncComputedReturns<R> 
+export function computed<R=any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?: ComputedOptions<R>):ComputedReturns<R>
 export function computed<R=any>(getter:ComputedGetter<R>,options?: ComputedOptions<R>):ComputedReturns<R>
-export function computed<R=any>(getter:Function,depends:any,options?: ComputedOptions<R>):Function {
+export function computed<R=any>(getter:any,depends:any,options?: ComputedOptions<R>):ComputedReturns<R>{
 
 	if(typeof(getter)!="function") throw new Error("getter must be a function")
-  const opts =Object.assign({}, arguments.length >= 3 ? arguments[2] : (arguments.length==2 ? arguments[1] : {}))
-  const { async=false } = opts
-  
-  // 是否是异步计算函数
-  const isAsync = async===true || isAsyncFunction(getter)
 
-  if(arguments.length==1){
-    depends = []
-  }else if(arguments.length==2){  // 同步
-    if(isAsync){
-      if(!(Array.isArray(depends) || typeof(depends)=="function")){
-        throw new Error("async computed must specify depends")
-      }
-    }else{
-      depends = []
-    }
-  } 
+  const opts:ComputedOptions<R> = {
+    async:false
+  }
+
+  // 是否是异步计算函数
+  const isAsync = opts.async===true
+                || isAsyncFunction(getter)
+                || (arguments.length==2 && Array.isArray(arguments[1]))
+                || (arguments.length==3 && Array.isArray(arguments[2]) && isPlainObject(arguments[1]))
+
+  if(isAsync){
+    opts.depends = arguments[1] || []
+    Object.assign(opts,arguments[2] || {})
+  }else{
+    opts.depends = []   // 同步计算函数不需要指定依赖
+    Object.assign(opts,arguments[1] || {})
+  }
+
   opts.async = isAsync
 
   const fn =  () => {
     return {
       getter,
-      options:opts      
+      options:opts
     }
   }
 
   // @ts-ignore
-  fn.__COMPUTED__ = 'async' //isAsync ? 'async' : 'sync'
+  fn.__ASYNC__ = isAsync
 
-  return fn
-} 
+  return fn  as ComputedReturns<R>
+}
 
 /**
- * 
+ *
  * 计算函数的context可以在全局Store中通过computedThis参数指定
  * 也可以在computed(fn,{context})函数中指定
- * 
+ *
  * computed配置的context优先级高于store配置的context
- * 
- * 
- * 
- * @param state 
- * @param computedThis 
- * @param storeContext 
+ *
+ *
+ *
+ * @param state
+ * @param computedThis
+ * @param storeContext
  */
 function getContextOption(state:any,computedContext?:StoreComputedScope ,storeContext?:StoreComputedScope){
   let ctx = computedContext || storeContext
   if(typeof(ctx)=='function'){
     try{
       ctx = ctx.call(state,state)
-    }catch{}    
+    }catch{}
   }
   return ctx || storeContext || ComputedScopeRef.Root
 }
- 
+
 
 /**
  * 为同步计算属性生成mutate
- * @param stateCtx 
- * @param params 
+ * @param stateCtx
+ * @param params
  */
 function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,computedOptions: ComputedOptions,storeOptions:StoreOptions){
   let { fullKeyPath, value:getter,keyPath,parent } = params;
@@ -199,13 +184,13 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
 
   // 排除掉所有非own属性,例如valueOf等
   if(parent && !Object.hasOwn(parent,fullKeyPath[fullKeyPath.length-1])){
-    return 
+    return
   }
   // 当创建计算属性前时运行hook，本Hook的目的是允许重新指定computedThis或者重新包装原始计算函数
   if(typeof(onCreateComputed)=='function' && typeof(getter)==='function'){
-    const newGetter = onCreateComputed.call(stateCtx,fullKeyPath,getter,computedOptions)    
-    if(typeof(newGetter)=='function') getter = newGetter 
-  }  
+    const newGetter = onCreateComputed.call(stateCtx,fullKeyPath,getter,computedOptions)
+    if(typeof(newGetter)=='function') getter = newGetter
+  }
   const { context,scope,onError,initial,params:computedParams,depends } = computedOptions
 
 
@@ -220,7 +205,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
       let computedValue = initial
       try{
         computedValue = getter.call(thisDraft,scopeDraft,computedParams)
-      }catch(e:any){ 
+      }catch(e:any){
         // 如果执行计算函数出错,则调用
         if(typeof(onError)==='function'){
           try{onError?.call(thisDraft,e)}catch{}
@@ -228,19 +213,19 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
       }
       // 4. 将getter的返回值替换到状态中的,完成移花接木
       setVal(draft, fullKeyPath,computedValue);
-      
-    }, 
+
+    },
     desc: fullKeyPath.join('.'),
     // 关闭死循环检测，信任开发者
     checkDeadCycle: false,
   })
-  params.replaceValue(getVal(witness.snap, fullKeyPath));        
+  params.replaceValue(getVal(witness.snap, fullKeyPath));
 }
 
 /**
  * 为异步计算属性生成mutate
- * @param stateCtx 
- * @param params 
+ * @param stateCtx
+ * @param params
  */
 function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,params:IOperateParams,storeOptions:StoreOptions){
   const { fullKeyPath, keyPath,value ,parent} = params;
@@ -248,16 +233,16 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
 
   // 排除掉所有非own属性,例如valueOf等
   if(parent && !Object.hasOwn(parent,fullKeyPath[fullKeyPath.length-1])){
-    return 
-  }  
+    return
+  }
   let {getter,options:computedOptions } = value()
   computedOptions.async = true
 
   // 在创建computed前运行,允许拦截更改计算函数的依赖,上下文,以及getter等
   if(typeof(onCreateComputed)=='function' && typeof(getter)==='function'){
-    const newGetter = onCreateComputed.call(stateCtx,fullKeyPath,getter,computedOptions)    
-    if(typeof(newGetter)=='function') getter = newGetter 
-  }  
+    const newGetter = onCreateComputed.call(stateCtx,fullKeyPath,getter,computedOptions)
+    if(typeof(newGetter)=='function') getter = newGetter
+  }
 
   const { depends,context,scope,onError,initial,params:computedParams  }  = computedOptions
 
@@ -280,7 +265,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
       })
     },
     // 此函数在依赖变化时执行，用来异步计算
-    task:async ({draft,setState,input})=>{    
+    task:async ({draft,setState,input})=>{
 
       const thisDraft = getComputedContextDraft(draft, { context:getContextOption(draft,context,computedThis), fullKeyPath, keyPath ,parent,depends:input})
       const scopeDraft = getComputedContextDraft(draft, { context:getContextOption(draft,scope,computedScope), fullKeyPath, keyPath ,parent,depends:input})
@@ -288,7 +273,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
       try{
         // @ts-ignore
         setState((draft)=>setVal(draft,[...fullKeyPath,'loading'],true))
-        const result = await getter.call(thisDraft,scopeDraft,computedParams)     
+        const result = await getter.call(thisDraft,scopeDraft,computedParams)
         // @ts-ignore
         setState((draft)=>{
           setVal(draft,[...fullKeyPath,'value'],result)
@@ -303,11 +288,11 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
       }finally{
         // @ts-ignore
         setState((draft)=>setVal(draft,[...fullKeyPath,'loading'],false))
-      }      
+      }
     },
     immediate:true,
     desc
-  })  
+  })
 }
 
 
@@ -318,41 +303,41 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
  * @returns
  */
 export function createComputed<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,api: HeluxApi,options:StoreOptions) {
- 
+
 	  const replacedMap: any = {};
     // 拦截读取state的操作，在第一次读取时，
     // - 为计算函数创建mutate
     // - 将原始属性替换为计算属性值或异步对象
 	  stateCtx.setOnReadHook((params) => {
       const { fullKeyPath, value } = params;
-      if(fullKeyPath[fullKeyPath.length-1]=='fullNameX') debugger
 
       const key = fullKeyPath.join(".");
       if (typeof value === "function" && !replacedMap[key]) {
         replacedMap[key] = true;
         // 将声明在state里面的计算函数转换为helux的mutate
         //******** 使用computed创建 ****************** */
-        if(value.__COMPUTED__=='async'){   // 异步属性
-          createAsyncComputedMutate<Store>(stateCtx,params,options)     
-        }else if(value.__COMPUTED__=='sync'){    // 通过computed函数创建的同步计算属性，允许重新指定上下文
-          const {getter,options:computedOptions } = value()
-          params.value = getter
-          createComputedMutate<Store>(stateCtx,params,computedOptions,options)
-        //******** 直接的函数声明 ****************** */
-        }else if(isAsyncFunction(value)){   // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次          
-          params.value =()=>({  
+        if(value.__ASYNC__){   // 异步属性
+          createAsyncComputedMutate<Store>(stateCtx,params,options)
+        // }
+        // else if(value.__COMPUTED__=='sync'){    // 通过computed函数创建的同步计算属性，允许重新指定上下文
+        //   const {getter,options:computedOptions } = value()
+        //   params.value = getter
+        //   createComputedMutate<Store>(stateCtx,params,computedOptions,options)
+        // //******** 直接的函数声明 ****************** */
+        }else if(isAsyncFunction(value)){   // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次
+          params.value =()=>({
             getter:value,
             options:{
               depends:[],                       // 未指定依赖
               initial:undefined,                // 也没有初始化值
               context:options.computedThis,     // 指定默认上下文
-              scope:ComputedScopeRef.Current    // 
+              scope:ComputedScopeRef.Current    //
             }
           })
-          createAsyncComputedMutate<Store>(stateCtx,params,options)     
-        }else{                // 直接声明同步计算函数,使用全局配置的计算上下文        
-          createComputedMutate<Store>(stateCtx,params,{},options)        
+          createAsyncComputedMutate<Store>(stateCtx,params,options)
+        }else{                // 直接声明同步计算函数,使用全局配置的计算上下文
+          createComputedMutate<Store>(stateCtx,params,{},options)
         }
       }
-    }); 
+    });
 }
