@@ -191,7 +191,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
     const newGetter = onCreateComputed.call(stateCtx,fullKeyPath,getter,computedOptions)
     if(typeof(newGetter)=='function') getter = newGetter
   }
-  const { context,scope,onError,initial,params:computedParams,depends } = computedOptions
+  const { context,scope,onError,initial,params:computedParams } = computedOptions
 
 
   const witness = stateCtx.mutate({

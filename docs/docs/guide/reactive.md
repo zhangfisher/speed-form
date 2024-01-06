@@ -37,7 +37,7 @@ yarn add helux-store
 
 典型的`Store`结构如下：
 
-![](/store.png)
+![](./store.png)
 
 - `Store`对象中会定义`State`数据结构，一般情况下不允许直接修改`State`数据，而是通过`Action`来修改`State`数据。
 - `Action`是一个普通的函数，一般会实现某种业务逻辑，可以是同步函数，也可以是异步函数。执行成功会修改`State`数据。
@@ -363,7 +363,7 @@ export default ()=>{
 **`helux-store`实现了最独特的移花接木式的计算属性实现方式**
 :::
 
-![](/computed.png)
+![](./computed.png)
 
 **基本过程如下：**
 
@@ -786,28 +786,33 @@ store.state.user.fullName={
 
 ```tsx
 import { createStore,computed } from 'helux-store';
-const delay = (ms:number=2000)=>new Promise(resolve=>setTimeout(resolve,ms))
+import { useRef,useEffect } from "react"
+const delay = (ms:number=1000)=>new Promise(resolve=>setTimeout(resolve,ms))
 const state = {
   user:{
     firstName:"Zhang",
     lastName:"Fisher",
-    fullNameX: computed(async (user)=>{
+    fullName: computed(async (user)=>{
       await delay()
-      return "user.firstName+user.lastName"  
-    },["user.firstName"]) 
+      return user.firstName+user.lastName  
+    },["user.firstName","user.lastName"]) 
   }
 }  
 const store = createStore<typeof state>({state})
 
 export default ()=>{
+  const count = useRef(0)
   const [state,setState] = store.useState()
+  useEffect(()=>{count.current++},[])
   return (<div>
     <div>FirstName:{state.user.firstName}</div>
-    <div>LastName:{state.user.lastName}</div>
-    <div>FullName:{state.user.fullNameX.loading ? '正在计算' : state.user.fullNameX.value}</div>
+    <div>LastName:{state.user.lastName}</div> 
+    <div>FullName:{state.user.fullName.loading ? '正在计算...' : state.user.fullName.value}</div>
     {/* <div>error:{state.user.fullName.error}</div> */}
-    <button onClick={setState((state)=>state.user.firstName=state.user.firstName+'.')}>修改FirstName</button>
-    <button onClick={()=>state.user.fullNameX.reset()}>重新计算</button>
+    <button onClick={()=>setState((state)=>state.user.firstName='ZHANG '+count.current++)}>修改FirstName</button>
+    <button onClick={()=>setState((state)=>state.user.lastName='FISHER'+count.current++)}>修改LastName</button>
+
+    {/* <button onClick={()=>state.user.fullNameX.reset()}>重新计算</button> */}
   </div>)
 }
 ```
