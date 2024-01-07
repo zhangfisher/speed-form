@@ -1,4 +1,4 @@
-import React, { MouseEvent } from "react";
+import React, { MouseEvent,useEffect } from "react";
 import Card from "./components/Card"  
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
@@ -171,9 +171,9 @@ const NetworkForm = ()=>{
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.store.useState()
-    // useEffect(()=>{
-    //  JSON.stringify(state.interface.select)
-    // })
+    useEffect(()=>{
+     JSON.stringify(state.interface.select)
+    })
     
     // state.dhcp.start.validate.value
 

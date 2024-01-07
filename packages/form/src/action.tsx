@@ -38,7 +38,9 @@ import React from "react";
 import { defaultObject } from "flex-tools/object/defaultObject";
 import type { FormOptions } from "./form";
 import { AsyncComputedObject, AsyncComputedReturns, ComputedParams, ComputedScopeRef, computed } from "helux-store"; 
-import { ChangeFieldType, assignObject } from "flex-tools";
+import { assignObject } from "flex-tools/object/assignObject";
+import type { ChangeFieldType } from "flex-tools/types";
+
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
   | ((fields:Fields)=>Promise<R>) 

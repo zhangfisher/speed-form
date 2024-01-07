@@ -61,9 +61,12 @@ export interface AsyncComputedParams<R>  {
     initial:R
   }
 }
-export type ComputedReturns<R> = (...args:any)=> AsyncComputedParams<R>
-export type ComputedAsyncReturns<R> = (...args:any)=> Promise<R>
-export type AsyncComputedReturns<R> = (...args:any)=> AsyncComputedParams<R>
+
+// 计算属性的声明形式
+export type Computed<R> = (...args:any)=> R          // 同步计算函数
+export type AsyncComputed<R> = (...args:any)=> Promise<R>  // 异步计算函数
+export type ComputedAsyncReturns<R> = (...args:any)=>  AsyncComputedParams<R>   // 使用computed函数创建的计算属性
+
 
 /**
  * 根据输入的context参数获取计算属性的上下文
