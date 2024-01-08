@@ -123,6 +123,7 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
     const fieldPath = Array.isArray(name) ? name : name.split(".")  
     // 含fields前缀的字段路径
     const fullFieldPath:string[] = ['fields',...fieldPath]
+    const valueFieldPath:string[] = ['fields',...fieldPath]
 
 		const [state,setState] = store.useState() 
 
@@ -132,13 +133,14 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
     const isLite = isLiteField(value) 
     if(!isLite) {
       fieldPath.push("value") 
+      valueFieldPath.push("value")
     }
 
     // 更新当前字段信息，如update(field=>field.enable=true)
-    const filedUpdater = useFieldUpdater(store,fullFieldPath,setState)
+    const filedUpdater = useFieldUpdater(store,valueFieldPath,setState)
 
     // 表单字段同步，允许指定防抖参数
-    const syncer = useFieldSyncer(store,fullFieldPath)
+    const syncer = useFieldSyncer(store,valueFieldPath)
 
     const [fieldProps,setFieldProps] = useState(()=>createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater))
  

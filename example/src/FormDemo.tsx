@@ -79,7 +79,7 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field> 
-            <Network.Field<typeof Network.fields.ip> name="ip">                      
+            {/* <Network.Field<typeof Network.fields.ip> name="ip">                      
                 {({title,value,visible,validate,placeholder,sync})=>{ 
                     return <FieldRow visible={visible} label={title}>
                          <input className={classnames({invalid:!validate.value})} placeholder={placeholder} value={value} onChange={sync(100)}/>
@@ -160,7 +160,7 @@ const NetworkForm = ()=>{
                         <input className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                     </FieldRow>
                 }}
-            </Network.Field>   
+            </Network.Field>    */}
         </Card>
     </Network.Form>        
 }
@@ -170,9 +170,7 @@ const NetworkForm = ()=>{
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.store.useState()
-    useEffect(()=>{
-     JSON.stringify(state.interface.select)
-    })
+ 
     
     // state.dhcp.start.validate.value
 

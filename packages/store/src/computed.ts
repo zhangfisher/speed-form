@@ -14,7 +14,7 @@ import { ComputedScopeRef } from './store';
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject";
-import { skipComputed,isSkipComputed } from "./utils"
+import { skipComputed,isSkipComputed, getValue } from "./utils"
 
 export interface ComputedParams extends Record<string,any>{
   // 获取一个进度条，用来显示异步计算的进度
@@ -81,22 +81,20 @@ function getComputedContextDraft(draft:any,{context,keyPath,fullKeyPath,depends}
     const ctx = typeof(context)=='function' ? context(draft) : context
 
     if(ctx === ComputedScopeRef.Current){
-        return  keyPath.length==0 ? draft : getVal(draft, keyPath)
-    }else if(ctx === ComputedScopeRef.Parent){
-      const paths = fullKeyPath.slice(0,fullKeyPath.length-2)
-        return paths.length > 0 ? getVal(draft,paths) : draft
+        return  getValue(draft, keyPath)
+    }else if(ctx === ComputedScopeRef.Parent){ 
+        return getValue(draft,fullKeyPath.slice(0,fullKeyPath.length-2))  
     }else if(ctx === ComputedScopeRef.Root){
         return draft
     }else if(ctx === ComputedScopeRef.Depends){ // 异步计算的依赖值
       return Array.isArray(depends) ? depends : []
     }else if(typeof(ctx)=='string'){ // 当前对象的指定键
-      return getVal(draft,[...keyPath,...ctx.split(".")])
+      return getValue(draft,[...keyPath,...ctx.split(".")])
     }else if(Array.isArray(ctx)){
-      return ctx.length > 0 ? getVal(draft,ctx) : draft
+      return getValue(draft,ctx) 
     }else if(typeof(ctx)=='number'){
       const endIndex = ctx > fullKeyPath.length-2 ? fullKeyPath.length-ctx-1 : 0
-      const paths =   fullKeyPath.slice(0,endIndex)
-      return paths.length>0 ?  getVal(draft,paths) : draft
+      return getValue(draft,fullKeyPath.slice(0,endIndex)) 
     }else{
       return draft
     }
@@ -144,7 +142,9 @@ export function computed<R=any>(getter:any,depends:any,options?: ComputedOptions
     },arguments[2] || {})
   }else{
     opts.depends = []   // 同步计算函数不需要指定依赖
-    Object.assign(opts,arguments[1] || {})
+    Object.assign(opts,{
+      scope:ComputedScopeRef.Current,     // 异步计算函数的上下文指向依赖
+    },arguments[1] || {})
   }
 
   opts.async = isAsync

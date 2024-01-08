@@ -39,7 +39,7 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreDefine, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, AsyncComputedReturns, AsyncComputedObject } from "helux-store";
+import { type StoreDefine, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions  } from "helux-store";
 import type { ReactFC, Dict, ComputedAttr } from "./types";
 import { FieldComponent,  createFieldComponent } from "./field"; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
@@ -137,7 +137,7 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
  * 经过处理后
  * 
  * 如果validator是由computed函数创建的,由于computed函数可以指定依赖和计算上下文,有较强的自由度,因此不做任何处理
- * 仅当validator是一个普通的同步函数和异步函数时,才进行处理
+ * 仅当validator不是由computed函数创建时
  * 
  * 处理方式:
  *  - 同步计算函数的context指向当前字段值
@@ -145,15 +145,8 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
  * 
  */
 function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOptions){		
-	if(options.async){	// 异步计算函数
-		// 异步计算的输入参数是([depends],ctx),如果异步计算函数不是使用computed声明的,没有指定依赖，则自动将对对段值value作为第一个依赖
-		const deps = options.depends || []
-		if(Array.isArray(deps)) deps.splice(0,0,[...keyPath.slice(0,keyPath.length-1),'value'])
-		options.depends = deps
-	}else{//同步计算函数
-		//同步计算函数将从默认的根状态对象更改为当前字段的值
-		options.context = 'value'  // == 上下文总是指向当前字段的值		
-	}  
+	// 如果没有指定scope,则默认指向value
+	if(options.scope==undefined) options.scope="value"
 	options.initial = true	// 初始化true
 }
 

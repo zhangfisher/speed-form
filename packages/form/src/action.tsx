@@ -37,14 +37,14 @@ import { getVal } from "@helux/utils";
 import React from "react";
 import { defaultObject } from "flex-tools/object/defaultObject";
 import type { FormOptions } from "./form";
-import { AsyncComputedObject, AsyncComputedReturns, ComputedParams, ComputedScopeRef, computed } from "helux-store"; 
+import { AsyncComputedObject, ComputedAsyncReturns, ComputedParams, ComputedScopeRef, computed } from "helux-store"; 
 import { assignObject } from "flex-tools/object/assignObject";
 import type { ChangeFieldType } from "flex-tools/types";
 
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
   | ((fields:Fields)=>Promise<R>) 
-  | AsyncComputedReturns<R>
+  | ComputedAsyncReturns<R>
   | R  
 
 
