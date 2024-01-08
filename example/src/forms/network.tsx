@@ -11,7 +11,10 @@ const formSchema ={
         value:"React-Helux-Form",
         placeholder:"输入网络配置名称",
         title:"网络名称",
-        validate:(value:string)=>value.length>3
+        validate:(value:string)=>value.length>3,
+        validate1:computed((value:string)=>value.length>3,{}),
+        validate2:computed(async (value:string)=>value.length>3,[]),
+        validate3:computed(async (value:string)=>value.length>3,[],{})
     },
     interface:{
         value:"wifi",
@@ -103,7 +106,7 @@ const Network = createForm<NetworkType>(formSchema,{
         }
     }
 })
-
+ 
 
 // @ts-ignore
 globalThis.Network = Network

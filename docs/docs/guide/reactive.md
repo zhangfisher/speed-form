@@ -785,7 +785,8 @@ store.state.user.fullName={
 
 
 ```tsx
-import { createStore,computed } from 'helux-store';
+
+import { createStore,computed,ComputedScopeRef } from 'helux-store';
 import { useRef,useEffect } from "react"
 const delay = (ms:number=1000)=>new Promise(resolve=>setTimeout(resolve,ms))
 const state = {
@@ -807,12 +808,11 @@ export default ()=>{
   return (<div>
     <div>FirstName:{state.user.firstName}</div>
     <div>LastName:{state.user.lastName}</div> 
-    <div>FullName:{state.user.fullName.loading ? '正在计算...' : state.user.fullName.value}</div>
+    <div>FullName:{state.user.fullName.loading ? '正在计算...' : (state.user.fullName.error ? `ERROR:${state.user.fullName.error}`: state.user.fullName.value)}</div>
     {/* <div>error:{state.user.fullName.error}</div> */}
     <button onClick={()=>setState((state)=>state.user.firstName='ZHANG '+count.current++)}>修改FirstName</button>
     <button onClick={()=>setState((state)=>state.user.lastName='FISHER'+count.current++)}>修改LastName</button>
-
-    {/* <button onClick={()=>state.user.fullNameX.reset()}>重新计算</button> */}
+    <button onClick={()=>state.user.fullName.reset()}>重新计算</button>
   </div>)
 }
 ```

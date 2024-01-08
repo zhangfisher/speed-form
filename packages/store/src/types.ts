@@ -2,7 +2,7 @@ export type StateUpdater<State=any> = (state:State)=>any
 export type Action<State> = (...args:any[])=>StateUpdater<State>
 export type AsyncAction<State> = (...args:any[])=>Promise<StateUpdater<State>>
 export type Actions<State=any>  = Record<string,Action<State> | AsyncAction<State>>
-import type { Computed,AsyncComputed,ComputedAsyncReturns,AsyncComputedObject } from "./computed"
+import type { Computed,AsyncComputed,ComputedAsyncReturns,AsyncComputedObject, ComputedSyncReturns } from "./computed"
 /**
  * 返回函数的返回值类型
  * 支持返回()=>Promise<R>中的R类型 
@@ -11,9 +11,12 @@ export type AsyncReturnType<T extends (...args: any) => any> = T extends (...arg
     T extends (...args: any) => infer R ? R : any)
     
 // 用来提前计算属性函数的返回值
-export type PickComputedResult<T> = T extends ComputedAsyncReturns<infer X> ? AsyncComputedObject<X> : 
-                                    (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
-                                    (T extends Computed<infer R> ? R : T) ) 
+export type PickComputedResult<T> = T extends  ComputedAsyncReturns<infer X> ? AsyncComputedObject<X> : 
+                                    ( T extends ComputedSyncReturns<infer X> ? X: 
+                                        (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
+                                            (T extends Computed<infer R> ? R : T) 
+                                        )
+                                    )
                                     
 
 // 转换状态中的计算属性函数
