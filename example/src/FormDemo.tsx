@@ -1,4 +1,4 @@
-import React, { MouseEvent,useEffect } from "react";
+import React, { MouseEvent } from "react";
 import Card from "./components/Card"  
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
@@ -11,12 +11,13 @@ import { Loading } from "./components/Loading";
 const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({enable,visible,label,children})=>{
     return  (
         <div  className="field"  style={{
+            position:'relative',
             display: visible===false ? 'none' : 'flex',
             boxSizing:"border-box",
             flexDirection:"row",
             width:'100%',
             padding:"8px"
-        }}>   <ColorBlock  title="渲染计数"/>   
+        }}>   
             <label  className="field-label"  style={{
                 minWidth:'160px',
                 fontWeight:'bold',
@@ -27,7 +28,13 @@ const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({ena
                 display:'flex',
                 flexDirection:'row',
                 color: enable===false ? 'gray' : 'inherit'
-            }}>{children}</span>    
+            }}>{children}</span>  
+            <ColorBlock style={{
+                position:'absolute',
+                right:0,
+                fontSize:'10px',
+                borderRadius: '4px',
+            }}  title="渲染计数"/>     
         </div>   
     )
 }
@@ -79,7 +86,7 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field> 
-            {/* <Network.Field<typeof Network.fields.ip> name="ip">                      
+             <Network.Field<typeof Network.fields.ip> name="ip">                      
                 {({title,value,visible,validate,placeholder,sync})=>{ 
                     return <FieldRow visible={visible} label={title}>
                          <input className={classnames({invalid:!validate.value})} placeholder={placeholder} value={value} onChange={sync(100)}/>
@@ -128,18 +135,7 @@ const NetworkForm = ()=>{
                         </Network.Field> 
                 </Card>)
             }}
-         </Network.Group>  
-         <Network.Field<typeof Network.fields.dhcp.enable> 
-            name="dhcp.enable"
-            render={({title,visible,value,validate,sync})=>{     
-                    return <FieldRow visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync()}/>
-                    </FieldRow>
-                }}            
-            >                                       
-            
-            </Network.Field> 
-             
+         </Network.Group>                
            <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp.enable" >                                       
                 {({title,visible,value,validate,sync})=>{     
                     return <FieldRow visible={visible} label={title}>
@@ -149,18 +145,18 @@ const NetworkForm = ()=>{
             </Network.Field> 
            <Network.Field<typeof Network.fields.dhcp.start> name="dhcp.start">                      
                 {({value,validate,visible,title,sync})=>{ 
-                    return  <FieldRow visible={visible} label={title}>
+                    return  <FieldRow visible={visible.value} label={title}>
                         <input className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                     </FieldRow>
                 } }
             </Network.Field>
             <Network.Field<typeof Network.fields.dhcp.end> name="dhcp.end">                      
                 {({value,validate,visible,title,sync})=>{     
-                    return <FieldRow visible={visible} label={title}>
+                    return <FieldRow visible={visible.value} label={title}>
                         <input className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                     </FieldRow>
                 }}
-            </Network.Field>    */}
+            </Network.Field>   
         </Card>
     </Network.Form>        
 }

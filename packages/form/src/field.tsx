@@ -4,6 +4,7 @@ import { isLiteField, debounce as debounceWrapper } from './utils';
 import { Dict } from "./types";  
 import { assignObject } from "flex-tools/object/assignObject"; 
 import type { FormOptions } from "./form";
+import { FIELDS_STATE_KEY } from "./consts";
  
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
@@ -103,7 +104,7 @@ function useFieldUpdater(store: any,valuePath:string[],setState:any){
       if(debounceValue!==debounce && debounce>0) setDebounce(debounce)
       const updateFn = (updater:any)=>{
         if(typeof(updater)=="function"){
-          setState((draft:any)=>updater.call(draft,draft))
+          setState((draft:any)=>updater.call(draft,draft.fields))
         }else{
           setState((draft:any)=>setVal(draft,valuePath,updater))
         } 
@@ -122,8 +123,8 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
     // 不含fields前缀的字段路径
     const fieldPath = Array.isArray(name) ? name : name.split(".")  
     // 含fields前缀的字段路径
-    const fullFieldPath:string[] = ['fields',...fieldPath]
-    const valueFieldPath:string[] = ['fields',...fieldPath]
+    const fullFieldPath:string[] = [FIELDS_STATE_KEY,...fieldPath]
+    const valueFieldPath:string[] = [FIELDS_STATE_KEY,...fieldPath]
 
 		const [state,setState] = store.useState() 
 

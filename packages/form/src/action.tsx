@@ -48,52 +48,56 @@ export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)
   | R  
 
 
+
 // 动作声明，供createForm时使用来声明动作
-export interface FormAction<Scope extends Dict=Dict>{
-    name?:string
+
+/**
+ * Scope:动作作用域，用来指定动作作用的表单数据范围
+ * Result: 动作函数execute执行结果返回值类型
+ */
+export interface FormActionDefine<Scope extends Dict=Dict,Result =any>{
     scope?:string | string[] | (()=>string | string[])          // 动作提交范围
 	title?:ActionComputedAttr<string,Scope>					    // 动作标题    
     help?:ActionComputedAttr<string,Scope>					    // 动作帮助
     tips?:ActionComputedAttr<string,Scope>					    // 动作提示
  	visible?:ActionComputedAttr<boolean,Scope>					// 是否可见
-	enable?:ActionComputedAttr<boolean,Scope>					// 是否可用		
-    count?:number                                               // 动作执行计数
-    // 动作执行标识，=true代表正在执行，=false代表未在执行,如果=1000代表倒计时1秒，1秒后变成false
-    loading?:boolean | number
-    error?:string | null                                        // 执行错误信息
+	enable?:ActionComputedAttr<boolean,Scope>					// 是否可用	
     // 执行动作，用来对表单数据进行处理
-    execute:(scope:Dict,options?:ComputedParams)=> Promise<void> | void
+    execute:(scope:any,options?:ComputedParams)=> Promise<Result | void> | Result | void
 	[key:string]:ActionComputedAttr<unknown,Scope>			    // 其他可扩展的动作参数
-}
+} 
 
-export type ffFormAction = ChangeFieldType<FormAction,'execute',any>
+// 经过创建表单后的动作对象
+export type FormAction<R,ATTRS extends Record<string,any>=Record<string,any>> = AsyncComputedObject<R,ATTRS>
+ 
+ 
 
 
-function  wrapperActionExecute(action:Required<FormAction>){
-    if(typeof(action.execute)!='function') return 
-
-    action.execute = computed(async function (this:any,action:FormAction,options:ComputedParams){
-        const formData = this           // 指向的是表单数据对象
-        action.loading = true
-        try{
-            // 读取作用域表单数据
-            let scopePath = typeof(action.scope)=="function" ? action.scope() : action.scope
-            scopePath = (Array.isArray(action.scope) ? action.scope : (typeof(action.scope) =='string' ? action.scope.split(".") : [])) 
-            scopePath.splice(0,0,'fields')
-            const scopeValue = getVal(formData.fields,scopePath)
-
-            // 执行动作函数
-            await action.execute.call(this,scopeValue,options)
-            action.error = null
-        }catch(e:any){
-            action.error = e.message
-        }finally{
-            action.loading = false
-        }
-    },['actions',action.name,'count'],{  
-        scope:action.scope,                // 指向scope动作的scope参数指定的表单数据 
-        context:ComputedScopeRef.Current
-    } )  
+function  createComputedAction<Scope extends Dict = Dict,Result=any>(action:FormActionDefine){
+    if(typeof(action.execute)!='function') throw new Error(`action.execute is not a function`)
+    const params = {...action}
+    return computed<Result,Omit<FormActionDefine,'execute'>>(action.execute,{params})
+    // return computed<Result,any>(async function (this:any,action:FormActionDefine,options:ComputedParams){
+    //     const formData = this           // 指向的是表单数据对象
+    //     action.loading = true
+    //     try{
+    //         // 读取作用域表单数据
+    //         let scopePath = typeof(action.scope)=="function" ? action.scope() : action.scope
+    //         scopePath = (Array.isArray(action.scope) ? action.scope : (typeof(action.scope) =='string' ? action.scope.split(".") : [])) 
+    //         scopePath.splice(0,0,'fields')
+    //         const scopeValue = getVal(formData.fields,scopePath)
+    //         // 执行动作函数
+    //         await action.execute.call(this,scopeValue,options)
+    //         action.error = null
+    //     }catch(e:any){
+    //         action.error = e.message
+    //     }finally{
+    //         action.loading = false
+    //     }
+    // },[['actions',action.name!,'count']],{  
+    //     scope:action.scope,                // 指向scope动作的scope参数指定的表单数据 
+    //     context:ComputedScopeRef.Current
+    // } )  
 }
 
 /**
@@ -105,9 +109,9 @@ function  wrapperActionExecute(action:Required<FormAction>){
  * @param data 
  * @returns 
  */
-export function initFormActions(actions:FormActions):FormActions{
-    
-    Object.entries(actions).forEach(([name,action])=>{        
+export function createFormActions<Actions>(actionDefines:FormActionsDefines){
+    const actions = {}
+    Object.entries(actionDefines).forEach(([name,action])=>{        
         defaultObject(action,{            
             title:'',
             help:'',
@@ -117,24 +121,39 @@ export function initFormActions(actions:FormActions):FormActions{
             count:0, 
             execute:(scope:any)=>Promise.resolve(scope) 
         })
-        action.name=name 
-        wrapperActionExecute(action as Required<FormAction>)
+        actions[name]= createComputedAction(action as Required<FormActionDefine>)
     })
 
-    return actions
+    return actionDefines
+
 
 }
 
 
+/**
+ * 声明动作，用来创建动作组件声明，提供类型检查
+ * @param define 
+ */
+export function action<Scope extends Dict = Dict,Result=any>(define:FormActionDefine){
+    return createComputedAction<Scope,Result>(Object.assign({
+        scope:'',
+        help:'',
+        tips:'',
+        visible:true,
+        enable:true
+    },define))
+}
+
+
 // 标准表单提交
-export interface StandardSubmitAction<Fields extends Dict=Dict> extends FormAction<Fields>{
+export interface StandardSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
 	url?:ActionComputedAttr<string,Fields>						    // 提交的URL
     method?:ActionComputedAttr<HttpMethod,Fields>					// 提交的方法
     enctype?:ActionComputedAttr<HttpFormEnctype,Fields>				// 是否包含文件，此表单中的
 }
 
 // API提交
-export interface ApiSubmitAction<Fields extends Dict=Dict> extends FormAction<Fields>{
+export interface ApiSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
 	url?:ActionComputedAttr<string,Fields>						// 提交的URL
     method?:ActionComputedAttr<HttpMethod,Fields>		        // 提交的方法
     params?:ActionComputedAttr<Dict,Fields>						// 提交的参数
@@ -143,12 +162,12 @@ export interface ApiSubmitAction<Fields extends Dict=Dict> extends FormAction<Fi
 }
 
 // 表单动作
-export type FormActions<Fields extends Dict=Dict> = Record<string,FormAction<Fields>>
+export type FormActionsDefines<Fields extends Dict=Dict> = Record<string,FormActionDefine<Fields>>
 
 
 export type ActionExecutor<Scope extends Dict = Dict,Params extends Dict = Dict> = (scope:Scope,params:Params)=>void
 
-export type ActionRenderProps<Scope extends Dict = Dict,Params extends Dict = Dict>= FormAction<Scope> &  {
+export type ActionRenderProps<Scope extends Dict = Dict,Params extends Dict = Dict>= FormActionDefine<Scope> &  {
     submit?:()=>void                                        // 提交表单
     reset?:()=>void                                         // 重置表单
     ref: RefObject<HTMLElement>                             // 动作元素引用

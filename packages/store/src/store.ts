@@ -55,7 +55,8 @@
 import { ISharedCtx, model  } from "helux"
 import { createActions } from './action';
 import { Actions, ComputedState, RequiredComputedState } from "./types";
-import { type ComputedOptions, createComputed } from "./computed";
+import { createComputed } from "./computed";
+import type { ComputedOptions, ComputedRefDraftOptions } from "./computed";
 import { deepClone } from "flex-tools/object/deepClone";
 
 
@@ -123,6 +124,10 @@ export interface StoreOptions{
     // 是否是单例模式，如果是单例模式，那么所有的计算属性都是共享的，否则每个实例都有自己的计算属性
     // =false时会对传入的data进行深度克隆，这样就可以创建多个互相不干扰的实例
     singleton?:boolean
+    /**
+     * 可以拦截修改计算函数的context,scope
+     */
+    onComputedContext(draft:any,options:ComputedRefDraftOptions):any
 
 }
 export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){

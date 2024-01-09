@@ -39,12 +39,13 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreDefine, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions  } from "helux-store";
+import { type StoreDefine, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions,computed as storeComputed, AsyncComputedGetter, ComputedDepends, ComputedGetter, ComputedAsyncReturns  } from "helux-store";
 import type { ReactFC, Dict, ComputedAttr } from "./types";
 import { FieldComponent,  createFieldComponent } from "./field"; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import { ActionComputedAttr, FormAction, FormActions, createActionComponent } from "./action";
+import { ActionComputedAttr, FormActionDefine, FormActionsDefines, createActionComponent, createFormActions } from './action';
+import { FIELDS_STATE_KEY } from "./consts";
 
 
 export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{
@@ -64,7 +65,7 @@ export interface FormObject<State extends Record<string, any>> {
 	Field: FieldComponent;
 	Group: FieldGroupComponent
   	fields:State
-	actions:FormActions<State>	
+	actions:FormActionsDefines<State>	
 	submit:()=>void
 	reset:()=>{}
 	load:(data:Dict)=>void							// 加载表单数据
@@ -86,7 +87,7 @@ export interface FormOptions<Fields extends Dict = Dict>{
 	enable?:ActionComputedAttr<boolean>						// 是否可用		
 	valid?:ActionComputedAttr<boolean>						// 是否有效
 	readonly?:ActionComputedAttr<boolean>				    // 是否只读	
-	actions?:FormActions<Fields>							// 声明表单动作
+	actions?:FormActionsDefines<Fields>						// 声明表单动作
 	// 何时进行数据验证, once=实时校验, lost-focus=失去焦点时校验, submit=提交时校验
 	validAt?: 'once' | 'lost-focus' | 'submit'	
 	/**
@@ -147,7 +148,9 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
 function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOptions){		
 	// 如果没有指定scope,则默认指向value
 	if(options.scope==undefined) options.scope="value"
-	options.initial = true	// 初始化true
+	if(options.depends==undefined) options.depends=[]
+	options.depends.push([...keyPath.slice(0,-1),"value"])
+	options.initial = true		// 初始化true
 }
 
 
@@ -169,21 +172,37 @@ export function createForm<Fields extends Dict>(fields: Fields,options?:FormOpti
 	const store = createStore<FormStoreType>({ 
 		state:{
 			fields,
-			actions:opts.actions
+			actions:createFormActions<(typeof opts)['actions']>(opts.actions)
 		}
 	},{
 		// 所有计算函数的上下文均指向根
 		computedThis: ComputedScopeRef.Root,
 		// 计算函数作用域默认指向fields
-		computedScope: ['fields'],
+		computedScope: [FIELDS_STATE_KEY],
 		// 对validator进行特殊处理
-		onCreateComputed(keyPath,getter,options) {		
-			// 只对validator进行处理,目的是使validate函数的第一个参数指向当前字段的值
-			if(keyPath.length>=2 && keyPath[0]=='fields' && keyPath[keyPath.length-1]=='validate'){	
+		onCreateComputed(keyPath,getter,options) {		 
+			// 只对validator进行处理,目的是使validate函数依赖于当前字段的值value，将使得validate函数的第一个参数总是当前字段的值
+			if(keyPath.length>=2 && keyPath[0]==FIELDS_STATE_KEY && keyPath[keyPath.length-1]=='validate'){	
 				createValidatorHook(keyPath,getter,options)
-			} 
-			
+			}
+			if(keyPath.length > 0 && keyPath[0]==FIELDS_STATE_KEY && options.depends){
+				// 所有位于fields下的的依赖均自动添加fields前缀，这样在声明依赖时就可以省略fields前缀
+				options.depends.forEach((depend,i)=>{
+					if(Array.isArray(depend) && (depend.length>0 && depend[0]!=FIELDS_STATE_KEY)){
+						options.depends![i] = [FIELDS_STATE_KEY,...depend]
+					}else if(typeof(depend)=='string' && !depend.startsWith('fields.')){
+						options.depends![i] = `${FIELDS_STATE_KEY}.${depend}`
+					}
+				})
+			}
 		},
+		onComputedContext(draft,{type,fullKeyPath}){
+			// 修改计算函数的作用域根，使之总是指向fields开头
+			// 这样可以保证在计算函数中,当scope->Root时，总是指向fields，否则就需要state.fields.xxx.xxx
+			if(type=='scope' && fullKeyPath.length >0 && fullKeyPath[0]==FIELDS_STATE_KEY){
+				return draft.fields
+			}
+		}
 	});  
 	return {
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<Fields>>(opts,store),
@@ -240,3 +259,4 @@ function createFormComponent<Fields extends Dict>(this:FormOptions,store: any): 
 }
 
 
+ 

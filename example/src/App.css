@@ -90,7 +90,14 @@ input.invalid{
   border: 1px solid red;
   position: relative;
 }
+input.invalid:focus{
+  border: 1px solid red;
+  outline: none;
+}
 
+input:focus{
+  outline: none;
+}
 input.invalid::after{
   position: absolute;
   background: red;
