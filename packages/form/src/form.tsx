@@ -44,7 +44,7 @@ import type { ReactFC, Dict, ComputedAttr } from "./types";
 import { FieldComponent,  createFieldComponent } from "./field"; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import { ActionComputedAttr, FormActionDefine, FormActionsDefines, createActionComponent, createFormActions } from './action';
+import { ActionComputedAttr, FormActionDefine, FormActionDefines, FormActions, createActionComponent, createFormActions } from './action';
 import { FIELDS_STATE_KEY } from "./consts";
 
 
@@ -65,7 +65,7 @@ export interface FormObject<State extends Record<string, any>> {
 	Field: FieldComponent;
 	Group: FieldGroupComponent
   	fields:State
-	actions:FormActionsDefines<State>	
+	actions:FormActions,
 	submit:()=>void
 	reset:()=>{}
 	load:(data:Dict)=>void							// 加载表单数据
@@ -87,7 +87,7 @@ export interface FormOptions<Fields extends Dict = Dict>{
 	enable?:ActionComputedAttr<boolean>						// 是否可用		
 	valid?:ActionComputedAttr<boolean>						// 是否有效
 	readonly?:ActionComputedAttr<boolean>				    // 是否只读	
-	actions?:FormActionsDefines<Fields>						// 声明表单动作
+	actions?:FormActionDefines<Fields>						// 声明表单动作
 	// 何时进行数据验证, once=实时校验, lost-focus=失去焦点时校验, submit=提交时校验
 	validAt?: 'once' | 'lost-focus' | 'submit'	
 	/**
@@ -166,13 +166,13 @@ export function createForm<Fields extends Dict>(fields: Fields,options?:FormOpti
 	},options) as Required<FormOptions>
 
 	// 创建表单Store对象实例
-	type FormStoreType = StoreDefine<FormState<Fields,(typeof opts)['actions']>>
+	type FormStoreType = StoreDefine<FormState<Fields,FormActions>>
 
 
 	const store = createStore<FormStoreType>({ 
 		state:{
 			fields,
-			actions:createFormActions<(typeof opts)['actions']>(opts.actions)
+			actions:createFormActions(opts.actions) 
 		}
 	},{
 		// 所有计算函数的上下文均指向根

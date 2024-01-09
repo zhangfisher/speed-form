@@ -96,17 +96,26 @@ const Network = createForm<NetworkType>(formSchema,{
     actions:{
         ping:{
             title:"测试网络连通性", 
-            scope:"wifi",// 表示该动作的上下文是wifi这个子表单
-            enable:(wifi:any)=>wifi.ssid.value.length>0,
+            scope:"wifi",           // 表示该动作的上下文是wifi这个子表单
+            enable:(wifi:any)=>wifi.ssid.value.length > 0,
             execute:async (a:Dict)=>{
                 await delay(100)
                 console.log(a)
+            }
+        },
+        submit:{
+            title:"提交", 
+            enable:(wifi:any)=>wifi.ssid.value.length > 0,
+            execute:async (fields:any)=>{
+                await delay(100)
+                console.log(fields)
             }
         }
     }
 })
  
-Network.actions.ping
+Network.actions
+
  
 
 

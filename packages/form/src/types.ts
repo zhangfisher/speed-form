@@ -51,24 +51,6 @@ export type Dict<T=any> = Record<string,T> // 字段属性类型集
 
  
 
-// 
-export type PickAsyncFieldPropValue<T> = T extends (...args:any)=> Promise<infer R>  ? AsyncComputedObject<R> : 
-    (
-        T extends AsyncComputedReturns<infer R1> ? AsyncComputedObject<R1> :
-        (
-            T extends (...args:any)=> infer R2 ? R2 : T
-        )
-    )
- 
-
-// 使字段中的所有字段都是必填的，并且将异步计算属性转换为AsyncComputedObject
-export type RequiredComputedAsyncField<T extends Record<string, any>> = {
-    [K in keyof T]-?: Exclude<T[K],undefined> extends (...args:any)=>any 
-        ? PickComputedReturns<Exclude<T[K],undefined>> 
-        : (Required<T[K]> extends Record<string, any> ? RequiredComputedAsyncField<Exclude<T[K],undefined> > : Exclude<T[K],undefined>)
-};
-
-
 
 
 export type Primitive = number | boolean | string | null | undefined 
