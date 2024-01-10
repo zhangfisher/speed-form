@@ -165,7 +165,7 @@ const NetworkForm = ()=>{
 
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
-    const [state] = Network.state.useState()
+    const [state] = Network.useState()
  
     
     // state.dhcp.start.validate.value
@@ -175,6 +175,7 @@ const FormDemo:React.FC = ()=>{
             <div style={{padding:"8px",margin:'8px',width:'60%'}}>
                 <NetworkForm/>
                 {/* <NetworkForm/> */}
+                <button onClick={()=>Network.actions.submit()}>提交</button>
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单数据">

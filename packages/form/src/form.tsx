@@ -44,7 +44,7 @@ import type { ReactFC, Dict, ComputedAttr } from "./types";
 import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import { FormActions, createActionComponent } from './action';
+import { ActionRecords, FormActions, createActionComponent, createFormActions } from './action';
 import { FIELDS_STATE_KEY } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
 
@@ -184,6 +184,24 @@ function setFormDefault(define:any){
 		enable:true,
 		visible:true
 	})
+	// 为Actions提供默认值
+	if(define.actions){
+		Object.entries(define.actions).forEach(([name,action])=>{
+			if(action && typeof(action)=='object' ){
+				defaultObject(action,{
+					loading:false,
+					enable:true,
+					visible:true,
+					title:name,
+					help:"",
+					tips:"",					
+					count:0,
+					progress:0,
+					error:null
+				})
+			}			
+		})
+	}
 }
 
 /**
@@ -192,6 +210,7 @@ function setFormDefault(define:any){
 function loadFormData(store:any){
 
 }
+
 
 
 export function createForm<Schema extends Dict=Dict>(define: Schema,options?:FormOptions<Schema>) {
@@ -208,7 +227,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 		computedThis: ComputedScopeRef.Root,
 		// 计算函数作用域默认指向fields
 		computedScope: [FIELDS_STATE_KEY],
-		// 创建计算函数时的钩子函数
+		// 创建计算函数时的钩子函数，可以在创建前做一些不可描述的处理
 		onCreateComputed(keyPath,getter,options) {		 
 			// 1. 只对validator进行处理,目的是使validate函数依赖于当前字段的值value，将使得validate函数的第一个参数总是当前字段的值
 			if(keyPath.length>=2 && keyPath[0]==FIELDS_STATE_KEY && keyPath[keyPath.length-1]=='validate'){	
@@ -224,7 +243,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 					}
 				})
 			}
-			// 3. 所有表单actions的execute的makeRaw，不需要proxy
+			// 3. 所有表单actions的execute的makeRaw不需要proxy
 
 		},
 		onComputedContext(draft,{type,fullKeyPath}){
@@ -235,18 +254,21 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 			}
 		}
 	});  
+	type FieldsType = (typeof store.state)['fields']
+	type ActionsType = (typeof store.state)['actions']
 	return {
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
 		Action: createActionComponent.call(opts,store),	
-    	fields:store.state.fields as (typeof store.state)['fields'],
-		actions:store.state.actions as (typeof store.state)['actions'], 
+    	fields:store.state.fields as FieldsType,
+		actions:createFormActions.call<typeof store,[ActionsType],ActionRecords<Schema['actions']>>(store,store.state.actions), 
 		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase>,
 		useState:store.useState,
 		load:loadFormData
 	};
 }
+
 
 
 /**

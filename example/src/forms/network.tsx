@@ -1,6 +1,6 @@
 import { ComputedScopeRef, computed } from "helux-store";
 import { Dict, createForm } from "speed-form";
-import { Project, getProjects } from "../api/getProjects";
+// import { Project, getProjects } from "../api/getProjects";
 import { delay } from "flex-tools/async/delay";
 import validator from "validator"; 
 
@@ -105,12 +105,15 @@ const formSchema = {
         // 向导表单:上一步
         previous:{
             enable: (wifi: any) => wifi.ssid.value.length > 0,
+			execute:async (a:number)=>{
+				return a
+			}
         },
         // 向导表单:下一步        
         next:{
             enable: (wifi: any) => wifi.ssid.value.length > 0,
-            execute: async (fields: any) => {
-                fields.title.value = "next"
+            execute: async (fields:any) => {
+                return fields
             }
         }
 	},
@@ -119,10 +122,12 @@ const formSchema = {
 type NetworkFormType = typeof formSchema;
 type NetworkType = NetworkFormType['fields'];
 
-const Network = createForm<NetworkFormType>(formSchema, {});
+const Network = createForm<NetworkFormType>(formSchema);
 
-
+Network.actions.next()
 Network.actions.next
+
+
 
 
 // @ts-ignore

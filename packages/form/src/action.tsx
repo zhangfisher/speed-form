@@ -35,11 +35,10 @@ import { ReactNode, useCallback,useState,useEffect, useRef, RefObject} from "rea
 import { Dict, HttpFormEnctype, HttpMethod } from "./types";
 import { getVal } from "@helux/utils";
 import React from "react";
-import { defaultObject } from "flex-tools/object/defaultObject";
 import type { FormOptions } from "./form";
-import { AsyncComputedObject, ComputedAsyncReturns, ComputedParams, ComputedScopeRef, computed } from 'helux-store'; 
+import { AsyncComputedObject, ComputedAsyncReturns, ComputedParams,  watch } from 'helux-store'; 
 import { assignObject } from "flex-tools/object/assignObject";
-import type { ChangeFieldType } from "flex-tools/types";
+import { FIELDS_STATE_KEY } from "./consts";
 
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
@@ -61,9 +60,13 @@ export interface FormActionDefine<Scope extends Dict=Dict,Result =any>{
     help?   : ActionComputedAttr<string,Scope>					            // 动作帮助
     tips?   : ActionComputedAttr<string,Scope>					            // 动作提示
     visible?: ActionComputedAttr<boolean,Scope>					            // 是否可见
-    enable? : ActionComputedAttr<boolean,Scope>					            // 是否可用	    
+    enable? : ActionComputedAttr<boolean,Scope>					            // 是否可用	        
+    loading:boolean
+    progress:number
+    count:number
+    error:string | Error
     execute :(scope:any,options?:ComputedParams)=> Promise<void | Result>   // 执行动作，用来对表单数据进行处理
-	[key:string]:ActionComputedAttr<unknown,Scope>			                // 其他可扩展的动作参数
+	//[key:string]:ActionComputedAttr<unknown,Scope>			                // 其他可扩展的动作参数
 } 
 
 // 经过创建表单后的动作对象,  execute
@@ -74,66 +77,50 @@ export type FormAction<T extends FormActionDefine> =ComputedAsyncReturns<{
 export type FormActions<T extends FormActionDefines = FormActionDefines> = {
     [Key in keyof T]: FormAction<T[Key]>
 }
+// 动作
+export type ActionRecords<Actions extends Record<string,any>> = {
+	[Name in keyof Actions]: Actions[Name]['execute'] extends ((first:any, ...args:infer Rest)=>infer R) ? ((...args:Rest)=>R) : never
+                           & Omit<FormActionDefine,'execute'> 
+                           & Omit<Actions[Name],'execute'>
+                            
+}
 
- 
 
-
-function  createComputedAction<Scope extends Dict = Dict,Result=any>(action:FormActionDefine):FormAction<typeof action>{
-    if(typeof(action.execute)!='function') throw new Error(`action.execute is not a function`)
-    const params = {...action}
-    const executeFn = params.execute
-    // @ts-ignore
-    delete params.execute
-    return computed(async function(this:any,scope:Scope){
-        await executeFn.call(this,scope,action)
-        return  "" as Result
-    },[],{ // 不需要依赖任何字段，必须手工调用来执行
-        params,
-        scope:['fields']
-    })  
+function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,actionState:FormActionDefine,setState:any){
+    // action.execute的执行状态会更新到action.execute.value,action.execute.lading,action.execute.progress中
+    // 因此侦听此信息来同步到action中
+    watch(()=>{
+        setState((state:any)=>{
+            const executeInfo = state.actions[name].execute
+            actionState.loading = executeInfo.loading
+            actionState.progress = executeInfo.progress!
+            actionState.error = executeInfo.error!
+        })        
+    })
+    // 执行动作时传入的额外参数
+    return async (params:any)=>{
+        // 由于action.execute依赖于count，所以当count++时会触发动作执行        
+        setState((state:any)=>state.actions[name].count++)
+    }
 }
 
 
 /**
  * 
- * 初始化表单动作
+ * 根据表单中的动作声明生成动作对象
  * 
  * 
- * @param data 
+ * @param actionStates 经过helux-store计算后的动作声明 
  * @returns 
  */
-export function createFormActions(actionDefines:FormActionDefines){
-    const actions:FormActions = {}
-    Object.entries(actionDefines).forEach(([name,action])=>{        
-        defaultObject(action,{            
-            title   : '',
-            help    : '',
-            visible : true,
-            enable  : true,
-            readonly: false,
-            execute : (scope:any)=>Promise.resolve(scope) 
-        })
-        actions[name]= createComputedAction(action)
+export function createFormActions<ActionStates extends Dict>(actionStates:ActionStates,store:any){
+    const actions:Dict={}
+    Object.entries(actionStates).forEach(([name,actionState])=>{      
+        actions[name]= createFormAction(name,actionState,store.setState)
     })
-    return actions
+    return actions as ActionRecords<ActionStates>
 }
-
-
-/**
- * 声明动作，用来创建动作组件声明，提供类型检查
- * @param define 
- */
-export function action<Scope extends Dict = Dict,Result=any>(define:FormActionDefine){
-    return createComputedAction<Scope,Result>(Object.assign({
-        scope:'',
-        help:'',
-        tips:'',
-        visible:true,
-        enable:true
-    },define))
-}
-
-
+ 
 // 标准表单提交
 export interface StandardSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
 	url?:ActionComputedAttr<string,Fields>						    // 提交的URL
@@ -219,7 +206,7 @@ export function createActionComponent(this:Required<FormOptions>,store: any) {
         const { type,scope = [],params } = props 
         // 处理scope参数，用来读取字段中的数据
         let scopePath = typeof(scope)=="function" ? scope() : scope
-        scopePath = ['fields',...Array.isArray(scope) ? scope : String(scope).split(".")]                
+        scopePath = [FIELDS_STATE_KEY,...Array.isArray(scope) ? scope : String(scope).split(".")]                
         const fieldScopeValue =scopePath.length==0 ? state : getVal(state,scopePath)
 
 

@@ -157,20 +157,14 @@ export function computed<R = any,Attrs extends Record<string,any> = never>( gett
 
   if (isAsync) {
     opts.depends = arguments[1] || [];
-    Object.assign(
-      opts,
-      {
+    Object.assign(opts, {
         scope: ComputedScopeRef.Current, // 异步计算函数的上下文指向依赖
-      },
-      arguments[2] || {}
+      },arguments[2] || {}
     );
   } else {
     opts.depends = []; // 同步计算函数不需要指定依赖
-    Object.assign(
-      opts,
-      {
-        scope: ComputedScopeRef.Current, // 异步计算函数的上下文指向依赖
-      },
+    Object.assign(opts,
+      {  scope: ComputedScopeRef.Current }, // 异步计算函数的上下文指向依赖     ,
       arguments[1] || {}
     );
   }
