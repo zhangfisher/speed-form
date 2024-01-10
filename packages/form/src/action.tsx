@@ -113,10 +113,11 @@ function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,act
  * @param actionStates 经过helux-store计算后的动作声明 
  * @returns 
  */
-export function createFormActions<ActionStates extends Dict>(actionStates:ActionStates,store:any){
+export function createFormActions<ActionStates extends Dict>(this:any,actionStates:ActionStates){
+    const store = this
     const actions:Dict={}
     Object.entries(actionStates).forEach(([name,actionState])=>{      
-        //actions[name]= createFormAction(name,actionState,store.setState)
+        //actions[name]= createFormAction.call(store,name,actionState,store.setState)
     })
     return actions as ActionRecords<ActionStates>
 }

@@ -54,7 +54,7 @@
 
 import { ISharedCtx, model  } from "helux"
 import { createActions } from './action';
-import { Actions, ComputedState, RequiredComputedState } from "./types";
+import { Actions, ComputedState, Dict, RequiredComputedState } from "./types";
 import { createComputed } from "./computed";
 import type { ComputedOptions, ComputedRefDraftOptions } from "./computed";
 import { deepClone } from "flex-tools/object/deepClone";
@@ -80,6 +80,7 @@ export type StateGetter<State,Value=any> = (state:State)=>Value
 export type StateSetter<State,Value=any> = (state:State,value:Value)=>void
 
 
+
 /**
  *  StateGetter函数返回
  *
@@ -91,8 +92,8 @@ export type StateSetter<State,Value=any> = (state:State,value:Value)=>void
  *
  * @param useState
  */
-function wrapperUseState<Store extends StoreDefine<any>>(stateCtx:ISharedCtx<Store["state"]>){
-    return function<Value=any,SetValue=Value>(getter?:StateGetter<RequiredComputedState<Store>,Value>,setter?:StateSetter<RequiredComputedState<Store>,SetValue>){
+function wrapperUseState<State extends Dict>(stateCtx:ISharedCtx<State["state"]>){
+    return function<Value=any,SetValue=Value>(getter?:StateGetter<RequiredComputedState<State>,Value>,setter?:StateSetter<RequiredComputedState<State>,SetValue>){
         const useState = stateCtx.useState
         if(getter==undefined){
             return useState()
@@ -128,8 +129,14 @@ export interface StoreOptions{
      * 可以拦截修改计算函数的context,scope
      */
     onComputedContext(draft:any,options:ComputedRefDraftOptions):any
-
 }
+
+export type IStore<State extends Dict=Dict> = ISharedCtx<State> & {
+    state:ISharedCtx<State>['reactive']
+    useState:ReturnType<typeof wrapperUseState>
+}
+
+
 export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
     const opts = Object.assign({
         computedThis:ComputedScopeRef.Root,
@@ -137,7 +144,7 @@ export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOpt
         singleton:true
     },options) as Required<StoreOptions>
     const storeData = opts.singleton ? data : deepClone(data)
-    return  model((api) => { // api对象 有详细的类型提示
+    return  model((api) => { 
         const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any,{
             stopArrDep: false
         })

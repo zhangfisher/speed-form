@@ -16,30 +16,29 @@ import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject";
 import { skipComputed, isSkipComputed, getValue } from "./utils";
 
-export interface ComputedParams extends Record<string, any> {
+export interface ComputedParams extends Record<string,any>{
   // 获取一个进度条，用来显示异步计算的进度
-  getProgressbar?: (progress: number) => void;
+  getProgressbar?:(progress:number)=>void
 }
 
-export type ComputedOptions<T = any, Params extends ComputedParams = ComputedParams> = {
-  context?: StoreComputedScope; // 计算函数的this
-  scope?: StoreComputedScope; // 计算函数的第一个参数
-  initial?: T;
+export type ComputedOptions<T=any,Params extends ComputedParams= ComputedParams> = {
+  context?:StoreComputedScope             // 计算函数的this
+  scope?:StoreComputedScope               // 计算函数的第一个参数
+  initial?:T
   // 异步计算,默认情况下，通过typeof(fn)=="async function"来判断是否是异步计算函数
   // 但是在返回Promise等情况下，无法判断，此时需要手动指定async=true
-  async?: boolean;
+  async?:boolean
   // 指定依赖，例如["key","a.b.c"]等形式
-  depends?: Array<string | Array<string>>;
+  depends?:string[]
   // 当执行计算getter函数出错时的回回调
-  onError?: (e: Error) => void;
+  onError?:(e:Error)=>void
   // 作为计算函数的第二个参数传入
-  params?: Params;
+  params?:Params
 };
 
-export type ComputedDepends = Array<string> | Array<Array<string>> | ((draft: any) => any[]);
-
-export type ComputedGetter<R> = (scopeDraft: any) => Exclude<R, Promise<any>>;
-export type AsyncComputedGetter<R> = (scopeDraft: any, options: ComputedParams) => Promise<R>;
+export type ComputedDepends = Array<string> | Array<Array<string>> | ((draft: any) => any[])
+export type ComputedGetter<R> = (scopeDraft: any) => Exclude<R,Promise<any>>
+export type AsyncComputedGetter<R> = (scopeDraft:any,options:ComputedParams) => Promise<R>
 
 export type AsyncComputedObject<V = any,Attrs extends Record<string,any>=Record<string,any>> ={
   loading: boolean;
@@ -47,7 +46,7 @@ export type AsyncComputedObject<V = any,Attrs extends Record<string,any>=Record<
   error?: any;
   value: V;
   keyPath?: string[];
-  reset: () => {}; // 重新执行任务  
+  reset: () => {}; // 重新执行任务
 } & Attrs
 
 export interface AsyncComputedParams<R> {
@@ -95,11 +94,11 @@ function getComputedRefDraft(draft: any, computedCtx: ComputedRefDraftOptions, s
     const ctx = typeof context == "function" ? context(rootDraft) : context;
 
     if (ctx === ComputedScopeRef.Current) {
-      return getValue(draft, keyPath);
+        return getValue(draft, keyPath);
     } else if (ctx === ComputedScopeRef.Parent) {
       return getValue(draft,fullKeyPath.slice(0, fullKeyPath.length - 2));
     } else if (ctx === ComputedScopeRef.Root) {
-      return rootDraft;
+        return rootDraft;
     } else if (ctx === ComputedScopeRef.Depends) {
       // 异步计算的依赖值
       return Array.isArray(depends) ? depends : [];
@@ -115,22 +114,14 @@ function getComputedRefDraft(draft: any, computedCtx: ComputedRefDraftOptions, s
       return draft;
     }
   } catch (e) {
-    return draft;
+        return draft;
   }
 }
- 
 
 /**
- *
- * 创建计算属性
- *
- * 支持传入的是异步函数，同步函数
- *
- *
  * 用来封装状态的计算函数，使用计算函数的传入的是当前对象
  *
- * @type Attrs 指的是异步计算对象中的额外的成员类型
- * @type R  getter返回值类型
+ *
  * @param getter
  * @param depends
  * @param options
@@ -140,7 +131,7 @@ function getComputedRefDraft(draft: any, computedCtx: ComputedRefDraftOptions, s
 export function computed<R = any,Attrs extends Record<string,any> = never>( getter: AsyncComputedGetter<R>, depends: ComputedDepends, options?: ComputedOptions<R>): ComputedAsyncReturns<R & Attrs>;
 export function computed<R = any,Attrs extends Record<string,any> = never>( getter: ComputedGetter<R>, options?: ComputedOptions<R>): R & Attrs;
 export function computed<R = any,Attrs extends Record<string,any> = never>( getter: any,depends: any, options?: ComputedOptions<R>): ComputedAsyncReturns<R & Attrs> {
-  if (typeof getter != "function")  throw new Error("getter must be a function");
+	if (typeof getter != "function")  throw new Error("getter must be a function");
 
   const opts: ComputedOptions<R> = {
     async: false,
@@ -210,7 +201,7 @@ function getContextOption(
   return ctx == undefined
     ? storeContext == undefined
       ? ComputedScopeRef.Root
-      : storeContext
+: storeContext
     : ctx;
 }
 
@@ -306,19 +297,19 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>( stateCtx: IS
       ),
     fn: (draft, params) => {
       if (params.isFirstCall) {
-        // 将异步计算属性转换为一个计算属性对象
-        setVal(draft, fullKeyPath, {
-          value: initial,
-          keyPath: fullKeyPath,
-          loading: false,
-          error: null,
-          progress: 0,
-          reset: markRaw(
+      // 将异步计算属性转换为一个计算属性对象
+      setVal(draft, fullKeyPath, {
+        value: initial,
+        keyPath: fullKeyPath,
+        loading: false,
+        error: null,
+        progress: 0,
+        reset: markRaw(
             skipComputed(() => {
-              stateCtx.runMutateTask(desc);
+          stateCtx.runMutateTask(desc);
             })
           ),
-        });
+      });
       }
     },
     // 此函数在依赖变化时执行，用来异步计算
@@ -361,7 +352,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>( stateCtx: IS
         if (typeof onError == "function") {
           try { onError.call(thisDraft, e)} catch { }
         }
-        // @ts-ignore
+         // @ts-ignore
         setState((draft) =>setVal(draft, [...fullKeyPath, "error"], e));
       } finally {
         // @ts-ignore
@@ -374,6 +365,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>( stateCtx: IS
   });
 }
 
+
 /**
  * 创建计算属性
  * 为state中的计算属性自动创建mutate
@@ -381,36 +373,36 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>( stateCtx: IS
  * @returns
  */
 export function createComputed<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,api: HeluxApi, options: StoreOptions) {
-  const replacedMap: any = {};
-  // 拦截读取state的操作，在第一次读取时，
-  // - 为计算函数创建mutate
-  // - 将原始属性替换为计算属性值或异步对象
-  stateCtx.setOnReadHook((params) => {
-    const { fullKeyPath, value } = params;
+	  const replacedMap: any = {};
+    // 拦截读取state的操作，在第一次读取时，
+    // - 为计算函数创建mutate
+    // - 将原始属性替换为计算属性值或异步对象
+	  stateCtx.setOnReadHook((params) => {
+      const { fullKeyPath, value } = params;
 
-    const key = fullKeyPath.join(".");
-    if ( typeof value === "function" && !replacedMap[key] && !isSkipComputed(value) ) {
-      replacedMap[key] = true;
-      // 将声明在state里面的计算函数转换为helux的mutate
-      //******** 使用computed创建 ****************** */
-      if (value.__ASYNC__) {
+      const key = fullKeyPath.join(".");
+      if ( typeof value === "function" && !replacedMap[key] && !isSkipComputed(value) ) {
+        replacedMap[key] = true;
+        // 将声明在state里面的计算函数转换为helux的mutate
+        //******** 使用computed创建 ****************** */
+        if (value.__ASYNC__) {
         // 异步属性
-        createAsyncComputedMutate<Store>(stateCtx, params, options);
+          createAsyncComputedMutate<Store>(stateCtx, params, options);
       } else if (isAsyncFunction(value)) {
         // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次
-        params.value = () => ({
-          getter: value,
-          options: {
-            depends: [], // 未指定依赖
-            initial: undefined, // 也没有初始化值
-            context: options.computedThis, // 指定默认上下文
+          params.value = () => ({
+            getter: value,
+            options: {
+              depends: [], // 未指定依赖
+              initial: undefined, // 也没有初始化值
+              context: options.computedThis, // 指定默认上下文
           },
-        });
-        createAsyncComputedMutate<Store>(stateCtx, params, options);
+          });
+          createAsyncComputedMutate<Store>(stateCtx, params, options);
       } else {
         // 直接声明同步计算函数,使用全局配置的计算上下文
-        createComputedMutate<Store>(stateCtx, params, {}, options);
+          createComputedMutate<Store>(stateCtx, params, {}, options);
+        }
       }
-    }
-  });
+    });
 }

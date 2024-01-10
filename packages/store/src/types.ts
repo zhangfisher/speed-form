@@ -34,4 +34,4 @@ export type RequiredComputedState<T extends Record<string, any>> = {
 };
 
 
- 
+export type Dict<T=any> = Record<string,T>
