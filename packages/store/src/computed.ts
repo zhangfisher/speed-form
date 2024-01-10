@@ -250,30 +250,8 @@ function createComputedMutate<Store extends StoreDefine<any>>(
     fn: (draft, params) => {
       const { input } = params;
       // 2. 根据配置参数获取计算函数的上下文对象
-      const thisDraft = getComputedRefDraft(
-        draft,
-        {
-          context: getContextOption(draft, context, computedThis),
-          fullKeyPath,
-          keyPath,
-          parent,
-          depends: input,
-          type:"context"
-        },
-        storeOptions
-      );
-      const scopeDraft = getComputedRefDraft(
-        draft,
-        {
-          context: getContextOption(draft, scope, computedScope),
-          fullKeyPath,
-          keyPath,
-          parent,
-          depends: input,
-          type:"scope"
-        },
-        storeOptions
-      );
+      const thisDraft = getComputedRefDraft(draft,{context: getContextOption(draft, context, computedThis),fullKeyPath,keyPath,parent,depends: input,type:"context"},storeOptions);
+      const scopeDraft = getComputedRefDraft(draft,{context: getContextOption(draft, scope, computedScope), fullKeyPath, keyPath,parent,depends: input,type:"scope"},storeOptions);
 
       // 3. 执行getter函数
       let computedValue = initial;
@@ -378,14 +356,8 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>( stateCtx: IS
 
       try {
         // @ts-ignore
-        setState((draft) =>
-          setVal(draft, [...fullKeyPath, "loading"], true)
-        );
-        const result = await getter.call(
-          thisDraft,
-          scopeDraft,
-          computedParams
-        );
+        setState((draft) =>setVal(draft, [...fullKeyPath, "loading"], true));
+        const result = await getter.call(thisDraft, scopeDraft,computedParams);
         // @ts-ignore
         setState((draft) => {
           setVal(draft, [...fullKeyPath, "value"], result);
@@ -393,19 +365,13 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>( stateCtx: IS
         });
       } catch (e) {
         if (typeof onError == "function") {
-          try {
-            onError.call(thisDraft, e);
-          } catch { }
+          try { onError.call(thisDraft, e)} catch { }
         }
         // @ts-ignore
-        setState((draft) =>
-          setVal(draft, [...fullKeyPath, "error"], e)
-        );
+        setState((draft) =>setVal(draft, [...fullKeyPath, "error"], e));
       } finally {
         // @ts-ignore
-        setState((draft) =>
-          setVal(draft, [...fullKeyPath, "loading"], false)
-        );
+        setState((draft) => setVal(draft, [...fullKeyPath, "loading"], false));
       }
     },
     immediate: true,
@@ -429,11 +395,7 @@ export function createComputed<Store extends StoreDefine<any>>(stateCtx: IShared
     const { fullKeyPath, value } = params;
 
     const key = fullKeyPath.join(".");
-    if (
-      typeof value === "function" &&
-      !replacedMap[key] &&
-      !isSkipComputed(value)
-    ) {
+    if ( typeof value === "function" && !replacedMap[key] && !isSkipComputed(value) ) {
       replacedMap[key] = true;
       // 将声明在state里面的计算函数转换为helux的mutate
       //******** 使用computed创建 ****************** */

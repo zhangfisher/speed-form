@@ -39,13 +39,14 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreDefine, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions,computed as storeComputed, AsyncComputedGetter, ComputedDepends, ComputedGetter, ComputedAsyncReturns  } from "helux-store";
+import { type StoreDefine, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions } from "helux-store";
 import type { ReactFC, Dict, ComputedAttr } from "./types";
-import { FieldComponent,  createFieldComponent } from "./field"; 
+import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import { ActionComputedAttr, FormActionDefine, FormActionDefines, FormActions, createActionComponent, createFormActions } from './action';
+import { FormActions, createActionComponent } from './action';
 import { FIELDS_STATE_KEY } from "./consts";
+import { defaultObject } from "flex-tools/object/defaultObject";
 
 
 export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{
@@ -76,19 +77,31 @@ export interface FormObject<State extends Record<string, any>> {
   	}	  
 }
 
+// 表单元数据
+export interface FormSchemaBase extends Record<string, any> {
+	title?:ComputedAttr<string>					    // 动作标题    
+    help?:ComputedAttr<string>					    // 动作帮助
+    tips?:ComputedAttr<string>					    // 动作提示
+ 	visible?:ComputedAttr<boolean>					// 是否可见
+	enable?:ComputedAttr<boolean>					// 是否可用		
+	valid?:ComputedAttr<boolean>					// 是否有效
+	readonly?:ComputedAttr<boolean>				    // 是否只读	  
+	dirty?:ComputedAttr<boolean>					// 数据已经更新过	
+}
 
+export interface FormSchema extends FormSchemaBase{
+	fields:Dict
+	actions:Dict
+}
 
-export interface FormOptions<Fields extends Dict = Dict>{
-	// 表单数据
-	title?:ActionComputedAttr<string>					    // 动作标题    
-    help?:ActionComputedAttr<string>					    // 动作帮助
-    tips?:ActionComputedAttr<string>					    // 动作提示
- 	visible?:ActionComputedAttr<boolean>					// 是否可见
-	enable?:ActionComputedAttr<boolean>						// 是否可用		
-	valid?:ActionComputedAttr<boolean>						// 是否有效
-	readonly?:ActionComputedAttr<boolean>				    // 是否只读	
-	actions?:FormActionDefines<Fields>						// 声明表单动作
-	// 何时进行数据验证, once=实时校验, lost-focus=失去焦点时校验, submit=提交时校验
+// 创建表单时的参数
+export interface FormOptions<Schema=Dict>{
+	/**
+	 * 何时进行数据验证
+	 * - once : 实时校验 
+	 * - lost-focus : 失去焦点时校验 
+	 * - submit : 提交时校验
+	 */
 	validAt?: 'once' | 'lost-focus' | 'submit'	
 	/**
 	* 用来生成字段名，如果不指定，则使用默认的字段名生成规则
@@ -103,17 +116,11 @@ export interface FormOptions<Fields extends Dict = Dict>{
 
 
 export type FormStatus = 'idle' 
-	| 'validating' 			// 正在校验
+	| 'loading'				// 正在加载数据
+	| 'validating' 			// 正在校验数据
 	| 'submiting'  			// 正在提交中	
 	| 'error'				// 表单错误
-
-
-/**
- * 表单基础
- */
-export interface IFormState<Fields extends Dict = Dict,Actions extends Dict = Dict>{
-
-}
+ 
 
 
 /**
@@ -154,47 +161,71 @@ function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOp
 }
 
 
-export function createForm<Fields extends Dict>(fields: Fields,options?:FormOptions<Fields>) {
-	const opts = assignObject({
-		title:"",
+/**
+ *  设置表单默认属性
+ * 	title?:ComputedAttr<string>					    // 动作标题    
+    help?:ComputedAttr<string>					    // 动作帮助
+    tips?:ComputedAttr<string>					    // 动作提示
+ 	visible?:ComputedAttr<boolean>					// 是否可见
+	enable?:ComputedAttr<boolean>					// 是否可用		
+	valid?:ComputedAttr<boolean>					// 是否有效
+	readonly?:ComputedAttr<boolean>				    // 是否只读	  
+ * @param define 
+ */
+function setFormDefault(define:any){
+	defaultObject(define,{
+		title:"SpeedForm",
 		help:"",
-		visible:true,
-		enable:true,
+		tips:"",
+		status:"idle",
+		dirty:false,
+		valid:true,
 		readonly:false,
-		actions:{},
+		enable:true,
+		visible:true
+	})
+}
+
+/**
+ * 加载表单数据
+ */
+function loadFormData(store:any){
+
+}
+
+
+export function createForm<Schema extends Dict=Dict>(define: Schema,options?:FormOptions<Schema>) {
+	const opts = assignObject({
 		getFieldName:(valuePath:string[])=>valuePath.join(".")
-	},options) as Required<FormOptions>
+	},options) as Required<FormOptions<Schema>>
+
+	// 注入表单默认属性
+	setFormDefault(define)
 
 	// 创建表单Store对象实例
-	type FormStoreType = StoreDefine<FormState<Fields,FormActions>>
-
-
-	const store = createStore<FormStoreType>({ 
-		state:{
-			fields,
-			actions:createFormActions(opts.actions) 
-		}
-	},{
+	const store = createStore<StoreDefine<Schema>>({state:define},{
 		// 所有计算函数的上下文均指向根
 		computedThis: ComputedScopeRef.Root,
 		// 计算函数作用域默认指向fields
 		computedScope: [FIELDS_STATE_KEY],
-		// 对validator进行特殊处理
+		// 创建计算函数时的钩子函数
 		onCreateComputed(keyPath,getter,options) {		 
-			// 只对validator进行处理,目的是使validate函数依赖于当前字段的值value，将使得validate函数的第一个参数总是当前字段的值
+			// 1. 只对validator进行处理,目的是使validate函数依赖于当前字段的值value，将使得validate函数的第一个参数总是当前字段的值
 			if(keyPath.length>=2 && keyPath[0]==FIELDS_STATE_KEY && keyPath[keyPath.length-1]=='validate'){	
 				createValidatorHook(keyPath,getter,options)
 			}
-			if(keyPath.length > 0 && keyPath[0]==FIELDS_STATE_KEY && options.depends){
-				// 所有位于fields下的的依赖均自动添加fields前缀，这样在声明依赖时就可以省略fields前缀
+			// 2. 对所有位于fields下的的依赖均自动添加fields前缀，这样在声明依赖时就可以省略fields前缀
+			if(keyPath.length > 0 && keyPath[0]==FIELDS_STATE_KEY && options.depends){ 
 				options.depends.forEach((depend,i)=>{
 					if(Array.isArray(depend) && (depend.length>0 && depend[0]!=FIELDS_STATE_KEY)){
 						options.depends![i] = [FIELDS_STATE_KEY,...depend]
-					}else if(typeof(depend)=='string' && !depend.startsWith('fields.')){
+					}else if(typeof(depend)=='string' && !depend.startsWith(`${FIELDS_STATE_KEY}.`)){
 						options.depends![i] = `${FIELDS_STATE_KEY}.${depend}`
 					}
 				})
 			}
+			// 3. 所有表单actions的execute的makeRaw，不需要proxy
+
 		},
 		onComputedContext(draft,{type,fullKeyPath}){
 			// 修改计算函数的作用域根，使之总是指向fields开头
@@ -205,13 +236,15 @@ export function createForm<Fields extends Dict>(fields: Fields,options?:FormOpti
 		}
 	});  
 	return {
-		Form: createFormComponent.call<FormOptions,any[],FormComponent<Fields>>(opts,store),
+		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
 		Action: createActionComponent.call(opts,store),	
-    	fields:store.state.fields,
-		actions:store.state.actions,
-		store:store    
+    	fields:store.state.fields as (typeof store.state)['fields'],
+		actions:store.state.actions as (typeof store.state)['actions'], 
+		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase>,
+		useState:store.useState,
+		load:loadFormData
 	};
 }
 

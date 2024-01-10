@@ -1,7 +1,7 @@
 import React, {	 ChangeEventHandler, ReactNode, useCallback, useEffect,useRef,useState  } from "react";  
 import { getVal, setVal } from "@helux/utils";
 import { isLiteField, debounce as debounceWrapper } from './utils';
-import { Dict } from "./types";  
+import { ComputedAttr, Dict } from "./types";  
 import { assignObject } from "flex-tools/object/assignObject"; 
 import type { FormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts";
@@ -172,34 +172,25 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
 
 
 
-// export interface Field<T=any>{
-//   __SPEED_FORM_FIELD__?:boolean
-//   name?         : string
-//   value        : T;
-//   title?       : FieldComputedProp<string>;                       // 标题
-//   defaultValue?: FieldComputedProp<T>;                          // 默认值
-//   oldValue?    : FieldComputedProp<T>;                          // 默认值
-//   help?        : FieldComputedProp<string>;                       // 提示信息
-//   placeholder? : FieldComputedProp<string>;                       // 占位符
-//   required?    : FieldComputedProp<boolean>;                      // 是否必填
-//   readonly?    : FieldComputedProp<boolean>;                      // 是否只读
-//   visible?     : FieldComputedProp<boolean>;                      // 是否可见
-//   enable?      : FieldComputedProp<boolean>;                      // 是否可用
-//   validate?    : FieldComputedProp<boolean>;                      // 验证
-//   select?      : FieldComputedProp<any[]>                         // 枚举值  
-// }
+export interface Field<T=any>{
+  value        : T;
+  title?       : ComputedAttr<string>;                       // 标题
+  defaultValue?: ComputedAttr<T>;                          // 默认值
+  oldValue?    : ComputedAttr<T>;                          // 默认值
+  help?        : ComputedAttr<string>;                       // 提示信息
+  placeholder? : ComputedAttr<string>;                       // 占位符
+  required?    : ComputedAttr<boolean>;                      // 是否必填
+  readonly?    : ComputedAttr<boolean>;                      // 是否只读
+  visible?     : ComputedAttr<boolean>;                      // 是否可见
+  enable?      : ComputedAttr<boolean>;                      // 是否可用
+  validate?    : ComputedAttr<boolean>;                      // 验证
+  select?      : ComputedAttr<any[]>                         // 枚举值  
+}
+ 
 
-// /**
-//  * 用来声明一个字段
-//  * field()
-//  * field("")
-//  * field({value:any})
-//  * 
-//  * @param data 
-//  * @returns 
-//  */
-// export function field<Value=any>(valueOrSchema?:Primitive | Field<Value>):Field<Value>{  
-//   const schema = Object.assign({__SPEED_FORM_FIELD__:true,value:null},
-//     isPrimitive(valueOrSchema)   ? {value:valueOrSchema}  : valueOrSchema ) as Field<Value>  
-//   return schema
-// } 
+export type Fields={
+  [name:string]:Record<string,Field>               
+              | Array<Field> 
+              | Array<Fields>
+              | Record<string,Fields> 
+}

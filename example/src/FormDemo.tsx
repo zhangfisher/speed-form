@@ -165,7 +165,7 @@ const NetworkForm = ()=>{
 
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
-    const [state] = Network.store.useState()
+    const [state] = Network.state.useState()
  
     
     // state.dhcp.start.validate.value

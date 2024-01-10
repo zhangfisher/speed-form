@@ -250,26 +250,3 @@ export function createActionComponent(this:Required<FormOptions>,store: any) {
 
 
 
-
-
-    // return computed<Result,any>(async function (this:any,action:FormActionDefine,options:ComputedParams){
-    //     const formData = this           // 指向的是表单数据对象
-    //     action.loading = true
-    //     try{
-    //         // 读取作用域表单数据
-    //         let scopePath = typeof(action.scope)=="function" ? action.scope() : action.scope
-    //         scopePath = (Array.isArray(action.scope) ? action.scope : (typeof(action.scope) =='string' ? action.scope.split(".") : [])) 
-    //         scopePath.splice(0,0,'fields')
-    //         const scopeValue = getVal(formData.fields,scopePath)
-    //         // 执行动作函数
-    //         await action.execute.call(this,scopeValue,options)
-    //         action.error = null
-    //     }catch(e:any){
-    //         action.error = e.message
-    //     }finally{
-    //         action.loading = false
-    //     }
-    // },[['actions',action.name!,'count']],{  
-    //     scope:action.scope,                // 指向scope动作的scope参数指定的表单数据 
-    //     context:ComputedScopeRef.Current
-    // } )  
