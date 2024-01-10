@@ -124,8 +124,7 @@ type NetworkType = NetworkFormType['fields'];
 
 const Network = createForm<NetworkFormType>(formSchema);
 
-Network.actions.next()
-Network.actions.next
+
 
 
 

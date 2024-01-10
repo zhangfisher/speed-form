@@ -116,7 +116,7 @@ function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,act
 export function createFormActions<ActionStates extends Dict>(actionStates:ActionStates,store:any){
     const actions:Dict={}
     Object.entries(actionStates).forEach(([name,actionState])=>{      
-        actions[name]= createFormAction(name,actionState,store.setState)
+        //actions[name]= createFormAction(name,actionState,store.setState)
     })
     return actions as ActionRecords<ActionStates>
 }
