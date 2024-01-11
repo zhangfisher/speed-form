@@ -97,8 +97,8 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
 
   // 2. 读取计算函数的上下文配置参数
   const contexRef = getContextOption(draft, 
-      type=='context' ?  computedOptions.scope : storeOptions.computedScope,
-      type=='context' ?  computedOptions.context : storeOptions.computedThis
+      type=='context' ? computedOptions.context : computedOptions.scope ,
+      type=='context' ? storeOptions.computedThis : storeOptions.computedScope
   );
 
   // 3. 根据配置参数获取计算函数的上下文对象
@@ -194,7 +194,7 @@ export function computed<R = any,Attrs extends Record<string,any> = never>( gett
  * @param computedThis
  * @param storeCtxOption
  */
-function getContextOption(state: any,computedCtxOption?: ComputedScope,storeCtxOption?: ComputedContext) {
+function getContextOption(state: any,computedCtxOption?: ComputedScope,storeCtxOption?: ComputedScope) {
   let ctx = computedCtxOption == undefined ? storeCtxOption : computedCtxOption;
   if (typeof ctx == "function") {
     try { ctx = ctx.call(state, state) } catch { }

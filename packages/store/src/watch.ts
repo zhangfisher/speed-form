@@ -14,7 +14,6 @@ import { watch as heluxWatch } from "helux";
 
 export interface WatchOptions{
     immediate?:boolean
-    depends?:string | string[] | any[]
 }
 
 export interface WatchResult{
@@ -22,11 +21,12 @@ export interface WatchResult{
 }
 
 
-export function watch(listener:()=>void,options?:WatchOptions):()=>void{
+export function watch(listener:()=>void,depends:Array<string | string[]>,options?:WatchOptions):()=>void{
     const {unwatch} = heluxWatch(()=>{
         listener()
     },{
-        immediate:options?.immediate
+        immediate:options?.immediate,
+        deps:()=>Array.isArray(depends) ? depends.map(dep=>Array.isArray(dep) ? dep : (typeof(dep)=='string' ? dep.split(".") : []) ) : []
     })
     return unwatch
 }

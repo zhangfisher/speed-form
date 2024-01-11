@@ -81,9 +81,7 @@ export type FormActions<T extends FormActionDefines = FormActionDefines> = {
 export type ActionRecords<Actions extends Record<string,any>> = {
 	[Name in keyof Actions]: Actions[Name]['execute'] extends ((first:any, ...args:infer Rest)=>infer R) ? ((...args:Rest)=>R) : never
                            & Omit<FormActionDefine,'execute'> 
-                           & Omit<Actions[Name],'execute'>
-                            
-}
+                           & Omit<Actions[Name],'execute'>}
 
 
 function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,actionState:FormActionDefine,setState:any){
@@ -96,7 +94,8 @@ function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,act
             actionState.progress = executeInfo.progress!
             actionState.error = executeInfo.error!
         })        
-    })
+        
+    },[['actions',name,'count']])
     // 执行动作时传入的额外参数
     return async (params:any)=>{
         // 由于action.execute依赖于count，所以当count++时会触发动作执行        
@@ -113,11 +112,11 @@ function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,act
  * @param actionStates 经过helux-store计算后的动作声明 
  * @returns 
  */
-export function createFormActions<ActionStates extends Dict>(this:any,actionStates:ActionStates){
+export function createFormActions<ActionStates extends Dict>(this:any,actionExecutors:ActionStates){
     const store = this
     const actions:Dict={}
-    Object.entries(actionStates).forEach(([name,actionState])=>{      
-        //actions[name]= createFormAction.call(store,name,actionState,store.setState)
+    Object.entries(actionExecutors).forEach(([name,actionState])=>{      
+        actions[name]= createFormAction.call(store,name,actionState,store.setState)
     })
     return actions as ActionRecords<ActionStates>
 }

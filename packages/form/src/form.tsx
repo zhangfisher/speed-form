@@ -47,6 +47,7 @@ import { assignObject } from "flex-tools/object/assignObject";
 import { ActionRecords, FormActions, createActionComponent, createFormActions } from './action';
 import { FIELDS_STATE_KEY } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
+import { markRaw } from 'helux';
 
 
 export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{
@@ -211,6 +212,12 @@ function loadFormData(store:any){
 
 }
 
+function getFormActions<Schema extends Dict=Dict>(define: Schema): Record<string, Function> {
+	return Object.entries(define.actions || {}).reduce((actions: Record<string, Function>, [name, action]: [string, unknown]) => {
+		actions[name] = (action as any ).execute;
+		return actions;
+	}, {});
+}
 
 
 export function createForm<Schema extends Dict=Dict>(define: Schema,options?:FormOptions<Schema>) {
@@ -219,7 +226,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 	},options) as Required<FormOptions<Schema>>
 
 	// 注入表单默认属性
-	setFormDefault(define)
+	setFormDefault(define) 
 
 	// 创建表单Store对象实例
 	const store = createStore<StoreSchema<Schema>>({state:define},{
