@@ -39,7 +39,7 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreDefine, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions } from "helux-store";
+import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions } from "helux-store";
 import type { ReactFC, Dict, ComputedAttr } from "./types";
 import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
@@ -222,7 +222,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 	setFormDefault(define)
 
 	// 创建表单Store对象实例
-	const store = createStore<StoreDefine<Schema>>({state:define},{
+	const store = createStore<StoreSchema<Schema>>({state:define},{
 		// 所有计算函数的上下文均指向根
 		computedThis: ComputedScopeRef.Root,
 		// 计算函数作用域默认指向fields
@@ -246,10 +246,10 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 			// 3. 所有表单actions的execute的makeRaw不需要proxy
 
 		},
-		onComputedContext(draft,{type,fullKeyPath}){
-			// 修改计算函数的作用域根，使之总是指向fields开头
+		onComputedContext(draft,{type,valuePath}){
+			// 修改fields下的所有计算函数的作用域根，使之总是指向fields开头
 			// 这样可以保证在计算函数中,当scope->Root时，总是指向fields，否则就需要state.fields.xxx.xxx
-			if(type=='scope' && fullKeyPath.length >0 && fullKeyPath[0]==FIELDS_STATE_KEY){
+			if(type=='scope' && valuePath.length >0 && valuePath[0]==FIELDS_STATE_KEY){
 				return draft.fields
 			}
 		}
