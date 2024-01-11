@@ -1,66 +1,17 @@
 /**
 
-    createStore({
-        state:{
-            user:{
-                id:'2123',
-                firstName:'tom',
-                lastName:'zhang',
-                fullname:(state)=>state.user.firstName+state.user.lastName,
-                age:18,
-                addresss:[
-                    {city:'北京',street:'朝阳区'},
-                    {city:'上海',street:'浦东区'},
-                    {city:'广州',street:'天河区'},
-                ]
-            },
-            books:[
-                {name:'张三',price:18,author:'tom'},
-                {name:'李四',price:19,author:'jack'},
-                {name:'王五',price:20,author:'bob'}
-            ],
-            orders:[],
-            sales:{
-                total:0,
-            }
-        },
-        computed:{
-            // 同步计算属性
-            "user.fullname":()=>{
-                doSomething()
-                return (state)=>state.user.firstName+state.user.lastName
-            },
-            // 异步计算属性,需要指定依赖
-            "sales.total":[
-                async ()=>{
-                    await getOrders()
-                    return (state)=>state.books.reduce((total,book)=>total+book.price,0)
-                },["books"]
-            ]
-        },
-        actions:{
-            add(arg1,arg2){
-                return state=>state.count++
-            },
-            async addAsync(arg1,arg2){
-                await doSomething()
-                return state=>state.count++
-            }
-        }
-
-
-    } as const)
+ 
  */
 
 import { ISharedCtx, model  } from "helux"
-import { createActions } from './action';
-import { Actions, ComputedState, Dict, RequiredComputedState } from "./types";
+import { Actions, createActions } from './action';
+import { ComputedState, Dict, RequiredComputedState } from "./types";
 import { createComputed } from "./computed";
 import type { ComputedOptions, ComputedRefDraftOptions } from "./computed";
 import { deepClone } from "flex-tools/object/deepClone";
 
 
-export interface StoreDefine<State>{
+export interface StoreSchema<State> extends Dict{
     state:State
     actions?:Actions<State>
 }
@@ -78,8 +29,6 @@ export type StoreComputedContext  = NonDependsScopeRef | string | string[] | ((s
 
 export type StateGetter<State,Value=any> = (state:State)=>Value
 export type StateSetter<State,Value=any> = (state:State,value:Value)=>void
-
-
 
 /**
  *  StateGetter函数返回
@@ -131,25 +80,27 @@ export interface StoreOptions{
     onComputedContext(draft:any,options:ComputedRefDraftOptions):any
 }
 
+
 export type IStore<State extends Dict=Dict> = ISharedCtx<State> & {
     state:ISharedCtx<State>['reactive']
     useState:ReturnType<typeof wrapperUseState>
 }
 
 
-export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
+export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOptions){
     const opts = Object.assign({
         computedThis:ComputedScopeRef.Root,
         computedScope:ComputedScopeRef.Current,
         singleton:true
     },options) as Required<StoreOptions>
     const storeData = opts.singleton ? data : deepClone(data)
+
     return  model((api) => { 
         const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any,{
             stopArrDep: false
         })
         // 1. 创建Actions
-        const actions = createActions<T>(storeData.actions,stateCtx,api)
+        const actions = createActions<T>(storeData.actions,stateCtx,api,opts)
 
         // 2. 处理Computed属性
         createComputed<T['state']>(stateCtx,api,opts)!

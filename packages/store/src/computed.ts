@@ -9,7 +9,7 @@
  */
 
 import { HeluxApi, IOperateParams, ISharedCtx, markRaw } from "helux";
-import type { StoreDefine, StoreComputedScope, StoreOptions } from "./store";
+import type { StoreSchema, StoreComputedScope, StoreOptions } from "./store";
 import { ComputedScopeRef } from "./store";
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
@@ -19,6 +19,8 @@ import { skipComputed, isSkipComputed, getValue } from "./utils";
 export interface ComputedParams extends Record<string,any>{
   // 获取一个进度条，用来显示异步计算的进度
   getProgressbar?:(progress:number)=>void
+  // 当计算函数启用超时时，可以指定一个cb，在超时后会调用此函数
+  onTimeout?:(cb:()=>void)=>void
 }
 
 export type ComputedOptions<T=any,Params extends ComputedParams= ComputedParams> = {
@@ -42,7 +44,10 @@ export type AsyncComputedGetter<R> = (scopeDraft:any,options:ComputedParams) => 
 
 export type AsyncComputedObject<V = any,Attrs extends Record<string,any>=Record<string,any>> ={
   loading: boolean;
-  progress?: number; // 进度值
+  progress?: number;        // 进度值
+  // 超时时间，当>0时会进行在执行计算函数时进行超时检测,超时后loading自动设置为false，同时如果
+  // 如果computedParams指定了onTimeout(cb)函数，会调用onTimeout函数
+  timeout?: number;         
   error?: any;
   value: V;
   keyPath?: string[];
@@ -138,13 +143,10 @@ export function computed<R = any,Attrs extends Record<string,any> = never>( gett
   };
 
   // 是否是异步计算函数
-  const isAsync =
-    opts.async === true ||
+  const isAsync = opts.async === true ||
     isAsyncFunction(getter) ||
     (arguments.length == 2 && Array.isArray(arguments[1])) ||
-    (arguments.length == 3 &&
-      Array.isArray(arguments[1]) &&
-      isPlainObject(arguments[2]));
+    (arguments.length == 3 && Array.isArray(arguments[1]) && isPlainObject(arguments[2]));
 
   if (isAsync) {
     opts.depends = arguments[1] || [];
@@ -187,22 +189,12 @@ export function computed<R = any,Attrs extends Record<string,any> = never>( gett
  * @param computedThis
  * @param storeContext
  */
-function getContextOption(
-  state: any,
-  computedContext?: StoreComputedScope,
-  storeContext?: StoreComputedScope
-) {
+function getContextOption(state: any,computedContext?: StoreComputedScope,storeContext?: StoreComputedScope) {
   let ctx = computedContext == undefined ? storeContext : computedContext;
   if (typeof ctx == "function") {
-    try {
-      ctx = ctx.call(state, state);
-    } catch { }
+    try { ctx = ctx.call(state, state) } catch { }
   }
-  return ctx == undefined
-    ? storeContext == undefined
-      ? ComputedScopeRef.Root
-: storeContext
-    : ctx;
+  return ctx == undefined ? (storeContext == undefined ? ComputedScopeRef.Root: storeContext) : ctx;
 }
 
 /**
@@ -210,11 +202,7 @@ function getContextOption(
  * @param stateCtx
  * @param params
  */
-function createComputedMutate<Store extends StoreDefine<any>>(
-  stateCtx: ISharedCtx<Store["state"]>,
-  params: IOperateParams,
-  computedOptions: ComputedOptions,
-  storeOptions: StoreOptions
+function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>, params: IOperateParams, computedOptions: ComputedOptions, storeOptions: StoreOptions
 ) {
   let { fullKeyPath, value: getter, keyPath, parent } = params;
   const { computedThis, computedScope, onCreateComputed } = storeOptions;
@@ -234,18 +222,14 @@ function createComputedMutate<Store extends StoreDefine<any>>(
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
       const { input } = params;
-      // 2. 根据配置参数获取计算函数的上下文对象
+      // 1. 根据配置参数获取计算函数的上下文对象
       const thisDraft = getComputedRefDraft(draft,{context: getContextOption(draft, context, computedThis),fullKeyPath,keyPath,parent,depends: input,type:"context"},storeOptions);
       const scopeDraft = getComputedRefDraft(draft,{context: getContextOption(draft, scope, computedScope), fullKeyPath, keyPath,parent,depends: input,type:"scope"},storeOptions);
 
-      // 3. 执行getter函数
+      // 2. 执行getter函数
       let computedValue = initial;
       try {
-        computedValue = getter.call(
-          thisDraft,
-          scopeDraft,
-          computedParams
-        );
+        computedValue = getter.call(thisDraft,scopeDraft);
       } catch (e: any) {
         // 如果执行计算函数出错,则调用
         if (typeof onError === "function") {
@@ -254,7 +238,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(
           } catch { }
         }
       }
-      // 4. 将getter的返回值替换到状态中的,完成移花接木
+      // 3. 将getter的返回值替换到状态中的,完成移花接木
       setVal(draft, fullKeyPath, computedValue);
     },
     desc: fullKeyPath.join("."),
@@ -269,7 +253,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(
  * @param stateCtx
  * @param params
  */
-function createAsyncComputedMutate<Store extends StoreDefine<any>>( stateCtx: ISharedCtx<Store["state"]>,params: IOperateParams,storeOptions: StoreOptions) {
+function createAsyncComputedMutate<Store extends StoreSchema<any>>( stateCtx: ISharedCtx<Store["state"]>,params: IOperateParams,storeOptions: StoreOptions) {
   const { fullKeyPath, keyPath, value, parent } = params;
   const { onCreateComputed, computedThis, computedScope } = storeOptions;
 
@@ -372,7 +356,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>( stateCtx: IS
  * @param options
  * @returns
  */
-export function createComputed<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,api: HeluxApi, options: StoreOptions) {
+export function createComputed<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>,api: HeluxApi, options: StoreOptions) {
 	  const replacedMap: any = {};
     // 拦截读取state的操作，在第一次读取时，
     // - 为计算函数创建mutate

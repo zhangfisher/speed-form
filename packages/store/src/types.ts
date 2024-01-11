@@ -1,7 +1,7 @@
 export type StateUpdater<State=any> = (state:State)=>any
-export type Action<State> = (...args:any[])=>StateUpdater<State>
-export type AsyncAction<State> = (...args:any[])=>Promise<StateUpdater<State>>
-export type Actions<State=any>  = Record<string,Action<State> | AsyncAction<State>>
+
+
+
 import type { Computed,AsyncComputed,ComputedAsyncReturns,AsyncComputedObject, ComputedSyncReturns } from "./computed"
 /**
  * 返回函数的返回值类型
