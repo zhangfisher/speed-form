@@ -15,6 +15,7 @@ import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject";
 import { skipComputed, isSkipComputed, getValue } from "./utils";
+import { switchValue } from "flex-tools/misc/switchValue";
 
 
 // 作为计算函数的第二个参数传入
@@ -47,8 +48,8 @@ export interface ComputedOptions<Value=any> {
   // 默认情况下，异步计算属性会将计算函数转换成一AsyncComputedObject对象，此对象包含value,loading,error等属性
   // 但是有时候我们希望直接返回计算函数的返回值/loading/error等属性，被更新到其他对象中，此时可以通过参数来指定
   // 如果指定了computedObjectKey,则会将计算函数的返回值更新到指定的对象中，而不是原地的AsyncComputedObject对象
-  // 默认值是default，表示不指定，会原地更新到原地的AsyncComputedObject对象
-  toComputedResult?: 'default' | 'root' | 'parent' | 'current' | string[] 
+  // 默认值是sefl，表示不指定，会原地更新到原地的AsyncComputedObject对象
+  toComputedResult?: 'self' | 'root' | 'parent' | 'current' | string[] 
 };
 
 export type ComputedDepends = Array<string> | Array<Array<string>> | ((draft: any) => any[])
@@ -150,7 +151,7 @@ export function computed<R = any,Attrs extends Record<string,any> = never>( gett
   const opts: ComputedOptions<R> = {
     async: false,
     timeout:0,
-    toComputedResult:'default'
+    toComputedResult:'self'
   };
 
   // 是否是异步计算函数
@@ -316,12 +317,14 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
   const { fullKeyPath:valuePath } = computedContext;  
   const { timeout=0,toComputedResult }  = computedOptions
 
-  // 根据配置读取计算函数的返回值应该更新到哪个对象中
-  const computedResultPath:string[] = toComputedResult =='default' ? valuePath : 
-                                      ( toComputedResult=='root' ? [] : 
-                                          ( toComputedResult=='parent' ? valuePath.slice(0,valuePath.length-1) : (Array.isArray(toComputedResult) ? toComputedResult : [])
-                                        )
-                                      )
+  // 根据配置读取计算函数的返回值以及状态等 应该更新到哪里
+  const computedResultPath:string[] =switchValue(toComputedResult,{
+    self:valuePath,
+    root: [],
+    parent: valuePath.slice(0,valuePath.length-2),
+    current: valuePath.slice(0,valuePath.length-1),
+    Array:toComputedResult
+  },{defaultValue:valuePath})    
 
 
   let timeoutCallback:Function
@@ -334,11 +337,10 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
     try {
       // 处理超时参数和倒计时
       let [timeoutValue=0,countdown=0] = Array.isArray(timeout) ? timeout : [timeout,0]
-      const countdownInterval= timeoutValue/countdown
       // @ts-ignore
       setState((draft) =>{
-        setVal(draft, [...valuePath, "loading"], true)
-        setVal(draft, [...valuePath, "timeout"], countdown > 1 ? countdown :timeoutValue )
+        setVal(draft, [...computedResultPath, "loading"], true)
+        setVal(draft, [...computedResultPath, "timeout"], countdown > 1 ? countdown :timeoutValue )
       })       
       if(timeoutValue>=0){        
         timerId = setTimeout(()=>{          
@@ -346,36 +348,36 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
           if(!hasError){  
             // @ts-ignore
             setState((draft) =>{
-              setVal(draft, [...valuePath, "loading"], false)
-              setVal(draft, [...valuePath, "error"], 'TIMEOUT')
+              setVal(draft, [...computedResultPath, "loading"], false)
+              setVal(draft, [...computedResultPath, "error"], 'TIMEOUT')
             })
           }          
           if(typeof(timeoutCallback)=='function') timeoutCallback()
         })
-        // 启用设置倒计时:  比如timeout= 6*1000, countdown= 1000
+        // 启用设置倒计时:  比如timeout= 6*1000, countdown= 6
         if(countdown>1){
           countdownId = setInterval(()=>{
             // @ts-ignore
             setState((draft) =>{              
-              setVal(draft, [...valuePath, "timeout"], countdown--)
+              setVal(draft, [...computedResultPath, "timeout"], countdown--)
               if(countdown===0) clearInterval(countdownId)
             })
-          },countdownInterval)
+          },timeoutValue/countdown)
         }
       }
       const computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
       if(!isTimeout){
         // @ts-ignore
         setState((draft) => {
-          setVal(draft, [...valuePath, "value"], computedResult);
-          setVal(draft, [...valuePath, "error"], null);
+          setVal(draft, [...computedResultPath, "value"], computedResult);
+          setVal(draft, [...computedResultPath, "error"], null);
         });
       }      
     }catch (e:any) {
       hasError = true
       if(!isTimeout){
         // @ts-ignore
-        setState((draft) =>setVal(draft, [...valuePath, "error"], e.message));      
+        setState((draft) =>setVal(draft, [...computedResultPath, "error"], e.message));      
         if (typeof computedOptions.onError == "function") {
           try { computedOptions.onError.call(thisDraft, e)} catch { }
         }
@@ -385,8 +387,8 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
       clearInterval(countdownId)
       // @ts-ignore
       setState((draft) => {
-        setVal(draft, [...valuePath, "loading"], false)
-        if(!hasError && !isTimeout) setVal(draft, [...valuePath, "error"], null)
+        setVal(draft, [...computedResultPath, "loading"], false)
+        if(!hasError && !isTimeout) setVal(draft, [...computedResultPath, "error"], null)
       });
     }
 }
@@ -450,6 +452,7 @@ export function createComputed<Store extends StoreSchema<any>>(stateCtx: IShared
       const { fullKeyPath, value } = params;
       const key = fullKeyPath.join(".");
       if ( typeof value === "function" && !replacedMap[key] && !isSkipComputed(value) ) {
+
         replacedMap[key] = true;
         // 将声明在state里面的计算函数转换为helux的mutate
         //******** 使用computed创建 ****************** */

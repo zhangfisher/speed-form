@@ -35,57 +35,35 @@ export function isSkipComputed(fn:Function){
 }
 
 
-export interface SwitchValueOptions{
-    typeMatchers: Record<string,string>
-    defaultValue?:any
-}
 /**
+ * 根据相对路径获取值的路径
  * 
- * switchValue(toComputedResult,{
- *      default:valuePath,
- *      root:[]
- *      parent:valuePath.slice(0,valuePath.length-1)     
- *      Array:valuePath
- *      Object:fn1
- *      Boolean:fn4
- *      Number:fn5
- *      StringArray:fn6   
- * })
+ * 如valuePath = ['a','b','c','d']   
+ *  relPath = 'default'  则返回 ['a','b','c','d']
+ *  relPath = 'root'     则返回 []
+ *  relPath = 'parent'   则返回 ['a','b']
+ *  relPath = 'current'  则返回 ['a','b','c']
+ *  relPath = ['a','b']  则返回 ['a','b']
+ *  relPath = 'x'        则返回 ['a','b','c','x']
  * 
  * 
+ * @param path 
+ * @param relPath 
+ * @returns 
  */
-
-export function switchValue<T=any>(value:T,switchers:Record<string,any>,options?:SwitchValueOptions){
-    const { typeMatchers,defaultValue } = Object.assign({
-        typeMatchers:{
-            Number  : 'number',
-            String  : 'string',
-            Function: 'function',
-            Object  : 'object',
-            Boolean : 'boolean'            
-        }
-    },options) 
-    let result:any = defaultValue
-    for(const [matchKey,matchValue] of Object.entries(switchers)){                    
-        if(matchKey == value){
-            result = matchValue
-            break
-        }else if(matchKey in typeMatchers && typeMatchers[matchKey] ==typeof(value)){            
-            result = matchValue      
-            break
-        }else if(matchKey == 'Array'){
-            if(Array.isArray(value)){
-                result = matchValue
-                break
-            }
-        }else if(matchKey.endsWith("Array")){
-            const t = typeMatchers[matchKey.slice(0,-5)]
-            if(Array.isArray(value) &&  value.every((v:any)=>typeof(v)==t)){                
-                result = matchValue
-                break
-            }
-        }
+export function getRelValuePath(path:string[],relPath:'self' | 'root' | 'parent' | 'current' | string[] | string ){
+    if(relPath  === 'self'){
+        return path
+    }else if(relPath === 'root'){
+        return []
+    }else if(relPath === 'parent'){
+        return path.slice(0,-2)
+    }else if(relPath === 'current'){
+        return path.slice(0,-1)
+    }else if(typeof(relPath) === 'string'){
+        return [...path.slice(0,-1),relPath.split(".")]
+    }else if(Array.isArray(relPath)){
+        return relPath
     }
-
-    return typeof(result)=='function' ? result(value) : result        
+    return path    
 }

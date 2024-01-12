@@ -87,15 +87,15 @@ export type ActionRecords<Actions extends Record<string,any>> = {
 function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,actionState:FormActionDefine,setState:any){
     // action.execute的执行状态会更新到action.execute.value,action.execute.lading,action.execute.progress中
     // 因此侦听此信息来同步到action中
-    watch(()=>{
-        setState((state:any)=>{
-            const executeInfo = state.actions[name].execute
-            actionState.loading = executeInfo.loading
-            actionState.progress = executeInfo.progress!
-            actionState.error = executeInfo.error!
-        })        
+    // watch(()=>{
+    //     setState((state:any)=>{
+    //         const executeInfo = state.actions[name].execute
+    //         actionState.loading = executeInfo.loading
+    //         actionState.progress = executeInfo.progress!
+    //         actionState.error = executeInfo.error!
+    //     })        
         
-    },[['actions',name,'count']])
+    // },[['actions',name,'count']])
     // 执行动作时传入的额外参数
     return async (params:any)=>{
         // 由于action.execute依赖于count，所以当count++时会触发动作执行        

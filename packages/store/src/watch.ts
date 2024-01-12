@@ -9,7 +9,7 @@
  * 
  * 
  */
-import { watch as heluxWatch } from "helux";
+import { watch as heluxWatch} from "helux";
 
 
 export interface WatchOptions{
@@ -26,7 +26,9 @@ export function watch(listener:()=>void,depends:Array<string | string[]>,options
         listener()
     },{
         immediate:options?.immediate,
-        deps:()=>Array.isArray(depends) ? depends.map(dep=>Array.isArray(dep) ? dep : (typeof(dep)=='string' ? dep.split(".") : []) ) : []
+        deps:()=>{
+            return getVal(draft,Array.isArray(depends) ? depends.map(dep=>Array.isArray(dep) ? dep : (typeof(dep)=='string' ? dep.split(".") : []) ) : [])
+        }
     })
     return unwatch
 }
