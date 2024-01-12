@@ -44,6 +44,11 @@ export interface ComputedOptions<Value=any> {
    */
   timeout?:number  | [number,number]
   onError?:(e:Error)=>void              // 当执行计算getter函数出错时的回调
+  // 默认情况下，异步计算属性会将计算函数转换成一AsyncComputedObject对象，此对象包含value,loading,error等属性
+  // 但是有时候我们希望直接返回计算函数的返回值/loading/error等属性，被更新到其他对象中，此时可以通过参数来指定
+  // 如果指定了computedObjectKey,则会将计算函数的返回值更新到指定的对象中，而不是原地的AsyncComputedObject对象
+  // 默认值是default，表示不指定，会原地更新到原地的AsyncComputedObject对象
+  toComputedResult?: 'default' | 'root' | 'parent' | 'current' | string[] 
 };
 
 export type ComputedDepends = Array<string> | Array<Array<string>> | ((draft: any) => any[])
@@ -140,11 +145,12 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
 export function computed<R = any,Attrs extends Record<string,any> = never>( getter: AsyncComputedGetter<R>, depends: ComputedDepends, options?: ComputedOptions<R>): ComputedAsyncReturns<R & Attrs>;
 export function computed<R = any,Attrs extends Record<string,any> = never>( getter: ComputedGetter<R>, options?: ComputedOptions<R>): R & Attrs;
 export function computed<R = any,Attrs extends Record<string,any> = never>( getter: any,depends: any, options?: ComputedOptions<R>): ComputedAsyncReturns<R & Attrs> {
-	if (typeof getter != "function")  throw new Error("getter must be a function");
-
+	
+  if (typeof getter != "function")  throw new Error("getter must be a function");
   const opts: ComputedOptions<R> = {
     async: false,
-    timeout:0
+    timeout:0,
+    toComputedResult:'default'
   };
 
   // 是否是异步计算函数
@@ -308,7 +314,15 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
   const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext,storeOptions,type:"context"})
   const scopeDraft= getComputedRefDraft(draft,{input,computedOptions,computedContext,storeOptions,type:"scope"})  
   const { fullKeyPath:valuePath } = computedContext;  
-  const { timeout=0 }  = computedOptions
+  const { timeout=0,toComputedResult }  = computedOptions
+
+  // 根据配置读取计算函数的返回值应该更新到哪个对象中
+  const computedResultPath:string[] = toComputedResult =='default' ? valuePath : 
+                                      ( toComputedResult=='root' ? [] : 
+                                          ( toComputedResult=='parent' ? valuePath.slice(0,valuePath.length-1) : (Array.isArray(toComputedResult) ? toComputedResult : [])
+                                        )
+                                      )
+
 
   let timeoutCallback:Function
   const computedParams:ComputedParams ={

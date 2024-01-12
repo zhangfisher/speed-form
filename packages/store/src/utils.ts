@@ -30,4 +30,62 @@ export function skipComputed(fn:Function){
 export function isSkipComputed(fn:Function){
     // @ts-ignore
     return fn[SKIP_COMPUTED] === true
+
+    
+}
+
+
+export interface SwitchValueOptions{
+    typeMatchers: Record<string,string>
+    defaultValue?:any
+}
+/**
+ * 
+ * switchValue(toComputedResult,{
+ *      default:valuePath,
+ *      root:[]
+ *      parent:valuePath.slice(0,valuePath.length-1)     
+ *      Array:valuePath
+ *      Object:fn1
+ *      Boolean:fn4
+ *      Number:fn5
+ *      StringArray:fn6   
+ * })
+ * 
+ * 
+ */
+
+export function switchValue<T=any>(value:T,switchers:Record<string,any>,options?:SwitchValueOptions){
+    const { typeMatchers,defaultValue } = Object.assign({
+        typeMatchers:{
+            Number  : 'number',
+            String  : 'string',
+            Function: 'function',
+            Object  : 'object',
+            Boolean : 'boolean'            
+        }
+    },options) 
+    let result:any = defaultValue
+    for(const [matchKey,matchValue] of Object.entries(switchers)){                    
+        if(matchKey == value){
+            result = matchValue
+            break
+        }else if(matchKey in typeMatchers && typeMatchers[matchKey] ==typeof(value)){            
+            result = matchValue      
+            break
+        }else if(matchKey == 'Array'){
+            if(Array.isArray(value)){
+                result = matchValue
+                break
+            }
+        }else if(matchKey.endsWith("Array")){
+            const t = typeMatchers[matchKey.slice(0,-5)]
+            if(Array.isArray(value) &&  value.every((v:any)=>typeof(v)==t)){                
+                result = matchValue
+                break
+            }
+        }
+    }
+
+    return typeof(result)=='function' ? result(value) : result        
 }
