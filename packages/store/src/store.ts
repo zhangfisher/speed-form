@@ -8,6 +8,7 @@ import { Actions, createActions } from './action';
 import { ComputedState, Dict, RequiredComputedState } from "./types";
 import { createComputed, ComputedOptions } from './computed';
 import { deepClone } from "flex-tools/object/deepClone";
+import { log } from "./utils";
 
 
 export interface StoreSchema<State> extends Dict{
@@ -66,6 +67,9 @@ function wrapperUseState<State extends Dict>(stateCtx:ISharedCtx<State["state"]>
 
 
 export interface StoreOptions{
+    id?:string
+    // 是否开启调试模式，开启后会打印出一些的信息
+    debug?:boolean
     // 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象
     // 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
     computedThis?: ComputedContext
@@ -84,13 +88,15 @@ export interface StoreOptions{
      * @param options 
      * @returns 
      */
-    onCreateComputed?:(keyPath:string[],getter:Function,options:ComputedOptions)=>Function | void
+    onCreateComputed?:(keyPath:string[],getter:Function,options:ComputedOptions)=> void | (()=>any)
     
     /**
      * 在传递给计算函数的context和scope时调用
      * 可以返回一个新的context和scope来代替默认的
      */
     onComputedContext(draft:any,options:{type:'context' | 'scope',valuePath:string[]}):any
+    // 输出日志信息
+    log?:(message:any,level?:'log' | 'error' | 'warn')=>void
 }
 
 
@@ -102,9 +108,12 @@ export type IStore<State extends Dict=Dict> = ISharedCtx<State> & {
 
 export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOptions){
     const opts = Object.assign({
+        id:"",
+        debug:true,
         computedThis:ComputedScopeRef.Root,
         computedScope:ComputedScopeRef.Current,
-        singleton:true
+        singleton:true,
+        log:log
     },options) as Required<StoreOptions>
     const storeData = opts.singleton ? data : deepClone(data)
 

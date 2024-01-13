@@ -36,7 +36,7 @@ import { Dict, HttpFormEnctype, HttpMethod } from "./types";
 import { getVal } from "@helux/utils";
 import React from "react";
 import type { FormOptions } from "./form";
-import { AsyncComputedObject, ComputedAsyncReturns, ComputedParams,  watch } from 'helux-store'; 
+import { AsyncComputedObject, ComputedAsyncReturns, ComputedParams,  IStore,  watch } from 'helux-store'; 
 import { assignObject } from "flex-tools/object/assignObject";
 import { FIELDS_STATE_KEY } from "./consts";
 
@@ -84,18 +84,18 @@ export type ActionRecords<Actions extends Record<string,any>> = {
                            & Omit<Actions[Name],'execute'>}
 
 
-function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,actionState:FormActionDefine,setState:any){
+function  createFormAction<Scope extends Dict = Dict,Result=any>(this:IStore,name:string,actionExecutor:FormActionDefine,setState:any){
     // action.execute的执行状态会更新到action.execute.value,action.execute.lading,action.execute.progress中
     // 因此侦听此信息来同步到action中
-    // watch(()=>{
-    //     setState((state:any)=>{
-    //         const executeInfo = state.actions[name].execute
-    //         actionState.loading = executeInfo.loading
-    //         actionState.progress = executeInfo.progress!
-    //         actionState.error = executeInfo.error!
-    //     })        
-        
-    // },[['actions',name,'count']])
+    watch(()=>{
+        setState((state:any)=>{
+            const actionState = state.actions[name]
+            // const actionM = actionState.execute
+            // actionState.loading = executeInfo.loading
+            // actionState.progress = executeInfo.progress!
+            // actionState.error = executeInfo.error!
+        })     
+    },()=>[getVal(this.state,["actions",name,"count"])])          
     // 执行动作时传入的额外参数
     return async (params:any)=>{
         // 由于action.execute依赖于count，所以当count++时会触发动作执行        
@@ -112,11 +112,11 @@ function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,act
  * @param actionStates 经过helux-store计算后的动作声明 
  * @returns 
  */
-export function createFormActions<ActionStates extends Dict>(this:any,actionExecutors:ActionStates){
+export function createFormActions<ActionStates extends Dict>(this:IStore,actionExecutors:ActionStates){
     const store = this
     const actions:Dict={}
-    Object.entries(actionExecutors).forEach(([name,actionState])=>{      
-        actions[name]= createFormAction.call(store,name,actionState,store.setState)
+    Object.entries(actionExecutors).forEach(([name,actionExecutor])=>{      
+        actions[name]= createFormAction.call(store,name,actionExecutor,store.setState)
     })
     return actions as ActionRecords<ActionStates>
 }

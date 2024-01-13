@@ -21,14 +21,12 @@ export interface WatchResult{
 }
 
 
-export function watch(listener:()=>void,depends:Array<string | string[]>,options?:WatchOptions):()=>void{
+export function watch(listener:()=>void,depends: () => any[] ,options?:WatchOptions):()=>void{
     const {unwatch} = heluxWatch(()=>{
         listener()
     },{
         immediate:options?.immediate,
-        deps:()=>{
-            return getVal(draft,Array.isArray(depends) ? depends.map(dep=>Array.isArray(dep) ? dep : (typeof(dep)=='string' ? dep.split(".") : []) ) : [])
-        }
+        deps:depends
     })
     return unwatch
 }

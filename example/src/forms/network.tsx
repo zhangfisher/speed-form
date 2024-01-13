@@ -85,6 +85,16 @@ const formSchema = {
 		},
 	},
 	actions: {
+		submit: {
+			title: "提交",
+			enable: (root: any) => {
+				return root.fields.wifi.ssid.value.length > 3
+			},
+			execute: async (fields: any) => {
+				await delay(100);
+				console.log(fields);
+			},
+		},
 		ping: {
 			title: "测试网络连通性",
 			scope: "wifi", // 表示该动作的上下文是wifi这个子表单
@@ -93,15 +103,7 @@ const formSchema = {
 				await delay(100);
 				console.log(a);
 			},
-		},
-		submit: {
-			title: "提交",
-			enable: (wifi: any) => wifi.ssid.value.length > 0,
-			execute: async (fields: any) => {
-				await delay(100);
-				console.log(fields);
-			},
-		},
+		},		
         // 向导表单:上一步
         previous:{
             enable: (wifi: any) => wifi.ssid.value.length > 0,

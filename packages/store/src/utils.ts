@@ -34,6 +34,13 @@ export function isSkipComputed(fn:Function){
     
 }
 
+export function log(message:any,level:'log' | 'error' | 'warn'='log'){
+    let msg = typeof(message) === 'function' ? message() : message
+    try{
+        console[level]("[helux-store] ",...Array.isArray(msg) ? msg : [msg])
+    }catch{}
+}
+
 
 /**
  * 根据相对路径获取值的路径

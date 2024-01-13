@@ -39,7 +39,7 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions } from "helux-store";
+import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, IStore, computed } from "helux-store";
 import type { ReactFC, Dict, ComputedAttr } from "./types";
 import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
@@ -213,9 +213,13 @@ function loadFormData(store:any){
 }
 
 function filterFormActions<Schema extends Dict=Dict>(define: Schema): Record<string, Function> {
-	return Object.entries(define.actions || {}).reduce((actions: Record<string, Function>, [name, action]: [string, unknown]) => {
-		actions[name] = (action as any ).execute;
-		delete (action as any).execute;
+	return Object.entries(define.actions || {}).reduce((actions: Record<string, Function>, [name, action]: [string, any]) => {
+		const executor = action.execute
+		actions[name] = executor;
+		action.execute = computed(executor,{
+			depends:[`${ACTIONS_STATE_KEY}.${name}.count`],
+			scope:ComputedScopeRef.Root
+		})
 		return actions;
 	}, {});
 }
@@ -256,8 +260,11 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 			// 3. 将表单actions的execute的onComputedResult指向其current
 			// 比如: actions.ping.execute，则执行execute时，其onComputedResult指向current,此时可以直接使用action.ping.loading来代表动作正在执行
 			// action.ping.value来代表动作的返回值，action.ping.error来代表动作的错误
-			if(keyPath.length==2 && keyPath[0]==ACTIONS_STATE_KEY && keyPath[2]=='execute'){
+			if(keyPath.length==3 && keyPath[0]==ACTIONS_STATE_KEY && keyPath[2]=='execute'){
 				options.toComputedResult ='current'
+			}
+			if(keyPath.length>0 && keyPath[0]==ACTIONS_STATE_KEY ){
+				options.scope = ComputedScopeRef.Root
 			}
 
 		},
@@ -277,7 +284,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 		Group: createFieldGroupComponent.call(opts,store),	
 		Action: createActionComponent.call(opts,store),	
     	fields:store.state.fields as FieldsType,
-		actions:createFormActions.call<typeof store,[ActionsType],ActionRecords<Schema['actions']>>(store,actionExecutors), 
+		actions:createFormActions.call<IStore,[ActionsType],ActionRecords<Schema['actions']>>(store as unknown as IStore,actionExecutors), 
 		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase>,
 		useState:store.useState,
 		load:loadFormData
