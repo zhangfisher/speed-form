@@ -74,3 +74,14 @@ export function getRelValuePath(path:string[],relPath:'self' | 'root' | 'parent'
     }
     return path    
 }
+
+
+export function getDepsString(deps:(string | string[])[]):string{
+    return deps.map((dep)=>{
+        if(Array.isArray(dep)){
+            return dep.join('.')
+        }
+        return dep
+    }).join('_')
+}
+ 

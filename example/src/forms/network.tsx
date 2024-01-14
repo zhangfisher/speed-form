@@ -91,8 +91,9 @@ const formSchema = {
 				return root.fields.wifi.ssid.value.length > 3
 			},
 			execute: async (fields: any) => {
-				await delay(100);
+				await delay(2000);
 				console.log(fields);
+				return 100
 			},
 		},
 		ping: {
@@ -100,24 +101,24 @@ const formSchema = {
 			scope: "wifi", // 表示该动作的上下文是wifi这个子表单
 			enable: (wifi: any) => wifi.ssid.value.length > 0,
 			execute: async (a: Dict) => {
-				await delay(100);
+				await delay(2000);
 				console.log(a);
 			},
 		},		
         // 向导表单:上一步
-        previous:{
-            enable: (wifi: any) => wifi.ssid.value.length > 0,
-			execute:async (a:number)=>{
-				return a
-			}
-        },
-        // 向导表单:下一步        
-        next:{
-            enable: (wifi: any) => wifi.ssid.value.length > 0,
-            execute: async (fields:any) => {
-                return fields
-            }
-        }
+        // previous:{
+        //     enable: (wifi: any) => wifi.ssid.value.length > 0,
+		// 	execute:async (a:number)=>{
+		// 		return a
+		// 	}
+        // },
+        // // 向导表单:下一步        
+        // next:{
+        //     enable: (wifi: any) => wifi.ssid.value.length > 0,
+        //     execute: async (fields:any) => {
+        //         return fields
+        //     }
+        // }
 	},
 };
 

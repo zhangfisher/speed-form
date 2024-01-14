@@ -207,8 +207,8 @@ function setFormDefault(define:any){
 
 /**
  * 加载表单数据
- */
-function loadFormData(store:any){
+ */ 
+function loadFormData(store:any){ 
 
 }
 
@@ -216,11 +216,11 @@ function filterFormActions<Schema extends Dict=Dict>(define: Schema): Record<str
 	return Object.entries(define.actions || {}).reduce((actions: Record<string, Function>, [name, action]: [string, any]) => {
 		const executor = action.execute
 		actions[name] = executor;
-		action.execute = computed(executor,{
-			depends:[[ACTIONS_STATE_KEY,name,"count"]],
-			scope:ComputedScopeRef.Root,
-			toComputedResult:'current'
-		})
+		action.execute = computed(executor,[[ACTIONS_STATE_KEY,name,"count"]],
+			{
+				scope:ComputedScopeRef.Root,
+				toComputedResult:'current'
+			})
 		return actions;
 	}, {});
 }

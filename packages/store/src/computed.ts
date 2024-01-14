@@ -14,7 +14,7 @@ import { ComputedScopeRef } from "./store";
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject";
-import { skipComputed, isSkipComputed, getValue } from "./utils";
+import { skipComputed, isSkipComputed, getValue, getDepsString } from "./utils";
 import { switchValue } from "flex-tools/misc/switchValue";
 
 
@@ -297,9 +297,9 @@ function createAsyncComputedObject(stateCtx:any,mutateDesc:string,valueObj:Parti
   },valueObj)
 }
 
-function setAsyncComputedObject(stateCtx:any,resultPath:string[],mutateDesc:string,valueObj:Partial<AsyncComputedObject>){
+function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[],mutateDesc:string,valueObj:Partial<AsyncComputedObject>){
   const asyncObj = createAsyncComputedObject(stateCtx,mutateDesc,valueObj)
-  const reusltValue = getVal(stateCtx.state,resultPath)
+  const reusltValue = getVal(draft,resultPath)
   Object.assign(reusltValue,asyncObj,valueObj)
 }
 
@@ -363,7 +363,7 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
     
       updateAsyncComputedObject(setState,computedResultPath,{loading:true,timeout:countdown > 1 ? countdown :timeoutValue})
           
-      if(timeoutValue>=0){        
+      if(timeoutValue>0){        
         timerId = setTimeout(()=>{          
           isTimeout=true
           if(!hasError){  
@@ -413,9 +413,9 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     return;
   }
   let { getter, options: computedOptions }  = value() as AsyncComputedParams<any>
-  computedOptions.async = true;
-  const {toComputedResult,computedResultType='object' } =computedOptions
-
+  computedOptions.async = true; 
+  const {toComputedResult='self',computedResultType='object' } =computedOptions
+ 
   // 根据配置读取计算函数的返回值以及状态等 应该更新到哪里
   const computedResultPath:string[] =switchValue(toComputedResult,{
     self:valuePath,
@@ -435,9 +435,9 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
   const {depends,initial} = computedOptions;
   const deps = (depends || []).map((deps: any) =>Array.isArray(deps) ? deps : deps.split("."))
 
-  const mutateDesc = deps.join("_") + "_computed";
+  const mutateDesc = getDepsString(valuePath) + "_computed";
 
-  storeOptions.log(`Create async computed: ${valuePath.join(".")} (depends=${deps.join(".")})`);
+  storeOptions.log(`Create async computed: ${valuePath.join(".")} (depends=${getDepsString(deps)})`);
 
   stateCtx.mutate({
     // 声明依赖
@@ -452,11 +452,11 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
           }else{
             setVal(draft, valuePath, createAsyncComputedObject(stateCtx, mutateDesc,{value: initial}))
           }          
-        }else{  
+        }else{  // 更新到对象的其他地方
           if(computedResultType=='value'){
             setVal(draft, computedResultPath,initial)
           }else{
-            setAsyncComputedObject(stateCtx,computedResultPath, mutateDesc,{value: initial})
+            setAsyncComputedObject(stateCtx,draft,computedResultPath, mutateDesc,{value: initial})
           }             
         }
       }
