@@ -106,19 +106,19 @@ const formSchema = {
 			},
 		},		
         // 向导表单:上一步
-        // previous:{
-        //     enable: (wifi: any) => wifi.ssid.value.length > 0,
-		// 	execute:async (a:number)=>{
-		// 		return a
-		// 	}
-        // },
-        // // 向导表单:下一步        
-        // next:{
-        //     enable: (wifi: any) => wifi.ssid.value.length > 0,
-        //     execute: async (fields:any) => {
-        //         return fields
-        //     }
-        // }
+        previous:{
+            enable: (wifi: any) => wifi.ssid.value.length > 0,
+			execute:async (a:number)=>{
+				return 1
+			}
+        },
+        // 向导表单:下一步        
+        next:{
+            enable: (wifi: any) => wifi.ssid.value.length > 0,
+            execute: async (fields:any) => {
+                return 2
+            }
+        }
 	},
 };
 
