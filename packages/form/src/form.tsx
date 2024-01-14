@@ -217,8 +217,9 @@ function filterFormActions<Schema extends Dict=Dict>(define: Schema): Record<str
 		const executor = action.execute
 		actions[name] = executor;
 		action.execute = computed(executor,{
-			depends:[`${ACTIONS_STATE_KEY}.${name}.count`],
-			scope:ComputedScopeRef.Root
+			depends:[[ACTIONS_STATE_KEY,name,"count"]],
+			scope:ComputedScopeRef.Root,
+			toComputedResult:'current'
 		})
 		return actions;
 	}, {});

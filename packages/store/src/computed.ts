@@ -445,15 +445,19 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     fn: (draft, params) => {
       if (params.isFirstCall) {     
         if(toComputedResult=='self'){ // 原地替换
-          if(asyncResult=='none'){
+          if(computedResultType=='none'){ // 不返回任何值
             delete parent[valuePath[valuePath.length-1]]
-          }else if(asyncResult=='value'){
-            parent[valuePath[valuePath.length-1]] = initial
+          }else if(computedResultType=='value'){
+            setVal(draft, valuePath.slice(0,valuePath.length-1),initial)
           }else{
             setVal(draft, valuePath, createAsyncComputedObject(stateCtx, mutateDesc,{value: initial}))
           }          
-        }else{          // 将结果更新到其他指定的对象中
-          setAsyncComputedObject(stateCtx,computedResultPath, mutateDesc,{value: initial})
+        }else{  
+          if(computedResultType=='value'){
+            setVal(draft, computedResultPath,initial)
+          }else{
+            setAsyncComputedObject(stateCtx,computedResultPath, mutateDesc,{value: initial})
+          }             
         }
       }
     },
