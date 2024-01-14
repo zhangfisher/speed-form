@@ -112,9 +112,12 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
         debug:true,
         computedThis:ComputedScopeRef.Root,
         computedScope:ComputedScopeRef.Current,
-        singleton:true,
-        log:log
+        singleton:true
     },options) as Required<StoreOptions>
+    opts.log = (...args:any[])=>{
+        if(opts.debug) (log as any)(...args)
+    }
+
     const storeData = opts.singleton ? data : deepClone(data)
 
     return  model((api) => { 

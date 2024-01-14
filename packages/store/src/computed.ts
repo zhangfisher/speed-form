@@ -45,11 +45,29 @@ export interface ComputedOptions<Value=any> {
    */
   timeout?:number  | [number,number]
   onError?:(e:Error)=>void              // 当执行计算getter函数出错时的回调
-  // 默认情况下，异步计算属性会将计算函数转换成一AsyncComputedObject对象，此对象包含value,loading,error等属性
-  // 但是有时候我们希望直接返回计算函数的返回值/loading/error等属性，被更新到其他对象中，此时可以通过参数来指定
-  // 如果指定了computedObjectKey,则会将计算函数的返回值更新到指定的对象中，而不是原地的AsyncComputedObject对象
-  // 默认值是sefl，表示不指定，会原地更新到原地的AsyncComputedObject对象
-  toComputedResult?: 'self' | 'root' | 'parent' | 'current' | string[] 
+  /**
+   * 指定计算结果更新到哪里
+   * 
+   * self: 默认，原地替换，异步计算属性会将计算函数转换成一AsyncComputedObject对象，此对象包含value,loading,error等属性
+   * root: 更新到根对象中
+   * parent: 更新到父对象中
+   * current: 更新到当前对象中
+   * none: 不更新到任何对象中
+   * {String} 当前对象的指定键
+   * {Array} 从根对象开始的完整路径
+   * 
+   */
+  toComputedResult?: 'self' | 'root' | 'parent' | 'current' | 'none' | string[] | string 
+  /**
+   * 指定异步计算函数的返回值类型
+   object: 默认值，生成AsyncComputedObject对象替换原始异步函数，里面包括了loading等属性,可以更好地跟踪异步计算过程
+   value: 只返回计算函数的返回值，将原计算函数替换为返回值
+   none:  不返回任何值，当toComputedResult将原计算函数替换为undefined
+  
+   如果指定为none，并且toComputedResult=self时，同时会删除原始计算函数属性
+
+   **/   
+  computedResultType?: 'object' | 'value' | 'none'
 };
 
 export type ComputedDepends = Array<string> | Array<Array<string>> | ((draft: any) => any[])
@@ -150,7 +168,8 @@ export function computed<R = any,Attrs extends Record<string,any> = never>( gett
   const opts: ComputedOptions<R> = {
     async: false,
     timeout:0,
-    toComputedResult:'self'
+    toComputedResult:'self',
+    computedResultType:'object',
   };
 
   // 是否是异步计算函数
@@ -213,7 +232,7 @@ function getContextOption(state: any,computedCtxOption?: ComputedScope,storeCtxO
  * @param stateCtx
  * @param computedContext
  */
-function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>, computedContext: IOperateParams, computedOptions: ComputedOptions, storeOptions: StoreOptions) {
+function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>, computedContext: IOperateParams, computedOptions: ComputedOptions, storeOptions: Required<StoreOptions>) {
 
   let { fullKeyPath:valuePath, value: getter, parent } = computedContext;
   const { onCreateComputed } = storeOptions;
@@ -228,6 +247,8 @@ function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedC
     const newGetter = onCreateComputed.call( stateCtx,valuePath, getter,computedOptions);
     if (typeof newGetter == "function") getter = newGetter;
   }
+  
+  storeOptions.log(`Create sync computed: ${valuePath.join(".")}`);
 
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
@@ -307,6 +328,15 @@ function createComputeProgressbar(setState:any,valuePath:string[],opts?:{max?:nu
   }
 }
 
+
+function updateAsyncComputedObject(setState:any,resultPath:string[],values:Partial<AsyncComputedObject>){
+  setState((draft:any) => {
+    Object.entries(values).forEach(([key,value])=>{
+      setVal(draft, [...resultPath,key], value);  
+    })
+  });
+}
+
 /**
  * 执行异步计算函数的getter方法
  * @param getter 
@@ -323,54 +353,40 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
   let timeoutCallback:Function
   const computedParams:ComputedParams ={
       onTimeout:(cb:Function)=>timeoutCallback=cb,
-      getProgressbar:(opts?:{max?:number,min?:number,value?:number})=>createComputeProgressbar(setState,valuePath,opts)
+      getProgressbar:(options?:{max?:number,min?:number,value?:number})=>createComputeProgressbar(setState,valuePath,options)
   }  
 
   let timerId:any,countdownId:any,hasError=false,isTimeout=false
     try {
       // 处理超时参数和倒计时
       let [timeoutValue=0,countdown=0] = Array.isArray(timeout) ? timeout : [timeout,0]
-      // @ts-ignore
-      setState((draft) =>{
-        setVal(draft, [...computedResultPath, "loading"], true)
-        setVal(draft, [...computedResultPath, "timeout"], countdown > 1 ? countdown :timeoutValue )
-      })       
+    
+      updateAsyncComputedObject(setState,computedResultPath,{loading:true,timeout:countdown > 1 ? countdown :timeoutValue})
+          
       if(timeoutValue>=0){        
         timerId = setTimeout(()=>{          
           isTimeout=true
           if(!hasError){  
-            // @ts-ignore
-            setState((draft) =>{
-              setVal(draft, [...computedResultPath, "loading"], false)
-              setVal(draft, [...computedResultPath, "error"], 'TIMEOUT')
-            })
+            updateAsyncComputedObject(setState,computedResultPath,{loading:false,error:"TIMEOUT"})            
           }          
           if(typeof(timeoutCallback)=='function') timeoutCallback()
         })
         // 启用设置倒计时:  比如timeout= 6*1000, countdown= 6
         if(countdown>1){
           countdownId = setInterval(()=>{
-            // @ts-ignore
-            setState((draft) =>{              
-              setVal(draft, [...computedResultPath, "timeout"], countdown--)
-              if(countdown===0) clearInterval(countdownId)
-            })
+            updateAsyncComputedObject(setState,computedResultPath,{timeout:countdown--})            
+            if(countdown===0) clearInterval(countdownId)            
           },timeoutValue/countdown)
         }
       }
       const computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
       if(!isTimeout){
-        // @ts-ignore
-        setState((draft) => {
-          setVal(draft, [...computedResultPath, "value"], computedResult);
-          setVal(draft, [...computedResultPath, "error"], null);
-        });
+        updateAsyncComputedObject(setState,computedResultPath,{value:computedResult,error:null})  
       }      
     }catch (e:any) {
       hasError = true
       if(!isTimeout){
-        // @ts-ignore
-        setState((draft) =>setVal(draft, [...computedResultPath, "error"], e.message));      
+        updateAsyncComputedObject(setState,computedResultPath,{error:e.message})         
         if (typeof computedOptions.onError == "function") {
           try { computedOptions.onError.call(thisDraft, e)} catch { }
         }
@@ -378,11 +394,8 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
     } finally {      
       clearTimeout(timerId)
       clearInterval(countdownId)
-      // @ts-ignore
-      setState((draft) => {
-        setVal(draft, [...computedResultPath, "loading"], false)
-        if(!hasError && !isTimeout) setVal(draft, [...computedResultPath, "error"], null)
-      });
+      updateAsyncComputedObject(setState,computedResultPath,{loading:false})
+      if(!hasError && !isTimeout) updateAsyncComputedObject(setState,computedResultPath,{error:null})
     }
 }
 
@@ -401,7 +414,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
   }
   let { getter, options: computedOptions }  = value() as AsyncComputedParams<any>
   computedOptions.async = true;
-  const {toComputedResult } =computedOptions
+  const {toComputedResult,computedResultType='object' } =computedOptions
 
   // 根据配置读取计算函数的返回值以及状态等 应该更新到哪里
   const computedResultPath:string[] =switchValue(toComputedResult,{
@@ -409,7 +422,8 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     root: [],
     parent: valuePath.slice(0,valuePath.length-2),
     current: valuePath.slice(0,valuePath.length-1),
-    Array:toComputedResult
+    Array:toComputedResult,    // 指定一个数组，表示完整路径
+    String:[...valuePath.slice(0,valuePath.length-1),String(toComputedResult).split(".")],
   },{defaultValue:valuePath})    
 
 
@@ -430,11 +444,17 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     deps: (state: any) =>(depends || []).map((deps: any) =>getVal(state, Array.isArray(deps) ? deps : deps.split("."))),
     fn: (draft, params) => {
       if (params.isFirstCall) {     
-        if(toComputedResult=='self'){
-          setVal(draft, valuePath, createAsyncComputedObject(stateCtx, mutateDesc,{value: initial}))
-        }else{
+        if(toComputedResult=='self'){ // 原地替换
+          if(asyncResult=='none'){
+            delete parent[valuePath[valuePath.length-1]]
+          }else if(asyncResult=='value'){
+            parent[valuePath[valuePath.length-1]] = initial
+          }else{
+            setVal(draft, valuePath, createAsyncComputedObject(stateCtx, mutateDesc,{value: initial}))
+          }          
+        }else{          // 将结果更新到其他指定的对象中
           setAsyncComputedObject(stateCtx,computedResultPath, mutateDesc,{value: initial})
-        }        
+        }
       }
     },
     // 此函数在依赖变化时执行，用来异步计算
