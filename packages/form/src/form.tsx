@@ -39,7 +39,7 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, IStore, computed } from "helux-store";
+import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, IStore, computed, AsyncComputedParams, AsyncComputedObject } from "helux-store";
 import type { ReactFC, Dict, ComputedAttr } from "./types";
 import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
@@ -215,16 +215,29 @@ function loadFormData(store:any){
 function filterFormActions<Schema extends Dict=Dict>(define: Schema): Record<string, Function> {
 	return Object.entries(define.actions || {}).reduce((actions: Record<string, Function>, [name, action]: [string, any]) => {
 		const executor = action.execute
-		actions[name] = executor;
-		action.execute = computed(executor,[[ACTIONS_STATE_KEY,name,"count"]],
+		actions[name] = executor;		
+		const actionDeps = [ACTIONS_STATE_KEY,name,"count"]
+		// 使用原始的async方式声明动作
+		if(action.execute.__COMPUTED__ == undefined){		
+			action.execute = computed(executor,[actionDeps],
 			{
 				scope:ComputedScopeRef.Root,
 				toComputedResult:'current'
 			})
+		}else{ // 使用computed方式声明动作
+			const executorParms = action.execute as  AsyncComputedParams<any>
+			executorParms.options.scope = ComputedScopeRef.Root
+			executorParms.options.toComputedResult = 'current'
+			if(!Array.isArray(executorParms.options.depends)) executorParms.options.depends = []
+			if(!executorParms.options.depends.includes(actionDeps)) executorParms.options.depends.push(actionDeps)
+		}
 		return actions;
 	}, {});
 }
 
+type ExtendActions<Actions extends Dict> = {
+	[Name in keyof Actions]: Required<Actions[Name] & AsyncComputedObject<ReturnType<Actions[Name]['execute']>>>
+}
 
 export function createForm<Schema extends Dict=Dict>(define: Schema,options?:FormOptions<Schema>) {
 	const opts = assignObject({
@@ -263,7 +276,9 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 			// action.ping.value来代表动作的返回值，action.ping.error来代表动作的错误
 			if(keyPath.length==3 && keyPath[0]==ACTIONS_STATE_KEY && keyPath[2]=='execute'){
 				options.toComputedResult ='current'
+				options.immediate = false
 			}
+			// 让表单actions的scope默认指向根
 			if(keyPath.length>0 && keyPath[0]==ACTIONS_STATE_KEY ){
 				options.scope = ComputedScopeRef.Root
 			}
@@ -277,8 +292,8 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 			}
 		}
 	});  
-	type FieldsType = (typeof store.state)['fields']
-	type ActionsType = (typeof store.state)['actions']
+	type FieldsType = (typeof store.state)['fields'] 
+	type ActionsType = ExtendActions<(typeof store.state)['actions']>
 	return {
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
@@ -286,7 +301,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 		Action: createActionComponent.call(opts,store),	
     	fields:store.state.fields as FieldsType,
 		actions:createFormActions.call<IStore,[ActionsType],ActionRecords<Schema['actions']>>(store as unknown as IStore,actionExecutors), 
-		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase>,
+		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase> & {actions:ActionsType},
 		useState:store.useState,
 		load:loadFormData
 	};

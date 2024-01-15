@@ -36,7 +36,7 @@ import { Dict, HttpFormEnctype, HttpMethod } from "./types";
 import { getVal } from "@helux/utils";
 import React from "react";
 import type { FormOptions } from "./form";
-import { ComputedAsyncReturns, ComputedParams,  IStore,  watch } from 'helux-store'; 
+import { AsyncComputed, AsyncComputedObject, ComputedAsyncReturns, ComputedParams,  IStore,  watch } from 'helux-store'; 
 import { assignObject } from "flex-tools/object/assignObject";
 import { FIELDS_STATE_KEY } from "./consts";
 
@@ -60,13 +60,9 @@ export interface FormActionDefine<Scope extends Dict=Dict,Result =any>{
     help?   : ActionComputedAttr<string,Scope>					            // 动作帮助
     tips?   : ActionComputedAttr<string,Scope>					            // 动作提示
     visible?: ActionComputedAttr<boolean,Scope>					            // 是否可见
-    enable? : ActionComputedAttr<boolean,Scope>					            // 是否可用	        
-    loading:boolean
-    progress:number
+    enable? : ActionComputedAttr<boolean,Scope>					            // 是否可用	            
     count:number
-    error:string | Error
     execute :(scope:any,options?:ComputedParams)=> Promise<void | Result>   // 执行动作，用来对表单数据进行处理
-	//[key:string]:ActionComputedAttr<unknown,Scope>			                // 其他可扩展的动作参数
 } 
 
 // 经过创建表单后的动作对象,  execute
@@ -77,16 +73,15 @@ export type FormAction<T extends FormActionDefine> =ComputedAsyncReturns<{
 export type FormActions<T extends FormActionDefines = FormActionDefines> = {
     [Key in keyof T]: FormAction<T[Key]>
 }
-// 动作
+
+// 动作记录，即form.actions的类型，不同于from.state.actions
 export type ActionRecords<Actions extends Record<string,any>> = {
 	[Name in keyof Actions]: Actions[Name]['execute'] extends ((first:any, ...args:infer Rest)=>infer R) ? ((...args:Rest)=>R) : never
-                           & Omit<FormActionDefine,'execute'> 
-                           & Omit<Actions[Name],'execute'>}
-
+}
 
 function  createFormAction<Scope extends Dict = Dict,Result=any>(this:IStore,name:string,actionExecutor:FormActionDefine,setState:any){   
     // 执行动作时传入的额外参数
-    return async (params:any)=>{
+    return async ()=>{
         // 由于action.execute依赖于count，所以当count++时会触发动作执行        
         setState((state:any)=>state.actions[name].count++)
     }
@@ -110,21 +105,6 @@ export function createFormActions<ActionStates extends Dict>(this:IStore,actionE
     return actions as ActionRecords<ActionStates>
 }
  
-// 标准表单提交
-export interface StandardSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
-	url?:ActionComputedAttr<string,Fields>						    // 提交的URL
-    method?:ActionComputedAttr<HttpMethod,Fields>					// 提交的方法
-    enctype?:ActionComputedAttr<HttpFormEnctype,Fields>				// 是否包含文件，此表单中的
-}
-
-// API提交
-export interface ApiSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
-	url?:ActionComputedAttr<string,Fields>						// 提交的URL
-    method?:ActionComputedAttr<HttpMethod,Fields>		        // 提交的方法
-    params?:ActionComputedAttr<Dict,Fields>						// 提交的参数
-    data?:ActionComputedAttr<Dict,Fields>						// 提交的Body数据
-    headers?:ActionComputedAttr<Dict,Fields>					// 提交的头信息
-}
 
 // 表单动作
 export type FormActionDefines<Fields extends Dict=Dict> = Record<string,FormActionDefine<Fields>>
@@ -132,10 +112,18 @@ export type FormActionDefines<Fields extends Dict=Dict> = Record<string,FormActi
 
 export type ActionExecutor<Scope extends Dict = Dict,Params extends Dict = Dict> = (scope:Scope,params:Params)=>void
 
-export type ActionRenderProps<Scope extends Dict = Dict,Params extends Dict = Dict>= FormActionDefine<Scope> &  {
-    submit?:()=>void                                        // 提交表单
-    reset?:()=>void                                         // 重置表单
-    ref: RefObject<HTMLElement>                             // 动作元素引用
+export type DefaultActionRenderProps={
+    title  : string
+    help   : string
+    tips   : string
+    visible: boolean
+    enable : boolean
+    count  :number                                                            
+}
+
+export type ActionRenderProps<PropTypes extends Dict> = DefaultActionRenderProps & PropTypes &  Required<AsyncComputedObject> & {
+    submit?:()=>void                                                        // 提交表单
+    ref: RefObject<HTMLElement>                                             // 动作元素引用
 } 
 
 export type ActionRender<PropTypes extends Dict,Params extends Dict = Dict>= (props: ActionRenderProps<PropTypes>) => ReactNode
@@ -227,3 +215,18 @@ export function createActionComponent(this:Required<FormOptions>,store: any) {
 
 
 
+// 标准表单提交
+export interface StandardSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
+	url?:ActionComputedAttr<string,Fields>						    // 提交的URL
+    method?:ActionComputedAttr<HttpMethod,Fields>					// 提交的方法
+    enctype?:ActionComputedAttr<HttpFormEnctype,Fields>				// 是否包含文件，此表单中的
+}
+
+// API提交
+export interface ApiSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
+	url?:ActionComputedAttr<string,Fields>						// 提交的URL
+    method?:ActionComputedAttr<HttpMethod,Fields>		        // 提交的方法
+    params?:ActionComputedAttr<Dict,Fields>						// 提交的参数
+    data?:ActionComputedAttr<Dict,Fields>						// 提交的Body数据
+    headers?:ActionComputedAttr<Dict,Fields>					// 提交的头信息
+}

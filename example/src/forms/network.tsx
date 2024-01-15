@@ -3,10 +3,16 @@ import { Dict, createForm } from "speed-form";
 // import { Project, getProjects } from "../api/getProjects";
 import { delay } from "flex-tools/async/delay";
 import validator from "validator"; 
-
+let count =1 
 // 声明表单数据
 const formSchema = {
 	fields: {
+		asyncTitle: {
+			value: "React-Helux-Form",
+			placeholder: "输入网络配置名称",
+			title: "网络名称",
+			validate:computed<boolean,boolean>(async (value: string) => value.length > 3,[])
+		},
 		title: {
 			value: "React-Helux-Form",
 			placeholder: "输入网络配置名称",
@@ -81,8 +87,8 @@ const formSchema = {
 				help: "密码长度应不小于6位",
 				enable: (net: any) => (net as NetworkType).interface.value === "wifi",
 				validate: (value: string) => value.length > 6,
-			},
-		},
+			}
+		}
 	},
 	actions: {
 		submit: {
@@ -93,8 +99,21 @@ const formSchema = {
 			execute: async (fields: any) => {
 				await delay(2000);
 				console.log(fields);
-				return 100
+				return count++
 			},
+		},
+		errorSubmit: {
+			title: "提交错误", 
+			execute: async () => {
+				await delay(2000);
+				throw new Error("提交错误"+count++);
+			},
+		},		
+		timeoutSubmit: {
+			title: "提交超时", 
+			execute: computed(async () => {
+				await delay(5000);								
+			},[],{timeout:2000}),
 		},
 		ping: {
 			title: "测试网络连通性",
@@ -108,14 +127,14 @@ const formSchema = {
         // 向导表单:上一步
         previous:{
             enable: (wifi: any) => wifi.ssid.value.length > 0,
-			execute:async (a:number)=>{
+			execute:async ()=>{
 				return 1
 			}
         },
         // 向导表单:下一步        
         next:{
             enable: (wifi: any) => wifi.ssid.value.length > 0,
-            execute: async (fields:any) => {
+            execute: async () => {
                 return 2
             }
         }
@@ -126,11 +145,7 @@ type NetworkFormType = typeof formSchema;
 type NetworkType = NetworkFormType['fields'];
 
 const Network = createForm<NetworkFormType>(formSchema);
-
-
-
-
-
+ 
 
 // @ts-ignore
 globalThis.Network = Network;

@@ -157,6 +157,11 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field>   
+            <Network.Action<typeof Network.state.actions.submit> type="submit" >                      
+                {({title,visible,enable,submit})=>{     
+                    return <button disabled={!enable} onClick={submit()}>{title}</button>
+                }}
+            </Network.Action>
         </Card>
     </Network.Form>        
 }
@@ -167,7 +172,8 @@ const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.useState()
  
-    
+    Network.actions.submit()      
+
     // state.dhcp.start.validate.value
 
     return (
@@ -176,6 +182,8 @@ const FormDemo:React.FC = ()=>{
                 <NetworkForm/>
                 {/* <NetworkForm/> */}
                 <button onClick={()=>Network.actions.submit()}>提交</button>
+                <button onClick={()=>Network.actions.errorSubmit()}>提交错误</button>
+                <button onClick={()=>Network.actions.timeoutSubmit()}>提交超时</button>
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单数据">

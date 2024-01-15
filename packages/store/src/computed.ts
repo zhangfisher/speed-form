@@ -44,6 +44,8 @@ export interface ComputedOptions<Value=any> {
    * 如果要实现60秒倒计时，可以这样写：[60*1000,60],这样value.timeout就会从60开始递减
    */
   timeout?:number  | [number,number]
+  // 是否立刻计算，默认为true，在创建时马上进行计算，=false,则只有在依赖变化时才会执行，或者手动调用reset方法
+  immediate?:boolean                     
   onError?:(e:Error)=>void              // 当执行计算getter函数出错时的回调
   /**
    * 指定计算结果更新到哪里
@@ -58,30 +60,20 @@ export interface ComputedOptions<Value=any> {
    * 
    */
   toComputedResult?: 'self' | 'root' | 'parent' | 'current' | 'none' | string[] | string 
-  /**
-   * 指定异步计算函数的返回值类型
-   object: 默认值，生成AsyncComputedObject对象替换原始异步函数，里面包括了loading等属性,可以更好地跟踪异步计算过程
-   value: 只返回计算函数的返回值，将原计算函数替换为返回值
-   none:  不返回任何值，当toComputedResult将原计算函数替换为undefined
-  
-   如果指定为none，并且toComputedResult=self时，同时会删除原始计算函数属性
-
-   **/   
-  computedResultType?: 'object' | 'value' | 'none'
 };
 
 export type ComputedDepends = Array<string> | Array<Array<string>> | ((draft: any) => any[])
 export type ComputedGetter<R> = (scopeDraft: any) => Exclude<R,Promise<any>>
 export type AsyncComputedGetter<R> = (scopeDraft:any,options:ComputedParams) => Promise<R>
 
-export type AsyncComputedObject<Value= any,Attrs extends Record<string,any>=Record<string,any>> ={
-  loading  : boolean;
+export type AsyncComputedObject<Value= any> ={
+  loading? : boolean;
   progress?: number;                // 进度值    
   timeout? : number ;               // 超时时间，单位ms，当启用超时时进行倒计时
   error?   : any;
   value    : Value;
   reset    : () => {};              // 重新执行任务
-} & Attrs
+} 
 
 export interface AsyncComputedParams<R> {
   getter: () => Promise<R> | R;
@@ -89,10 +81,10 @@ export interface AsyncComputedParams<R> {
 }
 
 // 计算属性的声明形式
-export type Computed<R> = (...args: any) => R; // 同步计算函数
-export type AsyncComputed<R> = (...args: any) => Promise<R>; // 异步计算函数
-export type ComputedAsyncReturns<R> = (...args: any) => AsyncComputedParams<R>; // 使用computed函数创建的计算属性
-export type ComputedSyncReturns<R> = (...args: any) => AsyncComputedParams<R>; // 使用computed函数创建的计算属性
+export type Computed<T> = (...args: any) => T; // 同步计算函数
+export type AsyncComputed<T> = (...args: any) => Promise<T>; // 异步计算函数
+export type ComputedAsyncReturns<T> = (...args: any) => AsyncComputedParams<T>; // 使用computed函数创建的计算属性
+export type ComputedSyncReturns<T> = (...args: any) => AsyncComputedParams<T>; // 使用computed函数创建的计算属性
  
 /**
  * 
@@ -160,16 +152,16 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
  * @returns
  *
  */
-export function computed<R = any,Attrs extends Record<string,any> = never>( getter: AsyncComputedGetter<R>, depends: ComputedDepends, options?: ComputedOptions<R>): ComputedAsyncReturns<R & Attrs>;
-export function computed<R = any,Attrs extends Record<string,any> = never>( getter: ComputedGetter<R>, options?: ComputedOptions<R>): R & Attrs;
-export function computed<R = any,Attrs extends Record<string,any> = never>( getter: any,depends: any, options?: ComputedOptions<R>): ComputedAsyncReturns<R & Attrs> {
+export function computed<R = any>( getter: AsyncComputedGetter<R>, depends: ComputedDepends, options?: ComputedOptions<R>): ComputedAsyncReturns<R>;
+export function computed<R = any>( getter: ComputedGetter<R>, options?: ComputedOptions<R>): R  
+export function computed<R = any>( getter: any,depends: any, options?: ComputedOptions<R>): ComputedAsyncReturns<R> {
 	
   if (typeof getter != "function")  throw new Error("getter must be a function");
   const opts: ComputedOptions<R> = {
     async: false,
     timeout:0,
-    toComputedResult:'self',
-    computedResultType:'object',
+    toComputedResult:'self', 
+    immediate:true,
   };
 
   // 是否是异步计算函数
@@ -182,6 +174,7 @@ export function computed<R = any,Attrs extends Record<string,any> = never>( gett
     opts.depends = arguments[1] || [];
     Object.assign(opts, {
         scope: ComputedScopeRef.Current, // 异步计算函数的上下文指向依赖
+        // immediate:false,
       },arguments[2] || {}
     );
   } else {
@@ -203,7 +196,7 @@ export function computed<R = any,Attrs extends Record<string,any> = never>( gett
 
   // @ts-ignore
   fn.__COMPUTED__ = isAsync ? 'async' : 'sync';
-  return fn as ComputedAsyncReturns<R & Attrs>;
+  return fn as ComputedAsyncReturns<R>;
 }
 
 /**
@@ -314,7 +307,7 @@ function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[],mutat
  * @returns 
  */
 function createComputeProgressbar(setState:any,valuePath:string[],opts?:{max?:number,min?:number,value?:number}){
-  const { max=100,min=0,value=0 } = Object.assign({},opts)
+  const { max=100, min=0, value=0 } = Object.assign({},opts)
   // @ts-ignore
   setState((draft) =>setVal(draft, [...valuePath, "progress"], value))
   return {
@@ -414,8 +407,16 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
   }
   let { getter, options: computedOptions }  = value() as AsyncComputedParams<any>
   computedOptions.async = true; 
-  const {toComputedResult='self',computedResultType='object' } =computedOptions
+
  
+  // 在创建computed前运行,允许拦截更改计算函数的依赖,上下文,以及getter等
+  if (typeof onCreateComputed == "function" && typeof getter === "function") {
+    const newGetter = onCreateComputed.call(stateCtx,valuePath, getter, computedOptions);
+    if (typeof newGetter == "function") getter = newGetter 
+  }
+  const {depends,initial,toComputedResult='self',immediate } =computedOptions
+
+
   // 根据配置读取计算函数的返回值以及状态等 应该更新到哪里
   const computedResultPath:string[] =switchValue(toComputedResult,{
     self:valuePath,
@@ -427,12 +428,6 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
   },{defaultValue:valuePath})    
 
 
-  // 在创建computed前运行,允许拦截更改计算函数的依赖,上下文,以及getter等
-  if (typeof onCreateComputed == "function" && typeof getter === "function") {
-    const newGetter = onCreateComputed.call(stateCtx,valuePath, getter, computedOptions);
-    if (typeof newGetter == "function") getter = newGetter 
-  }
-  const {depends,initial} = computedOptions;
   const deps = (depends || []).map((deps: any) =>Array.isArray(deps) ? deps : deps.split("."))
 
   const mutateDesc = getDepsString(valuePath) + "_computed";
@@ -445,19 +440,12 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     fn: (draft, params) => {
       if (params.isFirstCall) {     
         if(toComputedResult=='self'){ // 原地替换
-          if(computedResultType=='none'){ // 不返回任何值
-            delete parent[valuePath[valuePath.length-1]]
-          }else if(computedResultType=='value'){
-            setVal(draft, valuePath.slice(0,valuePath.length-1),initial)
-          }else{
-            setVal(draft, valuePath, createAsyncComputedObject(stateCtx, mutateDesc,{value: initial}))
-          }          
-        }else{  // 更新到对象的其他地方
-          if(computedResultType=='value'){
-            setVal(draft, computedResultPath,initial)
-          }else{
-            setAsyncComputedObject(stateCtx,draft,computedResultPath, mutateDesc,{value: initial})
-          }             
+          setVal(draft, valuePath, createAsyncComputedObject(stateCtx, mutateDesc,{value: initial}))
+        }else{  // 更新到其他地方
+          setAsyncComputedObject(stateCtx,draft,computedResultPath, mutateDesc,{value: initial})
+          // 删除原始的计算属性
+          const p = getVal(draft,valuePath.slice(0,valuePath.length-1))
+          delete p[valuePath[valuePath.length-1]]
         }
       }
     },
@@ -465,7 +453,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     task: async ({ draft, setState, input }) => {
       await executeComputedGetter(draft,getter,{computedResultPath,input,computedOptions,computedContext,storeOptions,setState})
     },
-    immediate: true,
+    immediate,
     desc:mutateDesc,
     checkDeadCycle: false,
   });
@@ -499,6 +487,7 @@ export function createComputed<Store extends StoreSchema<any>>(stateCtx: IShared
             options: {
               depends: [], // 未指定依赖
               initial: undefined, // 也没有初始化值
+              immediate: true, // 立即执行
               context: options.computedThis, // 指定默认上下文
           },
           });
