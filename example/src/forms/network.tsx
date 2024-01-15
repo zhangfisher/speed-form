@@ -11,7 +11,7 @@ const formSchema = {
 			value: "React-Helux-Form",
 			placeholder: "输入网络配置名称",
 			title: "网络名称",
-			validate:computed<boolean,boolean>(async (value: string) => value.length > 3,[])
+			validate:computed<boolean>(async (value: string) => value.length > 3,[])
 		},
 		title: {
 			value: "React-Helux-Form",

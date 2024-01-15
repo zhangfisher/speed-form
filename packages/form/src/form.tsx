@@ -235,9 +235,7 @@ function filterFormActions<Schema extends Dict=Dict>(define: Schema): Record<str
 	}, {});
 }
 
-type ExtendActions<Actions extends Dict> = {
-	[Name in keyof Actions]: Required<Actions[Name] & AsyncComputedObject<ReturnType<Actions[Name]['execute']>>>
-}
+ 
 
 export function createForm<Schema extends Dict=Dict>(define: Schema,options?:FormOptions<Schema>) {
 	const opts = assignObject({
@@ -292,13 +290,16 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 			}
 		}
 	});  
+	type StoreType = typeof store 
 	type FieldsType = (typeof store.state)['fields'] 
-	type ActionsType = ExtendActions<(typeof store.state)['actions']>
+	type ActionsType = (typeof store.state)['actions']
+	type ActionTypes = keyof (Schema)['actions']
+	type RequiredFormOptions = Required<FormOptions<Schema>>
 	return {
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
-		Action: createActionComponent.call(opts,store),	
+		Action: createActionComponent<ActionsType,StoreType,(Schema)['actions']>(store.state.actions,store,opts),	
     	fields:store.state.fields as FieldsType,
 		actions:createFormActions.call<IStore,[ActionsType],ActionRecords<Schema['actions']>>(store as unknown as IStore,actionExecutors), 
 		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase> & {actions:ActionsType},
