@@ -58,8 +58,8 @@ importers:
         specifier: ^4.2.3
         version: 4.2.3
       helux:
-        specifier: ^4.1.6
-        version: 4.1.6(react@18.2.0)
+        specifier: ^4.2.0
+        version: 4.2.0(react@18.2.0)
       helux-store:
         specifier: workspace:^
         version: link:../packages/store
@@ -128,8 +128,8 @@ importers:
         specifier: ^4.2.3
         version: 4.2.3
       helux:
-        specifier: ^4.1.6
-        version: 4.1.6(react@18.2.0)
+        specifier: ^4.2.0
+        version: 4.2.0(react@18.2.0)
       helux-store:
         specifier: workspace:^
         version: link:../packages/store
@@ -214,8 +214,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.6)
       helux:
-        specifier: ^4.1.6
-        version: 4.1.6(react@18.2.0)
+        specifier: ^4.2.0
+        version: 4.2.0(react@18.2.0)
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -257,8 +257,8 @@ importers:
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.6)
       helux:
-        specifier: ^4.1.6
-        version: 4.1.6(react@18.2.0)
+        specifier: ^4.2.0
+        version: 4.2.0(react@18.2.0)
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -2087,19 +2087,19 @@ packages:
       typescript: 5.3.3
     dev: true
 
-  /@helux/core@4.1.6:
-    resolution: {integrity: sha512-nAxZ7+40S6OwepB35fF9EyNC6NCfVXoVlsXTnyaB3kItRyiqmkRtCr9qocCF6TGRrWOJM1jgrXqZ7VJi3TWjRQ==}
+  /@helux/core@4.2.0:
+    resolution: {integrity: sha512-7XxPUNWWhF7GDZnOtax+zYyj6k4A10bbWXuKa5Jj2l1zUslRKZDL6i3XHclK0HxQTEMSc6vT0874ksulURenNQ==}
     dependencies:
-      '@helux/hooks-impl': 4.1.6
-      '@helux/types': 4.1.6
-      '@helux/utils': 4.1.6
+      '@helux/hooks-impl': 4.2.0
+      '@helux/types': 4.2.0
+      '@helux/utils': 4.2.0
       limu: 3.12.3
 
-  /@helux/hooks-impl@4.1.6:
-    resolution: {integrity: sha512-KQLVWs/j++LqxOJ541ZNq5MeSPp9y/m/yCJZPobquiE2jIXSwiKEf7BZaxZBPJ68BulgTth6gpXTra6oDZkFTQ==}
+  /@helux/hooks-impl@4.2.0:
+    resolution: {integrity: sha512-HqdN9Z40WNDIzqUO5nFQbYNNKCT3rurFdTpdyx2ljzO8wAR28CowgDmeG/niTrMXzT47XUlyIhiKB85aXPZ9ZQ==}
     dependencies:
-      '@helux/types': 4.1.6
-      '@helux/utils': 4.1.6
+      '@helux/types': 4.2.0
+      '@helux/utils': 4.2.0
 
   /@helux/types@3.5.1:
     resolution: {integrity: sha512-2ZUH4YmTQWJIhQwtr2mkszaOchvmr30ikO0bdGoXJp0QiRJjOp+k8bfldBTUl3w0e54bmhUIoZ46KXI/9VMsrw==}
@@ -2109,8 +2109,8 @@ packages:
     resolution: {integrity: sha512-oO7Ah5L6nBOe6Lu6hJR3VVnqBRH2tMAHib/Yw1MisIqgfVWKN0ETuMTyV7EAIW3L4Q3gMFI8SX1LuGToXUQQOg==}
     dev: true
 
-  /@helux/types@4.1.6:
-    resolution: {integrity: sha512-8+cCaGc04tLATeDU9suMlZh2Y23g33QycQDELawbwO2NcrutH69HAUN5mG/27hPXIcv7CY28n/OyrNcuEzH2QQ==}
+  /@helux/types@4.2.0:
+    resolution: {integrity: sha512-l6479l3QYPWEGh1Rq9v4fJyQIncnJn1hl3SHjVP0Q/gWvGAF9fOE+T84lrNHpB8D6z119/qmG6gZh+tPYkhFBA==}
 
   /@helux/utils@3.5.1:
     resolution: {integrity: sha512-mcxGzsRWHJEhrApfQ+E491rBGo3r8tEGMvB5v+mW6fUaKx6hCUTOcl8q21kb5RDNccrWBq0XdyU/tEA94u8B0Q==}
@@ -2124,10 +2124,10 @@ packages:
       '@helux/types': 3.5.11
     dev: true
 
-  /@helux/utils@4.1.6:
-    resolution: {integrity: sha512-j9gVR/W5S6yQzer653Wp+PGHjEtVmb7/6Z8JCWH0t3hZnpBgz75bzzwwDX0/MERQHksc1Hsz90Lm4lv4jEIOaA==}
+  /@helux/utils@4.2.0:
+    resolution: {integrity: sha512-0uT9Yi7ZJODuEwSMsIn7hVbC8naqrM9GT1Qw8Y4+T/Qn2LA4hR1iyA1CHdwmeUGSYvDQSqhYPlqeRoIWpBIpsA==}
     dependencies:
-      '@helux/types': 4.1.6
+      '@helux/types': 4.2.0
 
   /@humanwhocodes/config-array@0.11.13:
     resolution: {integrity: sha512-JSBDMiDKSzQVngfRjOdFXgFfklaXI4K9nLF49Auh21lmBWRLIK3+xTErTWD4KU54pb6coM6ESE7Awz/FNU3zgQ==}
@@ -3236,8 +3236,8 @@ packages:
       undici-types: 5.26.5
     dev: true
 
-  /@types/node@20.11.0:
-    resolution: {integrity: sha512-o9bjXmDNcF7GbM4CNQpmi+TutCgap/K3w1JyKgxAjqx41zp9qlIAVFi0IhCNsJcXolEqLWhbFbEeL0PvYm4pcQ==}
+  /@types/node@20.11.4:
+    resolution: {integrity: sha512-6I0fMH8Aoy2lOejL3s4LhyIYX34DPwY8bl5xlNjBvUEk8OHrcuzsFt+Ied4LvJihbtXPM+8zUqdydfIti86v9g==}
     dependencies:
       undici-types: 5.26.5
     dev: true
@@ -8129,12 +8129,12 @@ packages:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
 
-  /helux@4.1.6(react@18.2.0):
-    resolution: {integrity: sha512-Pzk/shlNE3cKcdo3Dyu3H+Hdw/bSqigaQTRBCJT/fbD556v1lR2t2rnB1uJiEebE/gituyfCGitJet8w1CriiA==}
+  /helux@4.2.0(react@18.2.0):
+    resolution: {integrity: sha512-FmgA3CXqUugmSK4XG6dR1lWQylVmRMuxdTcT+BOYenkFdR7nzwYkeTwgSnJCD8ZjFmt04PfTgNNTZPiPVK7zeA==}
     peerDependencies:
       react: '>=16.8.0'
     dependencies:
-      '@helux/core': 4.1.6
+      '@helux/core': 4.2.0
       react: 18.2.0
 
   /heti-findandreplacedomtext@0.5.0:
@@ -9079,7 +9079,7 @@ packages:
     resolution: {integrity: sha512-7vuh85V5cdDofPyxn58nrPjBktZo0u9x1g8WtjQol+jZDaE+fhN+cIvTj11GndBnMnyfrUOG1sZQxCdjKh+DKg==}
     engines: {node: '>= 10.13.0'}
     dependencies:
-      '@types/node': 20.11.0
+      '@types/node': 20.11.4
       merge-stream: 2.0.0
       supports-color: 8.1.1
     dev: true

@@ -98,14 +98,15 @@ export type ActionRecords<Actions extends Record<string,any>> = {
 	[Name in keyof Actions]: (options?:ActionExecuteOptions)=>Promise<void>
 }
 
-
+export type FormActionState = {
+    execute:AsyncComputedObject
+} & Record<string,any>
 
 function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,setState:any){       
     return async (options?:ActionExecuteOptions)=>{
         // action.execute依赖于scope和count两个属性，当变化时会触发重新执行
         // 由于action.execute依赖于count，所以当count++时会触发动作执行        
         const opts = Object.assign({timeout:0,debounce:0,noReentry:false},options)
-
         let fn = async ()=> setState((state:any)=>state.actions[name].count++)
         if(opts.noReentry){
             fn = noReentry(fn)
@@ -170,9 +171,8 @@ export type ActionRender<State extends Dict,Params extends Dict = Dict>= (props:
  * 
  * 
  */
-export type ActionProps<State extends Dict = Dict,PropTypes extends Dict = Dict,Params extends Dict = Dict,ActionKeys extends string = string> = {
-    // 动作类型名称
-    type:ActionKeys              
+export type ActionProps<State extends Dict = Dict,PropTypes extends Dict = Dict,Params extends Dict = Dict> = {
+    state:string | string[]              // 声明该动作对应的状态路径
     scope?: string | string[]    
     children: ActionRender<State,Params>  
 } 
@@ -207,6 +207,8 @@ function createActionRenderProps(props:ActionProps,store:any,actionState:string,
         ref
     },actionState)
 } 
+
+
   
 /**
  * 创建动作组件
@@ -231,7 +233,7 @@ export function createActionComponent<Store extends Dict = Dict,ActionStates ext
      * @param props 
      * @returns 
      */
-    function Action<Type extends string=string,Params extends Dict=Dict,Scope extends Dict=Dict>(props: ActionProps<Store['state']['actions'][Type],Scope,Params,ActionKeys>):ReactNode{
+    function Action<State extends FormActionState=FormActionState,Params extends Dict=Dict,Scope extends Dict=Dict>(props: ActionProps<Store['state']['actions'][Type],Scope,Params,ActionKeys>):ReactNode{
         const [state,setState] = store.useState()  
 
         const { type:actionKey,scope } = props  
@@ -254,7 +256,7 @@ export function createActionComponent<Store extends Dict = Dict,ActionStates ext
     }
     return React.memo(Action,(oldProps:any, newProps:any)=>{
         return oldProps.type === newProps.type || oldProps.scope === newProps.scope
-    }) as (<Type extends string=string,Params extends Dict=Dict,Scope extends Dict=Dict>(props: ActionProps<Store['state']['actions'][Type],Scope,Params,ActionKeys>)=>ReactNode)
+    }) as (<State extends FormActionState=FormActionState,Params extends Dict=Dict,Scope extends Dict=Dict>(props: ActionProps<Store['state']['actions'][Type],Scope,Params,ActionKeys>)=>ReactNode)
 }
 
 

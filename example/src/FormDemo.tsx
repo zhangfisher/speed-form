@@ -158,7 +158,7 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field>   
-            <Network.Action<'submit'> type="submit" scope="fdfd">                      
+            <Network.Action<typeof Network.fields.wifi.submit> state="">
                 {({title,visible,loading,enable,execute,timeout})=>{     
                     return <Button loading={loading} timeout={timeout} visible={visible} enable={enable} onClick={execute()}>{title}</Button>
                 }}
