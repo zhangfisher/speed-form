@@ -7,6 +7,7 @@ import classnames from 'classnames';
 import { ReactFC } from "./types"; 
 import ColorBlock from "./components/ColorBlock";
 import { Loading } from "./components/Loading";  
+import { Button } from "./components/Button";
 
 const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({enable,visible,label,children})=>{
     return  (
@@ -157,9 +158,9 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field>   
-            <Network.Action<typeof Network.state.actions.submit> type="submit" >                      
-                {({title,visible,enable,submit})=>{     
-                    return <button disabled={!enable} onClick={submit()}>{title}</button>
+            <Network.Action<'submit'> type="submit" scope="fdfd">                      
+                {({title,visible,loading,enable,execute,timeout})=>{     
+                    return <Button loading={loading} timeout={timeout} visible={visible} enable={enable} onClick={execute()}>{title}</Button>
                 }}
             </Network.Action>
         </Card>

@@ -216,20 +216,25 @@ function filterFormActions<Schema extends Dict=Dict>(define: Schema): Record<str
 	return Object.entries(define.actions || {}).reduce((actions: Record<string, Function>, [name, action]: [string, any]) => {
 		const executor = action.execute
 		actions[name] = executor;		
-		const actionDeps = [ACTIONS_STATE_KEY,name,"count"]
+		const actionDeps = [
+			[ACTIONS_STATE_KEY,name,"count"],
+			[ACTIONS_STATE_KEY,name,"scope"]	
+		]
 		// 使用原始的async方式声明动作
 		if(action.execute.__COMPUTED__ == undefined){		
-			action.execute = computed(executor,[actionDeps],
+			action.execute = computed(executor,actionDeps,
 			{
-				scope:ComputedScopeRef.Root,
+				// 动作的上下文总是指向scope所描述的路径
+				// 例：  scope="wifi"，则动作的上下文总是指向state.actions.wifi,将作为第一个参数传入execute函数
+				scope:"@scope",	
 				toComputedResult:'current'
 			})
 		}else{ // 使用computed方式声明动作
 			const executorParms = action.execute as  AsyncComputedParams<any>
-			executorParms.options.scope = ComputedScopeRef.Root
+			executorParms.options.scope = "@scope"
 			executorParms.options.toComputedResult = 'current'
 			if(!Array.isArray(executorParms.options.depends)) executorParms.options.depends = []
-			if(!executorParms.options.depends.includes(actionDeps)) executorParms.options.depends.push(actionDeps)
+			executorParms.options.depends.push(...actionDeps)
 		}
 		return actions;
 	}, {});
@@ -272,9 +277,11 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 			// 3. 将表单actions的execute的onComputedResult指向其current
 			// 比如: actions.ping.execute，则执行execute时，其onComputedResult指向current,此时可以直接使用action.ping.loading来代表动作正在执行
 			// action.ping.value来代表动作的返回值，action.ping.error来代表动作的错误
+
 			if(keyPath.length==3 && keyPath[0]==ACTIONS_STATE_KEY && keyPath[2]=='execute'){
 				options.toComputedResult ='current'
 				options.immediate = false
+
 			}
 			// 让表单actions的scope默认指向根
 			if(keyPath.length>0 && keyPath[0]==ACTIONS_STATE_KEY ){
@@ -292,19 +299,18 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 	});  
 	type StoreType = typeof store 
 	type FieldsType = (typeof store.state)['fields'] 
-	type ActionsType = (typeof store.state)['actions']
-	type ActionTypes = keyof (Schema)['actions']
-	type RequiredFormOptions = Required<FormOptions<Schema>>
+	type ActionsType = (typeof store.state)['actions'] 
+	const actions = createFormActions.call<IStore,[ActionsType],ActionRecords<Schema['actions']>>(store as unknown as IStore,actionExecutors)
 	return {
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
-		Action: createActionComponent<ActionsType,StoreType,(Schema)['actions']>(store.state.actions,store,opts),	
-    	fields:store.state.fields as FieldsType,
-		actions:createFormActions.call<IStore,[ActionsType],ActionRecords<Schema['actions']>>(store as unknown as IStore,actionExecutors), 
+		Action: createActionComponent<StoreType,ActionsType>(store,store.state.actions,actions,opts),	
+    	fields:store.state.fields as FieldsType,		
 		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase> & {actions:ActionsType},
 		useState:store.useState,
-		load:loadFormData
+		load:loadFormData,
+		actions,
 	};
 }
 

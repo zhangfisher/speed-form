@@ -23,11 +23,10 @@ export function isPrimitive(value:any){
 	return value==undefined || t =='boolean' || t =='number' || t == 'string' || t == null	
 } 
 
-
 /**
  * 简单的防抖函数
  * 
- * 1. 用于防止在短时间内多次触发
+ * 1. 用于防止在短时间内多次执行
  * 2. 总是确保最后一次调用被执行
  * 
  * @param fn   函数
@@ -38,8 +37,7 @@ export function debounce(fn:Function,interval:number=0){
 	let first:boolean = true
 
 	const run = ()=>{
-		// 已经没有再调用了
-		if(lastCallArgs==undefined) {
+		if(lastCallArgs==undefined) {  // 已经没有再调用了
 			first = true
 			clearTimeout(timer)
 			timer = 0
@@ -48,7 +46,6 @@ export function debounce(fn:Function,interval:number=0){
 		try{
 			const args = lastCallArgs
 			lastCallArgs = undefined
-			console.log("--")
 			fn(...args)
 			timer = setTimeout(()=>run(),interval)
 		}finally{
@@ -58,16 +55,14 @@ export function debounce(fn:Function,interval:number=0){
 
 	return function(...args:any[]){		
 		if(interval==0){
-			fn(...args)
+			return fn(...args)
 		}else{
-			lastCallArgs = args
+			lastCallArgs = args // 记住最后一次调用的参数
 			if(first || timer==0){ 
 				first = false
 				run()
 			}	 
 		}
-		
-		
 	}
 }
 

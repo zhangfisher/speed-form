@@ -1,5 +1,5 @@
 
-import { ThreeDots } from 'react-loader-spinner'
+import { Circles } from 'react-loader-spinner'
 
 
 export type LoadingProps ={
@@ -17,6 +17,6 @@ export const Loading:React.FC<LoadingProps> = (props)=>{
             cursor:"pointer",
             padding:"2px"
         }}>
-        <ThreeDots width={size} height={size} color={color}/>
+        <Circles width={size} height={size} color={color}/>
     </span>
 }

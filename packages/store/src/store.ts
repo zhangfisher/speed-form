@@ -26,6 +26,8 @@ export enum ComputedScopeRef{
 export type NonDependsScopeRef = Exclude<ComputedScopeRef, ComputedScopeRef.Depends>;
 
 // 指定Store中计算函数的上下文,如果是字符串代表是当前对象的指定键，如果是string[]，则代表是当前Store对象的完整路径
+// 当ComputedContext是一个字符串并且以@开头时，有个特殊含义，即是一个路径指向：
+// 如：{fields:{ user:"address",address:"user" }}，如果scope=@user，代表的当前scope对象指向的user属性的值所指向的对象，在这里实质传入的是address
 export type ComputedScope  =  ComputedScopeRef | string | string[] | ((state:any)=>string | string[] | ComputedScopeRef)
 export type ComputedContext  = NonDependsScopeRef | string | string[] | ((state:any)=>string | string[] | NonDependsScopeRef)
 
@@ -103,6 +105,7 @@ export interface StoreOptions{
 export type IStore<State extends Dict=Dict> = ISharedCtx<State> & {
     state:ISharedCtx<State>['reactive']
     useState:ReturnType<typeof wrapperUseState>
+    computedObjects:Record<string,{run:()=>void}>
 }
 
 
@@ -119,7 +122,7 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
     }
 
     const storeData = opts.singleton ? data : deepClone(data)
-
+    let computeObjects:Dict = {}
     return  model((api) => { 
         const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any,{
             stopArrDep: false
@@ -128,7 +131,7 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
         const actions = createActions<T>(storeData.actions,stateCtx,api,opts)
 
         // 2. 处理Computed属性
-        createComputed<T['state']>(stateCtx,api,opts)!
+        createComputed<T['state']>(stateCtx,api,computeObjects,opts)!
 
         // 3. 处理useState
         const useState = wrapperUseState<T['state']>(stateCtx)
@@ -137,7 +140,8 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
           actions,
           ...stateCtx,
           state:stateCtx.reactive,
-          useState
+          useState,
+          computeObjects:{}  
         }
       });
 

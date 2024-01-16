@@ -76,12 +76,9 @@ export function getRelValuePath(path:string[],relPath:'self' | 'root' | 'parent'
 }
 
 
-export function getDepsString(deps:(string | string[])[]):string{
-    return deps.map((dep)=>{
-        if(Array.isArray(dep)){
-            return dep.join('.')
-        }
-        return dep
+export function joinValuePath(paths:(string | string[])[]):string{
+    return paths.map((p)=>{
+        return Array.isArray(p) ? p.join(".") : p
     }).join('_')
 }
  

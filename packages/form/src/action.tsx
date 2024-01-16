@@ -36,9 +36,12 @@ import { Dict, HttpFormEnctype, HttpMethod } from "./types";
 import { getVal } from "@helux/utils";
 import React from "react";
 import type { FormOptions } from "./form";
-import { AsyncComputed, AsyncComputedObject, ComputedAsyncReturns, ComputedParams,  IStore,  watch } from 'helux-store'; 
+import { AsyncComputed, AsyncComputedObject, ComputedAsyncReturns, ComputedParams,  IStore } from 'helux-store'; 
 import { assignObject } from "flex-tools/object/assignObject";
 import { FIELDS_STATE_KEY } from "./consts";
+import { debounce } from './utils';
+import { timeout as timeoutWrapper } from "flex-tools/func/timeout";
+import { noReentry } from "flex-tools/func/noReentry";
 
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
@@ -46,6 +49,22 @@ export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)
   | ComputedAsyncReturns<R>
   | R  
 
+
+export type DefaultActionRenderProps={
+    title  : string
+    help   : string
+    tips   : string
+    visible: boolean
+    enable : boolean
+    count  :number                                                            
+}
+
+
+export type ActionExecuteOptions = {
+    debounce?:number,
+    timeout?:number
+    noReentry?:boolean
+}
 
 
 // 动作声明，供createForm时使用来声明动作
@@ -76,14 +95,28 @@ export type FormActions<T extends FormActionDefines = FormActionDefines> = {
 
 // 动作记录，即form.actions的类型，不同于from.state.actions
 export type ActionRecords<Actions extends Record<string,any>> = {
-	[Name in keyof Actions]: Actions[Name]['execute'] extends ((first:any, ...args:infer Rest)=>infer R) ? ((...args:Rest)=>R) : never
+	[Name in keyof Actions]: (options?:ActionExecuteOptions)=>Promise<void>
 }
 
-function  createFormAction<Scope extends Dict = Dict,Result=any>(this:IStore,name:string,actionExecutor:FormActionDefine,setState:any){   
-    // 执行动作时传入的额外参数
-    return async ()=>{
+
+
+function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,setState:any){       
+    return async (options?:ActionExecuteOptions)=>{
+        // action.execute依赖于scope和count两个属性，当变化时会触发重新执行
         // 由于action.execute依赖于count，所以当count++时会触发动作执行        
-        setState((state:any)=>state.actions[name].count++)
+        const opts = Object.assign({timeout:0,debounce:0,noReentry:false},options)
+
+        let fn = async ()=> setState((state:any)=>state.actions[name].count++)
+        if(opts.noReentry){
+            fn = noReentry(fn)
+        }  
+        if(opts.timeout>0){
+            fn = timeoutWrapper(fn,{value:opts.timeout})
+        }    
+        if(opts.debounce>0){
+            fn = debounce(fn,opts.debounce)
+        }          
+        return await fn()        
     }
 }
 
@@ -100,7 +133,7 @@ export function createFormActions<ActionStates extends Dict>(this:IStore,actionE
     const store = this
     const actions:Dict={}
     Object.entries(actionExecutors).forEach(([name,actionExecutor])=>{      
-        actions[name]= createFormAction.call(store,name,actionExecutor,store.setState)
+        actions[name]= createFormAction.call(store,name,store.setState)
     })
     return actions as ActionRecords<ActionStates>
 }
@@ -109,48 +142,43 @@ export function createFormActions<ActionStates extends Dict>(this:IStore,actionE
 // 表单动作
 export type FormActionDefines<Fields extends Dict=Dict> = Record<string,FormActionDefine<Fields>>
 
-
-export type ActionExecutor<Scope extends Dict = Dict,Params extends Dict = Dict> = (scope:Scope,params:Params)=>void
-
-export type DefaultActionRenderProps={
-    title  : string
-    help   : string
-    tips   : string
-    visible: boolean
-    enable : boolean
-    count  :number                                                            
+export interface ActionExecutorParams{
+    getProgressbar:()=>any
+    onTimeout:(timeout:number)=>void
 }
+
+export type ActionExecutor<Scope extends Dict = Dict,Params extends Dict = Dict> = ()=>void
+export type ActionExecutors = Record<string,ActionExecutor<Dict,Dict>>
+
 
 export type ActionRenderProps<State extends Dict> = 
     DefaultActionRenderProps 
     & State 
     & Required<AsyncComputedObject> 
     & {
-        submit?:()=>void                                                        // 提交表单
-        ref: RefObject<HTMLElement>                                             // 动作元素引用
+        execute:(options?:ActionExecuteOptions)=>()=>any                                           // 提交表单
+        ref: RefObject<HTMLElement>                                            // 动作元素引用
     } 
 
 export type ActionRender<State extends Dict,Params extends Dict = Dict>= (props: ActionRenderProps<State>) => ReactNode
 
-export type ActionProps<State extends Dict = Dict,PropTypes extends Dict = Dict,Params extends Dict = Dict,ActionKeys extends string = string,> = {
+
+/**
+ * 类型定义:
+ * State: 表单动作状态类型，即form.state.actions.xxxx的类型
+ * PropTypes: 表单动作属性类型，即form.actions.xxxx的类型
+ * 
+ * 
+ */
+export type ActionProps<State extends Dict = Dict,PropTypes extends Dict = Dict,Params extends Dict = Dict,ActionKeys extends string = string> = {
     // 动作类型名称
-    type:ActionKeys
-    // 动作作用域
-    scope?:string | string[] | (()=>(string | string[]))
-    // 当执行动作时用来传递给表单的额外参数
-    params?:Dict                       
+    type:ActionKeys              
+    scope?: string | string[]    
     children: ActionRender<State,Params>  
 } 
+   
   
-export type ActionComponent = React.FC<ActionProps>;
-  
-function useSubmitAction(valuePath:string[],setState:any){
-    return useCallback((updater:(group:any)=>void)=>{
-        setState((draft:any)=>{
-            updater.call(draft,getVal(draft,valuePath))
-        })
-    },[])
-}
+
 
 function useResetAction(valuePath:string[],setState:any){
     return useCallback((updater:(group:any)=>void)=>{
@@ -160,18 +188,26 @@ function useResetAction(valuePath:string[],setState:any){
     },[])
 }
 
-function createActionProps(props:any,actionValues:any,executor:Function,ref:RefObject<HTMLElement>){  
+function useActionExecutor(executor:ActionExecutor,props:ActionProps,setState:any){
+    // 因为execute依赖scope和count，所以只需要更新scope或者count即可触发动作执行
+    return useCallback((options?:ActionExecuteOptions)=>{               
+       return createFormAction(props.type,setState)(options)
+    },[])
+}
+
+
+function createActionRenderProps(props:ActionProps,store:any,actionState:string,actionExecutor:ActionExecutor,ref:RefObject<HTMLElement>){  
+    const [state,setState] = store.useState()  
+    const execute= useActionExecutor(actionExecutor,props,setState)
     return assignObject({    
         help       : "",
         visible    : true,    
         enable     : true,
-        submit    : executor,
+        execute    : execute,
         ref
-    },props,actionValues)
-
+    },actionState)
 } 
- 
-
+  
 /**
  * 创建动作组件
  * 
@@ -182,7 +218,11 @@ function createActionProps(props:any,actionValues:any,executor:Function,ref:RefO
  * @param store 
  * @returns 
  */
-export function createActionComponent<ActionStates extends Dict = Dict,Store extends Dict = Dict,ActionDefines extends Dict = Dict>(actionStates:ActionStates,store:Store,formOptions:Required<FormOptions>,) {
+export function createActionComponent<Store extends Dict = Dict,ActionStates extends Dict = Dict>(store:Store,actionStates:ActionStates,actionExecutors:ActionExecutors,formOptions:Required<FormOptions>,) {
+    
+    type ActionKeys =Exclude<keyof ActionStates,number | symbol>
+
+
     /**
      * ActionState:  指的是动作的状态类型<Action<typeof form.state.actions.xxxx>>
      * Params: 指的execute的入参，即动作的参数，  execute:(scope:any,{params})=>void,或者form.actions.xxxx.execute:(params)
@@ -191,38 +231,34 @@ export function createActionComponent<ActionStates extends Dict = Dict,Store ext
      * @param props 
      * @returns 
      */
-    function Action<State extends Dict,Params extends Dict=Dict,Scope extends Dict=Dict>(props: ActionProps<State,Scope,Params,keyof ActionDefines>):ReactNode{
+    function Action<Type extends string=string,Params extends Dict=Dict,Scope extends Dict=Dict>(props: ActionProps<Store['state']['actions'][Type],Scope,Params,ActionKeys>):ReactNode{
         const [state,setState] = store.useState()  
 
-        const { type,scope = [],params } = props 
-        // 处理scope参数，用来读取字段中的数据
-        let scopePath = typeof(scope)=="function" ? scope() : scope
-        scopePath = [FIELDS_STATE_KEY,...Array.isArray(scope) ? scope : String(scope).split(".")]                
-        const fieldScopeValue =scopePath.length==0 ? state : getVal(state,scopePath)
+        const { type:actionKey,scope } = props  
 
-        const actionValue =  getVal(state,['actions',type as string])
+        const [ actionState ]  = useState(()=>getVal(state,['actions',actionKey]))
 
-        // 用来指定
+        // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
 
-        // 执行当前动作, 如execute({})
-        const submitAction= useSubmitAction(scopePath,setState)
-
         // 创建动作组件的Props
-        const [ActionProps,setActionProps] = useState(()=>createActionProps(props,actionValue,submitAction,ref))
+        const [renderProps,setActionProps] = useState(()=>createActionRenderProps(props,store,actionState,actionExecutors[actionKey], ref))
         useEffect(()=>{
-            setActionProps(createActionProps(props,actionValue,submitAction,ref))
-          },[actionValue,fieldScopeValue,scope,params])
+            setActionProps(createActionRenderProps(props,store,actionState,actionExecutors[actionKey],ref))
+        },[actionKey,actionState,scope])
  
 
         // 执行渲染动作组件
-        return  <>{ props.children && props.children(ActionProps as any) }</>
+        return  <>{ props.children && props.children(renderProps as any) }</>
 
     }
     return React.memo(Action,(oldProps:any, newProps:any)=>{
         return oldProps.type === newProps.type || oldProps.scope === newProps.scope
-    }) as (<T extends Dict=Dict>(props: ActionProps<T>)=>ReactNode)
+    }) as (<Type extends string=string,Params extends Dict=Dict,Scope extends Dict=Dict>(props: ActionProps<Store['state']['actions'][Type],Scope,Params,ActionKeys>)=>ReactNode)
 }
+
+
+
 
 
 
