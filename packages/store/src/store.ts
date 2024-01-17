@@ -110,7 +110,7 @@ export type IStore<State extends Dict=Dict> = ISharedCtx<State> & {
 
 export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOptions){
     const opts = Object.assign({
-        id:"",
+        id:Math.random().toString(16).substring(2),
         debug:true,
         computedThis:ComputedScopeRef.Root,
         computedScope:ComputedScopeRef.Current,
@@ -124,7 +124,8 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
     let computeObjects:Dict = {}
     return  model((api) => { 
         const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any,{
-            stopArrDep: false
+            stopArrDep: false,
+            moduleName:opts.id
         })
         // 1. 创建Actions
         const actions = createActions<T>(storeData.actions,stateCtx,api,opts)
