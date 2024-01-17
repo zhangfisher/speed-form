@@ -1,11 +1,11 @@
-import React, {	 ChangeEventHandler, ReactNode, useCallback, useEffect,useRef,useState  } from "react";  
+import React, {	 ChangeEventHandler, ReactNode, useCallback, useEffect, useMemo,useRef,useState  } from "react";  
 import { getVal, setVal } from "@helux/utils";
-import { isLiteField, debounce as debounceWrapper } from './utils';
+import { debounce as debounceWrapper } from './utils';
 import { ComputedAttr, Dict } from "./types";  
 import { assignObject } from "flex-tools/object/assignObject"; 
 import type { FormOptions } from "./form";
-import { FIELDS_STATE_KEY } from "./consts";
- 
+import { FIELDS_STATE_KEY } from "./consts"; 
+
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
   value        : any
@@ -30,7 +30,7 @@ export type Value = {value:any}
 // 传递给字段组件的渲染参数
 export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultFieldPropTypes,keyof PropTypes> & PropTypes> & {
   sync	  	    : (debounce?:number)=>ChangeEventHandler	   		  		                    // 同步状态表单计算
-  update	  	  : (valueOrUpdater:PropTypes['value'] | ((field:PropTypes)=>void),options?:{debounce?:number})=>void	  	   
+  update	  	  : (valueOrUpdater:PropTypes['value'] | ((field:PropTypes)=>void),options?:{debounce?:number})=>any	  	   
   defaultValue  : PropTypes['value'] | undefined
   oldValue      : PropTypes['value'] 
 } 
@@ -50,7 +50,6 @@ export type FieldComponent = React.FC<FieldProps>;
 
 
 function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){  
-  const isLite = isLiteField(value)
   return assignObject({
     name,
     help       : "",
@@ -63,9 +62,8 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
     enable     : true,
     placeholder: "",        
     select     : [] as any,
-    sync       : ()=>{},
   },{
-    ...isLite ? {value} : value,
+    ...value,
     sync:syncer,
     update:filedUpdater 
   })   
@@ -96,18 +94,23 @@ function useFieldSyncer(store: any,valuePath:string[]){
  * @returns 
  */
 function useFieldUpdater(store: any,valuePath:string[],setState:any){
-  const update = useRef<null | ((updater:Function | Record<string,any>)=>void)>(null)  
+  const update = useRef<null | ((updater:Function | Record<string,any>)=>any)>(null)  
   const [debounceValue,setDebounce] = useState(0)
   return useCallback(function(updater:any,options?:{debounce:number}){      
     const { debounce } = Object.assign({debounce:0},options)
     if(update.current==null || debounceValue!==debounce){
       if(debounceValue!==debounce && debounce>0) setDebounce(debounce)
       const updateFn = (updater:any)=>{
-        if(typeof(updater)=="function"){
-          setState((draft:any)=>updater.call(draft,draft.fields))
-        }else{
-          setState((draft:any)=>setVal(draft,valuePath,updater))
-        } 
+        return (ev:any)=>{
+          if(typeof(updater)=="function"){
+            setState((draft:any)=>updater.call(draft,draft.fields))
+          }else{
+            setState((draft:any)=>setVal(draft,valuePath,updater))
+          }  
+          if(typeof(ev.preventDefault)){
+            ev.preventDefault()
+          }
+        }               
       }        
       update.current = debounce > 0 ? updateFn : debounceWrapper(updateFn,debounce)      
     }      
@@ -129,13 +132,8 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
 		const [state,setState] = store.useState() 
 
 		const value = getVal(state,fullFieldPath)
-
-    // 简单字段,即除了值没有任何控制属性
-    const isLite = isLiteField(value) 
-    if(!isLite) {
-      fieldPath.push("value") 
-      valueFieldPath.push("value")
-    }
+    fieldPath.push("value") 
+    valueFieldPath.push("value")
 
     // 更新当前字段信息，如update(field=>field.enable=true)
     const filedUpdater = useFieldUpdater(store,valueFieldPath,setState)
@@ -149,14 +147,20 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
       setFieldProps(createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater))
     },[value])
  
+
     // 调用渲染字段UI 
     if(props.render){ 
-      return  props.render(fieldProps as any)
+      return props.render(fieldProps as any)
     }else{
       if(props.children){
         return Array.isArray(props.children) ? 
-          props.children.map((children:any)=>children(fieldProps as any) )
-          : props.children(fieldProps as any) 
+          props.children.map((children:any)=>{
+            return useMemo(()=>children(fieldProps as any) ,[fieldProps])
+          })
+          : useMemo(()=>{
+              console.log("fieldProps=",fieldProps)
+              return typeof(props.children)=='function' && props.children(fieldProps as any) //props.children(fieldProps as any) 
+            },[fieldProps])
       }else{
         return 
       }      

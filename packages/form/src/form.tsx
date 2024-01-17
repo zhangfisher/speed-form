@@ -44,10 +44,9 @@ import type { ReactFC, Dict, ComputedAttr } from "./types";
 import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import { ActionRecords, FormActions, createActionComponent, createFormActions } from './action';
+import { ActionRecords,  FormActions,  createActionComponent, createFormActions } from './action';
 import { ACTIONS_STATE_KEY, FIELDS_STATE_KEY } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
-import { markRaw } from 'helux';
 
 
 export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{
@@ -154,11 +153,13 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
  * 
  */
 function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOptions){		
-	// 如果没有指定scope,则默认指向value
-	if(options.scope==undefined) options.scope="value"
-	if(options.depends==undefined) options.depends=[]
-	options.depends.push([...keyPath.slice(0,-1),"value"])
-	options.initial = true		// 初始化true
+	if(keyPath.length>=2 && keyPath[0]==FIELDS_STATE_KEY && keyPath[keyPath.length-1]=='validate'){	
+		// 如果没有指定scope,则默认指向value
+		if(options.scope==undefined) options.scope="value"
+		if(options.depends==undefined) options.depends=[]
+		options.depends.push([...keyPath.slice(0,-1),"value"])
+		options.initial = true		// 初始化true
+	}
 }
 
 
@@ -213,34 +214,64 @@ function loadFormData(store:any){
 }
 
 function filterFormActions<Schema extends Dict=Dict>(define: Schema): Record<string, Function> {
-	return Object.entries(define.actions || {}).reduce((actions: Record<string, Function>, [name, action]: [string, any]) => {
-		const executor = action.execute
-		actions[name] = executor;		
-		const actionDeps = [
-			[ACTIONS_STATE_KEY,name,"count"],
-			[ACTIONS_STATE_KEY,name,"scope"]	
-		]
-		// 使用原始的async方式声明动作
-		if(action.execute.__COMPUTED__ == undefined){		
-			action.execute = computed(executor,actionDeps,
-			{
-				// 动作的上下文总是指向scope所描述的路径
-				// 例：  scope="wifi"，则动作的上下文总是指向state.actions.wifi,将作为第一个参数传入execute函数
-				scope:"@scope",	
-				toComputedResult:'current'
-			})
-		}else{ // 使用computed方式声明动作
-			const executorParms = action.execute as  AsyncComputedParams<any>
-			executorParms.options.scope = "@scope"
-			executorParms.options.toComputedResult = 'current'
-			if(!Array.isArray(executorParms.options.depends)) executorParms.options.depends = []
-			executorParms.options.depends.push(...actionDeps)
-		}
-		return actions;
-	}, {});
+	// return Object.entries(define.actions || {}).reduce((actions: Record<string, Function>, [name, action]: [string, any]) => {
+	// 	const executor = action.execute
+	// 	actions[name] = executor;		
+	// 	const actionDeps = [
+	// 		[ACTIONS_STATE_KEY,name,"count"],
+	// 		[ACTIONS_STATE_KEY,name,"scope"]	
+	// 	]
+	// 	// 使用原始的async方式声明动作
+	// 	if(action.execute.__COMPUTED__ == undefined){		
+	// 		action.execute = computed(executor,actionDeps,
+	// 		{
+	// 			// 动作的上下文总是指向scope所描述的路径
+	// 			// 例：  scope="wifi"，则动作的上下文总是指向state.actions.wifi,将作为第一个参数传入execute函数
+	// 			scope:"@scope",	
+	// 			toComputedResult:'current'
+	// 		})
+	// 	}else{ // 使用computed方式声明动作
+	// 		const executorParms = action.execute as  AsyncComputedParams<any>
+	// 		executorParms.options.scope = "@scope"
+	// 		executorParms.options.toComputedResult = 'current'
+	// 		if(!Array.isArray(executorParms.options.depends)) executorParms.options.depends = []
+	// 		executorParms.options.depends.push(...actionDeps)
+	// 	}
+	// 	return actions;
+	// }, {});
 }
 
- 
+/**
+ * 我们约定，每一个动作均由一个{execute:computed(async ()=>{})}对象来描述
+ * 
+ * 并且对其行为进行了一些约定
+ * 
+ * - immediate=false : 不会自动执行,需要手动调用action.execute.run()来执行
+ *   
+ * 
+ */
+function createActionHook(valuePath:string[],getter:Function,options:ComputedOptions){
+	if(valuePath.length>1 && valuePath[valuePath.length-1]=='execute'){
+		options.immediate = false
+	}
+}
+/**
+ *  对所有位于fields下的的依赖均自动添加fields前缀，这样在声明依赖时就可以省略fields前缀
+ * @param valuePath 
+ * @param getter 
+ * @param options 
+ */
+function createDepsHook(valuePath:string[],getter:Function,options:ComputedOptions){
+	if(valuePath.length > 0 && valuePath[0]==FIELDS_STATE_KEY && options.depends){ 
+		options.depends.forEach((depend,i)=>{
+			if(Array.isArray(depend) && (depend.length>0 && depend[0]!=FIELDS_STATE_KEY)){
+				options.depends![i] = [FIELDS_STATE_KEY,...depend]
+			}else if(typeof(depend)=='string' && !depend.startsWith(`${FIELDS_STATE_KEY}.`)){
+				options.depends![i] = `${FIELDS_STATE_KEY}.${depend}`
+			}
+		})
+	}
+}
 
 export function createForm<Schema extends Dict=Dict>(define: Schema,options?:FormOptions<Schema>) {
 	const opts = assignObject({
@@ -259,35 +290,13 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 		// 计算函数作用域默认指向fields
 		computedScope: [FIELDS_STATE_KEY],
 		// 创建计算函数时的钩子函数，可以在创建前做一些不可描述的处理
-		onCreateComputed(keyPath,getter,options) {		 
+		onCreateComputed(valuePath,getter,options) {		 
 			// 1. 只对validator进行处理,目的是使validate函数依赖于当前字段的值value，将使得validate函数的第一个参数总是当前字段的值
-			if(keyPath.length>=2 && keyPath[0]==FIELDS_STATE_KEY && keyPath[keyPath.length-1]=='validate'){	
-				createValidatorHook(keyPath,getter,options)
-			}
+			createValidatorHook(valuePath,getter,options)
 			// 2. 对所有位于fields下的的依赖均自动添加fields前缀，这样在声明依赖时就可以省略fields前缀
-			if(keyPath.length > 0 && keyPath[0]==FIELDS_STATE_KEY && options.depends){ 
-				options.depends.forEach((depend,i)=>{
-					if(Array.isArray(depend) && (depend.length>0 && depend[0]!=FIELDS_STATE_KEY)){
-						options.depends![i] = [FIELDS_STATE_KEY,...depend]
-					}else if(typeof(depend)=='string' && !depend.startsWith(`${FIELDS_STATE_KEY}.`)){
-						options.depends![i] = `${FIELDS_STATE_KEY}.${depend}`
-					}
-				})
-			}
+			createDepsHook(valuePath,getter,options)
 			// 3. 将表单actions的execute的onComputedResult指向其current
-			// 比如: actions.ping.execute，则执行execute时，其onComputedResult指向current,此时可以直接使用action.ping.loading来代表动作正在执行
-			// action.ping.value来代表动作的返回值，action.ping.error来代表动作的错误
-
-			if(keyPath.length==3 && keyPath[0]==ACTIONS_STATE_KEY && keyPath[2]=='execute'){
-				options.toComputedResult ='current'
-				options.immediate = false
-
-			}
-			// 让表单actions的scope默认指向根
-			if(keyPath.length>0 && keyPath[0]==ACTIONS_STATE_KEY ){
-				options.scope = ComputedScopeRef.Root
-			}
-
+			createActionHook(valuePath,getter,options)
 		},
 		onComputedContext(draft,{type,valuePath}){
 			// 修改fields下的所有计算函数的作用域根，使之总是指向fields开头

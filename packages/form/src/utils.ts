@@ -1,17 +1,4 @@
 
-/**
- * 判断是否是表单字段是否是一个简单的字段
- * 
- * 简单的字段没有{value:<>}形式
-
-
- * @param obj
- */
-export function isLiteField(value: any): boolean {
-	return !(typeof value === "object" && "value" in value)
-}
-
-
 
 /**
  * 判定一个值是否是原子类型
@@ -66,6 +53,16 @@ export function debounce(fn:Function,interval:number=0){
 	}
 }
 
+// 比较两个对象，返回对象中值不同的属性
+export function compareObject<T extends Record<string,any>>(a:T,b:T):Partial<T>{
+	const result:any = {}
+	for(const key in a){
+		if(a[key]!==b[key]){
+			result[key] = b[key]
+		}
+	}
+	return result
+}
 
 // function fn(n:number){
 // 	console.log(n,' - ',new Date().getMilliseconds())

@@ -8,8 +8,7 @@ import { Actions, createActions } from './action';
 import { ComputedState, Dict, RequiredComputedState } from "./types";
 import { createComputed, ComputedOptions } from './computed';
 import { deepClone } from "flex-tools/object/deepClone";
-import { log } from "./utils";
-
+import { log } from "./utils"; 
 
 export interface StoreSchema<State> extends Dict{
     state:State

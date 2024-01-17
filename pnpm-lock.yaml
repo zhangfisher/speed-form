@@ -152,6 +152,9 @@ importers:
         specifier: ^13.11.0
         version: 13.11.0
     devDependencies:
+      '@helux/plugin-devtool':
+        specifier: ^4.0.1
+        version: 4.0.1(react@18.2.0)
       '@types/react':
         specifier: ^18.2.42
         version: 18.2.42
@@ -2100,6 +2103,15 @@ packages:
     dependencies:
       '@helux/types': 4.2.0
       '@helux/utils': 4.2.0
+
+  /@helux/plugin-devtool@4.0.1(react@18.2.0):
+    resolution: {integrity: sha512-FKyndZLMnsWMM3QYYCOZ9lslUEW9KOExbMUXIop7UizJtvMM0EEvfn4MqJ6Spj35jWGpOXnp9X/Tmh2m7w4/ow==}
+    dependencies:
+      helux: 4.2.0(react@18.2.0)
+      redux: 4.2.1
+    transitivePeerDependencies:
+      - react
+    dev: true
 
   /@helux/types@3.5.1:
     resolution: {integrity: sha512-2ZUH4YmTQWJIhQwtr2mkszaOchvmr30ikO0bdGoXJp0QiRJjOp+k8bfldBTUl3w0e54bmhUIoZ46KXI/9VMsrw==}
@@ -12401,6 +12413,12 @@ packages:
     dependencies:
       indent-string: 4.0.0
       strip-indent: 3.0.0
+    dev: true
+
+  /redux@4.2.1:
+    resolution: {integrity: sha512-LAUYz4lc+Do8/g7aeRa8JkyDErK6ekstQaqWQrNRW//MY1TvCEpMtpTWvlQ+FPbWCx+Xixu/6SHt5N0HR+SB4w==}
+    dependencies:
+      '@babel/runtime': 7.23.5
     dev: true
 
   /reflect.getprototypeof@1.0.4:

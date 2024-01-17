@@ -14,7 +14,7 @@ import { ComputedScopeRef } from "./store";
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject";
-import { skipComputed, isSkipComputed, getValue, joinValuePath } from "./utils";
+import { skipComputed, isSkipComputed, getValueByPath, joinValuePath } from "./utils";
 import { switchValue } from "flex-tools/misc/switchValue";
 import { Dict } from "./types";
 
@@ -29,7 +29,7 @@ export interface ComputedParams extends Record<string,any>{
   args?:any[]
 }
 
-export interface ComputedOptions<Value=any> {
+export interface ComputedOptions<Value=any,Extras extends Dict={}> {
   // 计算函数的唯一标识，如果未指定，则自动生成一个唯一标识
   id?:string | ((path:string[])=>string)                         
   context?: ComputedContext             // 计算函数的this
@@ -65,20 +65,24 @@ export interface ComputedOptions<Value=any> {
    * 
    */
   toComputedResult?: 'self' | 'root' | 'parent' | 'current' | 'none' | string[] | string 
+  /**
+   * 额外合并到计算结果AsyncComputedObject中的属性
+   */
+  extras?:Extras
 };
 
 export type ComputedDepends = Array<string> | Array<string[]> | Array<string | Array<string>> | ((draft: any) => any[])
 export type ComputedGetter<R> = (scopeDraft: any) => Exclude<R,Promise<any>>
 export type AsyncComputedGetter<R> = (scopeDraft:any,options:ComputedParams) => Promise<R>
 
-export type AsyncComputedObject<Value= any> ={
+export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
   loading? : boolean;
   progress?: number;                // 进度值    
   timeout? : number ;               // 超时时间，单位ms，当启用超时时进行倒计时
   error?   : any;
   value    : Value;
-  reset    : () => {};              // 重新执行任务
-} 
+  run      : () => {};              // 重新执行任务
+} & ExtAttrs
 
 export interface AsyncComputedParams<R> {
   getter: () => Promise<R> | R;
@@ -124,30 +128,30 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
   // 3. 根据配置参数获取计算函数的上下文对象
   try { 
     if(contexRef === ComputedScopeRef.Current) {
-        return getValue(draft, keyPath);
+        return getValueByPath(draft, keyPath);
     }else if (contexRef === ComputedScopeRef.Parent) {
-      return getValue(draft,fullKeyPath.slice(0, fullKeyPath.length - 2));
+      return getValueByPath(draft,fullKeyPath.slice(0, fullKeyPath.length - 2));
     }else if (contexRef === ComputedScopeRef.Root) {
         return rootDraft;
     }else if (contexRef === ComputedScopeRef.Depends) {      // 异步计算的依赖值      
       return Array.isArray(depends) ? depends : [];
     }else if (typeof contexRef == "string") {               // 当前对象的指定键      
       if(contexRef.startsWith("@")){
-        const finalKeys = getValue(draft, [...keyPath, ...contexRef.substring(1).split(".")]);
-        return getValue(draft,finalKeys);
+        const finalKeys = getValueByPath(draft, [...keyPath, ...contexRef.substring(1).split(".")]);
+        return getValueByPath(draft,finalKeys);
       }else{
-        return getValue(draft, [...keyPath, ...contexRef.split(".")]);
+        return getValueByPath(draft, [...keyPath, ...contexRef.split(".")]);
       }      
     }else if (Array.isArray(contexRef)) {                   // 从根对象开始的完整路径
       if(contexRef.length>0 && contexRef[0].startsWith("@")){
-        const finalKeys = getValue(draft, [...contexRef[0].substring(1).split("."),...contexRef.slice(1)]);
-        return getValue(draft,finalKeys);
+        const finalKeys = getValueByPath(draft, [...contexRef[0].substring(1).split("."),...contexRef.slice(1)]);
+        return getValueByPath(draft,finalKeys);
       }else{
-        return getValue(draft, contexRef);
+        return getValueByPath(draft, contexRef);
       }      
     }else if (typeof contexRef == "number") {
       const endIndex = contexRef > fullKeyPath.length - 2 ? fullKeyPath.length - contexRef - 1 : 0;
-      return getValue(draft, fullKeyPath.slice(0, endIndex));
+      return getValueByPath(draft, fullKeyPath.slice(0, endIndex));
     }else {
       return draft;
     }
@@ -167,9 +171,9 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
  * @returns
  *
  */
-export function computed<R = any>( getter: AsyncComputedGetter<R>, depends: ComputedDepends, options?: ComputedOptions<R>): ComputedAsyncReturns<R>;
-export function computed<R = any>( getter: ComputedGetter<R>, options?: ComputedOptions<R>): R  
-export function computed<R = any>( getter: any,depends: any, options?: ComputedOptions<R>): ComputedAsyncReturns<R> {
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: AsyncComputedGetter<R>, depends: ComputedDepends, options?: ComputedOptions<R,ExtraAttrs>): ComputedAsyncReturns<R & ExtraAttrs>;
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: ComputedGetter<R>, options?: ComputedOptions<R,ExtraAttrs>): R  
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depends: any, options?: ComputedOptions<R,ExtraAttrs>): ComputedAsyncReturns<R & ExtraAttrs> {
 	
   if (typeof getter != "function")  throw new Error("getter must be a function");
   const opts: ComputedOptions<R> = {
@@ -189,7 +193,6 @@ export function computed<R = any>( getter: any,depends: any, options?: ComputedO
     opts.depends = arguments[1] || [];
     Object.assign(opts, {
         scope: ComputedScopeRef.Current, // 异步计算函数的上下文指向依赖
-        // immediate:false,
       },arguments[2] || {}
     );
   } else {
@@ -211,7 +214,7 @@ export function computed<R = any>( getter: any,depends: any, options?: ComputedO
 
   // @ts-ignore
   fn.__COMPUTED__ = isAsync ? 'async' : 'sync';
-  return fn as ComputedAsyncReturns<R>;
+  return fn as ComputedAsyncReturns<R & ExtraAttrs>;
 }
 
 /**
@@ -316,7 +319,7 @@ function createAsyncComputedObject(stateCtx:any,mutateDesc:string,valueObj:Parti
     timeout:0,
     error: null,
     progress: 0,
-    reset: markRaw(
+    run: markRaw(
         skipComputed(() => {
           stateCtx.runMutateTask(mutateDesc);
         })

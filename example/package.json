@@ -23,6 +23,7 @@
     "validator": "^13.11.0"
   },
   "devDependencies": {
+    "@helux/plugin-devtool": "^4.0.1",
     "@types/react": "^18.2.42",
     "@types/react-dom": "^18.2.17",
     "@types/validator": "^13.11.7",

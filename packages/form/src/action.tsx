@@ -31,18 +31,16 @@
  */
 
 
-import { ReactNode, useCallback,useState,useEffect, useRef, RefObject} from "react";
+import { ReactNode, useCallback,useState,useEffect, useRef, RefObject, useMemo} from "react";
 import { Dict, HttpFormEnctype, HttpMethod } from "./types";
 import { getVal } from "@helux/utils";
 import React from "react";
 import type { FormOptions } from "./form";
-import { AsyncComputed, AsyncComputedObject, ComputedAsyncReturns, ComputedParams,  IStore } from 'helux-store'; 
-import { assignObject } from "flex-tools/object/assignObject";
-import { FIELDS_STATE_KEY } from "./consts";
+import {  AsyncComputedObject, ComputedAsyncReturns, ComputedDepends, ComputedOptions, ComputedParams,  IStore, computed, getValueByPath } from 'helux-store'; 
 import { debounce } from './utils';
 import { timeout as timeoutWrapper } from "flex-tools/func/timeout";
 import { noReentry } from "flex-tools/func/noReentry";
-
+import { omit } from "flex-tools/object/omit"; 
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
   | ((fields:Fields)=>Promise<R>) 
@@ -60,7 +58,7 @@ export type DefaultActionRenderProps={
 }
 
 
-export type ActionExecuteOptions = {
+export type ActionRunOptions = {
     debounce?:number,
     timeout?:number
     noReentry?:boolean
@@ -84,7 +82,21 @@ export interface FormActionDefine<Scope extends Dict=Dict,Result =any>{
     execute :(scope:any,options?:ComputedParams)=> Promise<void | Result>   // 执行动作，用来对表单数据进行处理
 } 
 
-// 经过创建表单后的动作对象,  execute
+
+// 表单基本属性
+export interface FormActionExtra{    
+    $action  : true                                  // 是否是动作，用来标识该字段是动作 
+    title   : string					            // 动作标题    
+    help    : string					            // 动作帮助
+    tips    : string					            // 动作提示
+    visible : boolean					            // 是否可见
+    enable  : boolean					            // 是否可用	            
+    validate: boolean
+    count   : number
+} 
+ 
+
+ // 经过创建表单后的动作对象,  execute
 export type FormAction<T extends FormActionDefine> =ComputedAsyncReturns<{
     [Key in keyof T]: Key extends 'execute' ? never : T[Key]
 }>
@@ -93,17 +105,19 @@ export type FormActions<T extends FormActionDefines = FormActionDefines> = {
     [Key in keyof T]: FormAction<T[Key]>
 }
 
+
 // 动作记录，即form.actions的类型，不同于from.state.actions
 export type ActionRecords<Actions extends Record<string,any>> = {
-	[Name in keyof Actions]: (options?:ActionExecuteOptions)=>Promise<void>
+	[Name in keyof Actions]: (options?:ActionRunOptions)=>Promise<void>
 }
 
+// 动作状态，必须包含一个名称为execute的异步计算属性
 export type FormActionState = {
     execute:AsyncComputedObject
-} & Record<string,any>
+} 
 
 function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,setState:any){       
-    return async (options?:ActionExecuteOptions)=>{
+    return async (options?:ActionRunOptions)=>{
         // action.execute依赖于scope和count两个属性，当变化时会触发重新执行
         // 由于action.execute依赖于count，所以当count++时会触发动作执行        
         const opts = Object.assign({timeout:0,debounce:0,noReentry:false},options)
@@ -121,7 +135,6 @@ function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,set
     }
 }
 
-
 /**
  * 
  * 根据表单中的动作声明生成动作对象
@@ -133,9 +146,9 @@ function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,set
 export function createFormActions<ActionStates extends Dict>(this:IStore,actionExecutors:ActionStates){
     const store = this
     const actions:Dict={}
-    Object.entries(actionExecutors).forEach(([name,actionExecutor])=>{      
-        actions[name]= createFormAction.call(store,name,store.setState)
-    })
+    // Object.entries(actionExecutors).forEach(([name,actionExecutor])=>{      
+    //     actions[name]= createFormAction.call(store,name,store.setState)
+    // })
     return actions as ActionRecords<ActionStates>
 }
  
@@ -155,9 +168,9 @@ export type ActionExecutors = Record<string,ActionExecutor<Dict,Dict>>
 export type ActionRenderProps<State extends Dict> = 
     DefaultActionRenderProps 
     & State 
-    & Required<AsyncComputedObject> 
+    & Required<Omit<AsyncComputedObject,'run'>> 
     & {
-        execute:(options?:ActionExecuteOptions)=>()=>any                                           // 提交表单
+        run:(options?:ActionRunOptions)=>()=>any                                           // 提交表单
         ref: RefObject<HTMLElement>                                            // 动作元素引用
     } 
 
@@ -171,14 +184,10 @@ export type ActionRender<State extends Dict,Params extends Dict = Dict>= (props:
  * 
  * 
  */
-export type ActionProps<State extends Dict = Dict,PropTypes extends Dict = Dict,Params extends Dict = Dict> = {
-    state:string | string[]              // 声明该动作对应的状态路径
-    scope?: string | string[]    
+export type ActionProps<State extends FormActionState=FormActionState,PropTypes extends Dict = Dict,Params extends Dict = Dict> = {
+    name:string | string[]              // 声明该动作对应的状态路径
     children: ActionRender<State,Params>  
-} 
-   
-  
-
+}    
 
 function useResetAction(valuePath:string[],setState:any){
     return useCallback((updater:(group:any)=>void)=>{
@@ -188,24 +197,33 @@ function useResetAction(valuePath:string[],setState:any){
     },[])
 }
 
-function useActionExecutor(executor:ActionExecutor,props:ActionProps,setState:any){
-    // 因为execute依赖scope和count，所以只需要更新scope或者count即可触发动作执行
-    return useCallback((options?:ActionExecuteOptions)=>{               
-       return createFormAction(props.type,setState)(options)
+ 
+
+function useActionRunner<State extends FormActionState=FormActionState>(actionState:State){
+    return useCallback((options?:ActionRunOptions)=>{
+        return (ev:any)=>{            
+            actionState.execute.run()
+            if(typeof(ev.preventDefault)){
+                ev.preventDefault()
+            }
+        }        
     },[])
 }
 
-
-function createActionRenderProps(props:ActionProps,store:any,actionState:string,actionExecutor:ActionExecutor,ref:RefObject<HTMLElement>){  
-    const [state,setState] = store.useState()  
-    const execute= useActionExecutor(actionExecutor,props,setState)
-    return assignObject({    
+function createActionRenderProps<State extends FormActionState=FormActionState>(actionState:State,actionRunner:any,ref:RefObject<HTMLElement>){  
+    return Object.assign({            
         help       : "",
+        title      : "",
         visible    : true,    
-        enable     : true,
-        execute    : execute,
-        ref
-    },actionState)
+        enable     : true
+    },
+    omit(actionState,"execute"),
+    {
+        ...actionState.execute,
+        run:actionRunner,
+        ref,
+        
+    })
 } 
 
 
@@ -222,61 +240,70 @@ function createActionRenderProps(props:ActionProps,store:any,actionState:string,
  */
 export function createActionComponent<Store extends Dict = Dict,ActionStates extends Dict = Dict>(store:Store,actionStates:ActionStates,actionExecutors:ActionExecutors,formOptions:Required<FormOptions>,) {
     
-    type ActionKeys =Exclude<keyof ActionStates,number | symbol>
+    // type ActionKeys =Exclude<keyof ActionStates,number | symbol>
 
 
     /**
-     * ActionState:  指的是动作的状态类型<Action<typeof form.state.actions.xxxx>>
+     * State:  指的是动作的对应状态数据，在schema中就是具有execute的一个对象
      * Params: 指的execute的入参，即动作的参数，  execute:(scope:any,{params})=>void,或者form.actions.xxxx.execute:(params)
      * Scope: 当前动作的作用域，用来指定动作作用的表单数据范围,如typeof form.fields.xxx，默认指向form.fields
      * 
      * @param props 
      * @returns 
      */
-    function Action<State extends FormActionState=FormActionState,Params extends Dict=Dict,Scope extends Dict=Dict>(props: ActionProps<Store['state']['actions'][Type],Scope,Params,ActionKeys>):ReactNode{
-        const [state,setState] = store.useState()  
+    function Action<State extends FormActionState=FormActionState,Scope extends Dict=Dict>(props: ActionProps<State,Scope>):ReactNode{
+        const [state] = store.useState()  
 
-        const { type:actionKey,scope } = props  
+        const { name:actionKey } = props  
 
-        const [ actionState ]  = useState(()=>getVal(state,['actions',actionKey]))
-
+        const actionState = getValueByPath(state,actionKey)
+        const actionRunner = useActionRunner(actionState)
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
 
         // 创建动作组件的Props
-        const [renderProps,setActionProps] = useState(()=>createActionRenderProps(props,store,actionState,actionExecutors[actionKey], ref))
+        const [renderProps,setActionProps] = useState(()=>createActionRenderProps(actionState,actionRunner,ref))
         useEffect(()=>{
-            setActionProps(createActionRenderProps(props,store,actionState,actionExecutors[actionKey],ref))
-        },[actionKey,actionState,scope])
- 
+            setActionProps(createActionRenderProps(actionState,actionRunner,ref))
+        },[actionKey,actionState])
 
         // 执行渲染动作组件
-        return  <>{ props.children && props.children(renderProps as any) }</>
-
+        if(props.children){
+            if(Array.isArray(props.children)){
+                return useMemo(()=>(props.children as any).map((child:any)=>child(renderProps as any)),[renderProps])
+            }else{
+                return useMemo(()=>props.children(renderProps as any),[renderProps])    
+            }            
+        }else{
+            return
+        }
     }
     return React.memo(Action,(oldProps:any, newProps:any)=>{
-        return oldProps.type === newProps.type || oldProps.scope === newProps.scope
-    }) as (<State extends FormActionState=FormActionState,Params extends Dict=Dict,Scope extends Dict=Dict>(props: ActionProps<Store['state']['actions'][Type],Scope,Params,ActionKeys>)=>ReactNode)
+        return oldProps.name === newProps.name  
+    }) as (<State extends FormActionState=FormActionState,Scope extends Dict=Dict>(props: ActionProps<State,Scope>)=>ReactNode)
 }
+ 
 
 
 
 
 
+// // 标准表单提交
+// export interface StandardSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
+// 	url?:ActionComputedAttr<string,Fields>						    // 提交的URL
+//     method?:ActionComputedAttr<HttpMethod,Fields>					// 提交的方法
+//     enctype?:ActionComputedAttr<HttpFormEnctype,Fields>				// 是否包含文件，此表单中的
+// }
+
+// // API提交
+// export interface ApiSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
+// 	url?:ActionComputedAttr<string,Fields>						// 提交的URL
+//     method?:ActionComputedAttr<HttpMethod,Fields>		        // 提交的方法
+//     params?:ActionComputedAttr<Dict,Fields>						// 提交的参数
+//     data?:ActionComputedAttr<Dict,Fields>						// 提交的Body数据
+//     headers?:ActionComputedAttr<Dict,Fields>					// 提交的头信息
+// }
 
 
-// 标准表单提交
-export interface StandardSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
-	url?:ActionComputedAttr<string,Fields>						    // 提交的URL
-    method?:ActionComputedAttr<HttpMethod,Fields>					// 提交的方法
-    enctype?:ActionComputedAttr<HttpFormEnctype,Fields>				// 是否包含文件，此表单中的
-}
 
-// API提交
-export interface ApiSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
-	url?:ActionComputedAttr<string,Fields>						// 提交的URL
-    method?:ActionComputedAttr<HttpMethod,Fields>		        // 提交的方法
-    params?:ActionComputedAttr<Dict,Fields>						// 提交的参数
-    data?:ActionComputedAttr<Dict,Fields>						// 提交的Body数据
-    headers?:ActionComputedAttr<Dict,Fields>					// 提交的头信息
-}
+

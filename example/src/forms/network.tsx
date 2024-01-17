@@ -88,13 +88,13 @@ const formSchema = {
 				enable: (net: any) => (net as NetworkType).interface.value === "wifi",
 				validate: (value: string) => value.length > 6,
 			},
-			submit: { // 这是一个动作
+			submit: { // 这是一个动作,
 				title: "提交wifi",
 				enable: (net: any) => (net as NetworkType).interface.value === "wifi",
 				validate: (value: string) => value.length > 6,
 				execute:async (wifi:any)=>{
 					await delay(2000)
-					console.log(wifi)
+					console.log("提交wifi=",wifi)
 				}
 			}
 		}

@@ -59,7 +59,6 @@ const ValidResult:React.FC<React.PropsWithChildren<{validate: boolean | AsyncCom
 </span>
 }
 
-
 const NetworkForm = ()=>{     
     
     return <Network.Form className="panel">
@@ -97,19 +96,13 @@ const NetworkForm = ()=>{
             </Network.Field>
             <Network.Field<typeof Network.fields.gateway> name="gateway">                      
                 {({title,value,required,visible,validate,update,enable,placeholder,sync})=>{ 
-                    console.log(required,visible,validate,enable)
+                    console.log("更新网关地址：",required,visible,validate,enable)
                     return <FieldRow visible={visible} label={title}>
                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
-                        <button onClick={(event:MouseEvent)=>{
-                            update((state:any)=>{
+                        <button onClick={update((state:any)=>{
                                 state.gateway.value='192.168.1.2'
-                            })
-                            event.preventDefault();
-                        }}>恢复</button>
-                        <button onClick={(event:MouseEvent)=>{
-                            update('192.168.1.1');
-                            event.preventDefault(); 
-                        }}>更新值</button>
+                            })}>恢复</button>
+                        <button onClick={update('192.168.1.1')}>更新值</button>
                         <ValidResult validate={validate}/>
                     </FieldRow>
                 } }
@@ -158,9 +151,10 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field>   
-            <Network.Action<typeof Network.fields.wifi.submit> state="">
-                {({title,visible,loading,enable,execute,timeout})=>{     
-                    return <Button loading={loading} timeout={timeout} visible={visible} enable={enable} onClick={execute()}>{title}</Button>
+            <Network.Action<typeof Network.fields.wifi.submit> name="fields.wifi.submit" >
+                {({title,visible,loading,enable,run,timeout,error,value})=>{ 
+                    console.log("action submit",loading,enable,timeout,error,value)
+                    return <Button loading={loading} timeout={timeout} visible={visible} enable={enable} onClick={run()}>{title}</Button>
                 }}
             </Network.Action>
         </Card>
@@ -168,12 +162,14 @@ const NetworkForm = ()=>{
 }
 
 
-
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.useState()
  
-    Network.actions.submit()      
+    // Network.actions.submit().then(()=>{
+    //     console.log('submit success')
+    // })  
+    // Network.state.actions.ping.execute
 
     // state.dhcp.start.validate.value
 

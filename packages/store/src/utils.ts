@@ -1,6 +1,8 @@
 import { getVal } from '@helux/utils'
 
-export function getValue(state:any,path:string | string[] | ((state:any)=>string | string[])){
+
+
+export function getValueByPath(state:any,path:string | string[] | ((state:any)=>string | string[])){
     let paths:string[] = []
     try{
         if(typeof(path)=== 'function'){
