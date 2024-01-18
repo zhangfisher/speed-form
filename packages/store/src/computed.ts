@@ -18,15 +18,17 @@ import { skipComputed, isSkipComputed, getValueByPath, joinValuePath } from "./u
 import { switchValue } from "flex-tools/misc/switchValue";
 import { Dict } from "./types";
 
+export interface ComputedProgressbar{
+  value:(num:number)=>void
+  end:()=>void
+}
 
 // 作为计算函数的第二个参数传入
 export interface ComputedParams extends Record<string,any>{
   // 获取一个进度条，用来显示异步计算的进度
-  getProgressbar?:(opts:{max?:number,min?:number,value?:number})=>void
+  getProgressbar?:(opts?:{max?:number,min?:number,value?:number})=>ComputedProgressbar
   // 当计算函数启用超时时，可以指定一个cb，在超时后会调用此函数
-  onTimeout?:(cb:()=>void)=>void
-  // 额外的参数，通过computed(fn,{args})传入
-  args?:any[]
+  onTimeout?:(cb:()=>void)=>void 
 }
 
 export interface ComputedOptions<Value=any,Extras extends Dict={}> {
@@ -73,7 +75,7 @@ export interface ComputedOptions<Value=any,Extras extends Dict={}> {
 
 export type ComputedDepends = Array<string> | Array<string[]> | Array<string | Array<string>> | ((draft: any) => any[])
 export type ComputedGetter<R> = (scopeDraft: any) => Exclude<R,Promise<any>>
-export type AsyncComputedGetter<R> = (scopeDraft:any,options:ComputedParams) => Promise<R>
+export type AsyncComputedGetter<R> = (scopeDraft:any,options:Required<ComputedParams>) => Promise<R>
 
 export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
   loading? : boolean;
@@ -343,7 +345,7 @@ function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[],mutat
  * @param init 
  * @returns 
  */
-function createComputeProgressbar(setState:any,valuePath:string[],opts?:{max?:number,min?:number,value?:number}){
+function createComputeProgressbar(setState:any,valuePath:string[],opts?:{max?:number,min?:number,value?:number}):ComputedProgressbar{
   const { max=100, min=0, value=0 } = Object.assign({},opts)
   // @ts-ignore
   setState((draft) =>setVal(draft, [...valuePath, "progress"], value))
@@ -354,7 +356,7 @@ function createComputeProgressbar(setState:any,valuePath:string[],opts?:{max?:nu
       // @ts-ignore
       setState((draft) =>setVal(draft, [...valuePath, "progress"], num))
     },
-   end(){ this.value(max) }
+    end(){ this.value(max) }
   }
 }
 
@@ -381,51 +383,55 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
   const { timeout=0 }  = computedOptions
  
   let timeoutCallback:Function
-  const computedParams:ComputedParams ={
+  const computedParams:Required<ComputedParams> ={
       onTimeout:(cb:Function)=>timeoutCallback=cb,
-      getProgressbar:(options?:{max?:number,min?:number,value?:number})=>createComputeProgressbar(setState,valuePath,options)
+      getProgressbar:(options)=>createComputeProgressbar(setState,valuePath,options)
   }  
 
   let timerId:any,countdownId:any,hasError=false,isTimeout=false
+  
+  const afterUpdated={} // 保存执行完成后需要更新的内容，以便在最后一起更新
     try {
       // 处理超时参数和倒计时
       let [timeoutValue=0,countdown=0] = Array.isArray(timeout) ? timeout : [timeout,0]
-    
-      updateAsyncComputedObject(setState,computedResultPath,{loading:true,timeout:countdown > 1 ? countdown :timeoutValue})
+      
+      updateAsyncComputedObject(setState,computedResultPath,{loading:true,error:null,timeout:countdown > 1 ? countdown :timeoutValue,progress:0})
           
       if(timeoutValue>0){        
-        timerId = setTimeout(()=>{          
+        timerId = setTimeout(()=>{                    
           isTimeout=true
-          if(!hasError){  
-            updateAsyncComputedObject(setState,computedResultPath,{loading:false,error:"TIMEOUT"})            
-          }          
           if(typeof(timeoutCallback)=='function') timeoutCallback()
-        })
+          if(!hasError){  
+            clearInterval(countdownId)   
+            updateAsyncComputedObject(setState,computedResultPath,{loading:false,error:"TIMEOUT",timeout:0})            
+          }                    
+        },timeoutValue)
         // 启用设置倒计时:  比如timeout= 6*1000, countdown= 6
         if(countdown>1){
           countdownId = setInterval(()=>{
-            updateAsyncComputedObject(setState,computedResultPath,{timeout:countdown--})            
-            if(countdown===0) clearInterval(countdownId)            
+            updateAsyncComputedObject(setState,computedResultPath,{timeout:countdown--})    
+            if(countdown===0) clearInterval(countdownId)                    
           },timeoutValue/countdown)
         }
       }
       const computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
       if(!isTimeout){
-        updateAsyncComputedObject(setState,computedResultPath,{value:computedResult,error:null})  
+        Object.assign(afterUpdated,{value:computedResult,error:null,timeout:0})
       }      
     }catch (e:any) {
       hasError = true
       if(!isTimeout){
-        updateAsyncComputedObject(setState,computedResultPath,{error:e.message})         
         if (typeof computedOptions.onError == "function") {
           try { computedOptions.onError.call(thisDraft, e)} catch { }
         }
+        Object.assign(afterUpdated,{error:e.message,timeout:0})        
       }
     } finally {      
       clearTimeout(timerId)
       clearInterval(countdownId)
-      updateAsyncComputedObject(setState,computedResultPath,{loading:false})
-      if(!hasError && !isTimeout) updateAsyncComputedObject(setState,computedResultPath,{error:null})
+      Object.assign(afterUpdated,{loading:false})
+      if(!hasError && !isTimeout) Object.assign(afterUpdated,{error:null})
+      updateAsyncComputedObject(setState,computedResultPath,afterUpdated)
     }
 }
 

@@ -203,11 +203,11 @@ function useActionRunner<State extends FormActionState=FormActionState>(actionSt
     return useCallback((options?:ActionRunOptions)=>{
         return (ev:any)=>{            
             actionState.execute.run()
-            if(typeof(ev.preventDefault)){
+            if(typeof(ev.preventDefault)=='function'){
                 ev.preventDefault()
             }
         }        
-    },[])
+    },[actionState])
 }
 
 function createActionRenderProps<State extends FormActionState=FormActionState>(actionState:State,actionRunner:any,ref:RefObject<HTMLElement>){  

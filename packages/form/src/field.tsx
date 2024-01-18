@@ -107,7 +107,7 @@ function useFieldUpdater(store: any,valuePath:string[],setState:any){
           }else{
             setState((draft:any)=>setVal(draft,valuePath,updater))
           }  
-          if(typeof(ev.preventDefault)){
+          if(typeof(ev.preventDefault)=='function'){
             ev.preventDefault()
           }
         }               

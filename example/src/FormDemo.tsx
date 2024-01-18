@@ -157,6 +157,16 @@ const NetworkForm = ()=>{
                     return <Button loading={loading} timeout={timeout} visible={visible} enable={enable} onClick={run()}>{title}</Button>
                 }}
             </Network.Action>
+            <Network.Action<typeof Network.fields.wifi.timeoutSubmit> name="fields.wifi.timeoutSubmit" >
+                {({title,visible,loading,enable,run,error,timeout})=>{ 
+                    return <Button loading={loading} timeout={timeout} visible={visible} enable={enable} onClick={run()}>{title}{error}</Button>
+                }}
+            </Network.Action>
+            <Network.Action<typeof Network.fields.wifi.progressSubmit> name="fields.wifi.progressSubmit" >
+                {({title,visible,loading,enable,run,error,progress})=>{ 
+                    return <Button loading={loading} timeout={progress} visible={visible} enable={enable} onClick={run()}>{title}{error}</Button>
+                }}
+            </Network.Action>
         </Card>
     </Network.Form>        
 }

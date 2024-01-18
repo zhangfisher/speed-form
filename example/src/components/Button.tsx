@@ -24,15 +24,14 @@ export const Button:React.FC<ButtonProps> = (props)=>{
         disabled={!enable}
         {...props}
     >
-        
-        {props.children}
         {loading ? <Loading/> : null}
+        {props.children}        
         {timeout >0 ? <span style={{
             padding:"4px",
             color:"red",
             backgroundColor:"#eee",
             borderRadius:"4px",
-        }}>timeout</span> : '' }
+        }}>{timeout}</span> : '' }
         
     </button>)
 }

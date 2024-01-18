@@ -96,6 +96,31 @@ const formSchema = {
 					await delay(2000)
 					console.log("提交wifi=",wifi)
 				}
+			},
+			timeoutSubmit: { // 这是一个动作,
+				title: "提交超时",
+				execute:computed(async (wifi:any)=>{
+					await delay(6000)
+					console.log("提交wifi=",wifi)
+				},[],{
+					timeout:[5 * 1000,5]
+				})
+			},
+			progressSubmit: { // 这是一个动作,
+				title: "提交进度",
+				execute:computed(async (wifi:any,{getProgressbar})=>{
+					const bar = getProgressbar()
+					return new Promise<void>((resolve)=>{
+						let count = 0 , tmId = 0
+						tmId = setInterval(()=>{
+							if(count==100){
+								clearInterval(tmId)
+								resolve()
+							}
+							bar.value(count++)							
+						},200)
+					})					
+				})
 			}
 		}
 	},
