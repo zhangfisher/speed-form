@@ -45,7 +45,7 @@ import { FieldComponent, createFieldComponent  } from './field';
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
 import { ActionRecords,  FormActions,  createActionComponent, createFormActions } from './action';
-import { ACTIONS_STATE_KEY, FIELDS_STATE_KEY } from "./consts";
+import { FIELDS_STATE_KEY } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
 
 
@@ -212,35 +212,7 @@ function setFormDefault(define:any){
 function loadFormData(store:any){ 
 
 }
-
-function filterFormActions<Schema extends Dict=Dict>(define: Schema): Record<string, Function> {
-	// return Object.entries(define.actions || {}).reduce((actions: Record<string, Function>, [name, action]: [string, any]) => {
-	// 	const executor = action.execute
-	// 	actions[name] = executor;		
-	// 	const actionDeps = [
-	// 		[ACTIONS_STATE_KEY,name,"count"],
-	// 		[ACTIONS_STATE_KEY,name,"scope"]	
-	// 	]
-	// 	// 使用原始的async方式声明动作
-	// 	if(action.execute.__COMPUTED__ == undefined){		
-	// 		action.execute = computed(executor,actionDeps,
-	// 		{
-	// 			// 动作的上下文总是指向scope所描述的路径
-	// 			// 例：  scope="wifi"，则动作的上下文总是指向state.actions.wifi,将作为第一个参数传入execute函数
-	// 			scope:"@scope",	
-	// 			toComputedResult:'current'
-	// 		})
-	// 	}else{ // 使用computed方式声明动作
-	// 		const executorParms = action.execute as  AsyncComputedParams<any>
-	// 		executorParms.options.scope = "@scope"
-	// 		executorParms.options.toComputedResult = 'current'
-	// 		if(!Array.isArray(executorParms.options.depends)) executorParms.options.depends = []
-	// 		executorParms.options.depends.push(...actionDeps)
-	// 	}
-	// 	return actions;
-	// }, {});
-}
-
+ 
 /**
  * 我们约定，每一个动作均由一个{execute:computed(async ()=>{})}对象来描述
  * 
@@ -279,9 +251,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 	},options) as Required<FormOptions<Schema>>
 
 	// 注入表单默认属性
-	setFormDefault(define) 
-	// 提取所有动作的execute函数，用来创建表单动作对象计算函数
-	const actionExecutors = filterFormActions(define);
+	setFormDefault(define)  
 
 	// 创建表单Store对象实例
 	const store = createStore<StoreSchema<Schema>>({state:define},{
@@ -309,7 +279,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 	type StoreType = typeof store 
 	type FieldsType = (typeof store.state)['fields'] 
 	type ActionsType = (typeof store.state)['actions'] 
-	const actions = createFormActions.call<IStore,[ActionsType],ActionRecords<Schema['actions']>>(store as unknown as IStore,actionExecutors)
+	const actions = createFormActions.call<IStore,[],ActionRecords<Schema['actions']>>(store as unknown as IStore)
 	return {
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	

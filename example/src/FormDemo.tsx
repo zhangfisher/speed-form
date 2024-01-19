@@ -1,4 +1,4 @@
-import React, { MouseEvent } from "react";
+import React, { useCallback } from "react";
 import Card from "./components/Card"  
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
@@ -8,6 +8,7 @@ import { ReactFC } from "./types";
 import ColorBlock from "./components/ColorBlock";
 import { Loading } from "./components/Loading";  
 import { Button } from "./components/Button";
+import { ActionRunOptions } from '../../packages/form/src/action';
 
 const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({enable,visible,label,children})=>{
     return  (
@@ -176,9 +177,14 @@ const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.useState()
  
-    // Network.actions.submit().then(()=>{
-    //     console.log('submit success')
-    // })  
+    const submit = useCallback((options?:ActionRunOptions)=>{
+        Network.actions.submit(options).then((result)=>{
+            console.log("提交结果：",result)
+        }).catch((error)=>{
+            console.log("提交错误：",error)
+        })
+    },[])
+  
     // Network.state.actions.ping.execute
 
     // state.dhcp.start.validate.value
@@ -188,9 +194,8 @@ const FormDemo:React.FC = ()=>{
             <div style={{padding:"8px",margin:'8px',width:'60%'}}>
                 <NetworkForm/>
                 {/* <NetworkForm/> */}
-                <button onClick={()=>Network.actions.submit()}>提交</button>
-                <button onClick={()=>Network.actions.errorSubmit()}>提交错误</button>
-                <button onClick={()=>Network.actions.timeoutSubmit()}>提交超时</button>
+                <button onClick={()=>submit()}>提交</button>
+                <button onClick={()=>submit({timeout:1000})}>提交超时</button>
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单数据">

@@ -11,7 +11,7 @@ const formSchema = {
 			value: "React-Helux-Form",
 			placeholder: "输入网络配置名称",
 			title: "网络名称",
-			validate:computed<boolean>(async (value: string) => value.length > 3,[])
+			validate:computed<boolean>(async (value: string) => value.length > 3)
 		},
 		title: {
 			value: "React-Helux-Form",
@@ -54,8 +54,9 @@ const formSchema = {
 					(dhcp: any) => {
 						return dhcp.enable.value;
 					},
-					["dhcp.enable.value"],
-					{ scope: ComputedScopeRef.Parent }
+					{ 
+						scope: ComputedScopeRef.Parent
+					}
 				),
 				validate: (value: any) => validator.isIP(value),
 			},
@@ -66,9 +67,11 @@ const formSchema = {
 				visible: computed<boolean>(
 					(fields: any) => {
 						return fields.dhcp.enable.value;
-					},
-					["dhcp.enable.value"],
-					{ scope: ComputedScopeRef.Root }
+					},					
+					{ 
+						scope: ComputedScopeRef.Root ,
+						depends:["dhcp.enable.value"]
+					}
 				),
 				validate: (value: any) => validator.isIP(value),
 			},
@@ -102,7 +105,7 @@ const formSchema = {
 				execute:computed(async (wifi:any)=>{
 					await delay(6000)
 					console.log("提交wifi=",wifi)
-				},[],{
+				},{
 					timeout:[5 * 1000,5]
 				})
 			},
@@ -130,9 +133,8 @@ const formSchema = {
 			enable: (root: any) => {
 				return root.fields.wifi.ssid.value.length > 3
 			},
-			execute: async (fields: any) => {
+			execute: async () => {
 				await delay(2000);
-				console.log(fields);
 				return count++
 			},
 		},
@@ -147,7 +149,7 @@ const formSchema = {
 			title: "提交超时", 
 			execute: computed(async () => {
 				await delay(5000);								
-			},[],{timeout:2000}),
+			},{timeout:2000}),
 		},
 		ping: {
 			title: "测试网络连通性",

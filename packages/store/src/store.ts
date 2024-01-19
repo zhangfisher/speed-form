@@ -121,7 +121,7 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
     }
 
     const storeData = opts.singleton ? data : deepClone(data)
-    let computeObjects:Dict = {}
+    let computedObjects:Dict = {}
     return  model((api) => { 
         const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any,{
             stopArrDep: false,
@@ -131,7 +131,7 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
         const actions = createActions<T>(storeData.actions,stateCtx,api,opts)
 
         // 2. 处理Computed属性
-        createComputed<T['state']>(stateCtx,api,computeObjects,opts)!
+        createComputed<T['state']>(stateCtx,api,computedObjects,opts)!
 
         // 3. 处理useState
         const useState = wrapperUseState<T['state']>(stateCtx)
@@ -141,7 +141,7 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
           ...stateCtx,
           state:stateCtx.reactive,
           useState,
-          computeObjects:{}  
+          computedObjects:{}  
         }
       });
 

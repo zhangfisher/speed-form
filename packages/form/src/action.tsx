@@ -36,7 +36,7 @@ import { Dict, HttpFormEnctype, HttpMethod } from "./types";
 import { getVal } from "@helux/utils";
 import React from "react";
 import type { FormOptions } from "./form";
-import {  AsyncComputedObject, ComputedAsyncReturns, ComputedDepends, ComputedOptions, ComputedParams,  IStore, computed, getValueByPath } from 'helux-store'; 
+import {  AsyncComputedObject, ComputedAsyncReturns, ComputedDepends, ComputedOptions, ComputedParams,  IStore, computed, getValueByPath, watch } from 'helux-store'; 
 import { debounce } from './utils';
 import { timeout as timeoutWrapper } from "flex-tools/func/timeout";
 import { noReentry } from "flex-tools/func/noReentry";
@@ -116,22 +116,23 @@ export type FormActionState = {
     execute:AsyncComputedObject
 } 
 
-function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,setState:any){       
-    return async (options?:ActionRunOptions)=>{
-        // action.execute依赖于scope和count两个属性，当变化时会触发重新执行
-        // 由于action.execute依赖于count，所以当count++时会触发动作执行        
-        const opts = Object.assign({timeout:0,debounce:0,noReentry:false},options)
-        let fn = async ()=> setState((state:any)=>state.actions[name].count++)
-        if(opts.noReentry){
-            fn = noReentry(fn)
-        }  
+function  createFormAction(name:string,store:IStore){     
+    const actionFn = async ()=>{
+        const computedObject = store.state.actions[name]
+        const [snap] = await computedObject.execute.run()
+        return getVal(snap,['actions',name,'execute','value']) 
+    }  
+    return async (options?:ActionRunOptions)=>{ 
+        let fn = actionFn
+        const opts = Object.assign({
+            noReentry:false,
+            timeout:0,
+            debounce:0
+        },options)
         if(opts.timeout>0){
             fn = timeoutWrapper(fn,{value:opts.timeout})
-        }    
-        if(opts.debounce>0){
-            fn = debounce(fn,opts.debounce)
-        }          
-        return await fn()        
+        }                  
+        return await fn()             
     }
 }
 
@@ -143,12 +144,12 @@ function  createFormAction<Scope extends Dict = Dict,Result=any>(name:string,set
  * @param actionStates 经过helux-store计算后的动作声明 
  * @returns 
  */
-export function createFormActions<ActionStates extends Dict>(this:IStore,actionExecutors:ActionStates){
-    const store = this
+export function createFormActions<ActionStates extends Dict>(this:IStore){    
     const actions:Dict={}
-    // Object.entries(actionExecutors).forEach(([name,actionExecutor])=>{      
-    //     actions[name]= createFormAction.call(store,name,store.setState)
-    // })
+    const store = this 
+    Object.keys(store.state.actions).forEach((name)=>{              
+        actions[name]= createFormAction(name,this)
+    })
     return actions as ActionRecords<ActionStates>
 }
  
