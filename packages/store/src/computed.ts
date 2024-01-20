@@ -69,14 +69,20 @@ export interface ComputedOptions<Value=any,Extras extends Dict={}> {
    */
   toComputedResult?: 'self' | 'root' | 'parent' | 'current' | 'none' | string[] | string 
   /**
+   * 用来对传入的scope进行转换，
+   * 例如可以将scope转换为一个普通对象，或者将scope转换为一个Proxy对象
+   * 
+   */
+  onGetScope?:(scope:unknown)=>any
+  /**
    * 额外合并到计算结果AsyncComputedObject中的属性
    */
   extras?:Extras
 };
 
 export type ComputedDepends = Array<string> | Array<string[]> | Array<string | Array<string>> | ((draft: any) => any[])
-export type ComputedGetter<R,Scope extends Dict=Dict> = (scopeDraft: Scope) => Exclude<R,Promise<any>>
-export type AsyncComputedGetter<R,Scope extends Dict=Dict> = (scopeDraft:Scope,options:Required<ComputedParams>) => Promise<R>
+export type ComputedGetter<R> = (scopeDraft: any) => Exclude<R,Promise<any>>
+export type AsyncComputedGetter<R> = (scopeDraft:any,options:Required<ComputedParams>) => Promise<R>
 
 export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
   loading? : boolean;
@@ -167,6 +173,9 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
 /**
  * 用来封装状态的计算函数，使用计算函数的传入的是当前对象
  *
+ *  类型声明：
+ *   R: 计算函数的返回值类型,该值会回写入声明的计算属性中，如果是异步计算函数，会回写入AsyncComputedObject.value中
+ *   ExtraAttrs: 额外的属性，会合并到AsyncComputedObject中
  *
  * @param getter
  * @param depends
@@ -174,9 +183,9 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
  * @returns
  *
  */
-export function computed<R = any,Scope extends Dict=Dict,ExtraAttrs extends Dict = {}>( getter: AsyncComputedGetter<R>,options?: ComputedOptions<R,ExtraAttrs>): ComputedAsyncReturns<R & ExtraAttrs>;
-export function computed<R = any,Scope extends Dict=Dict,ExtraAttrs extends Dict = {}>( getter: ComputedGetter<R>, options?: ComputedOptions<R,ExtraAttrs>): R  
-export function computed<R = any,Scope extends Dict=Dict,ExtraAttrs extends Dict = {}>( getter: any, options?: ComputedOptions<R,ExtraAttrs>): ComputedAsyncReturns<R & ExtraAttrs> {
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: AsyncComputedGetter<R>,options?: ComputedOptions<R,ExtraAttrs>): ComputedAsyncReturns<R & ExtraAttrs>;
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: ComputedGetter<R>, options?: ComputedOptions<R,ExtraAttrs>): R  
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any, options?: ComputedOptions<R,ExtraAttrs>): ComputedAsyncReturns<R & ExtraAttrs> {
 	
   if (typeof getter != "function")  throw new Error("getter must be a function");
   const opts: Required<ComputedOptions<R,ExtraAttrs>> = assignObject({

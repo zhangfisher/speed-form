@@ -17,6 +17,8 @@ const formSchema = {
 			value: "React-Helux-Form",
 			placeholder: "输入网络配置名称",
 			title: "网络名称",
+			// 为什么此处的validate函数的第一个参数总是当前字段的值value？
+			// 因为我们在创建表单时，对validate函数(计算函数)进行了处理，使得validate函数依赖于当前字段的值value
 			validate: (value: string) => value.length > 3,
 		},
 		interface: {

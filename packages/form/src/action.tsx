@@ -32,15 +32,15 @@
 
 
 import { ReactNode, useCallback,useState,useEffect, useRef, RefObject, useMemo} from "react";
-import { Dict, HttpFormEnctype, HttpMethod } from "./types";
+import { Dict  } from "./types";
 import { getVal } from "@helux/utils";
 import React from "react";
 import type { FormOptions } from "./form";
-import {  AsyncComputedObject, ComputedAsyncReturns, ComputedDepends, ComputedOptions, ComputedParams,  IStore, computed, getValueByPath, watch } from 'helux-store'; 
-import { debounce } from './utils';
+import {  AsyncComputedGetter, AsyncComputedObject, ComputedAsyncReturns, ComputedDepends, ComputedOptions, ComputedParams,  IStore, computed, getValueByPath, watch } from 'helux-store'; 
 import { timeout as timeoutWrapper } from "flex-tools/func/timeout";
-import { noReentry } from "flex-tools/func/noReentry";
 import { omit } from "flex-tools/object/omit"; 
+import { getFormData } from "./serialize";
+import { getSnap } from "helux"
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
   | ((fields:Fields)=>Promise<R>) 
@@ -284,7 +284,18 @@ export function createActionComponent<Store extends Dict = Dict,ActionStates ext
     }) as (<State extends FormActionState=FormActionState,Scope extends Dict=Dict>(props: ActionProps<State,Scope>)=>ReactNode)
 }
  
+/**
+ * 声明action函数，实现表单
+ * @param getter 
+ * @param options 
+ */
+export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGetter<Values>,options?: ComputedOptions<R>){
+    return computed<R>(async (scope:any,opts)=>{
+        const data = getFormData(getSnap(scope))
+        return await (getter as unknown as AsyncComputedGetter<R>)(data,opts)
+    },options)
 
+}
 
 
 
