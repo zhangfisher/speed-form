@@ -17,6 +17,7 @@ import { skipComputed, isSkipComputed, getValueByPath, joinValuePath } from "./u
 import { switchValue } from "flex-tools/misc/switchValue";
 import { assignObject } from "flex-tools/object/assignObject";
 import { Dict } from "./types";
+import { delay } from 'flex-tools/async/delay';
  
 
 export interface ComputedProgressbar{
@@ -114,6 +115,7 @@ export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
   progress?: number;                // 进度值    
   timeout? : number ;               // 超时时间，单位ms，当启用超时时进行倒计时
   error?   : any;
+  retry?   : number                 // 当执行重试操作时，会进行倒计时，每次重试-1，直到为0时停止重试
   value    : Value;
   run      : () => {};              // 重新执行任务
   cancel   : () => void;              // 取消正在执行的任务
@@ -346,6 +348,7 @@ function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial
     value: undefined, 
     loading: false,
     timeout:0,
+    retry:0,          // 重试次数，3表示最多重试3次
     error: null,
     progress: 0,
     run: markRaw(
@@ -407,8 +410,10 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
   const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext,storeOptions,type:"context"})
   const scopeDraft= getComputedRefDraft(draft,{input,computedOptions,computedContext,storeOptions,type:"scope"})  
   const { fullKeyPath:valuePath } = computedContext;  
-  const { timeout=0 }  = computedOptions
-  let timeoutCallback:Function,cancelCallback:Function
+  const { timeout=0,retry=[0,0] }  = computedOptions  
+  const [retryCount,retryInterval] = Array.isArray(retry) ? retry : [Number(retry),0]
+
+  let timeoutCallback:Function,cancelCallback:Function  
 
   const computedParams:Required<ComputedParams> ={
       onTimeout:(cb:Function)=>timeoutCallback=cb,
@@ -416,18 +421,18 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
       getSnap:(scope:any)=>getSnap(scope,false),
       onCancel:(cb:Function)=>cancelCallback=cb
   }  
-
-  let timerId:any,countdownId:any,hasError=false
-  let isTimeout=false
-  let isCanceling=false // 是否正在取消中
   
-  const afterUpdated={} // 保存执行完成后需要更新的内容，以便在最后一起更新
+  for(let i=0;i<retryCount+1;i++){
+      
+    let timerId:any,countdownId:any,hasError=false
+    let isTimeout=false,isCanceling=false // 是否正在取消中
+
+    const afterUpdated={} // 保存执行完成后需要更新的内容，以便在最后一起更新
     try {
       // 处理超时参数和倒计时
       let [timeoutValue=0,countdown=0] = Array.isArray(timeout) ? timeout : [timeout,0]
-      
-      updateAsyncComputedState(setState,computedResultPath,{loading:true,error:null,timeout:countdown > 1 ? countdown :timeoutValue,progress:0})
-         
+      updateAsyncComputedState(setState,computedResultPath,{loading:true,error:null,retry:0,timeout:countdown > 1 ? countdown :timeoutValue,progress:0})
+      // 超时处理
       if(timeoutValue>0){        
         timerId = setTimeout(()=>{                    
           isTimeout=true
@@ -445,11 +450,13 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
           },timeoutValue/countdown)
         }
       }
+      
       // 执行计算函数
       const computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
       if(!isTimeout){
         Object.assign(afterUpdated,{value:computedResult,error:null,timeout:0})
-      }      
+      }    
+
     }catch (e:any) {
       hasError = true
       if(!isTimeout){
@@ -458,6 +465,12 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
         }
         Object.assign(afterUpdated,{error:e.message,timeout:0})        
       }
+      /// 启用重试
+      if(retryCount>0){
+        Object.assign(afterUpdated,{retry:i===0 ? 
+          [retryCount,retryInterval]: [retryCount-i,retryInterval]
+        })        
+      }
     } finally {      
       clearTimeout(timerId)
       clearInterval(countdownId)
@@ -465,6 +478,14 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
       if(!hasError && !isTimeout) Object.assign(afterUpdated,{error:null})
       updateAsyncComputedState(setState,computedResultPath,afterUpdated)
     } 
+    // 重试延迟
+    if(hasError){
+      if(retryCount>0 && retryInterval>0){
+        await delay(retryInterval)
+      }
+    }
+
+  }
 }
 
 /**
