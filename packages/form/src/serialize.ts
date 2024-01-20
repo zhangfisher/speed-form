@@ -38,9 +38,6 @@ function isFieldGroup(data:Dict){
 }
 
 
-export interface GetFormDataOptions{
-    entry?:string[]    
-}
 
 
 function getFieldValue(data:Dict){
@@ -50,26 +47,49 @@ function getFieldValue(data:Dict){
 function getFiledGroupValue(data:Dict){
     const result:Dict = {}
     Object.entries(data).forEach(([key,value])=>{
+        
+        if(typeof(key) !== 'string'){
+            return
+        }
         if(isFieldValue(value)){
             result[key] = getFieldValue(value)
         }else if(isFieldGroup(value)){
             result[key] = getFiledGroupValue(value)
         }else if(isFieldList(value)){
-            
+            result[key] = getFieldListValue(value)
         }else{
             result[key] = value
+        }        
+        console.log("Get Field group key=",key)        
+    })
+    return result
+}
+function getFieldListValue(data:Dict){
+    const result:any[] = []
+    data.forEach((item:Dict)=>{    
+        if(isFieldValue(item)){
+            result.push(getFieldValue(item))
+        }else if(isFieldGroup(item)){
+            result.push(getFiledGroupValue(item))
+        }else if(isFieldList(item)){
+            result.push(getFieldListValue(item))
+        }else{
+            result.push(item)
         }        
     })
     return result
 }
-function getFiledListValue(data:Dict){
 
+
+export interface GetFormDataOptions{
+    entry?:string[]    
 }
+
 /**
  * 指定一个入口路径，获取指定路径下表单数据
- * @param state 
+ * @param snap 
  * @param entryPath 
  */
-export function getFormData(state:Dict,options?:GetFormDataOptions):Record<string,any>{
-    return getFiledGroupValue(state)
+export function getFormData(snap:Dict,options?:GetFormDataOptions):Record<string,any>{
+    return getFiledGroupValue(snap)
 }

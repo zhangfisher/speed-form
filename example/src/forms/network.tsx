@@ -1,5 +1,5 @@
 import { ComputedScopeRef, computed } from "helux-store";
-import { Dict, createForm } from "speed-form";
+import { Dict, createForm,action } from "speed-form";
 // import { Project, getProjects } from "../api/getProjects";
 import { delay } from "flex-tools/async/delay";
 import validator from "validator"; 
@@ -113,7 +113,25 @@ const formSchema = {
 			},
 			progressSubmit: { // 这是一个动作,
 				title: "提交进度",
-				execute:computed(async (wifi:any,{getProgressbar})=>{
+				execute:computed(async (fields:any,{getProgressbar,getSnap})=>{
+					const bar = getProgressbar()
+					console.log("submit fields=",getSnap(fields))
+					return new Promise<void>((resolve)=>{
+						let count = 0 , tmId = 0
+						tmId = setInterval(()=>{
+							if(count==100){
+								clearInterval(tmId)
+								resolve()
+							}
+							bar.value(count++)							
+						},200)
+					})					
+				})
+			},
+			progressSubmit2: { // 这是一个动作,
+				title: "提交进度2",
+				execute:action(async (fields,{getProgressbar})=>{
+					console.log("submit fields=",fields)
 					const bar = getProgressbar()
 					return new Promise<void>((resolve)=>{
 						let count = 0 , tmId = 0

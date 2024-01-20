@@ -30,7 +30,10 @@ export type Value = {value:any}
 // 传递给字段组件的渲染参数
 export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultFieldPropTypes,keyof PropTypes> & PropTypes> & {
   sync	  	    : (debounce?:number)=>ChangeEventHandler	   		  		                    // 同步状态表单计算
-  update	  	  : (valueOrUpdater:PropTypes['value'] | ((field:PropTypes)=>void),options?:{debounce?:number})=>any	  	   
+  update	  	  : (valueOrUpdater:PropTypes['value'] | ((field:PropTypes)=>void),options?:{debounce?:number})=>any
+  // 取消正在执行的异步计算函数，执行时会调用onCancel指定的回调函数，由计算函数自已退出
+  // 如果异步计算函数没有指定onCancel回调函数，则会忽略正在进行的函数自动退出
+  cancel        : ()=>void        	  	   
   defaultValue  : PropTypes['value'] | undefined
   oldValue      : PropTypes['value'] 
 } 
@@ -80,6 +83,18 @@ function useFieldSyncer(store: any,valuePath:string[]){
   },[]) 
 }
 
+/**
+ * 提供一个函数，当调用此函数时，会取消正在执行的异步计算函数
+ * 取消的机制是:
+ *  
+ *  
+ * 
+ */
+function useCancel(){
+  return useCallback(()=>{
+  
+  },[])
+}
 /**
  * 
  * 字段更新器，用来对表单数据进行更新

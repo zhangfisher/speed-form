@@ -219,12 +219,14 @@ function loadFormData(store:any){
  * 并且对其行为进行了一些约定
  * 
  * - immediate=false : 不会自动执行,需要手动调用action.execute.run()来执行
- *   
+ * - 让scope默认指向fields
  * 
  */
 function createActionHook(valuePath:string[],getter:Function,options:ComputedOptions){
 	if(valuePath.length>1 && valuePath[valuePath.length-1]=='execute'){
-		options.immediate = false
+		options.immediate = false			// 默认不自动执行,需要手动调用action.execute.run()来执行
+		options.scope = [FIELDS_STATE_KEY]	// 默认指向fields
+		options.noReentry = true			// 禁止重入
 	}
 }
 /**

@@ -16,10 +16,13 @@ export interface StoreSchema<State> extends Dict{
 }
 
 export enum ComputedScopeRef{
-    Root = 0,
-    Current = 1,
-    Parent = 2,
-    Depends = 3          // 指向依赖数组
+    None = 'none',
+    Root = 'root',
+    Current = 'current',
+    Parent = 'parent',
+    Depends = 'depends',          // 指向依赖数组
+    Self = 'self'
+
 }
 
 export type NonDependsScopeRef = Exclude<ComputedScopeRef, ComputedScopeRef.Depends>;

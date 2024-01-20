@@ -289,9 +289,9 @@ export function createActionComponent<Store extends Dict = Dict,ActionStates ext
  * @param getter 
  * @param options 
  */
-export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGetter<Values>,options?: ComputedOptions<R>){
+export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGetter<R,Values>,options?: ComputedOptions<R>){
     return computed<R>(async (scope:any,opts)=>{
-        const data = getFormData(getSnap(scope))
+        const data = getFormData(getSnap(scope,false).fields)
         return await (getter as unknown as AsyncComputedGetter<R>)(data,opts)
     },options)
 

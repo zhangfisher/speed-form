@@ -8,7 +8,7 @@
  *
  */
 
-import { HeluxApi, IOperateParams, ISharedCtx, markRaw } from "helux";
+import { HeluxApi, IOperateParams, ISharedCtx, markRaw, getSnap } from 'helux';
 import type { StoreSchema, ComputedScope, StoreOptions, ComputedContext, IStore } from "./store";
 import { ComputedScopeRef } from "./store";
 import { getVal, setVal } from "@helux/utils";
@@ -17,7 +17,7 @@ import { skipComputed, isSkipComputed, getValueByPath, joinValuePath } from "./u
 import { switchValue } from "flex-tools/misc/switchValue";
 import { assignObject } from "flex-tools/object/assignObject";
 import { Dict } from "./types";
-
+ 
 
 export interface ComputedProgressbar{
   value:(num:number)=>void
@@ -29,7 +29,18 @@ export interface ComputedParams extends Record<string,any>{
   // 获取一个进度条，用来显示异步计算的进度
   getProgressbar?:(opts?:{max?:number,min?:number,value?:number})=>ComputedProgressbar
   // 当计算函数启用超时时，可以指定一个cb，在超时后会调用此函数
-  onTimeout?:(cb:()=>void)=>void 
+  onTimeout?:(cb:()=>void)=>void   
+  /**
+   * 当计算正在loading时，如果在组件中调用cancel，则会调用onCancel中指定的cb函数，此时
+   * 计算函数应该要停止执行退出,是否停止执行由计算函数开发者自己决定   
+   */
+  onCancel?:(cb:()=>void)=>void   
+  /**
+   * 
+   * 提供一个函数用来获取当前Scope的快照
+   * 传入的scope是一个经过Proxy处理的响应式对象，此方法可以对scope进行转换为普通对象   
+   */
+  getSnap?:<T=Dict>(scope:any)=>T  
 }
 
 export interface ComputedOptions<Value=any,Extras extends Dict={}> {
@@ -54,7 +65,27 @@ export interface ComputedOptions<Value=any,Extras extends Dict={}> {
   timeout?:number  | [number,number]
   // 是否立刻计算，默认为true，在创建时马上进行计算，=false,则只有在依赖变化时才会执行，或者手动调用reset方法
   immediate?:boolean                     
-  onError?:(e:Error)=>void              // 当执行计算getter函数出错时的回调
+  /**
+   *  计算函数不可重入，即同一个计算函数在执行过程中，不会再次执行   
+   *  如果重入时，则在debug=true时会在控制台打印出警告信息
+   */
+  noReentry?:boolean
+  /**
+   * 当计算函数执行出错时的重试次数
+   * 
+   * retry:3  表示最多重试3次,重试间隔为0，加上第1次执行，总共执行4次
+   * retry:[3,1000] 表示最多重试3次，重试间隔为1000ms，加上第1次执行，总共执行4次
+   * 
+   * 重试数据可以通过AsyncComputedObject.retry获取
+   * 当首次执行失败时触发重试，此时AsyncComputedObject.retry=3，然后每次重试-1，直到为0时停止重试
+   * 可以在UI中通过AsyncComputedObject.retry来实时显示重试次数
+   * 
+   */
+  retry?:number | [number,number]
+  /**
+   * 当执行计算getter函数出错时的回调
+   */
+  onError?:(e:Error)=>void              
   /**
    * 指定计算结果更新到哪里
    * 
@@ -69,20 +100,14 @@ export interface ComputedOptions<Value=any,Extras extends Dict={}> {
    */
   toComputedResult?: 'self' | 'root' | 'parent' | 'current' | 'none' | string[] | string 
   /**
-   * 用来对传入的scope进行转换，
-   * 例如可以将scope转换为一个普通对象，或者将scope转换为一个Proxy对象
-   * 
-   */
-  onGetScope?:(scope:unknown)=>any
-  /**
    * 额外合并到计算结果AsyncComputedObject中的属性
    */
   extras?:Extras
 };
 
 export type ComputedDepends = Array<string> | Array<string[]> | Array<string | Array<string>> | ((draft: any) => any[])
-export type ComputedGetter<R> = (scopeDraft: any) => Exclude<R,Promise<any>>
-export type AsyncComputedGetter<R> = (scopeDraft:any,options:Required<ComputedParams>) => Promise<R>
+export type ComputedGetter<R,Scope=any> = (scopeDraft: Scope) => Exclude<R,Promise<any>>
+export type AsyncComputedGetter<R,Scope=any> = (scopeDraft:Scope,options:Required<ComputedParams>) => Promise<R>
 
 export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
   loading? : boolean;
@@ -91,6 +116,7 @@ export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
   error?   : any;
   value    : Value;
   run      : () => {};              // 重新执行任务
+  cancel   : () => void;              // 取消正在执行的任务
 } & ExtAttrs
 
 export interface AsyncComputedParams<R> {
@@ -192,8 +218,8 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any, opt
     async: false,
     timeout:0,
     depends: [],
-    scope:"current",
-    toComputedResult:'self',     
+    scope:ComputedScopeRef.Current,
+    toComputedResult:ComputedScopeRef.Self,
     immediate:true,
   },options) 
 
@@ -315,7 +341,7 @@ function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedC
  * 创建异步计算属性的数据结构
  * 
 */
-function createAsyncComputedObject(stateCtx:any,mutateDesc:string,valueObj:Partial<AsyncComputedObject>){
+function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial<AsyncComputedObject>){
   return Object.assign({
     value: undefined, 
     loading: false,
@@ -324,7 +350,7 @@ function createAsyncComputedObject(stateCtx:any,mutateDesc:string,valueObj:Parti
     progress: 0,
     run: markRaw(
         skipComputed(() => {
-          return stateCtx.runMutateTask(mutateDesc);
+          return stateCtx.runMutateTask(mutateId);
         })
     )
   },valueObj)
@@ -362,7 +388,7 @@ function createComputeProgressbar(setState:any,valuePath:string[],opts?:{max?:nu
 }
 
 
-function updateAsyncComputedObject(setState:any,resultPath:string[],values:Partial<AsyncComputedObject>){
+function updateAsyncComputedState(setState:any,resultPath:string[],values:Partial<AsyncComputedObject>){
   setState((draft:any) => {
     Object.entries(values).forEach(([key,value])=>{
       setVal(draft, [...resultPath,key], value);  
@@ -382,38 +408,44 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
   const scopeDraft= getComputedRefDraft(draft,{input,computedOptions,computedContext,storeOptions,type:"scope"})  
   const { fullKeyPath:valuePath } = computedContext;  
   const { timeout=0 }  = computedOptions
- 
-  let timeoutCallback:Function
+  let timeoutCallback:Function,cancelCallback:Function
+
   const computedParams:Required<ComputedParams> ={
       onTimeout:(cb:Function)=>timeoutCallback=cb,
-      getProgressbar:(options)=>createComputeProgressbar(setState,valuePath,options)
+      getProgressbar:(options)=>createComputeProgressbar(setState,valuePath,options),
+      getSnap:(scope:any)=>getSnap(scope,false),
+      onCancel:(cb:Function)=>cancelCallback=cb
   }  
 
-  let timerId:any,countdownId:any,hasError=false,isTimeout=false
+  let timerId:any,countdownId:any,hasError=false
+  let isTimeout=false
+  let isCanceling=false // 是否正在取消中
+  
   const afterUpdated={} // 保存执行完成后需要更新的内容，以便在最后一起更新
     try {
       // 处理超时参数和倒计时
       let [timeoutValue=0,countdown=0] = Array.isArray(timeout) ? timeout : [timeout,0]
       
-      updateAsyncComputedObject(setState,computedResultPath,{loading:true,error:null,timeout:countdown > 1 ? countdown :timeoutValue,progress:0})
-          
+      updateAsyncComputedState(setState,computedResultPath,{loading:true,error:null,timeout:countdown > 1 ? countdown :timeoutValue,progress:0})
+         
       if(timeoutValue>0){        
         timerId = setTimeout(()=>{                    
           isTimeout=true
           if(typeof(timeoutCallback)=='function') timeoutCallback()
           if(!hasError){  
             clearInterval(countdownId)   
-            updateAsyncComputedObject(setState,computedResultPath,{loading:false,error:"TIMEOUT",timeout:0})            
+            updateAsyncComputedState(setState,computedResultPath,{loading:false,error:"TIMEOUT",timeout:0})            
           }                    
         },timeoutValue)
         // 启用设置倒计时:  比如timeout= 6*1000, countdown= 6
         if(countdown>1){
           countdownId = setInterval(()=>{
-            updateAsyncComputedObject(setState,computedResultPath,{timeout:countdown--})    
+            updateAsyncComputedState(setState,computedResultPath,{timeout:countdown--})    
             if(countdown===0) clearInterval(countdownId)                    
           },timeoutValue/countdown)
         }
       }
+      // 执行计算函数
       const computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
       if(!isTimeout){
         Object.assign(afterUpdated,{value:computedResult,error:null,timeout:0})
@@ -431,7 +463,7 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
       clearInterval(countdownId)
       Object.assign(afterUpdated,{loading:false})
       if(!hasError && !isTimeout) Object.assign(afterUpdated,{error:null})
-      updateAsyncComputedObject(setState,computedResultPath,afterUpdated)
+      updateAsyncComputedState(setState,computedResultPath,afterUpdated)
     } 
 }
 
@@ -457,8 +489,8 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     const newGetter = onCreateComputed.call(stateCtx,valuePath, getter, computedOptions);
     if (typeof newGetter == "function") getter = newGetter 
   }
-  const {depends,initial,toComputedResult='self',immediate } =computedOptions
-
+  const {depends,initial,toComputedResult='self',immediate,noReentry=false } =computedOptions
+  let isMutateRunning = false // 正在运行标志
 
   // 根据配置读取计算函数的返回值以及状态等 应该更新到哪里
   const computedResultPath:string[] =switchValue(toComputedResult,{
@@ -494,7 +526,16 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     },
     // 此函数在依赖变化时执行，用来异步计算
     task: async ({ draft, setState, input }) => {
-      return await executeComputedGetter(draft,getter,{computedResultPath,input,computedOptions,computedContext,storeOptions,setState})
+      if(noReentry && isMutateRunning ) {
+        storeOptions.log(`Reentry async computed: ${valuePath.join(".")}`,'warn');
+        return
+      }
+      isMutateRunning=true
+      try{
+        return await executeComputedGetter(draft,getter,{computedResultPath,input,computedOptions,computedContext,storeOptions,setState})
+      }finally{
+        isMutateRunning=false
+      }
     },
     immediate,
     desc:mutateId,

@@ -64,16 +64,5 @@ export function compareObject<T extends Record<string,any>>(a:T,b:T):Partial<T>{
 	return result
 }
 
-// function fn(n:number){
-// 	console.log(n,' - ',new Date().getMilliseconds())
-// }
-
-// const dfn = debounce(fn,2000)
-// let count=0
-// setInterval(()=>{
-// 	dfn(++count)
-// },100)
-
-
 
 
