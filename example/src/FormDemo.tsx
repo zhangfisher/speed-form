@@ -173,6 +173,14 @@ const NetworkForm = ()=>{
                     return <Button loading={loading} timeout={progress} visible={visible} enable={enable} onClick={run()}>{title}{error}</Button>
                 }}
             </Network.Action>
+            <Network.Action<typeof Network.fields.wifi.retrySubmit> name="fields.wifi.retrySubmit" >
+                {({title,visible,loading,enable,run,error,retry,progress})=>{ 
+                    return <>
+                    <Button loading={loading} timeout={progress} visible={visible} enable={enable} onClick={run()}>{title}{error}</Button>
+                    {retry>0 && <span>重试次数：{retry}</span>}
+                    </>
+                }}
+            </Network.Action>
         </Card>
     </Network.Form>        
 }

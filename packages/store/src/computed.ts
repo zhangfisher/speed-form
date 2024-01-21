@@ -115,7 +115,7 @@ export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
   progress?: number;                // 进度值    
   timeout? : number ;               // 超时时间，单位ms，当启用超时时进行倒计时
   error?   : any;
-  retry?   : number                 // 当执行重试操作时，会进行倒计时，每次重试-1，直到为0时停止重试
+  retry?   : number                 // 重试次数，当执行重试操作时，会进行倒计时，每次重试-1，直到为0时停止重试
   value    : Value;
   run      : () => {};              // 重新执行任务
   cancel   : () => void;              // 取消正在执行的任务
@@ -353,7 +353,7 @@ function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial
     progress: 0,
     run: markRaw(
         skipComputed(() => {
-          return stateCtx.runMutateTask(mutateId);
+          return stateCtx.runMutateTask(mutateId,{extraArgs:{a:1}});
         })
     )
   },valueObj)
@@ -459,17 +459,15 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
 
     }catch (e:any) {
       hasError = true
-      if(!isTimeout){
-        if (typeof computedOptions.onError == "function") {
-          try { computedOptions.onError.call(thisDraft, e)} catch { }
-        }
+      if (typeof computedOptions.onError == "function") {
+        try { computedOptions.onError.call(thisDraft, e)} catch { }
+      }
+      if(!isTimeout){        
         Object.assign(afterUpdated,{error:e.message,timeout:0})        
       }
       /// 启用重试
       if(retryCount>0){
-        Object.assign(afterUpdated,{retry:i===0 ? 
-          [retryCount,retryInterval]: [retryCount-i,retryInterval]
-        })        
+        Object.assign(afterUpdated,{retry:retryCount- i })        
       }
     } finally {      
       clearTimeout(timerId)
@@ -484,7 +482,6 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
         await delay(retryInterval)
       }
     }
-
   }
 }
 
@@ -546,7 +543,8 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
       }
     },
     // 此函数在依赖变化时执行，用来异步计算
-    task: async ({ draft, setState, input }) => {
+    task: async ({ draft, setState, input,extraArgs }) => {
+      console.log("extraArgs=",extraArgs)
       if(noReentry && isMutateRunning ) {
         storeOptions.log(`Reentry async computed: ${valuePath.join(".")}`,'warn');
         return

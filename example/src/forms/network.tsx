@@ -128,6 +128,14 @@ const formSchema = {
 					})					
 				})
 			},
+			retrySubmit: { // 这是一个动作,
+				title: "提交出错重试",
+				execute:computed(async ()=>{
+					throw new Error("ERROR"+count++)
+				},{
+					retry:[5,1000]	// 重试5次，每次间隔1秒
+				})
+			},
 			progressSubmit2: { // 这是一个动作,
 				title: "提交进度2",
 				execute:action(async (fields,{getProgressbar})=>{
