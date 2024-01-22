@@ -353,7 +353,7 @@ function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial
     progress: 0,
     run: markRaw(
         skipComputed(() => {
-          return stateCtx.runMutateTask(mutateId,{extraArgs:{a:1}});
+          return stateCtx.runMutateTask({desc:mutateId,extraArgs:{a:1}});
         })
     )
   },valueObj)
@@ -544,7 +544,6 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     },
     // 此函数在依赖变化时执行，用来异步计算
     task: async ({ draft, setState, input,extraArgs }) => {
-      console.log("extraArgs=",extraArgs)
       if(noReentry && isMutateRunning ) {
         storeOptions.log(`Reentry async computed: ${valuePath.join(".")}`,'warn');
         return
@@ -605,3 +604,4 @@ export function createComputed<Store extends StoreSchema<any>>(stateCtx: IShared
       }
     });
 }
+

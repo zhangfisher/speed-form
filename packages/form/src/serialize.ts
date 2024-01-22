@@ -60,7 +60,6 @@ function getFiledGroupValue(data:Dict){
         }else{
             result[key] = value
         }        
-        console.log("Get Field group key=",key)        
     })
     return result
 }
@@ -92,4 +91,52 @@ export interface GetFormDataOptions{
  */
 export function getFormData(snap:Dict,options?:GetFormDataOptions):Record<string,any>{
     return getFiledGroupValue(snap)
+}
+
+export interface CreateFormDataOptions{
+    // 用来实现将keyPath转换为表单项名称
+    getItemName?:(keyPath:string[])=>string
+    /**
+     * 处理值
+     */
+    getItemValue?:(keyPath:string[],type?:'array' | 'object' | '')=>string
+}
+
+
+/**
+ * 
+ * 根据一个Dict生成一个表单数据对象，用来提交
+ * 
+ * 
+ * 
+ * @param data 
+ */
+export function createFormData(data:Dict,options?:CreateFormDataOptions):FormData{
+
+    const formData = new FormData()
+    const { getItemName } = Object.assign({
+        getItemName:(keyPath:string[])=>keyPath.join('.')
+
+    },options)
+
+    function append(keyPath:string[],value:any){
+        if(value==undefined){
+            return
+        }
+        const name = getItemName ? getItemName(keyPath) : keyPath.join('.')
+        if(Array.isArray(value)){
+            value.forEach((item,index)=>{
+                append([...keyPath,String(index)],item)
+            })
+        }else if(isPlainObject(value)){
+            Object.entries(value).forEach(([key,value])=>{
+                append([...keyPath,key],value)
+            })
+        }else{
+            formData.append(name,value)
+        }
+    }
+    append([],data)
+    return formData
+
 }

@@ -39,6 +39,16 @@ const formSchema = {
 				return validator.isIP(value);
 			},
 		},
+		spareIps:[
+			{
+				value: "1.1.1.2",
+				title: "备用IP地址1"
+			},
+			{
+				value: "1.1.1.3",
+				title: "备用IP地址2"
+			},
+		],
 		gateway: {
 			value: "1.1.1.1",
 			title: "网关地址",
@@ -151,6 +161,12 @@ const formSchema = {
 							bar.value(count++)							
 						},200)
 					})					
+				})
+			},
+			standardSubmit: { // 这是一个动作,
+				title: "标准提交",
+				execute:action(async (fields)=>{
+					console.log("formData=",fields)
 				})
 			}
 		}

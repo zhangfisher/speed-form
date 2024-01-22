@@ -181,6 +181,13 @@ const NetworkForm = ()=>{
                     </>
                 }}
             </Network.Action>
+            <Network.Action<typeof Network.fields.wifi.standardSubmit> name="fields.wifi.standardSubmit" >
+                {({title,visible,loading,enable,run,error,progress})=>{ 
+                    return <>
+                    <Button type="submit" loading={loading} timeout={progress} visible={visible} enable={enable} onClick={run()}>{title}{error}</Button>
+                    </>
+                }}
+            </Network.Action>
         </Card>
     </Network.Form>        
 }

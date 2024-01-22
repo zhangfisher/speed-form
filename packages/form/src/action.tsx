@@ -58,10 +58,12 @@ export type DefaultActionRenderProps={
 }
 
 
-export type ActionRunOptions = {
+export type ActionRunOptions = {    
+    preventDefault?:boolean,
     debounce?:number,
     timeout?:number
     noReentry?:boolean
+    
 }
 
 
@@ -125,6 +127,7 @@ function  createFormAction(name:string,store:IStore){
     return async (options?:ActionRunOptions)=>{ 
         let fn = actionFn
         const opts = Object.assign({
+            preventDefault:true,
             noReentry:false,
             timeout:0,
             debounce:0
@@ -202,9 +205,15 @@ function useResetAction(valuePath:string[],setState:any){
 
 function useActionRunner<State extends FormActionState=FormActionState>(actionState:State){
     return useCallback((options?:ActionRunOptions)=>{
+        const opts = Object.assign({
+            preventDefault:true,
+            noReentry:false,
+            timeout:0,
+            debounce:0
+        },options)
         return (ev:any)=>{            
             actionState.execute.run()
-            if(typeof(ev.preventDefault)=='function'){
+            if(typeof(ev.preventDefault)=='function' && opts.preventDefault){
                 ev.preventDefault()
             }
         }        
@@ -293,6 +302,22 @@ export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGett
     return computed<R>(async (scope:any,opts)=>{
         const data = getFormData(getSnap(scope,false).fields)
         return await (getter as unknown as AsyncComputedGetter<R>)(data,opts)
+    },options)
+
+}
+
+export type SubmitAsyncComputedGetter<R> = AsyncComputedGetter<R,FormData>
+
+/**
+ * 将传一个FormData对象
+ * @param getter 
+ * @param options 
+ * @returns 
+ */
+export function submit<R=any>(getter: SubmitAsyncComputedGetter<R>,options?: ComputedOptions<R>){
+    return action<Dict,R>(async (data:Dict,opts)=>{
+        const formData = new FormData()
+        return await (getter as unknown as SubmitAsyncComputedGetter<R>)(formData,opts)
     },options)
 
 }

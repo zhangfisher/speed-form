@@ -18,6 +18,7 @@ export interface DefaultFieldPropTypes{
   readonly?    : boolean;              // 是否只读
   visible?     : boolean;              // 是否可见
   enable?      : boolean               // 是否可用
+  dirty?      : boolean                // 数据已经更新过
   validate?    : boolean;              // 验证
   select?      : any[]                 // 枚举值
 }  
@@ -53,16 +54,17 @@ export type FieldComponent = React.FC<FieldProps>;
 function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){  
   return assignObject({
     name,
-    help       : "",
+    help        : "",
     defaultValue: undefined,
-    oldValue   : undefined,
-    visible    : true,
-    required   : false,
-    readonly   : false,
-    validate   : true,        
-    enable     : true,
-    placeholder: "",        
-    select     : [] as any,
+    oldValue    : undefined,
+    visible     : true,
+    required    : false,
+    readonly    : false,
+    validate    : true,        
+    enable      : true,
+    dirty       : false,
+    placeholder : "",        
+    select      : [] as any,
   },{
     ...value,
     sync:syncer,
