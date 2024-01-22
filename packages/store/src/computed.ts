@@ -117,7 +117,7 @@ export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
   error?   : any;
   retry?   : number                 // 重试次数，当执行重试操作时，会进行倒计时，每次重试-1，直到为0时停止重试
   value    : Value;
-  run      : () => {};              // 重新执行任务
+  run      : (options:{cancelable?:boolean}) => {};              // 重新执行任务
   cancel   : () => void;              // 取消正在执行的任务
 } & ExtAttrs
 
@@ -352,10 +352,21 @@ function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial
     error: null,
     progress: 0,
     run: markRaw(
-        skipComputed(() => {
+        skipComputed((options:{cancelable?:boolean}) => {
+          const opts = Object.assign({cancelable:false},options)
+          const extraArgs:Dict = {}
+          if(opts.cancelable){
+            const abortController =  new AbortController()            
+            extraArgs.cancelSignal = abortController.signal
+          }
           return stateCtx.runMutateTask({desc:mutateId,extraArgs:{a:1}});
         })
-    )
+    ),
+    cancel: markRaw(
+        skipComputed(() => {
+          return stateCtx.cancelMutateTask({desc:mutateId});
+        })
+    ),
   },valueObj)
 }
 
