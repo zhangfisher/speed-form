@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import Card from "./components/Card"  
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
@@ -152,42 +152,52 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field>   
-            <Network.Action<typeof Network.fields.wifi.submit> name="fields.wifi.submit" >
-                {({title,visible,loading,enable,run,timeout,error,value})=>{ 
-                    console.log("action submit",loading,enable,timeout,error,value)
-                    return <Button loading={loading} timeout={timeout} visible={visible} enable={enable} onClick={run()}>{title}</Button>
-                }}
-            </Network.Action>
-            <Network.Action<typeof Network.fields.wifi.timeoutSubmit> name="fields.wifi.timeoutSubmit" >
-                {({title,visible,loading,enable,run,error,timeout})=>{ 
-                    return <Button loading={loading} timeout={timeout} visible={visible} enable={enable} onClick={run()}>{title}{error}</Button>
-                }}
-            </Network.Action>
-            <Network.Action<typeof Network.fields.wifi.progressSubmit> name="fields.wifi.progressSubmit" >
-                {({title,visible,loading,enable,run,error,progress})=>{ 
-                    return <Button loading={loading} timeout={progress} visible={visible} enable={enable} onClick={run()}>{title}{error}</Button>
-                }}
-            </Network.Action>
-            <Network.Action<typeof Network.fields.wifi.progressSubmit2> name="fields.wifi.progressSubmit2" >
-                {({title,visible,loading,enable,run,error,progress})=>{ 
-                    return <Button loading={loading} timeout={progress} visible={visible} enable={enable} onClick={run()}>{title}{error}</Button>
-                }}
-            </Network.Action>
-            <Network.Action<typeof Network.fields.wifi.retrySubmit> name="fields.wifi.retrySubmit" >
-                {({title,visible,loading,enable,run,error,retry,progress})=>{ 
-                    return <>
-                    <Button loading={loading} timeout={progress} visible={visible} enable={enable} onClick={run()}>{title}{error}</Button>
-                    {retry>0 && <span>重试次数：{retry}</span>}
-                    </>
-                }}
-            </Network.Action>
-            <Network.Action<typeof Network.fields.wifi.standardSubmit> name="fields.wifi.standardSubmit" >
-                {({title,visible,loading,enable,run,error,progress})=>{ 
-                    return <>
-                    <Button type="submit" loading={loading} timeout={progress} visible={visible} enable={enable} onClick={run()}>{title}{error}</Button>
-                    </>
-                }}
-            </Network.Action>
+            <div style={{display:'flex',flexDirection:'column'}}>
+                <Network.Action<typeof Network.fields.wifi.submit> name="fields.wifi.submit" >
+                    {({title,visible,loading,enable,run,timeout,error,value})=>{ 
+                        console.log("action submit",loading,enable,timeout,error,value)
+                        return <Button loading={loading} timeout={timeout} visible={visible} enable={enable} onClick={run()}>{title}</Button>
+                    }}
+                </Network.Action>
+                <Network.Action<typeof Network.fields.wifi.timeoutSubmit> name="fields.wifi.timeoutSubmit" >
+                    {({title,visible,loading,enable,run,error,timeout})=>{ 
+                        return <Button loading={loading} timeout={timeout} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
+                    }}
+                </Network.Action>
+                <Network.Action<typeof Network.fields.wifi.progressSubmit> name="fields.wifi.progressSubmit" >
+                    {({title,visible,loading,enable,run,error,progress})=>{ 
+                        return <Button loading={loading} timeout={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
+                    }}
+                </Network.Action>
+                <Network.Action<typeof Network.fields.wifi.progressSubmit2> name="fields.wifi.progressSubmit2" >
+                    {({title,visible,loading,enable,run,error,progress})=>{ 
+                        return <Button loading={loading} timeout={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
+                    }}
+                </Network.Action>
+                <Network.Action<typeof Network.fields.wifi.retrySubmit> name="fields.wifi.retrySubmit" >
+                    {({title,visible,loading,enable,run,error,retry,progress})=>{ 
+                        return <>
+                        <Button loading={loading} timeout={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
+                        {retry>0 && <span>重试次数：{retry}</span>}
+                        </>
+                    }}
+                </Network.Action>
+                <Network.Action<typeof Network.fields.wifi.standardSubmit> name="fields.wifi.standardSubmit" >
+                    {({title,visible,loading,enable,run,error,progress})=>{ 
+                        return <>
+                        <Button type="submit" loading={loading} timeout={progress} visible={visible}  error={error} enable={enable} onClick={run()}>{title}</Button>
+                        </>
+                    }}
+                </Network.Action>
+                <Network.Action<typeof Network.fields.wifi.cancelableSubmit> name="fields.wifi.cancelableSubmit" >
+                    {({title,visible,loading,enable,run,cancel,error,progress})=>{ 
+                        return <>
+                            <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={run({cancelable:true})}>{title}</Button>
+                        </>
+                    }}
+                </Network.Action>
+            </div>
+            
         </Card>
     </Network.Form>        
 }
@@ -195,14 +205,14 @@ const NetworkForm = ()=>{
 
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
-    const [state] = Network.useState()
- 
+    const [state] = Network.useState() 
+
     const submit = useCallback((options?:ActionRunOptions)=>{
-        Network.actions.submit(options).then((result)=>{
-            console.log("提交结果：",result)
-        }).catch((error)=>{
-            console.log("提交错误：",error)
-        })
+        // Network.actions.submit(options).then((result)=>{            
+        //     console.log("提交结果：",result)
+        // }).catch((error)=>{
+        //     console.log("提交错误：",error)
+        // })
     },[])
   
     // Network.state.actions.ping.execute
@@ -216,12 +226,17 @@ const FormDemo:React.FC = ()=>{
                 {/* <NetworkForm/> */}
                 <button onClick={()=>submit()}>提交</button>
                 <button onClick={()=>submit({timeout:1000})}>提交超时</button>
+                <span>
+                <button onClick={()=>submit({cancelable:true})}>提交取消</button>
+                <button onClick={()=>submit}>取消</button>
+                </span>
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单数据">
                     <JsonViewer data={state}/> 
                 </Card>
             </div>
+            
         </div>
         
     )

@@ -84,3 +84,7 @@ export function joinValuePath(paths:(string | string[])[]):string{
     }).join('_')
 }
  
+
+export function getError(e:any):Error{
+    return  e instanceof Error ? e : new Error(e)
+}

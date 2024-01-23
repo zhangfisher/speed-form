@@ -13,7 +13,7 @@ import type { StoreSchema, ComputedScope, StoreOptions, ComputedContext, IStore 
 import { ComputedScopeRef } from "./store";
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
-import { skipComputed, isSkipComputed, getValueByPath, joinValuePath } from "./utils";
+import { skipComputed, isSkipComputed, getValueByPath, joinValuePath, getError } from "./utils";
 import { switchValue } from "flex-tools/misc/switchValue";
 import { assignObject } from "flex-tools/object/assignObject";
 import { Dict } from "./types";
@@ -30,18 +30,17 @@ export interface ComputedParams extends Record<string,any>{
   // 获取一个进度条，用来显示异步计算的进度
   getProgressbar?:(opts?:{max?:number,min?:number,value?:number})=>ComputedProgressbar
   // 当计算函数启用超时时，可以指定一个cb，在超时后会调用此函数
-  onTimeout?:(cb:()=>void)=>void   
-  /**
-   * 当计算正在loading时，如果在组件中调用cancel，则会调用onCancel中指定的cb函数，此时
-   * 计算函数应该要停止执行退出,是否停止执行由计算函数开发者自己决定   
-   */
-  onCancel?:(cb:()=>void)=>void   
+  onTimeout?:(cb:()=>void)=>void    
   /**
    * 
    * 提供一个函数用来获取当前Scope的快照
    * 传入的scope是一个经过Proxy处理的响应式对象，此方法可以对scope进行转换为普通对象   
    */
   getSnap?:<T=Dict>(scope:any)=>T  
+  /**
+   * 在执行计算函数时，如果传入AbortController.signal可以用来传递给异步计算函数，用来取消异步计算
+   */
+  abortSignal?:(timeout?:number)=>AbortSignal | null  
 }
 
 export interface ComputedOptions<Value=any,Extras extends Dict={}> {
@@ -71,6 +70,10 @@ export interface ComputedOptions<Value=any,Extras extends Dict={}> {
    *  如果重入时，则在debug=true时会在控制台打印出警告信息
    */
   noReentry?:boolean
+  /**
+   * 提供一个异步信号，用来传递给异步计算函数以便可以取消异步计算
+   */
+  abortSignal?:()=>AbortSignal | null
   /**
    * 当计算函数执行出错时的重试次数
    * 
@@ -110,6 +113,9 @@ export type ComputedDepends = Array<string> | Array<string[]> | Array<string | A
 export type ComputedGetter<R,Scope=any> = (scopeDraft: Scope) => Exclude<R,Promise<any>>
 export type AsyncComputedGetter<R,Scope=any> = (scopeDraft:Scope,options:Required<ComputedParams>) => Promise<R>
 
+// 当调用run方法时，用来传参覆盖原始的计算参数
+export type RuntimeComputedOptions = Pick<ComputedOptions,'abortSignal' | 'noReentry' | 'retry' | 'onError' | 'timeout' | 'extras'>
+
 export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
   loading? : boolean;
   progress?: number;                // 进度值    
@@ -117,8 +123,7 @@ export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
   error?   : any;
   retry?   : number                 // 重试次数，当执行重试操作时，会进行倒计时，每次重试-1，直到为0时停止重试
   value    : Value;
-  run      : (options:{cancelable?:boolean}) => {};              // 重新执行任务
-  cancel   : () => void;              // 取消正在执行的任务
+  run      : (options?:RuntimeComputedOptions) => {};        // 重新执行任务
 } & ExtAttrs
 
 export interface AsyncComputedParams<R> {
@@ -352,21 +357,10 @@ function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial
     error: null,
     progress: 0,
     run: markRaw(
-        skipComputed((options:{cancelable?:boolean}) => {
-          const opts = Object.assign({cancelable:false},options)
-          const extraArgs:Dict = {}
-          if(opts.cancelable){
-            const abortController =  new AbortController()            
-            extraArgs.cancelSignal = abortController.signal
-          }
-          return stateCtx.runMutateTask({desc:mutateId,extraArgs:{a:1}});
+        skipComputed((args:Dict) => {
+          return stateCtx.runMutateTask({desc:mutateId,extraArgs:args});
         })
-    ),
-    cancel: markRaw(
-        skipComputed(() => {
-          return stateCtx.cancelMutateTask({desc:mutateId});
-        })
-    ),
+    ) 
   },valueObj)
 }
 
@@ -416,27 +410,27 @@ function updateAsyncComputedState(setState:any,resultPath:string[],values:Partia
  * @param scopeDraft 
  * @param options 
  */
-async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,options:{computedResultPath:string[], input:any[],setState:any,computedContext: IOperateParams,computedOptions:ComputedOptions,storeOptions: StoreOptions}){
-  const { input,computedOptions,computedContext,storeOptions,setState ,computedResultPath} = options;  
-  const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext,storeOptions,type:"context"})
-  const scopeDraft= getComputedRefDraft(draft,{input,computedOptions,computedContext,storeOptions,type:"scope"})  
+async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,options:{computedResultPath:string[], input:any[],setState:any,computedContext: IOperateParams,computedOptions:Required<ComputedOptions>,storeOptions: StoreOptions}){
+  const { input, computedOptions, computedContext,storeOptions, computedResultPath, setState} = options;  
+  const thisDraft = getComputedRefDraft(draft,{input, computedOptions, computedContext,storeOptions, type:"context"})
+  const scopeDraft= getComputedRefDraft(draft,{input, computedOptions, computedContext,storeOptions, type:"scope"})  
   const { fullKeyPath:valuePath } = computedContext;  
   const { timeout=0,retry=[0,0] }  = computedOptions  
   const [retryCount,retryInterval] = Array.isArray(retry) ? retry : [Number(retry),0]
 
-  let timeoutCallback:Function,cancelCallback:Function  
+  let timeoutCallback:Function 
 
   const computedParams:Required<ComputedParams> ={
-      onTimeout:(cb:Function)=>timeoutCallback=cb,
-      getProgressbar:(options)=>createComputeProgressbar(setState,valuePath,options),
-      getSnap:(scope:any)=>getSnap(scope,false),
-      onCancel:(cb:Function)=>cancelCallback=cb
+    onTimeout:(cb:Function)=>timeoutCallback=cb,
+    getProgressbar:(options)=>createComputeProgressbar(setState,valuePath,options),
+    getSnap:(scope:any)=>getSnap(scope,false),
+    abortSignal:computedOptions.abortSignal
   }  
-  
+     
   for(let i=0;i<retryCount+1;i++){
       
     let timerId:any,countdownId:any,hasError=false
-    let isTimeout=false,isCanceling=false // 是否正在取消中
+    let isTimeout=false 
 
     const afterUpdated={} // 保存执行完成后需要更新的内容，以便在最后一起更新
     try {
@@ -452,7 +446,7 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
             clearInterval(countdownId)   
             updateAsyncComputedState(setState,computedResultPath,{loading:false,error:"TIMEOUT",timeout:0})            
           }                    
-        },timeoutValue)
+        },timeoutValue)        
         // 启用设置倒计时:  比如timeout= 6*1000, countdown= 6
         if(countdown>1){
           countdownId = setInterval(()=>{
@@ -474,7 +468,7 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
         try { computedOptions.onError.call(thisDraft, e)} catch { }
       }
       if(!isTimeout){        
-        Object.assign(afterUpdated,{error:e.message,timeout:0})        
+        Object.assign(afterUpdated,{error:getError(e).message,timeout:0})        
       }
       /// 启用重试
       if(retryCount>0){
@@ -554,14 +548,23 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
       }
     },
     // 此函数在依赖变化时执行，用来异步计算
-    task: async ({ draft, setState, input,extraArgs }) => {
+    task: async ({ draft, setState, input, extraArgs }) => {
+      // 当使用run方法时可以传入参数来覆盖默认的计算函数的配置参数
+      const finalComputedOptions = Object.assign({},computedOptions,extraArgs) as Required<ComputedOptions>
       if(noReentry && isMutateRunning ) {
         storeOptions.log(`Reentry async computed: ${valuePath.join(".")}`,'warn');
         return
       }
       isMutateRunning=true
       try{
-        return await executeComputedGetter(draft,getter,{computedResultPath,input,computedOptions,computedContext,storeOptions,setState})
+        return await executeComputedGetter(draft,getter,{
+          input,
+          computedResultPath,          
+          computedOptions:finalComputedOptions,
+          computedContext,
+          storeOptions,
+          setState
+        })
       }finally{
         isMutateRunning=false
       }

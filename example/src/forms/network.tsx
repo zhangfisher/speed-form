@@ -168,6 +168,21 @@ const formSchema = {
 				execute:action(async (fields)=>{
 					console.log("formData=",fields)
 				})
+			},
+			cancelableSubmit: { // 这是一个动作,
+				title: "可取消的提交",
+				execute:action(async (fields,{abortSignal})=>{
+					console.log("formData=",fields)	
+					return new Promise<void>((resolve,reject)=>{
+						setTimeout(()=>{
+							resolve()
+						},5000)
+						abortSignal()?.addEventListener("abort",()=>{
+							console.log("已取消：cancelled")
+							reject("cancelled")
+						})
+					})					
+				})
 			}
 		}
 	},
@@ -177,10 +192,17 @@ const formSchema = {
 			enable: (root: any) => {
 				return root.fields.wifi.ssid.value.length > 3
 			},
-			execute: async () => {
-				await delay(2000);
-				return count++
-			},
+			execute: action(async (f,{abortSignal}) => {
+				return new Promise<number>((resolve,reject)=>{
+					setTimeout(()=>{
+						resolve(count++)
+					},2000)
+					abortSignal()?.addEventListener("abort",()=>{
+						console.log("已取消：cancelled")
+						reject("cancelled")
+					})
+				})			 
+			}),
 		},
 		errorSubmit: {
 			title: "提交错误", 

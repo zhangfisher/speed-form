@@ -44,7 +44,7 @@ import type { ReactFC, Dict, ComputedAttr } from "./types";
 import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import { ActionRecords,  FormActions,  createActionComponent, createFormActions } from './action';
+import { FormActions,  createActionComponent, getAction } from './action';
 import { FIELDS_STATE_KEY } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
 
@@ -281,17 +281,16 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 	type StoreType = typeof store 
 	type FieldsType = (typeof store.state)['fields'] 
 	type ActionsType = (typeof store.state)['actions'] 
-	const actions = createFormActions.call<IStore,[],ActionRecords<Schema['actions']>>(store as unknown as IStore)
 	return {
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
-		Action: createActionComponent<StoreType,ActionsType>(store,store.state.actions,actions,opts),	
+		Action: createActionComponent<StoreType>(store,opts),	
+		getAction,
     	fields:store.state.fields as FieldsType,		
 		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase> & {actions:ActionsType},
 		useState:store.useState,
-		load:loadFormData,
-		actions,
+		load:loadFormData 
 	};
 }
 
