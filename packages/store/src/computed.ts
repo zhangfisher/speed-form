@@ -13,11 +13,12 @@ import type { StoreSchema, ComputedScope, StoreOptions, ComputedContext, IStore 
 import { ComputedScopeRef } from "./store";
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
-import { skipComputed, isSkipComputed, getValueByPath, joinValuePath, getError } from "./utils";
+import { skipComputed, isSkipComputed, getValueByPath, joinValuePath, getError, getDeps } from "./utils";
 import { switchValue } from "flex-tools/misc/switchValue";
 import { assignObject } from "flex-tools/object/assignObject";
 import { Dict } from "./types";
 import { delay } from 'flex-tools/async/delay';
+import { isPlainObject } from 'flex-tools/typecheck/isPlainObject';
  
 
 export interface ComputedProgressbar{
@@ -53,7 +54,7 @@ export interface ComputedOptions<Value=any,Extras extends Dict={}> {
   // 但是在返回Promise或者Babel转码等情况下，判断可能失效时，需要手动指定async=true
   async?:boolean
   // 指定依赖，例如["key","a.b.c"]等形式
-  depends?:Array<Array<string>|string>
+  depends?:ComputedDepends
   /**
    * 指定超时时间，当计算函数执行超过指定时间后，会自动设置loading为false
    * 如果timeout是一个数组，则第一个值表示超时时间，第二个值表示超时期的倒计时间隔
@@ -109,7 +110,7 @@ export interface ComputedOptions<Value=any,Extras extends Dict={}> {
   extras?:Extras
 };
 
-export type ComputedDepends = Array<string> | Array<string[]> | Array<string | Array<string>> | ((draft: any) => any[])
+export type ComputedDepends = Array<string> | Array<string | Array<string>> | ((draft: any) => Array<string | Array<string>>)
 export type ComputedGetter<R,Scope=any> = (scopeDraft: Scope) => Exclude<R,Promise<any>>
 export type AsyncComputedGetter<R,Scope=any> = (scopeDraft:Scope,options:Required<ComputedParams>) => Promise<R>
 
@@ -217,31 +218,51 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
  * @returns
  *
  */
-export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: AsyncComputedGetter<R>,options?: ComputedOptions<R,ExtraAttrs>): ComputedAsyncReturns<R & ExtraAttrs>;
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: AsyncComputedGetter<R>,depends?:ComputedDepends,options?: ComputedOptions<R,ExtraAttrs>): ComputedAsyncReturns<R & ExtraAttrs>;
 export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: ComputedGetter<R>, options?: ComputedOptions<R,ExtraAttrs>): R
-export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any, options?: ComputedOptions<R,ExtraAttrs>):any {
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depends:any, options?: ComputedOptions<R,ExtraAttrs>):any {
 	
   if (typeof getter != "function")  throw new Error("getter must be a function");
-  const opts: Required<ComputedOptions<R,ExtraAttrs>> = assignObject({
+  
+  // 解析参数：同时支持同步和异步计算函数两种方式声明
+  let deps:ComputedDepends = []
+  let opts : ComputedOptions<R,ExtraAttrs> = {
     async: false,
     timeout:0,
     depends: [],
     scope:ComputedScopeRef.Current,
     toComputedResult:ComputedScopeRef.Self,
     immediate:true,
-  },options) 
+  }
+
+  if(arguments.length==1){
+    deps = []    
+  }else if(arguments.length==2){
+    if(Array.isArray(arguments[1])){
+      deps = arguments[1]
+    }else if(isPlainObject(arguments[1])){
+      Object.assign(opts,arguments[1])
+    }else{
+      throw new Error("invalid arguments")
+    }
+  }else if(arguments.length>=3){
+    deps = arguments[1]
+    Object.assign(opts,arguments[2])
+  }
+
 
   // 是否是异步计算函数
-  const isAsync = opts.async === true || isAsyncFunction(getter)
+  const isAsync = opts.async === true 
+        || isAsyncFunction(getter)
+        || (arguments.length>=2 && Array.isArray(depends)) 
 
-  if (isAsync) {
-    if(Array.isArray(opts.depends) && opts.depends.length==0){
-      console.warn("async computed function should specify depends")
-    }
+
+  if (isAsync && opts.depends?.length==0) {
+    console.warn("async computed function should specify depends")
   }
 
   opts.async = isAsync;
-
+  opts.depends = deps;
   const fn = () => {
     return {
       getter,
@@ -493,6 +514,7 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
   }
 }
 
+ 
 /**
  * 为异步计算属性生成mutate
  * @param stateCtx
@@ -529,15 +551,14 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
   },{defaultValue:valuePath})    
 
 
-  const deps = (depends || []).map((deps: any) =>Array.isArray(deps) ? deps : deps.split("."))
+  const deps = getDeps(depends) //(depends || []).map((deps: any) =>Array.isArray(deps) ? deps : deps.split("."))
 
   const mutateId = getComputedId(valuePath,computedOptions.id)
 
   storeOptions.log(`Create async computed: ${valuePath.join(".")} (depends=${joinValuePath(deps)})`);
 
-  const witness = stateCtx.mutate({
-    // 声明依赖
-    deps: (state: any) =>(depends || []).map((deps: any) =>getVal(state, Array.isArray(deps) ? deps : deps.split("."))),
+  const witness = stateCtx.mutate({ 
+    deps: (state: any) =>deps.map((dep: any) =>getVal(state, dep)),
     fn: (draft, params) => {
       if (params.isFirstCall) {     
         if(toComputedResult=='self'){ // 原地替换

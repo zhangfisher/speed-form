@@ -1,4 +1,5 @@
 import { getVal } from '@helux/utils'
+import type { ComputedDepends } from './computed'
 
 
 
@@ -87,4 +88,17 @@ export function joinValuePath(paths:(string | string[])[]):string{
 
 export function getError(e:any):Error{
     return  e instanceof Error ? e : new Error(e)
+}
+
+/**
+ * 用来将依赖参数转换为数组
+ * @param arg 
+ */
+export function getDeps(arg:ComputedDepends | undefined,ctx?:any):(string[])[]{
+    let deps:(string[])[]= []
+    if(typeof(arg) === 'function'){
+        arg = arg.call(ctx,ctx)
+    }
+    deps = (arg || []).map((d: any) =>Array.isArray(d) ? deps : d.split("."))
+    return deps
 }

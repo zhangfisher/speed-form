@@ -11,7 +11,7 @@ const formSchema = {
 			value: "React-Helux-Form",
 			placeholder: "输入网络配置名称",
 			title: "网络名称",
-			validate:computed<boolean>(async (value: string) => value.length > 3)
+			validate:computed<boolean>(async (value: string) => value.length > 3,)
 		},
 		title: {
 			value: "React-Helux-Form",
@@ -113,7 +113,7 @@ const formSchema = {
 				execute:computed(async (wifi:any)=>{
 					await delay(6000)
 					console.log("提交wifi=",wifi)
-				},{
+				},[],{
 					timeout:[5 * 1000,5]
 				})
 			},
@@ -138,7 +138,7 @@ const formSchema = {
 				title: "提交出错重试",
 				execute:computed(async ()=>{
 					throw new Error("ERROR"+count++)
-				},{
+				},[],{
 					retry:[5,1000]	// 重试5次，每次间隔1秒
 				})
 			},
@@ -211,7 +211,7 @@ const formSchema = {
 			title: "提交超时", 
 			execute: computed(async () => {
 				await delay(5000);								
-			},{timeout:2000}),
+			},[],{timeout:2000}),
 		},
 		ping: {
 			title: "测试网络连通性",
