@@ -291,7 +291,7 @@ export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGett
     return computed<R>(async (scope:any,opts)=>{
         const data = getFormData(getSnap(scope,false).fields)
         return await (getter as unknown as AsyncComputedGetter<R>)(data,opts)
-    },options)
+    },[],options)
 
 }
 

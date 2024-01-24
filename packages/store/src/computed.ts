@@ -226,7 +226,7 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
   
   // 解析参数：同时支持同步和异步计算函数两种方式声明
   let deps:ComputedDepends = []
-  let opts : ComputedOptions<R,ExtraAttrs> = {
+  const opts : ComputedOptions<R,ExtraAttrs> = {
     async: false,
     timeout:0,
     depends: [],
@@ -240,7 +240,7 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
   }else if(arguments.length==2){
     if(Array.isArray(arguments[1])){
       deps = arguments[1]
-    }else if(isPlainObject(arguments[1])){
+    }else if(typeof(arguments[1])=='object'){
       Object.assign(opts,arguments[1])
     }else{
       throw new Error("invalid arguments")
