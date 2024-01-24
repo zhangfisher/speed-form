@@ -208,7 +208,7 @@ const formSchema = {
 			},
 		},		
 		timeoutSubmit: {
-			title: "提交超时", 
+			title: "提交超时倒计时", 
 			execute: computed(async () => {
 				await delay(5000);								
 			},[],{timeout:2000}),
