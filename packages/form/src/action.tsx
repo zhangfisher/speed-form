@@ -161,7 +161,11 @@ export function getAction<State extends FormActionState=FormActionState>(actionS
     return async (opts?:ActionRunOptions)=>{     
         const finalOpts = Object.assign({},options,opts) as Required<ActionRunOptions>        
         await actionState.execute.run(finalOpts)      
-        return actionState.execute.value
+        if(actionState.execute.error){
+            throw new Error(actionState.execute.error)
+        }else{
+            return actionState.execute.value
+        }
     } 
 }
 

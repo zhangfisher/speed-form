@@ -207,12 +207,12 @@ const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.useState() 
 
-    const submit = useCallback((options?:ActionRunOptions)=>{
-        // Network.actions.submit(options).then((result)=>{            
-        //     console.log("提交结果：",result)
-        // }).catch((error)=>{
-        //     console.log("提交错误：",error)
-        // })
+    const submit = useCallback((actionState:any)=>{
+        Network.getAction(actionState)().then((result)=>{            
+            console.log("提交结果：",result)
+        }).catch((error)=>{
+            console.log("提交错误：",error)
+        })
     },[])
   
     // Network.state.actions.ping.execute
@@ -224,10 +224,10 @@ const FormDemo:React.FC = ()=>{
             <div style={{padding:"8px",margin:'8px',width:'60%'}}>
                 <NetworkForm/>
                 {/* <NetworkForm/> */}
-                <button onClick={()=>submit()}>提交</button>
+                <button onClick={()=>submit(Network.state.actions.next)}>提交</button>
                 <button onClick={()=>submit({timeout:1000})}>提交超时</button>
                 <span>
-                <button onClick={()=>submit({})}>提交取消</button>
+                <button onClick={()=>submit(Network.state.actions.errorSubmit)}>提交出错</button>
                 <button onClick={()=>submit}>取消</button>
                 </span>
             </div>

@@ -7,7 +7,7 @@ let count =1
 // 声明表单数据
 const formSchema = {
 	fields: {
-		asyncTitle: {
+		asyncTitle: { 
 			value: "React-Helux-Form",
 			placeholder: "输入网络配置名称",
 			title: "网络名称",
@@ -233,6 +233,7 @@ const formSchema = {
         next:{
             enable: (wifi: any) => wifi.ssid.value.length > 0,
             execute: async () => {
+				await delay(1000)
                 return 2
             }
         }
@@ -243,7 +244,7 @@ type NetworkFormType = typeof formSchema;
 type NetworkType = NetworkFormType['fields'];
 
 const Network = createForm<NetworkFormType>(formSchema);
- 
+
 
 // @ts-ignore
 globalThis.Network = Network;

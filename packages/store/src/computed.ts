@@ -110,7 +110,7 @@ export interface ComputedOptions<Value=any,Extras extends Dict={}> {
   extras?:Extras
 };
 
-export type ComputedDepends = Array<string> | Array<string | Array<string>> | ((draft: any) => Array<string | Array<string>>)
+export type ComputedDepends =Array<string | Array<string>> 
 export type ComputedGetter<R,Scope=any> = (scopeDraft: Scope) => Exclude<R,Promise<any>>
 export type AsyncComputedGetter<R,Scope=any> = (scopeDraft:Scope,options:Required<ComputedParams>) => Promise<R>
 
@@ -575,7 +575,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     task: async ({ draft, setState, input, extraArgs }) => {
       // 当使用run方法时可以传入参数来覆盖默认的计算函数的配置参数
       const finalComputedOptions = Object.assign({},computedOptions,extraArgs) as Required<ComputedOptions>
-      if(noReentry && isMutateRunning ) {
+      if(noReentry && isMutateRunning && storeOptions.debug) {
         storeOptions.log(`Reentry async computed: ${valuePath.join(".")}`,'warn');
         return
       }
