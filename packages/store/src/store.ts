@@ -19,9 +19,9 @@ export enum ComputedScopeRef{
     None = 'none',
     Root = 'root',
     Current = 'current',
-    Parent = 'parent',
+    Parent = 'parent',  
     Depends = 'depends',          // 指向依赖数组
-    Self = 'self'
+    Self = 'self'                 // 指向自身，默认值
 
 }
 
@@ -134,7 +134,7 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
         const actions = createActions<T>(storeData.actions,stateCtx,api,opts)
 
         // 2. 处理Computed属性
-        createComputed<T['state']>(stateCtx,api,computedObjects,opts)!
+        createComputed<T['state']>(stateCtx,computedObjects,opts)!
 
         // 3. 处理useState
         const useState = wrapperUseState<T['state']>(stateCtx)

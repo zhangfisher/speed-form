@@ -62,11 +62,9 @@ const formSchema = {
 			start: {
 				title: "起始地址",
 				value: "192.168.1.1",
-				visible: computed<boolean>(
-					(dhcp: any) => {
+				visible: computed<boolean>((dhcp: any) => {
 						return dhcp.enable.value;
-					},
-					{ 
+					},{ 
 						scope: ComputedScopeRef.Parent
 					}
 				),
@@ -76,11 +74,9 @@ const formSchema = {
 				title: "结束地址",
 				value: "192.168.1.100",
 				// 将visible的context指向父对象即dhcp
-				visible: computed<boolean>(
-					(fields: any) => {
+				visible: computed<boolean>((fields: any) => {
 						return fields.dhcp.enable.value;
-					},					
-					{ 
+					},{ 
 						scope: ComputedScopeRef.Root ,
 						depends:["dhcp.enable.value"]
 					}
@@ -176,7 +172,7 @@ const formSchema = {
 					return new Promise<void>((resolve,reject)=>{
 						setTimeout(()=>{
 							resolve()
-						},5000)
+						},10* 1000)
 						abortSignal()?.addEventListener("abort",()=>{
 							console.log("已取消：cancelled")
 							reject("cancelled")
@@ -192,7 +188,7 @@ const formSchema = {
 			enable: (root: any) => {
 				return root.fields.wifi.ssid.value.length > 3
 			},
-			execute: action(async (f,{abortSignal}) => {
+			execute: action(async (scope:any,{abortSignal}) => {				
 				return new Promise<number>((resolve,reject)=>{
 					setTimeout(()=>{
 						resolve(count++)

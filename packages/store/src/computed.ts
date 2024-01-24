@@ -8,7 +8,7 @@
  *
  */
 
-import { HeluxApi, IOperateParams, ISharedCtx, markRaw, getSnap } from 'helux';
+import { IOperateParams, ISharedCtx, markRaw, getSnap } from 'helux';
 import type { StoreSchema, ComputedScope, StoreOptions, ComputedContext, IStore } from "./store";
 import { ComputedScopeRef } from "./store";
 import { getVal, setVal } from "@helux/utils";
@@ -40,7 +40,7 @@ export interface ComputedParams extends Record<string,any>{
   /**
    * 在执行计算函数时，如果传入AbortController.signal可以用来传递给异步计算函数，用来取消异步计算
    */
-  abortSignal?:(timeout?:number)=>AbortSignal | null  
+  abortSignal?:()=>AbortSignal | null | void | undefined
 }
 
 export interface ComputedOptions<Value=any,Extras extends Dict={}> {
@@ -73,7 +73,7 @@ export interface ComputedOptions<Value=any,Extras extends Dict={}> {
   /**
    * 提供一个异步信号，用来传递给异步计算函数以便可以取消异步计算
    */
-  abortSignal?:()=>AbortSignal | null
+  abortSignal?:()=>AbortSignal | null | void | undefined
   /**
    * 当计算函数执行出错时的重试次数
    * 
@@ -127,17 +127,18 @@ export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
 } & ExtAttrs
 
 export interface AsyncComputedParams<R> {
-  getter: () => Promise<R> | R;
+  getter: (scope:any) => Promise<R> | R;
   options: ComputedOptions<R>
 }
 
 // 计算属性的声明形式
 export type Computed<T> = (...args: any) => T; // 同步计算函数
 export type AsyncComputed<T> = (...args: any) => Promise<T>; // 异步计算函数
-export type ComputedAsyncReturns<T> = (...args: any) => AsyncComputedParams<T>; // 使用computed函数创建的计算属性
-export type ComputedSyncReturns<T> = (...args: any) => AsyncComputedParams<T>; // 使用computed函数创建的计算属性
- 
+// 使用computed函数创建的计算属性
+export type ComputedAsyncReturns<T> = (...args: any) => AsyncComputedParams<T>; 
+export type ComputedSyncReturns<T> = (...args: any) => Exclude<T,Promise<any>>;  
 /**
+
  * 
  * 根据当前计算函数的信息和配置参数获取计算函数的上下文或作用域
  * 
@@ -217,8 +218,8 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
  *
  */
 export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: AsyncComputedGetter<R>,options?: ComputedOptions<R,ExtraAttrs>): ComputedAsyncReturns<R & ExtraAttrs>;
-export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: ComputedGetter<R>, options?: ComputedOptions<R,ExtraAttrs>): R  
-export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any, options?: ComputedOptions<R,ExtraAttrs>): ComputedAsyncReturns<R & ExtraAttrs> {
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: ComputedGetter<R>, options?: ComputedOptions<R,ExtraAttrs>): R
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any, options?: ComputedOptions<R,ExtraAttrs>):any {
 	
   if (typeof getter != "function")  throw new Error("getter must be a function");
   const opts: Required<ComputedOptions<R,ExtraAttrs>> = assignObject({
@@ -250,7 +251,7 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any, opt
 
   // @ts-ignore
   fn.__COMPUTED__ = isAsync ? 'async' : 'sync';
-  return fn as ComputedAsyncReturns<R & ExtraAttrs>;
+  return fn //as ComputedAsyncReturns<R & ExtraAttrs>;
 }
 
 /**
@@ -295,11 +296,12 @@ function getComputedId(valuePath:string[],idArg:ComputedOptions['id']){
  * @param stateCtx
  * @param computedContext
  */
-function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>, computedContext: IOperateParams,computeObjects:IStore['computedObjects'], computedOptions: ComputedOptions, storeOptions: Required<StoreOptions>) {
+function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>, computedContext: IOperateParams,computeObjects:IStore['computedObjects'], storeOptions: Required<StoreOptions>) {
 
-  let { fullKeyPath:valuePath, value: getter, parent } = computedContext;
+  let { fullKeyPath:valuePath, value, parent } = computedContext;
   const { onCreateComputed } = storeOptions;
-
+  let { getter, options: computedOptions }  = value() as AsyncComputedParams<any>
+  
   // 排除掉所有非own属性,例如valueOf等
   if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
     return;
@@ -341,6 +343,7 @@ function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedC
   });
   computedContext.replaceValue(getVal(witness.snap, valuePath));
   computeObjects[mutateId] = witness
+  return computeObjects[mutateId] 
 }
 
 
@@ -532,7 +535,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
 
   storeOptions.log(`Create async computed: ${valuePath.join(".")} (depends=${joinValuePath(deps)})`);
 
-  computeObjects[mutateId] = stateCtx.mutate({
+  const witness = stateCtx.mutate({
     // 声明依赖
     deps: (state: any) =>(depends || []).map((deps: any) =>getVal(state, Array.isArray(deps) ? deps : deps.split("."))),
     fn: (draft, params) => {
@@ -573,6 +576,8 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     desc:mutateId,
     checkDeadCycle: false,
   });
+  computedContext.replaceValue(getVal(witness.snap, valuePath));
+  computeObjects[mutateId]  = witness
   return computeObjects[mutateId] 
 }
 
@@ -580,10 +585,10 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
 /**
  * 创建计算属性
  * 为state中的计算属性自动创建mutate
- * @param options
+ * @param storeOreOptions
  * @returns
  */
-export function createComputed<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>,api: HeluxApi, computeObjects:IStore['computedObjects'],options: Required<StoreOptions>) {
+export function createComputed<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>,computeObjects:IStore['computedObjects'],storeOreOptions: Required<StoreOptions>) {
 	  const replacedMap: any = {};
     // 拦截读取state的操作，在第一次读取时，
     // - 为计算函数创建mutate
@@ -596,24 +601,31 @@ export function createComputed<Store extends StoreSchema<any>>(stateCtx: IShared
         // 将声明在state里面的计算函数转换为helux的mutate
         //******** 使用computed创建 ****************** */
         if (value.__COMPUTED__=='async') {
-          const mutate = createAsyncComputedMutate<Store>(stateCtx, params,computeObjects, options);
-          if(mutate) params.replaceValue(getVal((mutate as any).snap,valuePath));
-      } else if (isAsyncFunction(value)) {
-        // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次
+          createAsyncComputedMutate<Store>(stateCtx, params,computeObjects, storeOreOptions);
+        }else if (value.__COMPUTED__=='sync') {
+          createComputedMutate<Store>(stateCtx, params,computeObjects, storeOreOptions);
+        }else if (isAsyncFunction(value)) {
+          // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次
+            params.value = () => ({
+              getter: value,
+              options: {
+                depends  : [],                    // 未指定依赖
+                initial  : undefined,             // 也没有初始化值
+                immediate: true,                  // 立即执行
+                context  : storeOreOptions.computedThis,  
+            },
+            });
+            createAsyncComputedMutate<Store>(stateCtx, params,computeObjects, storeOreOptions);
+        }else { // 简单的同步计算函数，没有通过computed函数创建
           params.value = () => ({
             getter: value,
             options: {
-              depends: [], // 未指定依赖
-              initial: undefined, // 也没有初始化值
-              immediate: true, // 立即执行
-              context: options.computedThis, // 指定默认上下文
-          },
-          });
-          const mutate = createAsyncComputedMutate<Store>(stateCtx, params,computeObjects, options);
-          if(mutate) params.replaceValue(getVal((mutate as any).snap,valuePath));
-      } else {
-        // 直接声明同步计算函数,使用全局配置的计算上下文
-          createComputedMutate<Store>(stateCtx, params, computeObjects, {},options);
+              initial  : undefined, 
+              context: storeOreOptions.computedThis, 
+            }
+          })
+          // 直接声明同步计算函数,使用全局配置的计算上下文
+          createComputedMutate<Store>(stateCtx, params, computeObjects, storeOreOptions);
         }
       }
     });

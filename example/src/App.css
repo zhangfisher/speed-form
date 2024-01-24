@@ -18,6 +18,15 @@
   margin-top: 0;
   margin-bottom: 0;
 }
+.speed-button{
+  background: #fafafa;
+  border:1px solid #ddd;
+
+}
+.speed-button:hover{
+  background: #eee;
+  border:1px solid #5d80e2;
+}
 
 #app>ul.navbar>li{
   padding:4px 8px 4px 8px;

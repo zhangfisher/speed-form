@@ -140,14 +140,14 @@ const NetworkForm = ()=>{
             </Network.Field> 
            <Network.Field<typeof Network.fields.dhcp.start> name="dhcp.start">                      
                 {({value,validate,visible,title,sync})=>{ 
-                    return  <FieldRow visible={visible.value} label={title}>
+                    return  <FieldRow visible={visible} label={title}>
                         <input className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                     </FieldRow>
                 } }
             </Network.Field>
             <Network.Field<typeof Network.fields.dhcp.end> name="dhcp.end">                      
                 {({value,validate,visible,title,sync})=>{     
-                    return <FieldRow visible={visible.value} label={title}>
+                    return <FieldRow visible={visible} label={title}>
                         <input className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                     </FieldRow>
                 }}
@@ -166,18 +166,18 @@ const NetworkForm = ()=>{
                 </Network.Action>
                 <Network.Action<typeof Network.fields.wifi.progressSubmit> name="fields.wifi.progressSubmit" >
                     {({title,visible,loading,enable,run,error,progress})=>{ 
-                        return <Button loading={loading} timeout={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
+                        return <Button loading={loading} progress={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
                     }}
                 </Network.Action>
                 <Network.Action<typeof Network.fields.wifi.progressSubmit2> name="fields.wifi.progressSubmit2" >
                     {({title,visible,loading,enable,run,error,progress})=>{ 
-                        return <Button loading={loading} timeout={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
+                        return <Button loading={loading} progress={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
                     }}
                 </Network.Action>
                 <Network.Action<typeof Network.fields.wifi.retrySubmit> name="fields.wifi.retrySubmit" >
                     {({title,visible,loading,enable,run,error,retry,progress})=>{ 
                         return <>
-                        <Button loading={loading} timeout={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
+                        <Button loading={loading} progress={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
                         {retry>0 && <span>重试次数：{retry}</span>}
                         </>
                     }}
@@ -185,14 +185,14 @@ const NetworkForm = ()=>{
                 <Network.Action<typeof Network.fields.wifi.standardSubmit> name="fields.wifi.standardSubmit" >
                     {({title,visible,loading,enable,run,error,progress})=>{ 
                         return <>
-                        <Button type="submit" loading={loading} timeout={progress} visible={visible}  error={error} enable={enable} onClick={run()}>{title}</Button>
+                        <Button type="submit" loading={loading} progress={progress} visible={visible}  error={error} enable={enable} onClick={run()}>{title}</Button>
                         </>
                     }}
                 </Network.Action>
                 <Network.Action<typeof Network.fields.wifi.cancelableSubmit> name="fields.wifi.cancelableSubmit" >
                     {({title,visible,loading,enable,run,cancel,error,progress})=>{ 
                         return <>
-                            <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={run({cancelable:true})}>{title}</Button>
+                            <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={run()}>{title}</Button>
                         </>
                     }}
                 </Network.Action>
@@ -227,7 +227,7 @@ const FormDemo:React.FC = ()=>{
                 <button onClick={()=>submit()}>提交</button>
                 <button onClick={()=>submit({timeout:1000})}>提交超时</button>
                 <span>
-                <button onClick={()=>submit({cancelable:true})}>提交取消</button>
+                <button onClick={()=>submit({})}>提交取消</button>
                 <button onClick={()=>submit}>取消</button>
                 </span>
             </div>

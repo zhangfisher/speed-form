@@ -1,8 +1,8 @@
+import type { Computed,AsyncComputed,ComputedAsyncReturns,AsyncComputedObject, ComputedSyncReturns } from "./computed"
+
 export type StateUpdater<State=any> = (state:State)=>any
 
 
-
-import type { Computed,AsyncComputed,ComputedAsyncReturns,AsyncComputedObject, ComputedSyncReturns } from "./computed"
 /**
  * 返回函数的返回值类型
  * 支持返回()=>Promise<R>中的R类型 
@@ -11,18 +11,27 @@ export type AsyncReturnType<T extends (...args: any) => any> = T extends (...arg
     T extends (...args: any) => infer R ? R : any)
     
 // 用来提前计算属性函数的返回值
-export type PickComputedResult<T> = T extends  ComputedAsyncReturns<infer X> ? AsyncComputedObject<X> : 
-                                    ( T extends ComputedSyncReturns<infer X> ? X: 
-                                        (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
-                                            (T extends Computed<infer R> ? R : T) 
-                                        )
-                                    )
-                                    
+// export type PickComputedResult<T> = T extends  ComputedAsyncReturns<infer X> ? AsyncComputedObject<X> : 
+//                                     ( T extends ComputedSyncReturns<infer X> ? X: 
+//                                         (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
+//                                             (T extends Computed<infer R> ? R : T) 
+//                                         )
+//                                     )
 
-// 转换状态中的计算属性函数
-// 将状态中的计算属性函数转换为计算属性函数的返回值类型
-// 如：{count:()=>1} => {count:number}
-// 如：{count:async ()=>1} => {count:number}
+export type PickComputedResult<T> = T extends  ComputedAsyncReturns<infer X> ? AsyncComputedObject<X> : 
+    ( T extends ComputedSyncReturns<infer X> ? X: 
+        (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
+            (T extends Computed<infer R> ? R : T) 
+        )
+    )                              
+/**
+ 
+ 转换状态中的计算属性函数的类型
+ 将状态中的计算属性函数转换为计算属性函数的返回值类型
+ 如：{count:()=>1} => {count:number}
+ 如：{count:async ()=>1} => {count:number}
+
+*/
 export type ComputedState<T extends Record<string, any>> = {
       [K in keyof T]: T[K] extends (...args:any) => any ? PickComputedResult<T[K]> : T[K] extends Record<string, any> ? ComputedState<T[K]> : T[K];
 };

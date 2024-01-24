@@ -32,8 +32,7 @@
 
 
 import { ReactNode, useCallback,useState,useEffect, useRef, RefObject, useMemo} from "react";
-import { Dict  } from "./types";
-import { getVal } from "@helux/utils";
+import { Dict  } from "./types"; 
 import React from "react";
 import type { FormOptions } from "./form";
 import {  AsyncComputedGetter, AsyncComputedObject, ComputedAsyncReturns, ComputedOptions, ComputedParams,  IStore, RuntimeComputedOptions, computed, getValueByPath, watch } from 'helux-store'; 
@@ -57,9 +56,7 @@ export type DefaultActionRenderProps={
 } 
 
 export type ActionRunOptions = {    
-    preventDefault?:boolean
-    cancelable?:boolean     
-    getAbortController:(abortController:AbortController)=>void
+    abortController?:AbortController
 } & RuntimeComputedOptions
 
 
@@ -146,53 +143,65 @@ export type ActionProps<State extends FormActionState=FormActionState,PropTypes 
  
 
 /**
- * 获取表单动作Action
+ * 根据表单动作的状态数据创建动作运行函数
  * 
  *  const run  = getAction<typeof Network.actions.submit>(Network.actions.submit,{...options...})
+ * 
+ *  run({..计算函数的配置参数，覆盖上面的配置...
+ *     abortable?:boolean           // 是否可取消,如果可取消
+ *     abortController?:AbortController  // 传入一个AbortController用来传递给动作计算函数
+ *   })
+ * 
+ * 
  * 
  * @param actionState 
  * @returns 
  */
 export function getAction<State extends FormActionState=FormActionState>(actionState:State,options?:ActionRunOptions){         
-    return (opts?:ActionRunOptions)=>{     
-        const finalOpts = Object.assign({},{
-            cancelable:false              // 允许取消
-        },options,opts) as Required<ActionRunOptions>       
-        if(finalOpts.cancelable){
-            const controller= new AbortController()
-            if(typeof(finalOpts.getAbortController)=='function'){
-                finalOpts.getAbortController(controller)
-            }
-            finalOpts.abortSignal = ()=>controller  && controller.signal                
-        }
-        actionState.execute.run(finalOpts)
+    return async (opts?:ActionRunOptions)=>{     
+        const finalOpts = Object.assign({},options,opts) as Required<ActionRunOptions>        
+        await actionState.execute.run(finalOpts)      
+        return actionState.execute.value
     } 
 }
 
  /**
- * 运行Action
- *  
+ *  在组件中运行Action
+ * 
+ * const [run,cancel] = useActionRunner()
+ * 
+ * <button onClick={run({
+ *      abortable:true,
+ *      preventDefault:true,
+ *      ...options  传递给计算函数的其他配置参数
+ * })}>提交</button>
+ * 
  * @param actionState 
  * @returns 
  */
 function useActionRunner<State extends FormActionState=FormActionState>(actionState:State){
     const controller = useRef<AbortController>() 
-    const runner = useCallback((options?:ActionRunOptions)=>{        
-        const [ run,_,abortController ] = getAction<State>(actionState,{...options,cancelable:true})
+    const runner = useCallback((options?:ActionRunOptions & {abortable?:boolean,preventDefault?:boolean})=>{ 
+        const opts = Object.assign({},{noReentry:true,preventDefault:true,abortable:false},options)       
+        if(!controller.current || (controller.current && controller.current.signal.aborted)){
+            const abortController =  new AbortController()
+            controller.current =  abortController
+        }
+        opts.abortSignal = () => controller.current?.signal
+        const run = getAction<State>(actionState,opts)
         return (event:any)=>{
-            run(event)
-            
-            if(event && typeof(event.preventDefault)=='function' && opts.preventDefault){
+            run().then(()=>{
+            //controller.current = new AbortController()
+            })            
+            if(event && opts.preventDefault && typeof(event.preventDefault)=='function'){
                 event.preventDefault()
             }
         }
     },[])         
-    const canceller = useCallback((ev:any)=>{        
-        if(controller.current){
-            controller.current.abort()
-            if(typeof(ev.preventDefault)=='function'){
-                ev.preventDefault()
-            }
+    const canceller = useCallback((event:any)=>{        
+        controller.current?.abort()
+        if(event && typeof(event.preventDefault)=='function'){
+            event.preventDefault()
         }
     },[])
     return [runner,canceller]
