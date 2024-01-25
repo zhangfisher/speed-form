@@ -47,7 +47,7 @@ export type StateSetter<State,Value=any> = (state:State,value:Value)=>void
  *
  * @param useState
  */
-function wrapperUseState<State extends Dict>(stateCtx:ISharedCtx<State["state"]>){
+function useStateWrapper<State extends Dict>(stateCtx:ISharedCtx<State["state"]>){
     return function<Value=any,SetValue=Value>(getter?:StateGetter<RequiredComputedState<State>,Value>,setter?:StateSetter<RequiredComputedState<State>,SetValue>){
         const useState = stateCtx.useState
         if(getter==undefined){
@@ -104,10 +104,10 @@ export interface StoreOptions{
 }
 
 
-export type IStore<State extends Dict=Dict> = ISharedCtx<State> & {
-    state:ISharedCtx<State>['reactive']
-    useState:ReturnType<typeof wrapperUseState>
-    computedObjects:Record<string,{run:()=>void}>
+export type IStore<State extends Dict=Dict> = ISharedCtx<ComputedState<State>> & {
+    state:ISharedCtx<ComputedState<State>>['reactive']
+    useState:ReturnType<typeof useStateWrapper>
+    computedObjects:Record<string,{run:()=>void}> 
 }
 
 
@@ -137,8 +137,8 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
         createComputed<T['state']>(stateCtx,computedObjects,opts)!
 
         // 3. 处理useState
-        const useState = wrapperUseState<T['state']>(stateCtx)
-
+        const useState = useStateWrapper<T['state']>(stateCtx)
+        
         return {
           actions,
           ...stateCtx,
@@ -146,6 +146,6 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
           useState,
           computedObjects:{}  
         }
-      });
+      }) as IStore<T['state']>
 
 }

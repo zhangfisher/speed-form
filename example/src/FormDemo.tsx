@@ -2,7 +2,7 @@ import React, { useCallback, useState } from "react";
 import Card from "./components/Card"  
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
-import { AsyncComputedObject } from "helux-store";  
+import { AsyncComputedObject, watch } from "helux-store";  
 import classnames from 'classnames';
 import { ReactFC } from "./types"; 
 import ColorBlock from "./components/ColorBlock";
@@ -59,6 +59,12 @@ const ValidResult:React.FC<React.PropsWithChildren<{validate: boolean | AsyncCom
     { !isValiding && (isValid ?  '' : invalidTips ) }
 </span>
 }
+
+watch((state)=>{
+    console.log("watch state change:",state)
+},{
+    depends:()=>[Network.state]
+})
 
 const NetworkForm = ()=>{     
     

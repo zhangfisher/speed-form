@@ -220,7 +220,7 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
  */
 export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: AsyncComputedGetter<R>,depends?:ComputedDepends,options?: ComputedOptions<R,ExtraAttrs>): ComputedAsyncReturns<R & ExtraAttrs>;
 export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: ComputedGetter<R>, options?: ComputedOptions<R,ExtraAttrs>): R
-export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depends:any, options?: ComputedOptions<R,ExtraAttrs>):any {
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depends?:any, options?: ComputedOptions<R,ExtraAttrs>):any {
 	
   if (typeof getter != "function")  throw new Error("getter must be a function");
   
@@ -571,7 +571,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
         }
       }
     },
-    // 此函数在依赖变化时执行，用来异步计算
+    // @ts-ignore 此函数在依赖变化时执行，用来异步计算
     task: async ({ draft, setState, input, extraArgs }) => {
       // 当使用run方法时可以传入参数来覆盖默认的计算函数的配置参数
       const finalComputedOptions = Object.assign({},computedOptions,extraArgs) as Required<ComputedOptions>

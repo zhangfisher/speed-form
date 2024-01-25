@@ -39,8 +39,8 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, IStore, computed, AsyncComputedParams, AsyncComputedObject } from "helux-store";
-import type { ReactFC, Dict, ComputedAttr } from "./types";
+import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, IStore, computed, AsyncComputedParams, AsyncComputedObject, Dict } from "helux-store";
+import type { ReactFC,  ComputedAttr } from "./types";
 import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
@@ -206,12 +206,7 @@ function setFormDefault(define:any){
 	}
 }
 
-/**
- * 加载表单数据
- */ 
-function loadFormData(store:any){ 
 
-}
  
 /**
  * 我们约定，每一个动作均由一个{execute:computed(async ()=>{})}对象来描述
@@ -290,7 +285,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
     	fields:store.state.fields as FieldsType,		
 		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase> & {actions:ActionsType},
 		useState:store.useState,
-		load:loadFormData 
+
 	};
 }
 

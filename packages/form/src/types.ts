@@ -13,9 +13,7 @@ export type ReactFC<Props=unknown> = React.FC<React.PropsWithChildren<
     Pick<React.HTMLAttributes<HTMLElement>,'className' | 'style'> & Props>> 
 
 export type FormData = Record<string, any>;
-
-export type Dict<T=any> = Record<string,T> // 字段属性类型集
-
+ 
  
 export type Primitive = number | boolean | string | null | undefined 
 

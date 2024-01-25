@@ -6,8 +6,8 @@
  * 
  */
 
-import { Dict } from "./types"
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject" 
+import type { Dict } from "helux-store"
 
 function isFormAction(data:Dict){
     return 'execute' in data && !isFieldValue(data)
@@ -46,8 +46,7 @@ function getFieldValue(data:Dict){
 
 function getFiledGroupValue(data:Dict){
     const result:Dict = {}
-    Object.entries(data).forEach(([key,value])=>{
-        
+    Object.entries(data).forEach(([key,value])=>{        
         if(typeof(key) !== 'string'){
             return
         }
@@ -92,6 +91,15 @@ export interface GetFormDataOptions{
 export function getFormData(snap:Dict,options?:GetFormDataOptions):Record<string,any>{
     return getFiledGroupValue(snap)
 }
+
+/**
+ * 加载表单数据
+ */ 
+export function loadFormData(this:any,data:Dict){ 
+    
+}
+
+
 
 export interface CreateFormDataOptions{
     // 用来实现将keyPath转换为表单项名称

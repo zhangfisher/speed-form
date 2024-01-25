@@ -96,9 +96,9 @@ export function getError(e:any):Error{
  */
 export function getDeps(arg:ComputedDepends | undefined,ctx?:any):(string[])[]{
     let deps:(string[])[]= []
-    if(typeof(arg) === 'function'){
-        arg = arg.call(ctx,ctx)
-    }
+    // if(typeof(arg) === 'function'){
+    //     arg = arg.call(ctx,ctx)
+    // }
     deps = (arg || []).map((d: any) =>Array.isArray(d) ? deps : d.split("."))
     return deps
 }

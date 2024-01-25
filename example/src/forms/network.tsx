@@ -1,11 +1,14 @@
-import { ComputedScopeRef, computed } from "helux-store";
-import { Dict, createForm,action } from "speed-form";
+import { ComputedScopeRef, Dict, computed } from "helux-store";
+import { createForm,action } from "speed-form";
 // import { Project, getProjects } from "../api/getProjects";
 import { delay } from "flex-tools/async/delay";
 import validator from "validator"; 
 let count =1 
 // 声明表单数据
 const formSchema = {
+	diary: computed<boolean>(()=>{
+		return true
+	},{depends:[]}),
 	fields: {
 		asyncTitle: { 
 			value: "React-Helux-Form",
@@ -144,6 +147,9 @@ const formSchema = {
 			},
 			progressSubmit2: { // 这是一个动作,
 				title: "提交进度2",
+				validate:async ()=>{
+					return true
+				},
 				execute:action(async (fields,{getProgressbar})=>{
 					console.log("submit fields=",fields)
 					const bar = getProgressbar()
@@ -188,13 +194,16 @@ const formSchema = {
 			enable: (root: any) => {
 				return root.fields.wifi.ssid.value.length > 3
 			},
+			validate:computed<true>(async (root: any)=>{
+				return true
+			}),
 			execute: action(async (scope:any,{abortSignal}) => {				
 				return new Promise<number>((resolve,reject)=>{
 					setTimeout(()=>{
 						resolve(count++)
 					},2000)
 					abortSignal()?.addEventListener("abort",()=>{
-						console.log("已取消：cancelled")
+						console.log("已取消: cancelled")
 						reject("cancelled")
 					})
 				})			 
