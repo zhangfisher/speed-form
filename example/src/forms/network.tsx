@@ -6,7 +6,13 @@ import validator from "validator";
 let count =1 
 // 声明表单数据
 const formSchema = {
-	diary: computed<boolean>(()=>{
+	dirty: computed<boolean>(()=>{
+		return true
+	}),
+	onlyReady: computed<boolean>(()=>{
+		return true
+	},{depends:[]}),
+	submiting: computed<boolean>(()=>{
 		return true
 	},{depends:[]}),
 	fields: {

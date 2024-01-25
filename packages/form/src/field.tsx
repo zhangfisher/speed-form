@@ -1,10 +1,11 @@
 import React, {	 ChangeEventHandler, ReactNode, useCallback, useEffect, useMemo,useRef,useState  } from "react";  
 import { getVal, setVal } from "@helux/utils";
 import { debounce as debounceWrapper } from './utils';
-import { ComputedAttr, Dict } from "./types";  
+import { ComputedAttr } from "./types";  
 import { assignObject } from "flex-tools/object/assignObject"; 
 import type { FormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
+import { Dict } from "helux-store";
 
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
