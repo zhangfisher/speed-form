@@ -34,14 +34,14 @@
 import { ReactNode, useCallback,useState,useEffect, useRef, RefObject, useMemo} from "react";
 import React from "react";
 import type { FormOptions } from "./form";
-import {  AsyncComputedGetter, AsyncComputedObject, ComputedAsyncReturns, ComputedOptions, ComputedParams,  Dict,  IStore, RuntimeComputedOptions, computed, getValueByPath, watch } from 'helux-store'; 
+import {  AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedOptions, ComputedParams,  Dict,  IStore, RuntimeComputedOptions, computed, getValueByPath, watch } from 'helux-store'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize";
 import { getSnap } from "helux"
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
   | ((fields:Fields)=>Promise<R>) 
-  | ComputedAsyncReturns<R>
+  | ComputedDescriptor<R>
   | R  
 
 
@@ -90,7 +90,7 @@ export interface FormActionExtra{
  
 
  // 经过创建表单后的动作对象,  execute
-export type FormAction<T extends FormActionDefine> =ComputedAsyncReturns<{
+export type FormAction<T extends FormActionDefine> =ComputedDescriptor<{
     [Key in keyof T]: Key extends 'execute' ? never : T[Key]
 }>
 

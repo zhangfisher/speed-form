@@ -1,11 +1,11 @@
-import { AsyncComputedObject,ComputedAsyncReturns } from "helux-store";
+import { AsyncComputedObject,ComputedDescriptor } from "helux-store";
 
 
 // 用来声明表单定义中的动态计算属性
 export type ComputedAttr<R=unknown,Args extends any[]=any[]> = ((...args:Args)=>R)  
   | ((...args:Args)=>Promise<R>)
   | AsyncComputedObject<R>
-  | ComputedAsyncReturns<R>
+  | ComputedDescriptor<R>
   | R  
 
  

@@ -5,14 +5,30 @@
 
 import { ISharedCtx, model  } from "helux"
 import { Actions, createActions } from './action';
-import { ComputedState, Dict, RequiredComputedState } from "./types";
-import { createComputed, ComputedOptions } from './computed';
+import { ComputedState, Dict, RequiredComputedState } from './types';
+import { ComputedOptions } from './computed';
 import { deepClone } from "flex-tools/object/deepClone";
 import { log } from "./utils"; 
-
+import { installExtends } from "./extends"
 export interface StoreSchema<State> extends Dict{
     state:State
     actions?:Actions<State>
+}
+
+/**
+ * 用来声明computed和watch函数的返回值类型
+ */
+export interface StateValueDescriptorParams<Fn extends Function,Options extends Dict = Dict> {
+    fn: Fn
+    options:Options
+} 
+
+/**
+ * 声明状态中的计算函数
+ */
+export interface StateValueDescriptor<Fn extends Function,Options extends Dict = Dict> {
+ (...args:any):StateValueDescriptorParams<Fn,Options>
+ __COMPUTED__: 'sync' | 'async' | 'watch' 
 }
 
 export enum ComputedScopeRef{
@@ -104,11 +120,15 @@ export interface StoreOptions{
 }
 
 
+export interface StoreExtendObjects{
+    computedObjects:Dict<{run:()=>void}>
+    watchObjects:Dict<{run:()=>void}>
+}
+
 export type IStore<State extends Dict=Dict> = ISharedCtx<ComputedState<State>> & {
     state:ISharedCtx<ComputedState<State>>['reactive']
-    useState:ReturnType<typeof useStateWrapper>
-    computedObjects:Record<string,{run:()=>void}> 
-}
+    useState:ReturnType<typeof useStateWrapper> 
+} & StoreExtendObjects
 
 
 export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOptions){
@@ -124,7 +144,7 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
     }
 
     const storeData = opts.singleton ? data : deepClone(data)
-    let computedObjects:Dict = {}
+    const extendObjects:StoreExtendObjects ={computedObjects:{},watchObjects:{}}
     return  model((api) => { 
         const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any,{
             stopArrDep: false,
@@ -132,9 +152,10 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
         })
         // 1. 创建Actions
         const actions = createActions<T>(storeData.actions,stateCtx,api,opts)
+        
 
-        // 2. 处理Computed属性
-        createComputed<T['state']>(stateCtx,computedObjects,opts)!
+        // 2. 处理extends,主要是处理computed，watch等
+        installExtends<T>(stateCtx,extendObjects,opts)
 
         // 3. 处理useState
         const useState = useStateWrapper<T['state']>(stateCtx)
@@ -144,7 +165,7 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
           ...stateCtx,
           state:stateCtx.reactive,
           useState,
-          computedObjects:{}  
+          ...extendObjects
         }
       }) as IStore<T['state']>
 

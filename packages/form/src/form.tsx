@@ -39,7 +39,7 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, IStore, computed, AsyncComputedParams, AsyncComputedObject, Dict } from "helux-store";
+import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, IStore, computed, ComputedDescriptorParams, AsyncComputedObject, Dict } from "helux-store";
 import type { ReactFC,  ComputedAttr } from "./types";
 import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";

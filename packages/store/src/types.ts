@@ -1,4 +1,4 @@
-import type { Computed,AsyncComputed,ComputedAsyncReturns,AsyncComputedObject, ComputedSyncReturns } from "./computed"
+import type { Computed,AsyncComputed,ComputedDescriptor,AsyncComputedObject, ComputedSyncReturns } from "./computed"
 
 export type StateUpdater<State=any> = (state:State)=>any
 
@@ -11,14 +11,14 @@ export type AsyncReturnType<T extends (...args: any) => any> = T extends (...arg
     T extends (...args: any) => infer R ? R : any)
     
 // 用来提前计算属性函数的返回值
-// export type PickComputedResult<T> = T extends  ComputedAsyncReturns<infer X> ? AsyncComputedObject<X> : 
+// export type PickComputedResult<T> = T extends  ComputedDescriptor<infer X> ? AsyncComputedObject<X> : 
 //                                     ( T extends ComputedSyncReturns<infer X> ? X: 
 //                                         (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
 //                                             (T extends Computed<infer R> ? R : T) 
 //                                         )
 //                                     )
 
-export type PickComputedResult<T> = T extends  ComputedAsyncReturns<infer X> ? AsyncComputedObject<X> : 
+export type PickComputedResult<T> = T extends  ComputedDescriptor<infer X> ? AsyncComputedObject<X> : 
     ( T extends ComputedSyncReturns<infer X> ? X: 
         (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
             (T extends Computed<infer R> ? R : T) 

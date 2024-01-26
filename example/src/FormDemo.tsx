@@ -59,12 +59,7 @@ const ValidResult:React.FC<React.PropsWithChildren<{validate: boolean | AsyncCom
 </span>
 }
 
-watch((state)=>{
-    console.log("watch state change:",state)
-},{
-    depends:()=>[Network.state]
-})
-
+ 
 const NetworkForm = ()=>{     
     
     return <Network.Form className="panel">
