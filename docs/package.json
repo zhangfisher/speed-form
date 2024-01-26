@@ -72,7 +72,7 @@
   },
   "dependencies": {
     "color": "^4.2.3",
-    "helux": "^4.2.4",
+    "helux": "^4.2.5",
     "helux-store": "workspace:^",
     "speed-form": "workspace:^"
   }

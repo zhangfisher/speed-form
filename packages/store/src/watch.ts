@@ -1,16 +1,13 @@
 /**
-
- * } 
- * 
+ 
  * 
  * 
  */
 import { ISharedCtx, watch as heluxWatch,addMiddleware, IOperateParams } from "helux";
 import type { StateValueDescriptor, StateValueDescriptorParams, StoreSchema } from "./store";
 import { StoreExtendContext } from "./extends";
-import { ComputedDescriptor } from "./computed";
 import { Dict } from "./types";
-import { getVal } from "@helux/utils";
+import { getVal, setVal } from "@helux/utils";
 
 
 
@@ -21,7 +18,7 @@ export interface WatchOptions<R=any>{
     on?:(path:string[],value:any)=>boolean
 }
  
-export type WatchListener<Result=any,Value = Result> = (relValue:Value,relPath:string[],curValue:Result)=>Result | void
+export type WatchListener<Result=any,Value = Result> = (value:Value,options:{getSelfValue:()=>Result,srcPath:string[]})=>(Exclude<Result,Promise<any>>)
 export type WatchDepends = (value:any,path:string[])=>boolean
 
 
@@ -65,7 +62,8 @@ export function watch<Value = any,Result=Value>(listener:WatchListener<Value,Res
 
 
 class StoreWatcher<Store extends StoreSchema<any>>{
-    watchListeners:Dict<WatchDescriptorParams> = {} 
+    watchListeners:Dict<WatchDescriptorParams & {valuePath:string[]}> = {} 
+    private _off:()=>void = ()=>{}
     constructor(private options:Omit<StoreExtendContext<ISharedCtx<Store["state"]>>,'params' | 'descriptor'>){
         this.createWacher()
     }
@@ -80,9 +78,11 @@ class StoreWatcher<Store extends StoreSchema<any>>{
     }
     private createWacher(){
         // @ts-ignore
-        storeWatcher = heluxWatch(({triggerReasons})=>{
+        const {unwatch} = heluxWatch(({triggerReasons})=>{
             const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath)
-            valuePaths.forEach((path)=>{
+            // 遍历所有的监听函数,如果监听函数的过滤条件返回true,则执行监听函数
+            // TODO：此处可能会有性能问题？优化
+            valuePaths.forEach((path)=>{                
                 Object.entries(this.watchListeners).forEach(([key,watchListener])=>{
                     try{
                         this.executeListener(key,path,watchListener)
@@ -91,6 +91,7 @@ class StoreWatcher<Store extends StoreSchema<any>>{
                 })
             })
         },()=>[this.stateCtx.state])
+        this._off =unwatch
     }
     /**
      * 当srcPath指向的值变化时,运行watchListener函数,其返回值更新到destPath指向的值中
@@ -98,26 +99,35 @@ class StoreWatcher<Store extends StoreSchema<any>>{
      * @param srcPath 
      * @param watchListener 
      */
-    private executeListener(destPath:string,srcPath:string[],watchListener:WatchDescriptorParams){
-        const { fn:listener,options } = watchListener
+    private executeListener(destPath:string,srcPath:string[],watchListener:WatchDescriptorParams & {valuePath:string[]}){
+        const { fn:listener,options,valuePath } = watchListener
         const filter = options.on
         if(typeof(filter)=='function'){
             const srcValue = getVal(this.stateCtx.state,srcPath)
             try{
                 if(filter(srcPath,srcValue)==true){            
-                    const destValue = getVal(this.stateCtx.state,destPath)
-                    const result = listener(srcValue,srcPath,destPath)                    
+                    const getSelfValue = ()=> getVal(this.stateCtx.state,valuePath)
+                    const result = listener(srcValue,{srcPath,getSelfValue})             
+                    // 回写到状态中
+                    if(result!==undefined){
+                        // @ts-ignore
+                        this.stateCtx.setState((draft:any)=>{
+                            setVal(draft,valuePath,result)
+                        })
+                    }                    
                 }
-            }catch(e){
+            }catch(e:any){
+                this.storeOptions.log(`Error while run watchLisenter(${srcPath}->${destPath})`+e.stack,'error')
             }
         }        
     }
     off(){
+        this._off()
     }
     add(descriptor:WatchDescriptorParams,params:IOperateParams){
         const {fullKeyPath:valuePath} = params
         const key = valuePath.join('.')
-        this.watchListeners[key] = descriptor 
+        this.watchListeners[key] = {valuePath,...descriptor} 
     }
     remove(keyPath:string[]){
         delete this.watchListeners[keyPath.join('.')]
@@ -130,8 +140,7 @@ let storeWatcher:StoreWatcher<StoreSchema<any>> | undefined
 
  
 export function installWatch<Store extends StoreSchema<any>>(options:StoreExtendContext<ISharedCtx<Store["state"]>>) {
-    const { stateCtx,descriptor,params,storeOptions,extendObjects} =options
-    
+    const { stateCtx,descriptor,params,storeOptions,extendObjects} =options    
     if(!storeWatcher){
         storeWatcher=new StoreWatcher<Store>({
             stateCtx,storeOptions,extendObjects
@@ -141,19 +150,4 @@ export function installWatch<Store extends StoreSchema<any>>(options:StoreExtend
     return  
 }
 
-
-
-// */
-// export function watch(listener:(params:any)=>void,options?:WatchOptions):()=>void{
-//     const opts=Object.assign({
-//         immediate:true,
-//         depends:()=>[]
-//     },options)
-
-//     // @ts-ignore
-//     const {unwatch} = heluxWatch(({triggerReasons})=>{
-//         const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath)
-//         listener(triggerReasons)
-//     },opts.depends)
-//     return unwatch
-// }
+ 

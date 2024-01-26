@@ -10,6 +10,7 @@ import { ComputedOptions } from './computed';
 import { deepClone } from "flex-tools/object/deepClone";
 import { log } from "./utils"; 
 import { installExtends } from "./extends"
+
 export interface StoreSchema<State> extends Dict{
     state:State
     actions?:Actions<State>

@@ -1,4 +1,4 @@
-import { ComputedScopeRef, Dict, computed } from "helux-store";
+import { ComputedScopeRef, Dict, computed,watch } from "helux-store";
 import { createForm,action } from "speed-form";
 // import { Project, getProjects } from "../api/getProjects";
 import { delay } from "flex-tools/async/delay";
@@ -6,15 +6,11 @@ import validator from "validator";
 let count =1 
 // 声明表单数据
 const formSchema = {
-	dirty: computed<boolean>(()=>{
-		return true
+	dirty:watch((value)=>{
+		return value
+	},(path)=>{
+		return path[path.length-1] ==='value'
 	}),
-	onlyReady: computed<boolean>(()=>{
-		return true
-	},{depends:[]}),
-	submiting: computed<boolean>(()=>{
-		return true
-	},{depends:[]}),
 	fields: {
 		asyncTitle: { 
 			value: "React-Helux-Form",

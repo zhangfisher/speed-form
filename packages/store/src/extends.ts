@@ -10,13 +10,13 @@
 import { IOperateParams, ISharedCtx } from "helux";
 import type { StoreExtendObjects, StoreOptions, StoreSchema } from "./store";
 import { isSkipComputed } from "./utils";
-import { ComputedDescriptor, installComputed } from "./computed"; 
+import {  installComputed } from "./computed"; 
+import { installWatch } from "./watch";
 
 export interface StoreExtendContext<Ctx>{
     stateCtx:Ctx
     extendObjects:StoreExtendObjects
     storeOptions: Required<StoreOptions>
-    descriptor:Function | ComputedDescriptor
     params:IOperateParams
 }
 
@@ -34,11 +34,10 @@ export function installExtends<Store extends StoreSchema<any>>(stateCtx: IShared
             stateCtx,
             extendObjects,
             storeOptions,
-            descriptor:value,
             params
         }
         if(value.__COMPUTED__=='watch'){
-            // 安装watch函数扩展         
+            //installWatch<Store>(ctx)
         }else{ // 安装计算函数扩展
             installComputed<Store>(ctx)
         } 

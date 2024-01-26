@@ -265,16 +265,16 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
 
   opts.async = isAsync;
   opts.depends = deps;
-  const fn = () => {
+  const descriptor = () => {
     return {
-      getter,
+      fn:getter,
       options: opts,
     };
   };
 
   // @ts-ignore
-  fn.__COMPUTED__ = isAsync ? 'async' : 'sync';
-  return fn //as ComputedDescriptor<R & ExtraAttrs>;
+  descriptor.__COMPUTED__ = isAsync ? 'async' : 'sync';
+  return descriptor //as ComputedDescriptor<R & ExtraAttrs>;
 }
 
 /**
@@ -317,11 +317,11 @@ function getComputedId(valuePath:string[],idArg:ComputedOptions['id']){
 /**
  * 为同步计算属性生成mutate
  * @param stateCtx
- * @param computedContext
+ * @param computedParams
  */
-function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>, computedContext: IOperateParams,computeObjects:StoreExtendObjects['computedObjects'], storeOptions: Required<StoreOptions>) {
+function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>, computedParams: IOperateParams,computeObjects:StoreExtendObjects['computedObjects'], storeOptions: Required<StoreOptions>) {
 
-  let { fullKeyPath:valuePath, value, parent } = computedContext;
+  const { fullKeyPath:valuePath, parent,value } = computedParams;
   const { onCreateComputed } = storeOptions;
   let { fn: getter, options: computedOptions }  = value() as ComputedDescriptorParams<any>
   
@@ -344,8 +344,8 @@ function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedC
     fn: (draft, params) => {
       const { input } = params;
       // 1. 根据配置参数获取计算函数的上下文对象      
-      const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext,storeOptions,type:"context"})
-      const scopeDraft= getComputedRefDraft(draft,{input,computedOptions,computedContext,storeOptions,type:"scope"})      
+      const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,storeOptions,type:"context"})
+      const scopeDraft= getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,storeOptions,type:"scope"})      
       // 2. 执行getter函数
       let computedResult = computedOptions.initial;
       try {
@@ -364,7 +364,7 @@ function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedC
     // 关闭死循环检测，信任开发者
     checkDeadCycle: false,
   });
-  computedContext.replaceValue(getVal(witness.snap, valuePath));
+  computedParams.replaceValue(getVal(witness.snap, valuePath));
   return computeObjects[mutateId] 
 }
 
@@ -519,10 +519,10 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
 /**
  * 为异步计算属性生成mutate
  * @param stateCtx
- * @param computedContext
+ * @param computedParams
  */
-function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>,computedContext: IOperateParams,computeObjects:IStore['computedObjects'],storeOptions: Required<StoreOptions>) {
-  const { fullKeyPath:valuePath,  value, parent } = computedContext;
+function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>,computedParams: IOperateParams,computeObjects:IStore['computedObjects'],storeOptions: Required<StoreOptions>) {
+  const { fullKeyPath:valuePath, parent ,value } = computedParams;
   const { onCreateComputed } = storeOptions;
 
   // 排除掉所有非own属性,例如valueOf等
@@ -530,6 +530,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     return;
   }
   let { fn: getter, options: computedOptions }  = value() as ComputedDescriptorParams<any>
+  if(!getter) debugger
   computedOptions.async = true; 
 
  
@@ -542,7 +543,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
   let isMutateRunning = false // 正在运行标志
 
   // 根据配置读取计算函数的返回值以及状态等 应该更新到哪里
-  const computedResultPath:string[] =switchValue(toComputedResult,{
+  const computedResultPath:string[] = switchValue(toComputedResult,{
     self:valuePath,
     root: [],
     parent: valuePath.slice(0,valuePath.length-2),
@@ -572,7 +573,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
         }
       }
     },
-    // @ts-ignore 此函数在依赖变化时执行，用来异步计算
+    //  此函数在依赖变化时执行，用来异步计算
     task: async ({ draft, setState, input, extraArgs }) => {
       // 当使用run方法时可以传入参数来覆盖默认的计算函数的配置参数
       const finalComputedOptions = Object.assign({},computedOptions,extraArgs) as Required<ComputedOptions>
@@ -586,7 +587,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
           input,
           computedResultPath,          
           computedOptions:finalComputedOptions,
-          computedContext,
+          computedContext: computedParams,
           storeOptions,
           setState
         })
@@ -598,23 +599,24 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     desc:mutateId,
     checkDeadCycle: false,
   });
-  computedContext.replaceValue(getVal(witness.snap, valuePath));
+  computedParams.replaceValue(getVal(witness.snap, valuePath));
   computeObjects[mutateId]  = witness
   return computeObjects[mutateId] 
 }
 
 
 export function installComputed<Store extends StoreSchema<any>>(options:StoreExtendContext<ISharedCtx<Store["state"]>>) {
-  const { stateCtx,fn,params,storeOptions,extendObjects} =options
+  const { stateCtx,params,storeOptions,extendObjects} = options
+  const descriptor = params.value
   //@ts-ignore
-  if (fn.__COMPUTED__=='async') {
-    createAsyncComputedMutate<Store>(stateCtx, params,extendObjects.computedObjects, storeOptions);
+  if (descriptor.__COMPUTED__=='async') {
+    createAsyncComputedMutate<Store>(stateCtx,params,extendObjects.computedObjects, storeOptions);
   //@ts-ignore
-  }else if (fn.__COMPUTED__=='sync') {
+  }else if (descriptor.__COMPUTED__=='sync') {
     createComputedMutate<Store>(stateCtx, params,extendObjects.computedObjects, storeOptions);
-  }else if (isAsyncFunction(fn)) { // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次   
+  }else if (isAsyncFunction(descriptor)) { // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次   
       params.value = () => ({
-        getter: fn,
+        fn: descriptor,
         options: {
           depends  : [],                    // 未指定依赖
           initial  : undefined,             // 也没有初始化值
@@ -622,10 +624,10 @@ export function installComputed<Store extends StoreSchema<any>>(options:StoreExt
           context  : storeOptions.computedThis,  
       },
       });
-      createAsyncComputedMutate<Store>(stateCtx, params,extendObjects.computedObjects, storeOptions);
+      createAsyncComputedMutate<Store>(stateCtx,params,extendObjects.computedObjects, storeOptions);
   }else { // 简单的同步计算函数，没有通过computed函数创建
     params.value = () => ({
-      getter: fn,
+      fn: descriptor,
       options: {
         initial  : undefined, 
         context: storeOptions.computedThis, 
