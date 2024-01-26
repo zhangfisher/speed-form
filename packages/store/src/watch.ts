@@ -106,8 +106,7 @@ class StoreWatcher<Store extends StoreSchema<any>>{
             try{
                 if(filter(srcPath,srcValue)==true){            
                     const destValue = getVal(this.stateCtx.state,destPath)
-                    const result = listener(srcValue,srcPath,destPath)
-                    
+                    const result = listener(srcValue,srcPath,destPath)                    
                 }
             }catch(e){
             }
