@@ -557,7 +557,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
 
   const mutateId = getComputedId(valuePath,computedOptions.id)
 
-  storeOptions.log(`Create async computed: ${valuePath.join(".")} (depends=${joinValuePath(deps)})`);
+  storeOptions.log(`Create async computed: ${valuePath.join(".")} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
 
   const witness = stateCtx.mutate({ 
     deps: (state: any) =>deps.map((dep: any) =>getVal(state, dep)),

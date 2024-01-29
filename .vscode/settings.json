@@ -8,5 +8,6 @@
         "**/Thumbs.db": true,
         "**/node_modules": true
     },
-    "commentTranslate.hover.enabled": false
+    "commentTranslate.hover.enabled": false,
+    "testing.automaticallyOpenPeekView": "never"
 }

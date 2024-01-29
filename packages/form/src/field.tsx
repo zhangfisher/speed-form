@@ -5,7 +5,7 @@ import { ComputedAttr } from "./types";
 import { assignObject } from "flex-tools/object/assignObject"; 
 import type { FormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
-import { Dict } from "helux-store";
+import { Dict } from "helux-store"; 
 
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
@@ -83,19 +83,7 @@ function useFieldSyncer(store: any,valuePath:string[]){
     return sync.current      
   },[]) 
 }
-
-/**
- * 提供一个函数，当调用此函数时，会取消正在执行的异步计算函数
- * 取消的机制是:
- *  
- *  
- * 
- */
-function useCancel(){
-  return useCallback(()=>{
-  
-  },[])
-}
+ 
 /**
  * 
  * 字段更新器，用来对表单数据进行更新
@@ -133,24 +121,23 @@ function useFieldUpdater(store: any,valuePath:string[],setState:any){
     return update.current(updater)
   },[])
 }
-
-
+ 
+ 
 export function createFieldComponent(this:Required<FormOptions>,store: any) {    
   const self = this
   return React.memo(<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
-		const { name } = props; 
+		const { name } = props;  
     // 不含fields前缀的字段路径
     const fieldPath = Array.isArray(name) ? name : name.split(".")  
     // 含fields前缀的字段路径
     const fullFieldPath:string[] = [FIELDS_STATE_KEY,...fieldPath]
     const valueFieldPath:string[] = [FIELDS_STATE_KEY,...fieldPath]
 
-		const [state,setState] = store.useState() 
+		const [state,setState] = store.useState()  
 
 		const value = getVal(state,fullFieldPath)
     fieldPath.push("value") 
-    valueFieldPath.push("value")
-
+    valueFieldPath.push("value") 
     // 更新当前字段信息，如update(field=>field.enable=true)
     const filedUpdater = useFieldUpdater(store,valueFieldPath,setState)
 
@@ -190,6 +177,22 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
  
 
 
+
+export interface IFieldProps<T=any>{
+  value        : T;
+  title?       : string;                       // 标题
+  defaultValue?: T;                            // 默认值
+  oldValue?    : T;                            // 默认值
+  help?        : string;                       // 提示信息
+  placeholder? : string;                       // 占位符
+  required?    : boolean;                      // 是否必填
+  readonly?    : boolean;                      // 是否只读
+  visible?     : boolean;                      // 是否可见
+  enable?      : boolean;                      // 是否可用
+  validate?    : boolean;                      // 验证
+  select?      : any[]                         // 枚举值  
+}
+ 
 
 export interface Field<T=any>{
   value        : T;

@@ -195,8 +195,8 @@ const NetworkForm = ()=>{
                             <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={run()}>{title}</Button>
                         </>
                     }}
-                </Network.Action>
-            </div>
+                </Network.Action> 
+            </div> 
             
         </Card>
     </Network.Form>        

@@ -37,7 +37,7 @@ export function installExtends<Store extends StoreSchema<any>>(stateCtx: IShared
             params
         }
         if(value.__COMPUTED__=='watch'){
-            installWatch<Store>(ctx)
+           installWatch<Store>(ctx)
         }else{ // 安装计算函数扩展
             installComputed<Store>(ctx)
         } 

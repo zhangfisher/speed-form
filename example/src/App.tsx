@@ -3,16 +3,19 @@ import { useState } from 'react'
 import classnames from "classnames"
 // import UseStateDemo from './UseStateDemo'
 import ComputedDemo from './ComputedDemo'
-import FormDemo from './FormDemo'
+import NetworkForm from './networkForm'
+import UserForm from './UserForm'
+
 
 const menuItems=[
   // {id:"render",title:"useState",component:<UseStateDemo/>},
   // {id:"computed",title:"计算属性",component:<ComputedDemo/>},
-  {id:"form",title:"表单",component:<FormDemo/>},
+  {id:"user",title:"用户",component:<UserForm/>,default:true},
+  {id:"network",title:"网络",component:<NetworkForm/>},  
 ] 
 
 function App() { 
-  const [menuItem,setMenuItem]= useState("form") 
+  const [menuItem,setMenuItem]= useState(menuItems.find(item=>item.default)?.id) 
 
   return (
     <div id="app">      

@@ -25,7 +25,7 @@ export interface WatchOptions<R=any>{
     // on函数是一个全局过滤器，而也可以指定依赖的值发生变化时，才会触发listener的执行
     // 此函数只会在依赖的值发生变化时执行，如果返回true，则会触发listener的执行
     // 相对于on参数，此参数可以精准执行，会有更佳的性能,在具备明确的依赖关系时，应该使用此参数
-    depends?:ComputedDepends
+    // depends?:ComputedDepends
 }
  
 export type WatchListener<Result=any,Value = Result> = (value:Value,options:{getSelfValue:()=>Result,srcPath:string[]})=>(Exclude<Result,Promise<any>>)
@@ -70,17 +70,18 @@ export function watch<Value = any,Result=Value>(listener:WatchListener<Value,Res
 
 
 export interface RegisteredWatchListener{
-    listener:WatchListener        // 侦听函数  
-    watcher:{off:()=>void} & Dict   // 
+    fn:WatchListener        // 侦听函数   
+    options:WatchOptions          // 侦听函数的选项
 }
 
 class StoreWatcher<Store extends StoreSchema<any>>{
     listeners = new Map<any,RegisteredWatchListener>()
     private _off:()=>void = ()=>{}
-    private wachers = new Map<string,{off:()=>void}>()
+    private wacher = {off:()=>{}} 
     private _enable:boolean=true            // 是否启用侦听器
+    private cache=new Map<any,any>()     // 用来缓存侦听函数的返回值
     constructor(private options:Omit<StoreExtendContext<ISharedCtx<Store["state"]>>,'params' | 'descriptor'>){
-        this.createRootWacher()
+        this.createWacher()
     }
     get stateCtx(){
         return this.options.stateCtx
@@ -103,56 +104,89 @@ class StoreWatcher<Store extends StoreSchema<any>>{
      * 此侦听器会侦听根对象，当对象所有的状态变化,会执行所有监听过滤函数，如果返回true，则执行对应的监听函数
      * 负责处理动态侦听
      */
-    private createRootWacher(){
+    private createWacher(){
         // @ts-ignore
         const {unwatch} = heluxWatch(({triggerReasons})=>{
-            const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath)
-            // 遍历所有的监听函数,如果监听函数的过滤条件返回true,则执行监听函数
-            // TODO：此处可能会有性能问题？优化
-            valuePaths.forEach((path)=>{                
-                Object.entries(this.listeners).forEach(([key,listener])=>{
+            const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
+            valuePaths.forEach((srcPath)=>{  
+                // 如果有缓存，则直接从缓存中取值
+                if(this.hitListenerFromCache(srcPath)) return        
+                // 如果没有缓存，则执行所有的监听函数
+                for(const [destPath,listener] of this.listeners){
                     try{
-                        this.executeListener(key,path,listener)
+                        this.executeListener(srcPath,destPath,listener)
                     }catch(e){
                     }
-                })
+                } 
             })
         },()=>[this.stateCtx.state])
-        this.wachers.set("ROOT",{off:unwatch})
-    }
-    private createWacher(deps:any[]){
-        // @ts-ignore
-        const {unwatch} = heluxWatch(({triggerReasons})=>{
-            const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath)
-            const values = valuePaths.map((path)=>getVal(this.stateCtx.state,path))                          
-            try{
-                this.executeListener(key,path,watchListener)
-            }catch(e){
-
-            } 
-        },()=>[...deps]) 
-        this.wachers.set(deps.join('.'),{off:unwatch})
+        this.wacher = {off:unwatch}
     }
     /**
-     * 当srcPath指向的值变化时,运行watchListener函数,其返回值更新到destPath指向的值中
-     * @param destPath 
+     * 缓存侦听函数
+     * 当匹配到过滤条件时，进行缓存以便下次当匹配的路径变化时可以直接执行侦听函数,而不是遍历所有的侦听过滤函数
      * @param srcPath 
+     * @param destPath 
+     * @param listener 
+     * @param listenerOpts 
+     */
+    private addListenerToCache(srcPath:string,destPath:string[],listener:WatchListener,listenerOpts:any){
+        if(!this.cache.has(srcPath)){
+            this.cache.set(srcPath,[])
+        }
+        const listenerCache = this.cache.get(srcPath)
+        listenerCache.push([destPath,listener,listenerOpts])
+    }
+    /**
+     * 命中匹配缓存中的侦听函数
+     * @param srcPath 
+     */
+    private hitListenerFromCache(srcPath:string[]){
+        if(this.cache.has(String(srcPath))){
+            const srcValue = getVal(this.stateCtx.state,srcPath)
+            const listeners = this.cache.get(String(srcPath))
+            listeners.forEach(([destPath,listener,listenerOpts]:[string[],WatchListener,any])=>{
+                 const result = listener(srcValue,listenerOpts)             
+                 // 将返回值回写到状态中
+                 if(result!==undefined){
+                     // @ts-ignore
+                     this.stateCtx.setState((draft:any)=>{
+                         setVal(draft,destPath,result)
+                     })
+                 }              
+            })
+            return listeners.length>0
+        }
+        return false
+    }
+
+    /**
+     * 当srcPath指向的值变化时,运行watchListener函数,其返回值更新到destPath指向的值中
+     * @param destPath   指的是watch函数所在的位置
+     * @param srcPath      指的是watch函数侦听的位置,即发生变化的源
      * @param watchListener 
      */
-    private executeListener(destPath:string,srcPath:string[],watchListener:WatchDescriptorParams & {valuePath:string[]}){
-        const { fn:listener,options,valuePath } = watchListener
+    private executeListener(srcPath:string[],destPath:string[],watchListener:WatchDescriptorParams ){
+        const { fn:listener,options } = watchListener
         const filter = options.on
         if(typeof(filter)=='function'){
             const srcValue = getVal(this.stateCtx.state,srcPath)
             try{
-                if(filter(srcPath,srcValue)==true){            
-                    const getSelfValue = ()=> getVal(this.stateCtx.state,valuePath)
-                    const result = listener(srcValue,{srcPath,getSelfValue})             
-                    // 回写到状态中
+                if(filter(srcPath,srcValue)==true){    
+                    // 提供一个函数用来获取自身当前的值,用函数是避免读取开销                            
+                    const listenerOpts = {
+                        getSelfValue : ()=> getVal(this.stateCtx.state,destPath),
+                        srcPath
+                    }
+                    // 将监听函数添加到缓存中
+                    this.addListenerToCache(String(srcPath),destPath,listener,listenerOpts)                    
+                    // 调用监听函数并获取返回值
+                    const result = listener(srcValue,listenerOpts)             
+                    // 将返回值回写到状态中
                     if(result!==undefined){
                         // @ts-ignore
                         this.stateCtx.setState((draft:any)=>{
-                            setVal(draft,valuePath,result)
+                            setVal(draft,destPath,result)
                         })
                     }                    
                 }
@@ -173,19 +207,14 @@ class StoreWatcher<Store extends StoreSchema<any>>{
 
     add(descriptor:WatchDescriptorParams,params:IOperateParams){
         const {fullKeyPath:valuePath} = params
+        this.listeners.set(valuePath,{
+            fn:descriptor.fn, 
+            options:descriptor.options
 
-        const { depends }   =descriptor.options     
-        // 指定了依赖时，创建独立的监听器进行精确侦听
-        if(depends){
-            const deps = getDeps(depends) 
-            this.createWacher(deps)
-        }
-
-        const key = valuePath.join('.')
-        this.listeners[key] = {valuePath,...descriptor} 
+        })
     }
     remove(keyPath:string[]){
-        delete this.listeners[keyPath.join('.')]
+        this.listeners.delete(keyPath)
     }
 }
 
