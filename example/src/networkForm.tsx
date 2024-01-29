@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import Card from "./components/Card"  
 import Network from './forms/network';
 import JsonViewer from "./components/JsonViewer" 
@@ -206,12 +206,13 @@ const NetworkForm = ()=>{
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
     const [state] = Network.useState() 
-
+    const [formData,setFormData] = useState({})
+    
     const submit = useCallback((actionState:any)=>{
         Network.getAction(actionState)().then((result)=>{            
-            console.log("提交结果：",result)
+            setFormData(result)
         }).catch((error)=>{
-            console.log("提交错误：",error)
+            setFormData("Error: "+error.message)
         })
     },[])
   
@@ -225,11 +226,16 @@ const FormDemo:React.FC = ()=>{
                 <NetworkForm/>
                 {/* <NetworkForm/> */}
                 <button onClick={()=>submit(Network.state.actions.next)}>提交</button>
-                <button onClick={()=>submit({timeout:1000})}>提交超时</button>
+                <button onClick={()=>submit(Network.state.actions.timeoutSubmit)}>提交超时</button>
                 <span>
                 <button onClick={()=>submit(Network.state.actions.errorSubmit)}>提交出错</button>
                 <button onClick={()=>submit}>取消</button>
                 </span>
+                               
+                <div>
+                    <h2>提交数据</h2>
+                    <textarea style={{width:"100%",height:"80px"}} value={JSON.stringify(formData)}></textarea>
+                </div>
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单数据">

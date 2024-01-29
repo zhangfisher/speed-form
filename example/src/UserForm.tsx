@@ -8,7 +8,8 @@ import { Field } from "./components/Field";
 
  
 const UserForm = ()=>{     
-    
+    const [state] = User.useState() 
+
     return <User.Form className="panel">
        <div data-loader="circle"></div>
         <Card title="帐号">
@@ -26,11 +27,7 @@ const UserForm = ()=>{
                     </Field>
                 } }
             </User.Field> 
-            <User.Field<typeof User.fields.fullName> name="fullName">                      
-                {/* {({value})=>{ 
-                    return  value
-                } } */}
-            </User.Field> 
+            <div>FullName:{state.fields.fullName}</div>
         </Card>
     </User.Form>        
 }
@@ -46,6 +43,10 @@ const FormDemo:React.FC = ()=>{
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>
             <div style={{padding:"8px",margin:'8px',width:'60%'}}>
                 <UserForm/>                 
+                <div>
+                    <h2>提交数据</h2>
+                    <textarea></textarea>
+                </div>
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单数据">

@@ -214,7 +214,7 @@ const formSchema = {
 		errorSubmit: {
 			title: "提交错误", 
 			execute: async () => {
-				await delay(2000);
+				await delay(1000);
 				throw new Error("提交错误"+count++);
 			},
 		},		

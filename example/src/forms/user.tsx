@@ -9,21 +9,17 @@ const userSchema = {
 			value: "zhang",
 			placeholder: "",
 			title: "姓", 
-			//validate: (value: string) => value.length > 3,
+			validate: (value: string) => value.length > 3,
 		},
 		lastName: {
 			value: "fisher",
 			placeholder: "",
 			title: "名", 
-			//validate: (value: string) => value.length > 3,
+			validate: (value: string) => value.length > 3,
 		},
-		fullName: {
-			title: "全名",
-			value:computed<string>((scope)=>{
-				console.log("fullName",scope.firstName,scope.lastName)
-				//return scope.firstName,scope.lastName
-			})
-		},
+		fullName:(scope:any)=>{
+			return scope.firstName.value+scope.lastName.value
+		}
 	},
 	actions: {
 		

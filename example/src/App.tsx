@@ -2,7 +2,7 @@ import './App.css'
 import { useState } from 'react' 
 import classnames from "classnames"
 // import UseStateDemo from './UseStateDemo'
-import ComputedDemo from './ComputedDemo'
+// import ComputedDemo from './ComputedDemo'
 import NetworkForm from './networkForm'
 import UserForm from './UserForm'
 
@@ -10,8 +10,8 @@ import UserForm from './UserForm'
 const menuItems=[
   // {id:"render",title:"useState",component:<UseStateDemo/>},
   // {id:"computed",title:"计算属性",component:<ComputedDemo/>},
-  {id:"user",title:"用户",component:<UserForm/>,default:true},
-  {id:"network",title:"网络",component:<NetworkForm/>},  
+  {id:"user",title:"用户",component:<UserForm/>},
+  {id:"network",title:"网络",component:<NetworkForm/>,default:true},  
 ] 
 
 function App() { 
