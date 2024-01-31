@@ -342,6 +342,7 @@ function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedC
 
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
+      storeOptions.log(`Run sync mutate for : ${valuePath.join(".")}`);
       const { input } = params;
       // 1. 根据配置参数获取计算函数的上下文对象      
       const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,storeOptions,type:"context"})
@@ -575,6 +576,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     },
     //  此函数在依赖变化时执行，用来异步计算
     task: async ({ draft, setState, input, extraArgs }) => {
+      storeOptions.log(`Run async mutate for : ${valuePath.join(".")}`);
       // 当使用run方法时可以传入参数来覆盖默认的计算函数的配置参数
       const finalComputedOptions = Object.assign({},computedOptions,extraArgs) as Required<ComputedOptions>
       if(noReentry && isMutateRunning && storeOptions.debug) {

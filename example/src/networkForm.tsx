@@ -66,8 +66,7 @@ const NetworkForm = ()=>{
        <div data-loader="circle"></div>
         <Card title="网络配置">
           <Network.Field<string> name="title">                      
-                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
-                    console.log(required,visible,validate,enable)
+                {({title,value,visible,validate,placeholder,sync})=>{                 
                     return <FieldRow visible={visible} label={title}>
                          <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
                         <ValidResult validate={validate}/>

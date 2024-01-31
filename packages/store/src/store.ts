@@ -72,8 +72,10 @@ function useStateWrapper<State extends Dict>(stateCtx:ISharedCtx<State["state"]>
         }
         const [ state,setState ] = useState()
         const value = getter(state)
-        let setValue = undefined
+        // @ts-ignore
+        let setValue = setState
         if( typeof(setter)=='function' ){
+            // @ts-ignore
             setValue=(value:SetValue)=>{
                 // @ts-ignore
                 setState((draft)=>{

@@ -254,7 +254,7 @@ const formSchema = {
 type NetworkFormType = typeof formSchema;
 type NetworkType = NetworkFormType['fields'];
 
-const Network = createForm<NetworkFormType>(formSchema);
+const Network = createForm<NetworkFormType>(formSchema,{debug:true});
 
 
 // @ts-ignore

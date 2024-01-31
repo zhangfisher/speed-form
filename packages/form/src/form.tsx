@@ -96,6 +96,7 @@ export interface FormSchema extends FormSchemaBase{
 
 // 创建表单时的参数
 export interface FormOptions<Schema=Dict>{
+	debug?:boolean										// 是否调试模式
 	/**
 	 * 何时进行数据验证
 	 * - once : 实时校验 
@@ -252,6 +253,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 
 	// 创建表单Store对象实例
 	const store = createStore<StoreSchema<Schema>>({state:define},{
+		debug:opts.debug,
 		// 所有计算函数的上下文均指向根
 		computedThis: ComputedScopeRef.Root,
 		// 计算函数作用域默认指向fields

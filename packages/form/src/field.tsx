@@ -5,7 +5,8 @@ import { ComputedAttr } from "./types";
 import { assignObject } from "flex-tools/object/assignObject"; 
 import type { FormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
-import { Dict } from "helux-store"; 
+import { Dict } from "helux-store";  
+
 
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
@@ -53,7 +54,7 @@ export type FieldComponent = React.FC<FieldProps>;
 
 
 function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){  
-  return assignObject({
+  return Object.assign({
     name,
     help        : "",
     defaultValue: undefined,
@@ -64,10 +65,9 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
     validate    : true,        
     enable      : true,
     dirty       : false,
-    placeholder : "",        
-    select      : [] as any,
+    placeholder : ""
   },{
-    ...value,
+    ...value,    
     sync:syncer,
     update:filedUpdater 
   })   
@@ -77,8 +77,8 @@ function useFieldSyncer(store: any,valuePath:string[]){
   const sync = useRef<null | Function>(null)
   return useCallback((debounce:number=0)=>{      
     if(sync.current==null){
-      const syncFn = store.sync(valuePath)
-      sync.current  = debounce==0 ? syncFn :debounceWrapper(syncFn,debounce)
+      const syncFn = store.sync(valuePath) 
+      sync.current  =  debounce==0 ? syncFn :debounceWrapper(syncFn,debounce)
     }
     return sync.current      
   },[]) 
@@ -97,7 +97,7 @@ function useFieldSyncer(store: any,valuePath:string[]){
  * @param setState 
  * @returns 
  */
-function useFieldUpdater(store: any,valuePath:string[],setState:any){
+function useFieldUpdater(valuePath:string[],setState:any){
   const update = useRef<null | ((updater:Function | Record<string,any>)=>any)>(null)  
   const [debounceValue,setDebounce] = useState(0)
   return useCallback(function(updater:any,options?:{debounce:number}){      
@@ -121,8 +121,26 @@ function useFieldUpdater(store: any,valuePath:string[],setState:any){
     return update.current(updater)
   },[])
 }
- 
- 
+/**
+ *  渲染字段的子组件,子组件负责字段UI的渲染
+ * @param this 
+ * @param props 
+ */
+export const FieldChildren = React.memo((props: FieldRenderProps<any> & {children:any})=>{
+  console.log("FieldChildren render")
+  return <>{
+    typeof(props.children)=='function' && props.children(props.fieldProps as any)  
+  }</>
+},(oldProps:FieldRenderProps<any>, newProps:FieldRenderProps<any>)=>{  
+  const changed=[]
+  const isEqual = Object.entries(oldProps.fieldProps).every(([key,value]:[key:string,value:any])=>{
+    if(value!==newProps.fieldProps[key]) changed.push(key)
+    return ['children','sync','update'].includes(key) ? true: value===newProps.fieldProps[key]
+  })
+  console.log("Field=",oldProps.fieldProps.name,"changed=",changed,"isEquel=",isEqual)
+  return isEqual
+})     
+
 export function createFieldComponent(this:Required<FormOptions>,store: any) {    
   const self = this
   return React.memo(<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
@@ -132,24 +150,23 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
     // 含fields前缀的字段路径
     const fullFieldPath:string[] = [FIELDS_STATE_KEY,...fieldPath]
     const valueFieldPath:string[] = [FIELDS_STATE_KEY,...fieldPath]
-
-		const [state,setState] = store.useState()  
-
-		const value = getVal(state,fullFieldPath)
     fieldPath.push("value") 
     valueFieldPath.push("value") 
+    // 读取字段值,指整个字段对象{value,...}
+		const [value,setValue] = store.useState((draft:any)=>getVal(draft,fullFieldPath))  
+    
     // 更新当前字段信息，如update(field=>field.enable=true)
-    const filedUpdater = useFieldUpdater(store,valueFieldPath,setState)
+    const filedUpdater = useFieldUpdater(valueFieldPath,setValue)
 
     // 表单字段同步，允许指定防抖参数
     const syncer = useFieldSyncer(store,valueFieldPath)
 
-    const [fieldProps,setFieldProps] = useState(()=>createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater))
+    // const [fieldProps,setFieldProps] = useState(()=>createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater))
  
-    useEffect(()=>{
-      setFieldProps(createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater))
-    },[value])
- 
+    // useEffect(()=>{
+    //   setFieldProps(createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater))
+    // },[value])
+    const fieldProps = createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater)
 
     // 调用渲染字段UI 
     if(props.render){ 
@@ -160,9 +177,7 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
           props.children.map((children:any)=>{
             return useMemo(()=>children(fieldProps as any) ,[fieldProps])
           })
-          : useMemo(()=>{
-              return typeof(props.children)=='function' && props.children(fieldProps as any) //props.children(fieldProps as any) 
-            },[fieldProps])
+          : <FieldChildren {...{fieldProps,children:props.children} as any}/>
       }else{
         return 
       }      
