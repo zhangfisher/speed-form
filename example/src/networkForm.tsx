@@ -204,7 +204,7 @@ const NetworkForm = ()=>{
 
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
-    const [state] = Network.useState() 
+    // const [state] = Network.useState() 
     const [formData,setFormData] = useState({})
     
     const submit = useCallback((actionState:any)=>{
@@ -238,7 +238,7 @@ const FormDemo:React.FC = ()=>{
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单数据">
-                    <JsonViewer data={state}/> 
+                    {/* <JsonViewer data={state}/>  */}
                 </Card>
             </div>
             

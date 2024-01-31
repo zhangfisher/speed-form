@@ -140,7 +140,6 @@ export const FieldChildren = React.memo((props: FieldRenderProps<any> & {childre
   console.log("Field=",oldProps.fieldProps.name,"changed=",changed,"isEquel=",isEqual)
   return isEqual
 })     
-
 export function createFieldComponent(this:Required<FormOptions>,store: any) {    
   const self = this
   return React.memo(<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
@@ -160,14 +159,9 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
 
     // 表单字段同步，允许指定防抖参数
     const syncer = useFieldSyncer(store,valueFieldPath)
-
-    // const [fieldProps,setFieldProps] = useState(()=>createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater))
- 
-    // useEffect(()=>{
-    //   setFieldProps(createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater))
-    // },[value])
+  
     const fieldProps = createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater)
-
+    
     // 调用渲染字段UI 
     if(props.render){ 
       return props.render(fieldProps as any)

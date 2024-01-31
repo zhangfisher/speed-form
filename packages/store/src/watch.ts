@@ -3,14 +3,10 @@
  * 
  * 
  */
-import { ISharedCtx, watch as heluxWatch,addMiddleware, IOperateParams } from "helux";
+import { ISharedCtx, watch as heluxWatch, IOperateParams } from "helux";
 import type { StateValueDescriptor, StateValueDescriptorParams, StoreSchema } from "./store";
-import { StoreExtendContext } from "./extends";
-import { Dict } from "./types";
-import { getVal, setVal } from "@helux/utils";
-import { ComputedDepends } from "./computed";
-import { getDeps } from "./utils";
-
+import { StoreExtendContext } from "./extends"; 
+import { getVal, setVal } from "@helux/utils"; 
 
 
 
