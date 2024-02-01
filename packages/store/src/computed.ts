@@ -116,13 +116,13 @@ export type AsyncComputedGetter<R,Scope=any> = (scopeDraft:Scope,options:Require
 // 当调用run方法时，用来传参覆盖原始的计算参数
 export type RuntimeComputedOptions = Pick<ComputedOptions,'abortSignal' | 'noReentry' | 'retry' | 'onError' | 'timeout' | 'extras'>
 
-export type AsyncComputedObject<Value= any,ExtAttrs extends Dict = {}> ={
+export type AsyncComputedObject<Result= any,ExtAttrs extends Dict = {}> ={
   loading? : boolean;
   progress?: number;                // 进度值    
   timeout? : number ;               // 超时时间，单位ms，当启用超时时进行倒计时
   error?   : any;
   retry?   : number                 // 重试次数，当执行重试操作时，会进行倒计时，每次重试-1，直到为0时停止重试
-  value    : Value;
+  result   : Result;
   run      : (options?:RuntimeComputedOptions) => {};        // 重新执行任务
 } & ExtAttrs
 
@@ -485,7 +485,7 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
       // 执行计算函数
       const computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
       if(!isTimeout){
-        Object.assign(afterUpdated,{value:computedResult,error:null,timeout:0})
+        Object.assign(afterUpdated,{result:computedResult,error:null,timeout:0})
       }    
 
     }catch (e:any) {
@@ -565,9 +565,9 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     fn: (draft, params) => {
       if (params.isFirstCall) {     
         if(toComputedResult=='self'){ // 原地替换
-          setVal(draft, valuePath, createAsyncComputedObject(stateCtx, mutateId,{value: initial}))
+          setVal(draft, valuePath, createAsyncComputedObject(stateCtx, mutateId,{result: initial}))
         }else{  // 更新到其他地方
-          setAsyncComputedObject(stateCtx,draft,computedResultPath, mutateId,{value: initial})
+          setAsyncComputedObject(stateCtx,draft,computedResultPath, mutateId,{result: initial})
           // 删除原始的计算属性
           const p = getVal(draft,valuePath.slice(0,valuePath.length-1))
           delete p[valuePath[valuePath.length-1]]

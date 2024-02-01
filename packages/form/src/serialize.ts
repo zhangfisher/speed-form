@@ -9,39 +9,10 @@
  * 
  */
 
-import { isPlainObject } from "flex-tools/typecheck/isPlainObject" 
 import type { Dict } from "helux-store"
-
-function isFormAction(data:Dict){
-    return 'execute' in data && !isFieldValue(data)
-}
-function isFieldValue(data:Dict){
-    return isPlainObject(data) && 'value' in data
-}
-
-function isFieldList(data:Dict){
-    return Array.isArray(data)
-}
-
-/**
- * 
- * 组类型，
- * 
- *  - 是一个{}
- *  - 没有value字段
- *  
- * 
- * 
- * 
- * @param data  * 
- * @returns 
- */
-function isFieldGroup(data:Dict){
-    return isPlainObject(data) && !isFieldValue(data) && !isFormAction(data)
-}
-
-
-
+import { isFieldGroup, isFieldList, isFieldValue } from "./utils"
+import { isPlainObject } from "flex-tools/typecheck/isPlainObject"
+ 
 
 function getFieldValue(data:Dict){
     return data.value

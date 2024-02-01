@@ -22,9 +22,10 @@ export interface WatchOptions<R=any>{
     // 此函数只会在依赖的值发生变化时执行，如果返回true，则会触发listener的执行
     // 相对于on参数，此参数可以精准执行，会有更佳的性能,在具备明确的依赖关系时，应该使用此参数
     // depends?:ComputedDepends
+    initial?:R
 }
  
-export type WatchListener<Result=any,Value = Result> = (value:Value,options:{getSelfValue:()=>Result,srcPath:string[]})=>(Exclude<Result,Promise<any>>)
+export type WatchListener<Result=any,Value = Result> = (value:Value,options:{getSelfValue:()=>Result ,srcPath:string[]})=>(Exclude<Result,Promise<any>> | undefined)
 export type WatchDepends = (value:any,path:string[])=>boolean
 
 

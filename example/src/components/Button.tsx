@@ -14,7 +14,7 @@ export type ButtonProps =React.PropsWithChildren<
     }>
 
 export const Button:React.FC<ButtonProps> = (props)=>{
-    const { visible=true,enable=true,loading,timeout=0,progress=0 } =props 
+    const { visible=true,enable=true,loading,timeout=0,progress=0,cancel} =props 
     return (
         <div
             className='speed-button'
@@ -30,7 +30,7 @@ export const Button:React.FC<ButtonProps> = (props)=>{
             {loading ? <Loading/> : null}
             <div 
                 style={{flexGrow:1,backgroundColor:'transparent'}}
-                disabled={!enable}
+                disabled={String(!enable)}
                 {...props}
             >   
                 {props.children}        
@@ -60,8 +60,8 @@ export const Button:React.FC<ButtonProps> = (props)=>{
                     }}>{props.error}</span> : ''
                 }
             {/* 显示取消按钮 */}
-            {props.loading && props.cancel ? 
-                <button onClick={props.cancel} style={{            
+            {props.loading && typeof(cancel)=='function' ? 
+                <button onClick={cancel} style={{            
                         padding:"4px",
                         color:"red",
                         margin:"2px",

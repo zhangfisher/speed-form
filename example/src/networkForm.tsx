@@ -45,7 +45,7 @@ const ValidResult:React.FC<React.PropsWithChildren<{validate: boolean | AsyncCom
     // 如果是同步校验，则validate是一个boolean
     const isAsycValidate = typeof(validate)!=='boolean'
     //
-    const isValid = isAsycValidate ? validate.value :  validate 
+    const isValid = isAsycValidate ? validate.result :  validate 
     
     const isValiding = isAsycValidate ? validate.loading: false
     
@@ -90,7 +90,7 @@ const NetworkForm = ()=>{
              <Network.Field<typeof Network.fields.ip> name="ip">                      
                 {({title,value,visible,validate,placeholder,sync})=>{ 
                     return <FieldRow visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate.value})} placeholder={placeholder} value={value} onChange={sync(100)}/>
+                         <input className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
                         <ValidResult validate={validate}/> 
                     </FieldRow> 
                 } }
@@ -235,7 +235,8 @@ const FormDemo:React.FC = ()=>{
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单状态">
-                    <FieldRow  label="dirty">false</FieldRow>
+                    <FieldRow  label="dirty">{formState.dirty}</FieldRow>
+                    <FieldRow  label="validate">{formState.validate}</FieldRow>
                     <textarea style={{width:"100%",height:"80px"}} value={JSON.stringify(formData)}></textarea>
 
                 </Card>

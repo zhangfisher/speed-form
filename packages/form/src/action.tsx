@@ -163,7 +163,7 @@ export function getAction<State extends FormActionState=FormActionState>(actionS
         if(actionState.execute.error){
             throw new Error(actionState.execute.error)
         }else{
-            return actionState.execute.value
+            return actionState.execute.result
         }
     } 
 }

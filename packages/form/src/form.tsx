@@ -39,7 +39,7 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, Dict } from "helux-store";
+import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, Dict, watch } from "helux-store";
 import type { ReactFC,  ComputedAttr } from "./types";
 import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
@@ -48,7 +48,7 @@ import { FormActions,  createActionComponent, getAction } from './action';
 import { FIELDS_STATE_KEY } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
-
+import defaultFormProps from "./form.default"
 
 export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{
 	// 可选的表单名称，当用在子表单时指定
@@ -85,7 +85,7 @@ export interface FormSchemaBase extends Record<string, any> {
     tips?:ComputedAttr<string>					    // 动作提示
  	visible?:ComputedAttr<boolean>					// 是否可见
 	enable?:ComputedAttr<boolean>					// 是否可用		
-	valid?:ComputedAttr<boolean>					// 是否有效
+	validate?:ComputedAttr<boolean>					// 是否有效
 	readonly?:ComputedAttr<boolean>				    // 是否只读	  
 	dirty?:ComputedAttr<boolean>					// 数据已经更新过	
 }
@@ -157,8 +157,8 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
 function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOptions){		
 	if(keyPath.length>=2 && keyPath[0]==FIELDS_STATE_KEY && keyPath[keyPath.length-1]=='validate'){	
 		// 如果没有指定scope,则默认指向value
-		if(options.scope==undefined) options.scope="value"
-		if(options.depends==undefined) options.depends=[]
+		if(!options.scope) options.scope="value"
+		if(!options.depends) options.depends=[]
 		options.depends.push([...keyPath.slice(0,-1),"value"])
 		options.initial = true		// 初始化true
 	}
@@ -177,35 +177,7 @@ function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOp
  * @param define 
  */
 function setFormDefault(define:any){
-	defaultObject(define,{
-		title:"SpeedForm",
-		help:"",
-		tips:"",
-		status:"idle",
-		dirty:false,
-		valid:true,
-		readonly:false,
-		enable:true,
-		visible:true
-	})
-	// 为Actions提供默认值
-	// if(define.actions){
-	// 	Object.entries(define.actions).forEach(([name,action])=>{
-	// 		if(action && typeof(action)=='object' ){
-	// 			defaultObject(action,{
-	// 				loading:false,
-	// 				enable:true,
-	// 				visible:true,
-	// 				title:name,
-	// 				help:"",
-	// 				tips:"",					
-	// 				count:0,
-	// 				progress:0,
-	// 				error:null
-	// 			})
-	// 		}			
-	// 	})
-	// }
+	defaultObject(define,defaultFormProps) 
 }
 
 
@@ -243,6 +215,7 @@ function createDepsHook(valuePath:string[],getter:Function,options:ComputedOptio
 		})
 	}
 }
+
 
 export function createForm<Schema extends Dict=Dict>(define: Schema,options?:FormOptions<Schema>) {
 	const opts = assignObject({
