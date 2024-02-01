@@ -39,7 +39,7 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, IStore, computed, ComputedDescriptorParams, AsyncComputedObject, Dict } from "helux-store";
+import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, Dict } from "helux-store";
 import type { ReactFC,  ComputedAttr } from "./types";
 import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
@@ -47,6 +47,7 @@ import { assignObject } from "flex-tools/object/assignObject";
 import { FormActions,  createActionComponent, getAction } from './action';
 import { FIELDS_STATE_KEY } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
+import { createObjectProxy } from "./utils";
 
 
 export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{
@@ -188,23 +189,23 @@ function setFormDefault(define:any){
 		visible:true
 	})
 	// 为Actions提供默认值
-	if(define.actions){
-		Object.entries(define.actions).forEach(([name,action])=>{
-			if(action && typeof(action)=='object' ){
-				defaultObject(action,{
-					loading:false,
-					enable:true,
-					visible:true,
-					title:name,
-					help:"",
-					tips:"",					
-					count:0,
-					progress:0,
-					error:null
-				})
-			}			
-		})
-	}
+	// if(define.actions){
+	// 	Object.entries(define.actions).forEach(([name,action])=>{
+	// 		if(action && typeof(action)=='object' ){
+	// 			defaultObject(action,{
+	// 				loading:false,
+	// 				enable:true,
+	// 				visible:true,
+	// 				title:name,
+	// 				help:"",
+	// 				tips:"",					
+	// 				count:0,
+	// 				progress:0,
+	// 				error:null
+	// 			})
+	// 		}			
+	// 	})
+	// }
 }
 
 
@@ -277,17 +278,16 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 	});  
 	type StoreType = typeof store 
 	type FieldsType = (typeof store.state)['fields'] 
-	type ActionsType = (typeof store.state)['actions'] 
+	// type ActionsType = (typeof store.state)['actions'] 
 	return {
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
-		Action: createActionComponent<StoreType>(store,opts),	
+		Action: createActionComponent<StoreType>(store,opts),
 		getAction,
-    	fields:store.state.fields as FieldsType,		
-		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase> & {actions:ActionsType},
+    	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
+		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase>,
 		useState:store.useState,
-
 	};
 }
 

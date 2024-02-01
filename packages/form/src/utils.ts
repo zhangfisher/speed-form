@@ -66,3 +66,13 @@ export function compareObject<T extends Record<string,any>>(a:T,b:T):Partial<T>{
 
 
 
+/**
+ * 创建一个Proxy对象,返回对fn的调用结果的代理
+ */
+export function createObjectProxy<T extends Record<string | symbol,any>=Record<string | symbol,any>>(fn: () => T): T {
+	return new Proxy<T>({} as T, {
+	  get: (target:T, prop: keyof T, receiver) => {
+		return fn()[prop];
+	  },
+	});
+  }

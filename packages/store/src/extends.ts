@@ -28,6 +28,8 @@ export function installExtends<Store extends StoreSchema<any>>(stateCtx: IShared
 	stateCtx.setOnReadHook((params) => {
       const { fullKeyPath:valuePath, value } = params;
       const key = valuePath.join(".");
+      if(params.fullKeyPath[0]=='actions' && params.fullKeyPath[params.fullKeyPath.length-1]=='execute') debugger
+
       if ( typeof value === "function" && !replacedMap[key] && !isSkipComputed(value) ) {
         replacedMap[key] = true;        
         const ctx:StoreExtendContext<ISharedCtx<Store["state"]>>= {
@@ -37,7 +39,7 @@ export function installExtends<Store extends StoreSchema<any>>(stateCtx: IShared
             params
         }
         if(value.__COMPUTED__=='watch'){
-           installWatch<Store>(ctx)
+            installWatch<Store>(ctx)
         }else{ // 安装计算函数扩展
             installComputed<Store>(ctx)
         } 

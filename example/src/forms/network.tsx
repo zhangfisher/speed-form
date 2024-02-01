@@ -6,11 +6,11 @@ import validator from "validator";
 let count =1 
 // 声明表单数据
 const formSchema = {
-	// dirty:watch((value)=>{
-	// 	return value
-	// },(path)=>{
-	// 	return path[path.length-1] ==='value'
-	// }),
+	dirty:watch((value)=>{
+		return value
+	},(path)=>{
+		return path[path.length-1] ==='value'
+	}),
 	fields: {
 		// asyncTitle: { 
 		// 	value: "React-Helux-Form",

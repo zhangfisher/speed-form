@@ -8,6 +8,7 @@ import { ReactFC } from "./types";
 import ColorBlock from "./components/ColorBlock";
 import { Loading } from "./components/Loading";  
 import { Button } from "./components/Button"; 
+import { Divider } from "./components/Divider";
 
 const FieldRow:ReactFC<{label?:string,visible?:boolean,enable?:boolean}> = ({enable,visible,label,children})=>{
     return  (
@@ -151,10 +152,10 @@ const NetworkForm = ()=>{
                     </FieldRow>
                 }}
             </Network.Field>   
+            <Divider title='提交'></Divider>
             <div style={{display:'flex',flexDirection:'column'}}>
                 <Network.Action<typeof Network.fields.wifi.submit> name="fields.wifi.submit" >
-                    {({title,visible,loading,enable,run,timeout,error,value})=>{ 
-                        console.log("action submit",loading,enable,timeout,error,value)
+                    {({title,visible,loading,enable,run,timeout})=>{ 
                         return <Button loading={loading} timeout={timeout} visible={visible} enable={enable} onClick={run()}>{title}</Button>
                     }}
                 </Network.Action>
@@ -204,9 +205,10 @@ const NetworkForm = ()=>{
 
 const FormDemo:React.FC = ()=>{
     // 如果缺少以下两句，则state.select无法触发setOnReadHook 
-    // const [state] = Network.useState() 
-    const [formData,setFormData] = useState({})
     
+    const [formData,setFormData] = useState({})
+    const [formState,setFormState] = useState(()=>Network.state)
+
     const submit = useCallback((actionState:any)=>{
         Network.getAction(actionState)().then((result)=>{            
             setFormData(result)
@@ -229,16 +231,18 @@ const FormDemo:React.FC = ()=>{
                 <span>
                 <button onClick={()=>submit(Network.state.actions.errorSubmit)}>提交出错</button>
                 <button onClick={()=>submit}>取消</button>
-                </span>
-                               
-                <div>
-                    <h2>提交数据</h2>
-                    <textarea style={{width:"100%",height:"80px"}} value={JSON.stringify(formData)}></textarea>
-                </div>
+                </span> 
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
-                <Card title="表单数据">
-                    {/* <JsonViewer data={state}/>  */}
+                <Card title="表单状态">
+                    <FieldRow  label="dirty">false</FieldRow>
+                    <textarea style={{width:"100%",height:"80px"}} value={JSON.stringify(formData)}></textarea>
+
+                </Card>
+                <Card title="表单数据" buttons={[
+                    {title:"更新",onClick:()=>setFormState(JSON.parse(JSON.stringify(Network.state)))}
+                ]}>
+                    <JsonViewer data={formState}/> 
                 </Card>
             </div>
             

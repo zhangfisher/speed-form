@@ -132,14 +132,11 @@ export const FieldChildren = React.memo((props: FieldRenderProps<any> & {childre
     typeof(props.children)=='function' && props.children(props.fieldProps as any)  
   }</>
 },(oldProps:FieldRenderProps<any>, newProps:FieldRenderProps<any>)=>{  
-  const changed=[]
-  const isEqual = Object.entries(oldProps.fieldProps).every(([key,value]:[key:string,value:any])=>{
-    if(value!==newProps.fieldProps[key]) changed.push(key)
+  return  Object.entries(oldProps.fieldProps).every(([key,value]:[key:string,value:any])=>{
     return ['children','sync','update'].includes(key) ? true: value===newProps.fieldProps[key]
-  })
-  console.log("Field=",oldProps.fieldProps.name,"changed=",changed,"isEquel=",isEqual)
-  return isEqual
+  }) 
 })     
+
 export function createFieldComponent(this:Required<FormOptions>,store: any) {    
   const self = this
   return React.memo(<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
