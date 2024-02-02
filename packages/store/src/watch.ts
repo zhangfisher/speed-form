@@ -17,20 +17,18 @@ export interface WatchOptions<R=any>{
     // 由于此函数会在表单中的每一个值发生变化时均会执行，所以此函数应该尽量简单，不要有复杂的逻辑      
     // 如果大量的表单字段均需要监听，则可能会有性能问题
     // 一般在动态依赖时使用
-    on?:(path:string[],value:any)=>boolean
-    // on函数是一个全局过滤器，而也可以指定依赖的值发生变化时，才会触发listener的执行
-    // 此函数只会在依赖的值发生变化时执行，如果返回true，则会触发listener的执行
-    // 相对于on参数，此参数可以精准执行，会有更佳的性能,在具备明确的依赖关系时，应该使用此参数
-    // depends?:ComputedDepends
+    on?:(path:string[],value:any)=>boolean 
     initial?:R
 }
  
-export type WatchListener<Result=any,Value = Result> = (value:Value,options:{getSelfValue:()=>Result ,srcPath:string[]})=>(Exclude<Result,Promise<any>> | undefined)
+export type WatchListener<Value=any, Result= Value> = (value:Value,options:{getSelfValue:()=>Result ,srcPath:string[]})=>(Exclude<Result,Promise<any>> | undefined)
 export type WatchDepends = (value:any,path:string[])=>boolean
 
 
 export type WatchDescriptorParams<Value = any,Result=Value>  = StateValueDescriptorParams<WatchListener<Value,Result>,WatchOptions>
 
+
+export type WatchDescriptor<Value = any,Result=Value> = StateValueDescriptor<WatchListener<Value,Result>,WatchOptions<Result>> 
  /* 
  *  watch函数用来声明一个监听函数，当监听的值发生变化时，会触发监听函数的执行
  *  并将监听的返回值回写入所声明的位置状态中
@@ -51,11 +49,11 @@ export type WatchDescriptorParams<Value = any,Result=Value>  = StateValueDescrip
  * @param options 
  * @returns 
  */
-export function watch<Value = any,Result=Value>(listener:WatchListener<Value,Result>,on:WatchOptions['on'],options?:WatchOptions):StateValueDescriptor<WatchListener,WatchOptions>{
+export function watch<Value = any,Result=Value>(listener:WatchListener<Value,Result>,on:WatchOptions['on'],options?:WatchOptions<Result>):WatchDescriptor<Value,Result>{
     const opts : WatchOptions = Object.assign({
         on
     },options)
-    const descriptor:StateValueDescriptor<WatchListener,WatchOptions> = () => {
+    const descriptor:WatchDescriptor<Value,Result> = () => {
         return {
           fn: listener,
           options: opts,

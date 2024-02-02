@@ -1,4 +1,5 @@
 import type { Computed,AsyncComputed,ComputedDescriptor,AsyncComputedObject, ComputedSyncReturns } from "./computed"
+import { WatchDescriptor } from "./watch";
 
 export type StateUpdater<State=any> = (state:State)=>any
 
@@ -19,11 +20,13 @@ export type AsyncReturnType<T extends (...args: any) => any> = T extends (...arg
 //                                     )
 
 export type PickComputedResult<T> = T extends  ComputedDescriptor<infer X> ? AsyncComputedObject<X> : 
-    ( T extends ComputedSyncReturns<infer X> ? X: 
-        (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
-            (T extends Computed<infer R> ? R : T) 
-        )
-    )                              
+    ( T extends WatchDescriptor<any,infer X> ? X :
+        ( T extends ComputedSyncReturns<infer X> ? X: 
+            (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
+                (T extends Computed<infer R> ? R : T) 
+            )
+        )                              
+    )
 /**
  
  转换状态中的计算属性函数的类型
@@ -33,7 +36,7 @@ export type PickComputedResult<T> = T extends  ComputedDescriptor<infer X> ? Asy
 
 */
 export type ComputedState<T extends Record<string, any>> = {
-      [K in keyof T]: T[K] extends (...args:any) => any ? PickComputedResult<T[K]> : T[K] extends Record<string, any> ? ComputedState<T[K]> : T[K];
+    [K in keyof T]: T[K] extends (...args:any) => any ? PickComputedResult<T[K]> : T[K] extends Record<string, any> ? ComputedState<T[K]> : T[K];
 };
 
 

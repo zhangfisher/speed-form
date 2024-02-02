@@ -216,9 +216,11 @@ const FormDemo:React.FC = ()=>{
             setFormData("Error: "+error.message)
         })
     },[])
-  
-    // Network.state.actions.ping.execute
-
+    
+    Network.state.dirty
+    Network.state.enable
+    Network.state.visible
+    
     // state.dhcp.start.validate.value
 
     return (

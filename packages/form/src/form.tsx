@@ -79,24 +79,21 @@ export interface FormObject<State extends Record<string, any>> {
 }
 
 // 表单元数据
-export interface FormSchemaBase extends Record<string, any> {
-	title?:ComputedAttr<string>					    // 动作标题    
-    help?:ComputedAttr<string>					    // 动作帮助
-    tips?:ComputedAttr<string>					    // 动作提示
- 	visible?:ComputedAttr<boolean>					// 是否可见
-	enable?:ComputedAttr<boolean>					// 是否可用		
-	validate?:ComputedAttr<boolean>					// 是否有效
-	readonly?:ComputedAttr<boolean>				    // 是否只读	  
-	dirty?:ComputedAttr<boolean>					// 数据已经更新过	
+export interface FormSchemaBase{
+	title:string					    
+    help:string					    
+    tips:string					    
+ 	visible:boolean					
+	enable:boolean					
+	validate:boolean					
+	readonly:boolean			
+	dirty:boolean					
 }
 
-export interface FormSchema extends FormSchemaBase{
-	fields:Dict
-	actions:Dict
-}
+export type FormSchema<State extends Dict> = RequiredComputedState<Omit<FormSchemaBase,keyof State> & State>
 
 // 创建表单时的参数
-export interface FormOptions<Schema=Dict>{
+export interface FormOptions{
 	debug?:boolean										// 是否调试模式
 	/**
 	 * 何时进行数据验证
@@ -188,7 +185,7 @@ function setFormDefault(define:any){
  * 并且对其行为进行了一些约定
  * 
  * - immediate=false : 不会自动执行,需要手动调用action.execute.run()来执行
- * - 让scope默认指向fields
+ * - 让scope默认指向fields,这样就可以直接使用fields下的字段,而不需要fields前缀
  * 
  */
 function createActionHook(valuePath:string[],getter:Function,options:ComputedOptions){
@@ -217,10 +214,10 @@ function createDepsHook(valuePath:string[],getter:Function,options:ComputedOptio
 }
 
 
-export function createForm<Schema extends Dict=Dict>(define: Schema,options?:FormOptions<Schema>) {
+export function createForm<Schema extends Dict=Dict>(define: Schema,options?:FormOptions) {
 	const opts = assignObject({
 		getFieldName:(valuePath:string[])=>valuePath.join(".")
-	},options) as Required<FormOptions<Schema>>
+	},options) as Required<FormOptions>
 
 	// 注入表单默认属性
 	setFormDefault(define)  
@@ -251,7 +248,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 	});  
 	type StoreType = typeof store 
 	type FieldsType = (typeof store.state)['fields'] 
-	// type ActionsType = (typeof store.state)['actions'] 
+	type ActionsType = (typeof store.state)['actions'] 
 	return {
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
@@ -259,7 +256,8 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 		Action: createActionComponent<StoreType>(store,opts),
 		getAction,
     	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
-		state:store.state as (typeof store.state) & RequiredComputedState<FormSchemaBase>,
+		actions:createObjectProxy(()=>store.state.actions) as ActionsType,		
+		state:store.state as FormSchema<typeof store.state>, 
 		useState:store.useState,
 	};
 }
@@ -287,7 +285,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
  */
 function createFormComponent<Fields extends Dict>(this:FormOptions,store: any): FormComponent<Fields> {
 	return (props: FormProps<Fields>) => {
-		const { children,scope } = props; 
+		const { children } = props; 
 
 		// 表单作用域
 		
