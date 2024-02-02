@@ -48,7 +48,7 @@ export const Field:ReactFC<FieldProps> = (props)=>{
                 display:'flex',
                 flexDirection:'row',
                 color: enable===false ? 'gray' : 'inherit'
-            }}>{React.isValidElement(children) ? children : null}</span>  
+            }}>{children}</span>  
             <ValidResult {...props}/>
             <ColorBlock style={{
                 position:'absolute',

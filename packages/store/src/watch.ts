@@ -114,7 +114,7 @@ class StoreWatcher<Store extends StoreSchema<any>>{
                     }
                 } 
             })
-        },()=>[this.stateCtx.state])
+        },()=>[this.stateCtx.state.fields])
         this.wacher = {off:unwatch}
     }
     /**
