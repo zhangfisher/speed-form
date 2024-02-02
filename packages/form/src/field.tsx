@@ -126,12 +126,11 @@ function useFieldUpdater(valuePath:string[],setState:any){
  * @param this 
  * @param props 
  */
-export const FieldChildren = React.memo((props: FieldRenderProps<any> & {children:any})=>{
-  console.log("FieldChildren render")
+export const FieldChildren = React.memo((props: {fieldProps:FieldRenderProps<any>  ,children:any})=>{
   return <>{
     typeof(props.children)=='function' && props.children(props.fieldProps as any)  
   }</>
-},(oldProps:FieldRenderProps<any>, newProps:FieldRenderProps<any>)=>{  
+},(oldProps, newProps)=>{  
   return  Object.entries(oldProps.fieldProps).every(([key,value]:[key:string,value:any])=>{
     return ['children','sync','update'].includes(key) ? true: value===newProps.fieldProps[key]
   }) 
@@ -161,17 +160,13 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
     
     // 调用渲染字段UI 
     if(props.render){ 
-      return props.render(fieldProps as any)
-    }else{
-      if(props.children){
-        return Array.isArray(props.children) ? 
-          props.children.map((children:any)=>{
-            return useMemo(()=>children(fieldProps as any) ,[fieldProps])
-          })
-          : <FieldChildren {...{fieldProps,children:props.children} as any}/>
+      return <FieldChildren {...{fieldProps,children:props.render} as any}/>
+    }else if(Array.isArray(props.children)){
+        return props.children.map((children:any)=>{
+          return <FieldChildren {...{fieldProps,children:children} as any}/>
+        })
       }else{
-        return 
-      }      
+        return <FieldChildren {...{fieldProps,children:props.children} as any}/>
     }
   },(oldProps:any, newProps:any)=>{
       return oldProps.name === newProps.name

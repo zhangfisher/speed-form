@@ -253,7 +253,9 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
-		Action: createActionComponent<StoreType>(store,opts),
+		Action: createActionComponent<StoreType>(store,{},opts),
+		// Submit与Action的区别是，Submit不会阻止默认行为,因此其运行run时会导致表单的提交,而Action则会阻止默认行为
+		Submit: createActionComponent<StoreType>(store,{preventDefault:false},opts),
 		getAction,
     	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
 		actions:createObjectProxy(()=>store.state.actions) as ActionsType,		
@@ -266,6 +268,9 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 
 /**
  * 创建表单组件
+ * 
+ * 当使用标准的表单提交模式时,使用该组件
+ * 
  * 
  * <Form></From>			// 表单组件
  * <Network.Form<typeof Network.wifi> scope="wifi">

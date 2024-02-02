@@ -182,20 +182,20 @@ const NetworkForm = ()=>{
                         </>
                     }}
                 </Network.Action>
-                <Network.Action<typeof Network.fields.wifi.standardSubmit> name="fields.wifi.standardSubmit" >
+                <Network.Submit<typeof Network.fields.wifi.standardSubmit> name="fields.wifi.standardSubmit" >
                     {({title,visible,loading,enable,run,error,progress})=>{ 
                         return <>
                         <Button type="submit" loading={loading} progress={progress} visible={visible}  error={error} enable={enable} onClick={run()}>{title}</Button>
                         </>
                     }}
-                </Network.Action>
+                </Network.Submit>
                 <Network.Action<typeof Network.fields.wifi.cancelableSubmit> name="fields.wifi.cancelableSubmit" >
                     {({title,visible,loading,enable,run,cancel,error,progress})=>{ 
                         return <>
                             <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={run()}>{title}</Button>
                         </>
                     }}
-                </Network.Action> 
+                </Network.Action>                 
             </div> 
             
         </Card>
@@ -220,7 +220,7 @@ const FormDemo:React.FC = ()=>{
     Network.state.dirty
     Network.state.enable
     Network.state.visible
-    
+    Network.Submit
     // state.dhcp.start.validate.value
 
     return (

@@ -31,10 +31,10 @@
  */
 
 
-import { ReactNode, useCallback,useState,useEffect, useRef, RefObject, useMemo} from "react";
+import { ReactNode, useCallback, useRef, RefObject} from "react";
 import React from "react";
 import type { FormOptions } from "./form";
-import {  AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedOptions, ComputedParams,  Dict,  IStore, RuntimeComputedOptions, computed, getValueByPath, watch } from 'helux-store'; 
+import {  AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedOptions, ComputedParams,  Dict, RuntimeComputedOptions, computed, getValueByPath, watch } from 'helux-store'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize";
 import { getSnap } from "helux"
@@ -56,6 +56,7 @@ export type DefaultActionRenderProps={
 
 export type ActionRunOptions = {    
     abortController?:AbortController
+    preventDefault?:boolean
 } & RuntimeComputedOptions
 
 
@@ -137,7 +138,8 @@ export type ActionRender<State extends Dict,Params extends Dict = Dict>= (props:
  */
 export type ActionProps<State extends FormActionState=FormActionState,PropTypes extends Dict = Dict,Params extends Dict = Dict> = {
     name:string | string[]              // 声明该动作对应的状态路径
-    children: ActionRender<State,Params>  
+    render?: ActionRender<State,Params>  
+    children?: ActionRender<State,Params>  
 }    
  
 
@@ -167,14 +169,13 @@ export function getAction<State extends FormActionState=FormActionState>(actionS
         }
     } 
 }
-
+ 
  /**
  *  在组件中运行Action
  * 
  * const [run,cancel] = useActionRunner()
  * 
  * <button onClick={run({
- *      abortable:true,
  *      preventDefault:true,
  *      ...options  传递给计算函数的其他配置参数
  * })}>提交</button>
@@ -182,10 +183,10 @@ export function getAction<State extends FormActionState=FormActionState>(actionS
  * @param actionState 
  * @returns 
  */
-function useActionRunner<State extends FormActionState=FormActionState>(actionState:State){
+function useActionRunner<State extends FormActionState=FormActionState>(actionState:State,actionOptions?:ActionRunOptions){
     const controller = useRef<AbortController>() 
-    const runner = useCallback((options?:ActionRunOptions & {abortable?:boolean,preventDefault?:boolean})=>{ 
-        const opts = Object.assign({},{noReentry:true,preventDefault:true,abortable:false},options)       
+    const runner = useCallback((options?:ActionRunOptions )=>{ 
+        const opts = Object.assign({},{noReentry:true,preventDefault:true},actionOptions,options)       
         if(!controller.current || (controller.current && controller.current.signal.aborted)){
             const abortController =  new AbortController()
             controller.current =  abortController
@@ -231,7 +232,16 @@ function createActionRenderProps<State extends FormActionState=FormActionState>(
     })
 } 
 
-
+export const ActionChildren = React.memo((props: {actionProps:ActionRenderProps<any>,children:any})=>{
+    return <>{
+      typeof(props.children)=='function' && props.children(props.actionProps as any)  
+    }</>
+  },(oldProps, newProps)=>{  
+    return  Object.entries(oldProps.actionProps).every(([key,value]:[key:string,value:any])=>{
+      return ['children','run','cancel'].includes(key) ? true: value===newProps.actionProps[key]
+    }) 
+  })     
+  
   
 /**
  * 创建动作组件
@@ -243,7 +253,7 @@ function createActionRenderProps<State extends FormActionState=FormActionState>(
  * @param store 
  * @returns 
  */
-export function createActionComponent<Store extends Dict = Dict>(store:Store,formOptions:Required<FormOptions>,) {
+export function createActionComponent<Store extends Dict = Dict>(store:Store,actionOptions?:ActionRunOptions,formOptions?:Required<FormOptions>) {
 
     /**
      * State:  指的是动作的对应状态数据，在schema中就是具有execute的一个对象
@@ -259,26 +269,25 @@ export function createActionComponent<Store extends Dict = Dict>(store:Store,for
         const { name:actionKey } = props  
 
         const actionState = getValueByPath(state,actionKey)
-        const [actionRunner,actionCanceller] = useActionRunner(actionState)
+        const [actionRunner,actionCanceller] = useActionRunner(actionState,actionOptions)
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
 
         // 创建动作组件的Props
-        const [renderProps,setActionProps] = useState(()=>createActionRenderProps(actionState,actionRunner,actionCanceller,ref))
-        useEffect(()=>{
-            setActionProps(createActionRenderProps(actionState,actionRunner,actionCanceller,ref))
-        },[actionKey,actionState])
+        const actionRenderProps = createActionRenderProps(actionState,actionRunner,actionCanceller,ref)        
 
         // 执行渲染动作组件
-        if(props.children){
+        if(typeof(props.render)==='function'){
+            return <ActionChildren {...{actionProps:actionRenderProps,children:props.render}} />
+        }else if(props.children){
             if(Array.isArray(props.children)){
-                return useMemo(()=>(props.children as any).map((child:any)=>child(renderProps as any)),[renderProps])
+                return (props.children as any).map((children:any)=>{
+                    return <ActionChildren {...{actionProps:actionRenderProps,children:children}} />
+                })
             }else{
-                return useMemo(()=>props.children(renderProps as any),[renderProps])    
+                return <ActionChildren {...{actionProps:actionRenderProps,children:props.children}} />
             }            
-        }else{
-            return
-        }
+        } 
     }
     return React.memo(Action,(oldProps:any, newProps:any)=>{
         return oldProps.name === newProps.name  
@@ -286,7 +295,14 @@ export function createActionComponent<Store extends Dict = Dict>(store:Store,for
 }
  
 /**
- * 声明action函数，实现表单
+ * 使用action来声明一个动作
+ * 
+ * 该函数实现以下功能:
+ * - 从store中获取动作的状态数据传递给Action的getter函数
+ * - 
+ * 
+ * 
+ * 
  * @param getter 
  * @param options 
  */
