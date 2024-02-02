@@ -1,13 +1,15 @@
-import { AsyncComputedObject } from "helux-store"
+import React from "react"
 import { ReactFC } from "../types"
 import ColorBlock from "./ColorBlock"
 import { Loading } from "./Loading"
+import { FieldRenderProps } from "speed-form"
 
 export const ValidResult:React.FC<FieldProps> = ({validate,help})=>{
+    if(validate==undefined) return 
     // 如果是同步校验，则validate是一个boolean
     const isAsycValidate = typeof(validate)!=='boolean'
     //
-    const isValid = isAsycValidate ? validate?.value :  validate 
+    const isValid = isAsycValidate ? validate?.result :  validate 
     
     const isValiding = isAsycValidate ? validate?.loading: false
     
@@ -23,16 +25,10 @@ export const ValidResult:React.FC<FieldProps> = ({validate,help})=>{
 }
 
 
-export interface FieldProps{
-    label?:string
-    visible?:boolean
-    enable?:boolean
-    help?:string
-    validate?: boolean | AsyncComputedObject<boolean>    
-}  
+export type FieldProps = Partial<FieldRenderProps<any>>
 
 export const Field:ReactFC<FieldProps> = (props)=>{
-    const {enable,visible,label,children} = props
+    const {enable=true,visible=true,title='',children=''} = props 
     return  (
         <div  className="field"  style={{
             position:'relative',
@@ -46,13 +42,13 @@ export const Field:ReactFC<FieldProps> = (props)=>{
                 minWidth:'160px',
                 fontWeight:'bold',
                 color: enable===false ? 'gray' : 'inherit'
-            }}>{label}:</label>
+            }}>{title}:</label>
             <span className="field-value" style={{
                 flexGrow:1,
                 display:'flex',
                 flexDirection:'row',
                 color: enable===false ? 'gray' : 'inherit'
-            }}>{children}</span>  
+            }}>{React.isValidElement(children) ? children : null}</span>  
             <ValidResult {...props}/>
             <ColorBlock style={{
                 position:'absolute',

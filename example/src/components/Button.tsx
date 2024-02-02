@@ -14,7 +14,7 @@ export type ButtonProps =React.PropsWithChildren<
     }>
 
 export const Button:React.FC<ButtonProps> = (props)=>{
-    const { visible=true,enable=true,loading,timeout=0,progress=0,cancel} =props 
+    const { visible=true,loading,timeout=0,progress=0,cancel=()=>{}} =props 
     return (
         <div
             className='speed-button'
@@ -30,8 +30,6 @@ export const Button:React.FC<ButtonProps> = (props)=>{
             {loading ? <Loading/> : null}
             <div 
                 style={{flexGrow:1,backgroundColor:'transparent'}}
-                disabled={String(!enable)}
-                {...props}
             >   
                 {props.children}        
             </div>  

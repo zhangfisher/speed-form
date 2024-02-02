@@ -12,10 +12,7 @@ const formSchema = {
 		return path[path.length-1] ==='value'
 	}),
 	enable:1,
-	visible:async (fields:any)=>{
-		await delay(2000)
-		return true
-	},
+	visible:true,
 	fields: {
 		// asyncTitle: { 
 		// 	value: "React-Helux-Form",

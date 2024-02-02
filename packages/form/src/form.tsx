@@ -292,8 +292,6 @@ function createFormComponent<Fields extends Dict>(this:FormOptions,store: any): 
 	return (props: FormProps<Fields>) => {
 		const { children } = props; 
 
-		// 表单作用域
-		
 
 		const onSubmit = useCallback((ev: React.FormEvent<HTMLFormElement>) => {
 			console.log("submit:",ev)
