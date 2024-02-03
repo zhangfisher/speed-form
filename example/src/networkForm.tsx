@@ -152,8 +152,6 @@ const NetworkForm = ()=>{
 
 
 const FormDemo:React.FC = ()=>{
-    // 如果缺少以下两句，则state.select无法触发setOnReadHook 
-    
     const [formData,setFormData] = useState({})
     const [formState,setFormState] = useState(()=>Network.state)
 
@@ -188,7 +186,6 @@ const FormDemo:React.FC = ()=>{
                     <Field name="dirty" title="dirty">{formState.dirty}</Field>
                     <Field name="validate" title="validate">{formState.validate}</Field>
                     <textarea style={{width:"100%",height:"80px"}} value={JSON.stringify(formData)} readOnly></textarea>
-
                 </Card>
                 <Card title="表单数据" buttons={[
                     {title:"更新",onClick:()=>setFormState(JSON.parse(JSON.stringify(Network.state)))}

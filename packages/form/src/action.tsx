@@ -318,7 +318,7 @@ export type SubmitAsyncComputedGetter<R> = AsyncComputedGetter<R,FormData>
 
 
 /**
- * 将传一个FormData对象
+ * 特殊的对象传入一个FormData对象
  * @param getter 
  * @param options 
  * @returns 
@@ -330,26 +330,4 @@ export function submit<R=any>(getter: SubmitAsyncComputedGetter<R>,options?: Com
     },options)
 
 }
-
-
-
-
-// // 标准表单提交
-// export interface StandardSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
-// 	url?:ActionComputedAttr<string,Fields>						    // 提交的URL
-//     method?:ActionComputedAttr<HttpMethod,Fields>					// 提交的方法
-//     enctype?:ActionComputedAttr<HttpFormEnctype,Fields>				// 是否包含文件，此表单中的
-// }
-
-// // API提交
-// export interface ApiSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
-// 	url?:ActionComputedAttr<string,Fields>						// 提交的URL
-//     method?:ActionComputedAttr<HttpMethod,Fields>		        // 提交的方法
-//     params?:ActionComputedAttr<Dict,Fields>						// 提交的参数
-//     data?:ActionComputedAttr<Dict,Fields>						// 提交的Body数据
-//     headers?:ActionComputedAttr<Dict,Fields>					// 提交的头信息
-// }
-
-
-
 

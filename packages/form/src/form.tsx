@@ -50,9 +50,7 @@ import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
 import defaultFormProps from "./form.default"
 
-export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{
-	// 可选的表单名称，当用在子表单时指定
-	scope?: string | string[];									
+export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{							
 	onSubmit?: (value: RequiredComputedState<State>) => void;
 	onReset?: (value: RequiredComputedState<State>) => void;
 }>;
@@ -275,11 +273,11 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
  * <Form></From>			// 表单组件
  * <Network.Form<typeof Network.wifi> scope="wifi">
  * 	   <Network.Field name="ssid"></Network.Field>			// 声明字段
- * 	   <Network.Action type="submit">
+ * 	   <Network.Submit>
  *        {({action})=>{
  * 			retrun <button onClick={action()}></button>
  *        }}
- *     </Network.Action>
+ *     </Network.Submit>
  * </Network.Form>			// 声明子表单
  * 
  * 
@@ -290,19 +288,22 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
  */
 function createFormComponent<Fields extends Dict>(this:FormOptions,store: any): FormComponent<Fields> {
 	return (props: FormProps<Fields>) => {
-		const { children } = props; 
 
+		const {scope,children } = props; 
 
+		// 提交表单
 		const onSubmit = useCallback((ev: React.FormEvent<HTMLFormElement>) => {
 			console.log("submit:",ev)
 		},[]);
+
+		// 重置表单
 		const onReset = useCallback((e: React.FormEvent<HTMLFormElement>) => {
 
 		},[]);
 
 
 		return (
-			<form onSubmit={onSubmit} onReset={onReset} className="speed-form">
+			<form className="speed-form" onSubmit={onSubmit} onReset={onReset}>
 				{children}
 			</form>
 		);
