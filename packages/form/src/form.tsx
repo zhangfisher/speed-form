@@ -220,7 +220,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 
 	// 注入表单默认属性
 	setFormDefault(define)  
-
+	
 	// 创建表单Store对象实例
 	const store = createStore<StoreSchema<Schema>>({state:define},{
 		debug:opts.debug,
@@ -245,9 +245,10 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 			}
 		}
 	});  
-	type StoreType = typeof store 
-	type FieldsType = (typeof store.state)['fields'] 
-	type ActionsType = (typeof store.state)['actions'] 
+	type StoreType = typeof store
+	type StateType = typeof store.state
+	type FieldsType = (StateType)['fields'] 
+	type ActionsType = (StateType)['actions'] 
 	return {
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
@@ -257,8 +258,8 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 		getAction,
     	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
 		actions:createObjectProxy(()=>store.state.actions) as ActionsType,		
-		state:store.state as FormSchema<typeof store.state>, 
-		useState:store.useState,
+		state:store.state as FormSchema<StateType>, 
+		useState:store.useState
 	};
 }
 

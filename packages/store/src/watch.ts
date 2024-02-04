@@ -228,10 +228,6 @@ export function installWatch<Store extends StoreSchema<any>>(options:StoreExtend
     storeOptions.log(`install watch for <${params.fullKeyPath.join('.')}>`)
     const watchDescriptor = params.value() as unknown as WatchDescriptorParams
     storeWatcher.add(watchDescriptor,params)
-    // @ts-ignore
-    // stateCtx.setState((draft: any)=>{
-    //     setVal(draft,params.fullKeyPath,watchDescriptor.options.initial)
-    // }) 
     params.replaceValue(watchDescriptor.options.initial)
     
 }

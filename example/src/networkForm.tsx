@@ -154,7 +154,7 @@ const NetworkForm = ()=>{
 const FormDemo:React.FC = ()=>{
     const [formData,setFormData] = useState({})
     const [formState,setFormState] = useState(Network.state)    
-
+    const [fState]= Network.useState()
     const submit = useCallback((actionState:any)=>{
         Network.getAction(actionState)().then((result)=>{            
             setFormData(result)
@@ -162,7 +162,13 @@ const FormDemo:React.FC = ()=>{
             setFormData("Error: "+error.message)
         })
     },[])
+
+    Network.state.dirty
+    Network.state.enable
+
+
     // state.dhcp.start.validate.value
+    console.log("fState.dirty=",fState.dirty)
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>
             <div style={{padding:"8px",margin:'8px',width:'60%'}}>
@@ -177,8 +183,8 @@ const FormDemo:React.FC = ()=>{
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单状态">
-                    <Field name="dirty" title="dirty">{formState.dirty}</Field>
-                    <Field name="validate" title="validate">{formState.validate}</Field>
+                     <Field name="dirty" title="dirty">{String(fState.dirty)}</Field>
+                    {/*<Field name="validate" title="validate">{formState.validate}</Field> */}
                     <textarea style={{width:"100%",height:"80px"}} value={JSON.stringify(formData)} readOnly></textarea>
                 </Card>
                 <Card title="表单数据" buttons={[
