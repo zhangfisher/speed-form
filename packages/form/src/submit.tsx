@@ -40,7 +40,7 @@ multipart/form-data	request payload
 
 import { Dict, getValueByPath } from "helux-store"; 
 import type { FormOptions, FormSchemaBase } from "./form";
-import { ReactNode, RefObject, useCallback, useRef } from "react";
+import React,{ ReactNode, RefObject, useCallback, useRef } from "react";
  import { isFieldGroup, isFieldList, isFieldValue } from "./utils";
 
 // 动作状态，必须包含一个名称为execute的异步计算属性
@@ -78,9 +78,18 @@ export type SubmitProps<State extends FormSubmitState=FormSubmitState,PropTypes 
  
 
 
-function SubmitChildren(){
+const SubmitChildren = React.memo((props:{submitProps:SubmitRenderProps<any>,children:any})=>{
+    return <>{
+      typeof(props.children)=='function' && props.children(props.submitProps as any)  
+    }</>
+  },(oldProps, newProps)=>{  
+    return  Object.entries(oldProps.submitProps).every(([key,value]:[key:string,value:any])=>{
+      return ['children','render'].includes(key) ? true: value===newProps.submitProps[key]
+    }) 
+  })     
+  
+  
 
-}
 export interface SubmitOptions{
 }
 
