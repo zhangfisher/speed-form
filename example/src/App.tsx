@@ -10,7 +10,7 @@ import UserForm from './UserForm'
 const menuItems=[
   // {id:"render",title:"useState",component:<UseStateDemo/>},
   // {id:"computed",title:"计算属性",component:<ComputedDemo/>},
-  {id:"user",title:"用户",component:<UserForm/>},
+  // {id:"user",title:"用户",component:<UserForm/>},
   {id:"network",title:"网络",component:<NetworkForm/>,default:true},  
 ] 
 

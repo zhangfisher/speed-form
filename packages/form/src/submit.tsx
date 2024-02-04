@@ -14,27 +14,6 @@ multipart/form-data	request payload
 </Submit>
 
 
-
-// // 标准表单提交
-// export interface StandardSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
-// 	url?:ActionComputedAttr<string,Fields>						    // 提交的URL
-//     method?:ActionComputedAttr<HttpMethod,Fields>					// 提交的方法
-//     enctype?:ActionComputedAttr<HttpFormEnctype,Fields>				// 是否包含文件，此表单中的
-// }
-
-// // API提交
-// export interface ApiSubmitAction<Fields extends Dict=Dict> extends FormActionDefine<Fields>{
-// 	url?:ActionComputedAttr<string,Fields>						// 提交的URL
-//     method?:ActionComputedAttr<HttpMethod,Fields>		        // 提交的方法
-//     params?:ActionComputedAttr<Dict,Fields>						// 提交的参数
-//     data?:ActionComputedAttr<Dict,Fields>						// 提交的Body数据
-//     headers?:ActionComputedAttr<Dict,Fields>					// 提交的头信息
-// }
-
-
-
-
-
  * 
  */
 
@@ -71,28 +50,22 @@ export type SubmitRender<State extends Dict,Params extends Dict = Dict>= (props:
 
 
 export type SubmitProps<State extends FormSubmitState=FormSubmitState,PropTypes extends Dict = Dict,Params extends Dict = Dict> = {
-    scope:string | string[]              // 声明该动作对应的状态路径
-    render?: SubmitRender<State,Params>  
+    scope? :string | string[]              // 声明该动作对应的状态路径
+    render? : SubmitRender<State,Params>  
     children?: SubmitRender<State,Params>  
 }    
  
 
-
-const SubmitChildren = React.memo((props:{submitProps:SubmitRenderProps<any>,children:any})=>{
-    return <>{
-      typeof(props.children)=='function' && props.children(props.submitProps as any)  
-    }</>
-  },(oldProps, newProps)=>{  
-    return  Object.entries(oldProps.submitProps).every(([key,value]:[key:string,value:any])=>{
-      return ['children','render'].includes(key) ? true: value===newProps.submitProps[key]
-    }) 
-  })     
-  
-  
-
 export interface SubmitOptions{
 }
 
+/**
+ * 
+ * 提取一个字段组中除了字段以后的所有属性
+ * 
+ * @param formState 
+ * @returns 
+ */
 function getFormAttrs(formState:Dict){
     const result:Dict = {}
     Object.entries(formState || {}).forEach(([key,value])=>{
@@ -104,6 +77,12 @@ function getFormAttrs(formState:Dict){
 }
 
 
+/**
+ * 执行提交动作
+ * @param formState 
+ * @param submitOptions 
+ * @returns 
+ */
 function useFormSubmit<State extends FormSubmitState=FormSubmitState>(formState:State,submitOptions?:SubmitOptions){
     return useCallback((options:SubmitOptions)=>{
      
@@ -111,7 +90,8 @@ function useFormSubmit<State extends FormSubmitState=FormSubmitState>(formState:
 }
 
 function createSubmitRenderProps<State extends FormSubmitState=FormSubmitState>(formState:State,submitFn:any,ref:RefObject<HTMLElement>){  
-    return Object.assign({            
+    return Object.assign({      
+        type      : "submit",
         help       : "",
         title      : "",
         dirty      : false,
@@ -126,14 +106,24 @@ function createSubmitRenderProps<State extends FormSubmitState=FormSubmitState>(
         ref,
     })
 } 
-
+const SubmitChildren = React.memo((props:{submitProps:SubmitRenderProps<any>,children:any})=>{
+    return <>{
+      typeof(props.children)=='function' && props.children(props.submitProps as any)  
+    }</>
+  },(oldProps, newProps)=>{  
+    return  Object.entries(oldProps.submitProps).every(([key,value]:[key:string,value:any])=>{
+      return ['children','render'].includes(key) ? true: value===newProps.submitProps[key]
+    }) 
+  })     
+  
+  
 export function createSubmitComponent<Store extends Dict = Dict>(store:Store,submitOptions?:SubmitOptions,formOptions?:Required<FormOptions>) {
     function Submit<State extends FormSubmitState=FormSubmitState,Scope extends Dict=Dict>(props: SubmitProps<State,Scope>):ReactNode{
         const [state] = store.useState()  
 
         const { scope } = props  
 
-        const formState = getValueByPath(state,scope)
+        const formState =getValueByPath(state,scope) 
         const submit = useFormSubmit(formState,submitOptions)
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
@@ -141,21 +131,22 @@ export function createSubmitComponent<Store extends Dict = Dict>(store:Store,sub
         // 创建动作组件的Props
         const submitRenderProps = createSubmitRenderProps(formState,submit,ref)        
 
+
         // 执行渲染动作组件
         if(typeof(props.render)==='function'){
-            return <SubmitChildren {...{actionProps:submitRenderProps,children:props.render}} />
+            return <SubmitChildren {...{submitProps:submitRenderProps,children:props.render}} />
         }else if(props.children){
             if(Array.isArray(props.children)){
                 return (props.children as any).map((children:any)=>{
-                    return <SubmitChildren {...{actionProps:actionRenderProps,children:children}} />
+                    return <SubmitChildren {...{submitProps:submitRenderProps,children:children}} />
                 })
             }else{
-                return <SubmitChildren {...{actionProps:actionRenderProps,children:props.children}} />
+                return <SubmitChildren {...{submitProps:submitRenderProps,children:props.children}} />
             }            
         } 
     }
-    return React.memo(Action,(oldProps:any, newProps:any)=>{
+    return React.memo(Submit,(oldProps:any, newProps:any)=>{
         return oldProps.name === newProps.name  
-    }) as (<State extends FormActionState=FormActionState,Scope extends Dict=Dict>(props: ActionProps<State,Scope>)=>ReactNode)
+    }) as (<State extends FormSubmitState=FormSubmitState,Scope extends Dict=Dict>(props: SubmitProps<State,Scope>)=>ReactNode)
 
 }

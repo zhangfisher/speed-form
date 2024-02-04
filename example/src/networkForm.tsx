@@ -129,13 +129,6 @@ const NetworkForm = ()=>{
                         </>
                     }}
                 </Network.Action>
-                <Network.Submit<typeof Network.fields.wifi.standardSubmit> name="fields.wifi.standardSubmit" >
-                    {({title,visible,loading,enable,run,error,progress})=>{ 
-                        return <>
-                        <Button type="submit" loading={loading} progress={progress} visible={visible}  error={error} enable={enable} onClick={run()}>{title}</Button>
-                        </>
-                    }}
-                </Network.Submit>
                 <Network.Action<typeof Network.fields.wifi.cancelableSubmit> name="fields.wifi.cancelableSubmit" >
                     {({title,visible,loading,enable,run,cancel,error,progress})=>{ 
                         return <>
@@ -143,7 +136,14 @@ const NetworkForm = ()=>{
                             <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={run()}>{title}</Button>
                         </>
                     }}
-                </Network.Action>                 
+                </Network.Action>     
+                <Network.Submit>
+                    {({title})=>{ 
+                        return <>
+                             <input type="submit" value={title}/>
+                        </>
+                    }}
+                </Network.Submit>            
             </div> 
             
         </Card>
@@ -153,7 +153,7 @@ const NetworkForm = ()=>{
 
 const FormDemo:React.FC = ()=>{
     const [formData,setFormData] = useState({})
-    const [formState,setFormState] = useState(()=>Network.state)
+    const [formState,setFormState] = useState(Network.state)    
 
     const submit = useCallback((actionState:any)=>{
         Network.getAction(actionState)().then((result)=>{            
@@ -162,13 +162,7 @@ const FormDemo:React.FC = ()=>{
             setFormData("Error: "+error.message)
         })
     },[])
-    
-    Network.state.dirty
-    Network.state.enable
-    Network.state.visible
-    Network.Submit
     // state.dhcp.start.validate.value
-
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>
             <div style={{padding:"8px",margin:'8px',width:'60%'}}>

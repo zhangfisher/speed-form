@@ -6,13 +6,14 @@ import validator from "validator";
 let count =1 
 // 声明表单数据
 const formSchema = {
-	dirty:watch<boolean>((value)=>{
-		return value
-	},(path)=>{
-		return path[path.length-1] ==='value'
-	}),
+	// dirty:watch<boolean>((value)=>{
+	// 	return value
+	// },(path)=>{
+	// 	return path[path.length-1] ==='value'
+	// }),
 	enable:1,
 	visible:true,
+	title: "网络配置",
 	fields: {
 		// asyncTitle: { 
 		// 	value: "React-Helux-Form",

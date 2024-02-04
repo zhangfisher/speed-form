@@ -20,16 +20,13 @@ export interface StoreExtendContext<Ctx>{
     params:IOperateParams
 }
 
-export function installExtends<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>,extendObjects:StoreExtendObjects,storeOptions: Required<StoreOptions>) {    
+export function installExtends<Store extends StoreSchema<any>>(params:IOperateParams,stateCtx: ISharedCtx<Store["state"]>,extendObjects:StoreExtendObjects,storeOptions: Required<StoreOptions>) {    
     const replacedMap: any = {};
     // 拦截读取state的操作，在第一次读取时，
     // - 为计算函数创建mutate
     // - 将原始属性替换为计算属性值或异步对象
-	stateCtx.setOnReadHook((params) => {
       const { fullKeyPath:valuePath, value } = params;
       const key = valuePath.join(".");
-      if(params.fullKeyPath[0]=='actions' && params.fullKeyPath[params.fullKeyPath.length-1]=='execute') debugger
-
       if ( typeof value === "function" && !replacedMap[key] && !isSkipComputed(value) ) {
         replacedMap[key] = true;        
         const ctx:StoreExtendContext<ISharedCtx<Store["state"]>>= {
@@ -40,11 +37,10 @@ export function installExtends<Store extends StoreSchema<any>>(stateCtx: IShared
         }
         if(value.__COMPUTED__=='watch'){
             installWatch<Store>(ctx)
-        }else{ // 安装计算函数扩展
+        }else{  
             installComputed<Store>(ctx)
         } 
       }
-    });
 }
 
 

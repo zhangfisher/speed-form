@@ -14,10 +14,11 @@ export type ButtonProps =React.PropsWithChildren<
     }>
 
 export const Button:React.FC<ButtonProps> = (props)=>{
-    const { visible=true,loading,timeout=0,progress=0,cancel=()=>{}} =props 
+    const { visible=true,loading,timeout=0,progress=0,cancel=()=>{},onClick} =props 
     return (
         <div
             className='speed-button'
+            onClick={onClick}
          style={{
             padding:"8px",
             margin:"4px",

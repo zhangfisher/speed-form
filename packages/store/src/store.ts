@@ -33,12 +33,12 @@ export interface StateValueDescriptor<Fn extends Function,Options extends Dict =
 }
 
 export enum ComputedScopeRef{
-    None = 'none',
-    Root = 'root',
+    None    = 'none',
+    Root    = 'root',
     Current = 'current',
-    Parent = 'parent',  
-    Depends = 'depends',          // 指向依赖数组
-    Self = 'self'                 // 指向自身，默认值
+    Parent  = 'parent',  
+    Depends = 'depends',                // 指向依赖数组
+    Self    = 'self'                    // 指向自身，默认值
 
 }
 
@@ -151,16 +151,14 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
     return  model((api) => { 
         const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any,{
             stopArrDep: false,
-            moduleName:opts.id
+            moduleName:opts.id,
+            onRead:(params)=>{   // 2. 处理extends,主要是处理computed，watch等                
+                installExtends<T>(params,stateCtx,extendObjects,opts)
+            }
         })
         // 1. 创建Actions
         const actions = createActions<T>(storeData.actions,stateCtx,api,opts)
-        
-
-        // 2. 处理extends,主要是处理computed，watch等
-        installExtends<T>(stateCtx,extendObjects,opts)
-
-        // 3. 处理useState
+        // 2. 处理useState
         const useState = useStateWrapper<T['state']>(stateCtx)
         
         return {

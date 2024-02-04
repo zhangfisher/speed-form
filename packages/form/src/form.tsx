@@ -49,6 +49,7 @@ import { FIELDS_STATE_KEY } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
 import defaultFormProps from "./form.default"
+import { createSubmitComponent } from "./submit";
 
 export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{							
 	onSubmit?: (value: RequiredComputedState<State>) => void;
@@ -252,8 +253,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
 		Action: createActionComponent<StoreType>(store,{},opts),
-		// Submit与Action的区别是，Submit不会阻止默认行为,因此其运行run时会导致表单的提交,而Action则会阻止默认行为
-		Submit: createActionComponent<StoreType>(store,{preventDefault:false},opts),
+		Submit: createSubmitComponent<StoreType>(store,{preventDefault:false},opts),
 		getAction,
     	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
 		actions:createObjectProxy(()=>store.state.actions) as ActionsType,		
@@ -289,7 +289,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 function createFormComponent<Fields extends Dict>(this:FormOptions,store: any): FormComponent<Fields> {
 	return (props: FormProps<Fields>) => {
 
-		const {scope,children } = props; 
+		const {children } = props; 
 
 		// 提交表单
 		const onSubmit = useCallback((ev: React.FormEvent<HTMLFormElement>) => {

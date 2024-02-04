@@ -27,7 +27,7 @@ function isFieldValue(path:string[]){
 function createDirtyProp(){
     return watch<boolean>((value,{ getSelfValue })=>{
         const selfValue = getSelfValue()
-        if(typeof(value)=='boolean' && value!==selfValue) return value
+        if(!selfValue) return true
     },(path)=>isFieldValue(path),{
         initial:false
     })

@@ -376,13 +376,13 @@ function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedC
 */
 function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial<AsyncComputedObject>){
   return Object.assign({
-    value: undefined, 
-    loading: false,
-    timeout:0,
-    retry:0,          // 重试次数，3表示最多重试3次
-    error: null,
+    value   : undefined, 
+    loading : false,
+    timeout : 0,
+    retry   : 0,          // 重试次数，3表示最多重试3次
+    error   : null,
     progress: 0,
-    run: markRaw(
+    run     : markRaw(
         skipComputed((args:Dict) => {
           return stateCtx.runMutateTask({desc:mutateId,extraArgs:args});
         })
