@@ -3,7 +3,7 @@
  * 
  * 
  */
-import { ISharedCtx, watch as heluxWatch, IOperateParams, flush } from "helux";
+import { ISharedCtx, watch as heluxWatch, IOperateParams, flush, getSnap } from 'helux';
 import type { StateValueDescriptor, StateValueDescriptorParams, StoreSchema } from "./store";
 import { StoreExtendContext } from "./extends"; 
 import { getVal, setVal } from "@helux/utils"; 
@@ -234,7 +234,12 @@ export function installWatch<Store extends StoreSchema<any>>(options:StoreExtend
     storeOptions.log(`install watch for <${params.fullKeyPath.join('.')}>`)
     const watchDescriptor = params.value() as unknown as WatchDescriptorParams
     storeWatcher.add(watchDescriptor,params)
-    params.replaceValue(watchDescriptor.options.initial)
+    // params.replaceValue(watchDescriptor.options.initial)
+    // @ts-ignore
+    stateCtx.setState((draft)=>{
+        setVal(draft,params.fullKeyPath,watchDescriptor.options.initial)
+    })
+    
     
 }
 

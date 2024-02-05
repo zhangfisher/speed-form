@@ -271,25 +271,46 @@ export default ()=>{
 当`computedThis==ComputedScopeRef.Depends`时，计算函数的`this`指向计算函数的依赖数组。
 
 :::warn
-**`ComputedScopeRef.Depends`仅在异步计算时生效**
+**`ComputedScopeRef.Depends`仅在异步计算时生效,而异步计算必须通过computed函数来指定依赖**
 :::
 
+```tsx
+/**
+ * title: <字符串数组*>
+ * description: store.computedThis==<字符串数组>
+ */
+import { createStore,computed,ComputedScopeRef  } from 'helux-store'; 
+
+const state = {
+  user:{
+    firstName:"Zhang",
+    lastName:"Fisher",
+    fullName: computed(async (deps)=>{ 
+      return deps[0] + deps[1]
+    },['user.firstName','user.lastName'],{      
+      async:true,
+      scope:ComputedScopeRef.Depends
+    }) 
+  }
+} 
+const store = createStore<typeof user>({state})
+
+export default ()=>{
+  const [state,setState] = store.useState()
+  return <div> 
+    <div>FullName:{state.user.fullName.result}</div>
+  </div>
+}
+
+```
 
 ## 作用域
 
-计算属性的`作用域`指的是传递给**计算函数的第一个参数**,
+计算属性的`作用域`指的是传递给**计算函数的第一个参数**。
 
 - `helux-store`提供了`computedScope`参数来指定计算函数的全局默认作用域。
 - 计算函数也可以在创建时指定作用域(通过`computed`指定，见后续介绍)，优先级高于全局`computedScope`参数。
 - `computedScope`取值与`computedThis`基本一样。
 
-
-:::info   
-
-**为什么计算函数的`this`要玩这么多花样？**
-
-一切均是为了提供更好的开发体验，让你可以更加灵活地处理数据，更加高效地开发。
-
-:::
-
+ 
  

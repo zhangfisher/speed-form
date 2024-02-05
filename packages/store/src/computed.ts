@@ -259,12 +259,14 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
         || (arguments.length>=2 && Array.isArray(depends)) 
 
 
+
+  opts.async = isAsync;
+  opts.depends = deps;
+  
   if (isAsync && opts.depends?.length==0) {
     console.warn("async computed function should specify depends")
   }
 
-  opts.async = isAsync;
-  opts.depends = deps;
   const descriptor = () => {
     return {
       fn:getter,
@@ -531,7 +533,6 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     return;
   }
   let { fn: getter, options: computedOptions }  = value() as ComputedDescriptorParams<any>
-  if(!getter) debugger
   computedOptions.async = true; 
 
  
@@ -555,13 +556,16 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
 
 
   const deps = getDeps(depends) //(depends || []).map((deps: any) =>Array.isArray(deps) ? deps : deps.split("."))
-
+  if(deps.length>0) debugger
   const mutateId = getComputedId(valuePath,computedOptions.id)
 
   storeOptions.log(`Create async computed: ${valuePath.join(".")} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
 
   const witness = stateCtx.mutate({ 
-    deps: (state: any) =>deps.map((dep: any) =>getVal(state, dep)),
+    // 依赖是相于对根对象的
+    deps: (state: any) =>{
+      return deps.map((dep: any) =>getVal(state, dep))
+    },
     fn: (draft, params) => {
       if (params.isFirstCall) {     
         if(toComputedResult=='self'){ // 原地替换
