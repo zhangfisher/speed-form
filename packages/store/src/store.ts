@@ -152,7 +152,7 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
         const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any,{
             stopArrDep: false,
             moduleName:opts.id,
-            onRead:(params)=>{   // 2. 处理extends,主要是处理computed，watch等                
+            onRead:(params)=>{   // 处理extends,主要是处理computed，watch等                
                 installExtends<T>(params,stateCtx,extendObjects,opts)
             }
         })

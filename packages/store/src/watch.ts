@@ -109,7 +109,7 @@ class StoreWatcher<Store extends StoreSchema<any>>{
                 // 如果没有缓存，则执行所有的监听函数
                 for(const [destPath,listener] of this.listeners){
                     try{
-                        this.executeListener(srcPath,destPath,listener)
+                        this.executeListener(srcPath,JSON.parse(destPath),listener)
                     }catch(e){
                     }
                 } 
@@ -125,21 +125,27 @@ class StoreWatcher<Store extends StoreSchema<any>>{
      * @param listener 
      * @param listenerOpts 
      */
-    private addListenerToCache(srcPath:string,destPath:string[],listener:WatchListener,listenerOpts:any){
-        if(!this.cache.has(srcPath)){
-            this.cache.set(srcPath,[])
+    private addListenerToCache(srcPath:string[],destPath:string[],listener:WatchListener,listenerOpts:any){
+        const srcKey = this.getValueKey(srcPath)
+        if(!this.cache.has(srcKey)){
+            this.cache.set(srcKey,[])
         }
-        const listenerCache = this.cache.get(srcPath)
+        const listenerCache = this.cache.get(srcKey)
         listenerCache.push([destPath,listener,listenerOpts])
+    }
+
+    private getValueKey(valuePath:string | string[]){
+        return JSON.stringify(valuePath)
     }
     /**
      * 命中匹配缓存中的侦听函数
      * @param srcPath 
      */
     private hitListenerFromCache(srcPath:string[]){
-        if(this.cache.has(String(srcPath))){
+        const srcKey = this.getValueKey(srcPath)
+        if(this.cache.has(srcKey)){
             const srcValue = getVal(this.stateCtx.state,srcPath)
-            const listeners = this.cache.get(String(srcPath))
+            const listeners = this.cache.get(srcKey)
             listeners.forEach(([destPath,listener,listenerOpts]:[string[],WatchListener,any])=>{
                  const result = listener(srcValue,listenerOpts)             
                  // 将返回值回写到状态中
@@ -174,7 +180,7 @@ class StoreWatcher<Store extends StoreSchema<any>>{
                         srcPath
                     }
                     // 将监听函数添加到缓存中
-                    this.addListenerToCache(String(srcPath),destPath,listener,listenerOpts)                    
+                    this.addListenerToCache(srcPath,destPath,listener,listenerOpts)                    
                     // 调用监听函数并获取返回值
                     const result = listener(srcValue,listenerOpts)             
                     // 将返回值回写到状态中
@@ -202,14 +208,14 @@ class StoreWatcher<Store extends StoreSchema<any>>{
 
     add(descriptor:WatchDescriptorParams,params:IOperateParams){
         const {fullKeyPath:valuePath} = params
-        this.listeners.set(String(valuePath),{
+        this.listeners.set(this.getValueKey(valuePath),{
             fn:descriptor.fn, 
             options:descriptor.options
 
         })
     }
-    remove(keyPath:string[]){
-        this.listeners.delete(String(keyPath))
+    remove(keyPath:string | string[]){
+        this.listeners.delete(this.getValueKey(keyPath))
     }
 }
 

@@ -28,7 +28,7 @@ export function installExtends<Store extends StoreSchema<any>>(params:IOperatePa
       const { fullKeyPath:valuePath, value } = params;
       const key = valuePath.join(".");
       if ( typeof value === "function" && !replacedMap[key] && !isSkipComputed(value) ) {
-        if(typeof value === "function") replacedMap[key] = true;        
+        replacedMap[key] = true;        
         const ctx:StoreExtendContext<ISharedCtx<Store["state"]>>= {
             stateCtx,
             extendObjects,
