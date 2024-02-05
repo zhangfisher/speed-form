@@ -92,9 +92,28 @@ export function getError(e:any):Error{
 
 /**
  * 用来将依赖参数转换为数组
- * @param arg 
+ * @param arg 返回 [[],[],[],[]]
  */
 export function getDeps(arg:ComputedDepends | undefined,ctx?:any):(string[])[]{
-    let deps:(string[])[]= (arg || []).map((d: any) =>Array.isArray(d) ? d : (typeof(d)=='string' ? d.split(".") : []))
-    return deps
+    return (arg || []).map((d: any) =>Array.isArray(d) ? d : (typeof(d)=='string' ? d.split(".") : []))   
+}
+
+/**
+ * depends:["./first/cc/fff","../","/sss"]
+ * 
+ *   获取依赖的值
+ *   支持 "./xxxx.xxx" 代表当前路径的相对路径
+ *   ../../代表父或者祖先路径
+ * 
+ */
+export function getDepValues(deps:string[],draft:any,curValuePath:string[]){
+    return deps.map((dep)=>{
+        if(dep.startsWith('./')){
+            return getVal(draft,[...curValuePath,...dep.slice(2)])
+        }else if(dep[0]=='/'){
+            return getVal(draft,dep)
+        }else{
+            return getVal(draft,[...curValuePath,dep])
+        }
+    })
 }
