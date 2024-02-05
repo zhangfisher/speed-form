@@ -22,8 +22,8 @@
 
 import { ReactNode } from "react";
 import { DefaultFieldPropTypes } from "./field";
-import { Dict } from "./types";
 import { getVal } from "@helux/utils";
+import { Dict } from "helux-store";
 
 export type DefaultFieldListPropTypes = Omit<DefaultFieldPropTypes,'value' | 'oldValue' | 'defaultValue' | 'validate'>
 

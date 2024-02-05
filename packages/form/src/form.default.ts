@@ -5,10 +5,9 @@ function isValidateField(path:string[]){
         path[path.length-1] ==='validate' 
         || (path.length>=2 && path[path.length-1]=='result' && path[path.length-2]=='validate')
     ) && !(path.length==1 && path[0]=='validate')
-    && !(path.length==2 && path[0]=='validate' && path[1]=='result')
-
-    
+    && !(path.length==2 && path[0]=='validate' && path[1]=='result')    
 }
+
 /**
  * 根据字段路径判定是否是字段值
  * @param path 

@@ -114,7 +114,7 @@ class StoreWatcher<Store extends StoreSchema<any>>{
                     }
                 } 
             })
-        },()=>[this.stateCtx.reactive.fields])
+        },()=>[this.stateCtx.state])
         this.wacher = {off:unwatch}
     }
     /**
@@ -202,14 +202,14 @@ class StoreWatcher<Store extends StoreSchema<any>>{
 
     add(descriptor:WatchDescriptorParams,params:IOperateParams){
         const {fullKeyPath:valuePath} = params
-        this.listeners.set(valuePath,{
+        this.listeners.set(String(valuePath),{
             fn:descriptor.fn, 
             options:descriptor.options
 
         })
     }
     remove(keyPath:string[]){
-        this.listeners.delete(keyPath)
+        this.listeners.delete(String(keyPath))
     }
 }
 

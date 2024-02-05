@@ -20,15 +20,15 @@ export interface StoreExtendContext<Ctx>{
     params:IOperateParams
 }
 
+const replacedMap: any = {};
 export function installExtends<Store extends StoreSchema<any>>(params:IOperateParams,stateCtx: ISharedCtx<Store["state"]>,extendObjects:StoreExtendObjects,storeOptions: Required<StoreOptions>) {    
-    const replacedMap: any = {};
     // 拦截读取state的操作，在第一次读取时，
     // - 为计算函数创建mutate
     // - 将原始属性替换为计算属性值或异步对象
       const { fullKeyPath:valuePath, value } = params;
       const key = valuePath.join(".");
       if ( typeof value === "function" && !replacedMap[key] && !isSkipComputed(value) ) {
-        replacedMap[key] = true;        
+        if(typeof value === "function") replacedMap[key] = true;        
         const ctx:StoreExtendContext<ISharedCtx<Store["state"]>>= {
             stateCtx,
             extendObjects,
