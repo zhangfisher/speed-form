@@ -1,4 +1,4 @@
-import { Dict, watch } from "helux-store"
+import { Dict, OBJECT_PATH_DELIMITER, watch } from "helux-store"
 
 function isValidateField(path:string[]){
     return (
@@ -48,7 +48,7 @@ function createValidateProp(){
     return watch<boolean,Dict>((value,{ getSelfValue,srcPath })=>{
         const selfValue = getSelfValue()  // 得到的是一个Dict用来保存所有字段的validate属性值
         if(typeof(value)=='boolean'){
-            selfValue[srcPath.join(".")] = value
+            selfValue[srcPath.join(OBJECT_PATH_DELIMITER)] = value
         }
         return selfValue
     },(path)=>isValidateField(path),{

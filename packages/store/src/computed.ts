@@ -18,6 +18,7 @@ import { switchValue } from "flex-tools/misc/switchValue";
 import { Dict } from "./types";
 import { delay } from 'flex-tools/async/delay'; 
 import { type StoreExtendContext } from './extends';
+import { OBJECT_PATH_DELIMITER } from './consts';
  
 
 export interface ComputedProgressbar{
@@ -182,15 +183,10 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
     }else if (contexRef === ComputedScopeRef.Depends) {      // 异步计算的依赖值      
       return Array.isArray(depends) ? depends : [];
     }else if (typeof contexRef == "string") {               // 当前对象的指定键      
-      if(contexRef.startsWith("@")){
-        const finalKeys = getValueByPath(draft, [...keyPath, ...contexRef.substring(1).split(".")]);
-        return getValueByPath(draft,finalKeys);
-      }else{
-        return getValueByPath(draft, [...keyPath, ...contexRef.split(".")]);
-      }      
+      return getValueByPath(draft, [...keyPath, ...contexRef.split(OBJECT_PATH_DELIMITER)]);
     }else if (Array.isArray(contexRef)) {                   // 从根对象开始的完整路径
       if(contexRef.length>0 && contexRef[0].startsWith("@")){
-        const finalKeys = getValueByPath(draft, [...contexRef[0].substring(1).split("."),...contexRef.slice(1)]);
+        const finalKeys = getValueByPath(draft, [...contexRef[0].substring(1).split(OBJECT_PATH_DELIMITER),...contexRef.slice(1)]);
         return getValueByPath(draft,finalKeys);
       }else{
         return getValueByPath(draft, contexRef);
@@ -338,13 +334,13 @@ function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedC
     if (typeof newGetter == "function") getter = newGetter;
   }
   
-  storeOptions.log(`Create sync computed: ${valuePath.join(".")}`);
+  storeOptions.log(`Create sync computed: ${valuePath.join(OBJECT_PATH_DELIMITER)}`);
   
   const mutateId = getComputedId(valuePath,computedOptions.id)
 
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
-      storeOptions.log(`Run sync mutate for : ${valuePath.join(".")}`);
+      storeOptions.log(`Run sync mutate for : ${valuePath.join(OBJECT_PATH_DELIMITER)}`);
       const { input } = params;
       // 1. 根据配置参数获取计算函数的上下文对象      
       const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,storeOptions,type:"context"})
@@ -552,15 +548,15 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     parent: valuePath.slice(0,valuePath.length-2),
     current: valuePath.slice(0,valuePath.length-1),
     Array:toComputedResult,    // 指定一个数组，表示完整路径
-    String:[...valuePath.slice(0,valuePath.length-1),String(toComputedResult).split(".")],
+    String:[...valuePath.slice(0,valuePath.length-1),String(toComputedResult).split(OBJECT_PATH_DELIMITER)],
   },{defaultValue:valuePath})    
 
 
-  const deps = getDeps(depends) //(depends || []).map((deps: any) =>Array.isArray(deps) ? deps : deps.split("."))
+  const deps = getDeps(depends) //(depends || []).map((deps: any) =>Array.isArray(deps) ? deps : deps.split(OBJECT_PATH_DELIMITER))
   if(deps.length>0) debugger
   const mutateId = getComputedId(valuePath,computedOptions.id)
 
-  storeOptions.log(`Create async computed: ${valuePath.join(".")} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
+  storeOptions.log(`Create async computed: ${valuePath.join(OBJECT_PATH_DELIMITER)} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
 
   const witness = stateCtx.mutate({ 
     // 依赖是相于对根对象的
@@ -581,11 +577,11 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     },
     //  此函数在依赖变化时执行，用来异步计算
     task: async ({ draft, setState, input, extraArgs }) => {
-      storeOptions.log(`Run async mutate for : ${valuePath.join(".")}`);
+      storeOptions.log(`Run async mutate for : ${valuePath.join(OBJECT_PATH_DELIMITER)}`);
       // 当使用run方法时可以传入参数来覆盖默认的计算函数的配置参数
       const finalComputedOptions = Object.assign({},computedOptions,extraArgs) as Required<ComputedOptions>
       if(noReentry && isMutateRunning && storeOptions.debug) {
-        storeOptions.log(`Reentry async computed: ${valuePath.join(".")}`,'warn');
+        storeOptions.log(`Reentry async computed: ${valuePath.join(OBJECT_PATH_DELIMITER)}`,'warn');
         return
       }
       isMutateRunning=true

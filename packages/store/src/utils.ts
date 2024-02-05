@@ -1,5 +1,6 @@
 import { getVal } from '@helux/utils'
 import type { ComputedDepends } from './computed'
+import { OBJECT_PATH_DELIMITER } from './consts'
 
 
 
@@ -9,7 +10,7 @@ export function getValueByPath(state:any,path?:string | string[] | ((state:any)=
         if(typeof(path)=== 'function'){
             path = path.call(state,state)
         }
-        paths = Array.isArray(path) ? path : (typeof(path)=='string' ? path.split('.') : [])    
+        paths = Array.isArray(path) ? path : (typeof(path)=='string' ? path.split(OBJECT_PATH_DELIMITER) : [])    
         return paths.length > 0 ? getVal(state,paths) : state
     }catch{
         return state
@@ -55,13 +56,16 @@ export function log(message:any,level:'log' | 'error' | 'warn'='log'){
  *  relPath = 'current'  则返回 ['a','b','c']
  *  relPath = ['a','b']  则返回 ['a','b']
  *  relPath = 'x'        则返回 ['a','b','c','x']
+ *  relPath = './x'        则返回 ['a','b','c','x']
+ *  relPath = '../x'        则返回 ['a','b','x']   ..代表父对象
  * 
  * 
  * @param path 
  * @param relPath 
  * @returns 
  */
-export function getRelValuePath(path:string[],relPath:'self' | 'root' | 'parent' | 'current' | string[] | string ){
+export function getRelValuePath(path:string[],relPath:'self' | 'root' | 'parent' | 'current' | string[] | string ):string[]{
+    if(!Array.isArray(path)) throw new Error('path must be an array')
     if(relPath  === 'self'){
         return path
     }else if(relPath === 'root'){
@@ -71,7 +75,14 @@ export function getRelValuePath(path:string[],relPath:'self' | 'root' | 'parent'
     }else if(relPath === 'current'){
         return path.slice(0,-1)
     }else if(typeof(relPath) === 'string'){
-        return [...path.slice(0,-1),relPath.split(".")]
+        // 字符串支持相对路径语法，如"../" 或 "./" 或 "xxx"
+        if(relPath.startsWith('./')){
+            return [...path.slice(0,-1),...relPath.slice(2).split(OBJECT_PATH_DELIMITER)]
+        }else if(relPath.startsWith('../')){ // 父路径
+            return getRelValuePath(getRelValuePath(path,'parent'),relPath.slice(3))
+        }else{
+            return [...path.slice(0,-1),...relPath.split(OBJECT_PATH_DELIMITER)]
+        }
     }else if(Array.isArray(relPath)){
         return relPath
     }
@@ -95,7 +106,7 @@ export function getError(e:any):Error{
  * @param arg 返回 [[],[],[],[]]
  */
 export function getDeps(arg:ComputedDepends | undefined,ctx?:any):(string[])[]{
-    return (arg || []).map((d: any) =>Array.isArray(d) ? d : (typeof(d)=='string' ? d.split(".") : []))   
+    return (arg || []).map((d: any) =>Array.isArray(d) ? d : (typeof(d)=='string' ? d.split(OBJECT_PATH_DELIMITER) : []))   
 }
 
 /**
