@@ -8,8 +8,8 @@ export default {
     tips:"",
     status:"idle",
     // 跟踪字段值,当值发生变化时，将dirty设置为true
-    dirty:dirty(),
-    validate:validate(),
+    dirty:dirty(['fields']),
+    validate:validate(['fields']),
     readonly:false,
     enable:true,
     visible:true

@@ -13,6 +13,7 @@ export function isValidateField(path:string[]){
 
 
 /**
+ *  侦听表单中entryPath下所有字段的validate属性，当任何一个字段的validate属性发生变化时，都会触发监听函数的执行并更新validate()所在的值
  *  只要有一个字段的validate为false，则整个表单的validate为false
  *  表单的validate = field1.validate && field2.validate && field3.validate ..... && fieldN.validate
  * 
@@ -24,9 +25,9 @@ export function isValidateField(path:string[]){
  * 
  * @returns 
  */
-export function validate(){
+export function validate(entryPath?:string[]){
     return watch<boolean,Dict>((value,{ getSelfValue,srcPath,selfPath})=>{
-        if(!isIncludePath(selfPath,srcPath)) return       
+        if(!isIncludePath(entryPath ? entryPath : selfPath,srcPath)) return       
         const selfValue = getSelfValue()  // 得到的是一个Dict用来保存所有字段的validate属性值
         if(typeof(value)=='boolean'){
             selfValue[srcPath.join(OBJECT_PATH_DELIMITER)] = value

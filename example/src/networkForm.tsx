@@ -184,7 +184,7 @@ const FormDemo:React.FC = ()=>{
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单状态">
                      <Field name="dirty" title="dirty">{String(fState.dirty)}</Field>
-                    {/*<Field name="validate" title="validate">{formState.validate}</Field> */}
+                    {/* <Field name="validate" title="validate">{fState.validate}</Field> */}
                     <textarea style={{width:"100%",height:"80px"}} value={JSON.stringify(formData)} readOnly></textarea>
                 </Card>
                 <Card title="表单数据" buttons={[
