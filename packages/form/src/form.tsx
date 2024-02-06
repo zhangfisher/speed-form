@@ -89,7 +89,7 @@ export interface FormSchemaBase{
 	dirty:boolean					
 }
 
-export type FormSchema<State extends Dict=Dict> = RequiredComputedState<State & Omit<FormSchemaBase,keyof State>>
+export type FormSchema<State extends Dict=Dict> = State & Omit<FormSchemaBase,keyof State>
 
 // 创建表单时的参数
 export interface FormOptions{
@@ -222,7 +222,7 @@ export function createForm<State extends Dict=FormSchema>(define: State,options?
 	setFormDefault(define)  
 	
 	// 创建表单Store对象实例
-	const store = createStore<StoreSchema<FormSchema<State>>>({state:define},{
+	const store = createStore<StoreSchema<FormSchema<State>>>({state:define as FormSchema<State>},{
 		debug:opts.debug,
 		// 所有计算函数的上下文均指向根
 		computedThis: ComputedScopeRef.Root,

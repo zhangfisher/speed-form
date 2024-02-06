@@ -4,13 +4,13 @@ import { OBJECT_PATH_DELIMITER } from './consts'
 
 
 
-export function getValueByPath(state:any,path?:string | string[] | ((state:any)=>string | string[])){
+export function getValueByPath(state:any,path?:string | string[] | ((state:any)=>string | string[]),delimiter=OBJECT_PATH_DELIMITER){
     let paths:string[] = []
     try{
         if(typeof(path)=== 'function'){
             path = path.call(state,state)
         }
-        paths = Array.isArray(path) ? path : (typeof(path)=='string' ? path.split(OBJECT_PATH_DELIMITER) : [])    
+        paths = Array.isArray(path) ? path : (typeof(path)=='string' ? path.split(delimiter) : [])    
         return paths.length > 0 ? getVal(state,paths) : state
     }catch{
         return state
@@ -126,3 +126,17 @@ export function getDepValues(deps:string[],draft:any,curValuePath:string[]){
         return getVal(draft,getRelValuePath(curValuePath,dep))
     })
 }
+
+/**
+ *  判断一个路径destPath是否包含另一个路径basePath判断
+ * @param basePath 
+ * @param destPath 
+ */
+export function isIncludePath(basePath:string[],destPath:string[]){
+    if(basePath.length>destPath.length) return false
+    return basePath.every((p,i)=>{
+        return p===destPath[i]
+    })
+}
+
+ 

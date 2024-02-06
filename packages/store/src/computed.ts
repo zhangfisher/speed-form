@@ -13,7 +13,7 @@ import type { StoreSchema, ComputedScope, StoreOptions, ComputedContext, IStore,
 import { ComputedScopeRef } from "./store";
 import { getVal, setVal } from "@helux/utils";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
-import { skipComputed, getValueByPath, joinValuePath, getError, getDeps } from "./utils";
+import { skipComputed, getValueByPath, joinValuePath, getError, getDeps, getDepValues } from "./utils";
 import { switchValue } from "flex-tools/misc/switchValue"; 
 import { Dict } from "./types";
 import { delay } from 'flex-tools/async/delay'; 
@@ -551,9 +551,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     String:[...valuePath.slice(0,valuePath.length-1),String(toComputedResult).split(OBJECT_PATH_DELIMITER)],
   },{defaultValue:valuePath})    
 
-
   const deps = getDeps(depends) //(depends || []).map((deps: any) =>Array.isArray(deps) ? deps : deps.split(OBJECT_PATH_DELIMITER))
-  if(deps.length>0) debugger
   const mutateId = getComputedId(valuePath,computedOptions.id)
 
   storeOptions.log(`Create async computed: ${valuePath.join(OBJECT_PATH_DELIMITER)} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
@@ -561,7 +559,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
   const witness = stateCtx.mutate({ 
     // 依赖是相于对根对象的
     deps: (state: any) =>{
-      return deps.map((dep: any) =>getVal(state, dep))
+      return deps.map((dep: any) =>getDepValues(dep,state, valuePath))
     },
     fn: (draft, params) => {
       if (params.isFirstCall) {     

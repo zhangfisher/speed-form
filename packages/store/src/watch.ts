@@ -22,7 +22,11 @@ export interface WatchOptions<R=any>{
     initial?:R
 }
  
-export type WatchListener<Value=any, Result= Value> = (value:Value,options:{getSelfValue:()=>Result ,srcPath:string[]})=>(Exclude<Result,Promise<any>> | undefined)
+/**
+ * curPath=当前watch函数所在的位置
+ * srcPath=watch函数侦听的位置，即发生变化的源路径
+ */
+export type WatchListener<Value=any, Result= Value> = (value:Value,options:{getSelfValue:()=>Result ,selfPath:string[] ,srcPath:string[]})=>(Exclude<Result,Promise<any>> | undefined)
 export type WatchDepends = (value:any,path:string[])=>boolean
 
 
@@ -177,8 +181,9 @@ class StoreWatcher<Store extends StoreSchema<any>>{
                 if(filter(srcPath,srcValue)==true){    
                     // 提供一个函数用来获取自身当前的值,用函数是避免读取开销                            
                     const listenerOpts = {
-                        getSelfValue : ()=> getVal(this.stateCtx.state,destPath),
-                        srcPath
+                        getSelfValue : ()=> getVal(getSnap(this.stateCtx.state),destPath),
+                        srcPath,
+                        selfPath:destPath
                     }
                     // 将监听函数添加到缓存中
                     this.addListenerToCache(srcPath,destPath,listener,listenerOpts)                    

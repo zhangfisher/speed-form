@@ -268,7 +268,7 @@ export function createActionComponent<Store extends Dict = Dict>(store:Store,act
 
         const { name:actionKey } = props  
 
-        const actionState = getValueByPath(state,actionKey)
+        const actionState = getValueByPath(state,actionKey,".")
         const [actionRunner,actionCanceller] = useActionRunner(actionState,actionOptions)
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
