@@ -49,15 +49,21 @@ export function log(message:any,level:'log' | 'error' | 'warn'='log'){
 /**
  * 根据相对路径获取值的路径
  * 
- * 如valuePath = ['a','b','c','d']   
- *  relPath = 'default'  则返回 ['a','b','c','d']
- *  relPath = 'root'     则返回 []
- *  relPath = 'parent'   则返回 ['a','b']
- *  relPath = 'current'  则返回 ['a','b','c']
- *  relPath = ['a','b']  则返回 ['a','b']
- *  relPath = 'x'        则返回 ['a','b','c','x']
- *  relPath = './x'        则返回 ['a','b','c','x']
- *  relPath = '../x'        则返回 ['a','b','x']   ..代表父对象
+如valuePath =[ 'a', 'b', 'c', 'd', 'e', 'f' ]
+self =  [ 'a', 'b', 'c', 'd', 'e', 'f' ]
+root =  []
+parent =  [ 'a', 'b', 'c', 'd' ]
+current =  [ 'a', 'b', 'c', 'd', 'e' ]
+['a','b'] =  [ 'a', 'b' ]
+m =  [ 'a', 'b', 'c', 'd', 'e', 'm' ]
+x =  [ 'a', 'b', 'c', 'd', 'e', 'x' ]
+./x =  [ 'a', 'b', 'c', 'd', 'e', 'x' ]
+../x =  [ 'a', 'b', 'c', 'd', 'x' ]
+../../x =  [ 'a', 'b', 'c', 'x' ]
+../../../x =  [ 'a', 'b', 'x' ]
+../../../../x =  [ 'a', 'x' ]
+../../../../../x =  [ 'x' ]
+../../../../../../x =  [ 'x' ]
  * 
  * 
  * @param path 
@@ -79,7 +85,7 @@ export function getRelValuePath(path:string[],relPath:'self' | 'root' | 'parent'
         if(relPath.startsWith('./')){
             return [...path.slice(0,-1),...relPath.slice(2).split(OBJECT_PATH_DELIMITER)]
         }else if(relPath.startsWith('../')){ // 父路径
-            return getRelValuePath(getRelValuePath(path,'parent'),relPath.slice(3))
+            return getRelValuePath(path.slice(0,-1),relPath.slice(3))
         }else{
             return [...path.slice(0,-1),...relPath.split(OBJECT_PATH_DELIMITER)]
         }
@@ -109,22 +115,14 @@ export function getDeps(arg:ComputedDepends | undefined,ctx?:any):(string[])[]{
     return (arg || []).map((d: any) =>Array.isArray(d) ? d : (typeof(d)=='string' ? d.split(OBJECT_PATH_DELIMITER) : []))   
 }
 
+
 /**
- * depends:["./first/cc/fff","../","/sss"]
- * 
- *   获取依赖的值
- *   支持 "./xxxx.xxx" 代表当前路径的相对路径
- *   ../../代表父或者祖先路径
+ * depends:["./first/cc/fff","../","/sss",'self']
+ *  
  * 
  */
 export function getDepValues(deps:string[],draft:any,curValuePath:string[]){
-    return deps.map((dep)=>{
-        if(dep.startsWith('./')){
-            return getVal(draft,[...curValuePath,...dep.slice(2)])
-        }else if(dep[0]=='/'){
-            return getVal(draft,dep)
-        }else{
-            return getVal(draft,[...curValuePath,dep])
-        }
+    return deps.map((dep)=>{ 
+        return getVal(draft,getRelValuePath(curValuePath,dep))
     })
 }

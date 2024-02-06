@@ -1,4 +1,4 @@
-import { ComputedScopeRef, Dict, computed,watch } from "helux-store";
+import { ComputedScopeRef, Dict, computed } from "helux-store";
 import { createForm,action } from "speed-form";
 // import { Project, getProjects } from "../api/getProjects";
 import { delay } from "flex-tools/async/delay";
@@ -199,10 +199,11 @@ const formSchema = {
 			enable: (root: any) => {
 				return root.fields.wifi.ssid.value.length > 3
 			},
-			validate:computed<true>(async (root: any)=>{
+			validate:computed<true>(async ()=>{
 				return true
 			}),
-			execute: action(async (scope:any,{abortSignal}) => {				
+			execute: action(async (scope:any,{abortSignal}) => {		
+				console.log(scope)
 				return new Promise<number>((resolve,reject)=>{
 					setTimeout(()=>{
 						resolve(count++)

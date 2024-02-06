@@ -89,7 +89,7 @@ export interface FormSchemaBase{
 	dirty:boolean					
 }
 
-export type FormSchema<State extends Dict> = RequiredComputedState<Omit<FormSchemaBase,keyof State> & State>
+export type FormSchema<State extends Dict=Dict> = RequiredComputedState<State & Omit<FormSchemaBase,keyof State>>
 
 // 创建表单时的参数
 export interface FormOptions{
@@ -213,7 +213,7 @@ function createDepsHook(valuePath:string[],getter:Function,options:ComputedOptio
 }
 
 
-export function createForm<Schema extends Dict=Dict>(define: Schema,options?:FormOptions) {
+export function createForm<State extends Dict=FormSchema>(define: State,options?:FormOptions) {
 	const opts = assignObject({
 		getFieldName:(valuePath:string[])=>valuePath.join(".")
 	},options) as Required<FormOptions>
@@ -222,7 +222,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 	setFormDefault(define)  
 	
 	// 创建表单Store对象实例
-	const store = createStore<StoreSchema<Schema>>({state:define},{
+	const store = createStore<StoreSchema<FormSchema<State>>>({state:define},{
 		debug:opts.debug,
 		// 所有计算函数的上下文均指向根
 		computedThis: ComputedScopeRef.Root,
@@ -250,7 +250,7 @@ export function createForm<Schema extends Dict=Dict>(define: Schema,options?:For
 	type FieldsType = (StateType)['fields'] 
 	type ActionsType = (StateType)['actions'] 
 	return {
-		Form: createFormComponent.call<FormOptions,any[],FormComponent<Schema>>(opts,store),
+		Form: createFormComponent.call<FormOptions,any[],FormComponent<State>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
 		Action: createActionComponent<StoreType>(store,{},opts),
