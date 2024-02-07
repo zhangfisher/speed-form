@@ -150,7 +150,6 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
     const storeData = opts.singleton ? data : deepClone(data)
     const extendObjects:StoreExtendObjects ={computedObjects:{},watchObjects:{},_replacedKey:{}}
     return  model((api) => { 
-
         const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any,{
             stopArrDep: false,
             moduleName:opts.id,

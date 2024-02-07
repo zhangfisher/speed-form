@@ -7,5 +7,8 @@ export * from "./consts"
 export { 
     getValueByPath,
     isIncludePath,
-    isSkipComputed
+    isSkipComputed,
+    skipComputed
 } from "./utils"
+
+export { markRaw} from "helux"

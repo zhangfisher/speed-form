@@ -69,10 +69,12 @@ export interface SubmitOptions{
 function getFormAttrs(formState:Dict){
     const result:Dict = {}
     Object.entries(formState || {}).forEach(([key,value])=>{
-        if(!(isFieldValue(value) || isFieldGroup(value) || isFieldList(value))){
+        if(key=='validate'){
+            result[key] = 'get' in value ? value.get() : true
+        }else if(!(isFieldValue(value) || isFieldGroup(value) || isFieldList(value))){
             result[key] = value      
         }
-    })
+    }) 
     return result
 }
 
@@ -90,7 +92,7 @@ function useFormSubmit<State extends FormSubmitState=FormSubmitState>(formState:
 }
 
 function createSubmitRenderProps<State extends FormSubmitState=FormSubmitState>(formState:State,submitFn:any,ref:RefObject<HTMLElement>){  
-    return Object.assign({      
+    return  Object.assign({      
         type      : "submit",
         help       : "",
         title      : "",
@@ -104,7 +106,7 @@ function createSubmitRenderProps<State extends FormSubmitState=FormSubmitState>(
     {
         submit:submitFn,
         ref,
-    })
+    })  
 } 
 const SubmitChildren = React.memo((props:{submitProps:SubmitRenderProps<any>,children:any})=>{
     return <>{

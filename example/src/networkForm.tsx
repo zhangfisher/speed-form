@@ -138,9 +138,10 @@ const NetworkForm = ()=>{
                     }}
                 </Network.Action>     
                 <Network.Submit>
-                    {({title})=>{ 
+                    {({title,dirty,validate})=>{ 
                         return <>
                              <input type="submit" value={title}/>
+                             dirty={String(dirty)},validate={String(validate)}
                         </>
                     }}
                 </Network.Submit>            
@@ -165,10 +166,7 @@ const FormDemo:React.FC = ()=>{
 
     Network.state.dirty
     Network.state.enable
-
-
-    // state.dhcp.start.validate.value
-    console.log("fState.dirty=",fState.dirty)
+ 
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>
             <div style={{padding:"8px",margin:'8px',width:'60%'}}>
@@ -184,7 +182,7 @@ const FormDemo:React.FC = ()=>{
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单状态">
                      <Field name="dirty" title="dirty">{String(fState.dirty)}</Field>
-                    {/* <Field name="validate" title="validate">{fState.validate}</Field> */}
+                    <Field name="validate" title="validate">{String(fState.validate)}</Field>
                     <textarea style={{width:"100%",height:"80px"}} value={JSON.stringify(formData)} readOnly></textarea>
                 </Card>
                 <Card title="表单数据" buttons={[

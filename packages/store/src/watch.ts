@@ -1,5 +1,9 @@
 /**
- 
+    用来声明一个监听函数，当监听的值发生变化时，会触发监听函数的执行
+    并将监听的返回值回写入所声明的位置状态中
+
+
+
  * 
  * 
  */
@@ -8,6 +12,7 @@ import type { StateValueDescriptor, StateValueDescriptorParams, StoreSchema } fr
 import { StoreExtendContext } from "./extends"; 
 import { getVal, setVal } from "@helux/utils"; 
 import { OBJECT_PATH_DELIMITER } from './consts';
+import { Dict } from './types';
 
 
 
@@ -19,14 +24,15 @@ export interface WatchOptions<R=any>{
     // 如果大量的表单字段均需要监听，则可能会有性能问题
     // 一般在动态依赖时使用
     on?:(path:string[],value:any)=>boolean 
-    initial?:R
+    initial?:R,    
 }
  
 /**
  * curPath=当前watch函数所在的位置
  * srcPath=watch函数侦听的位置，即发生变化的源路径
  */
-export type WatchListener<Value=any, Result= Value> = (value:Value,options:{getSelfValue:()=>Result ,selfPath:string[] ,srcPath:string[]})=>(Exclude<Result,Promise<any>> | undefined)
+export type WatchListenerOptions<Result=any> = {getSelfValue:()=>Result ,selfPath:string[] ,srcPath:string[]}
+export type WatchListener<Value=any, Result= Value> = (value:Value,options:WatchListenerOptions<Result>)=>(Exclude<Result,Promise<any>> | undefined)
 export type WatchDepends = (value:any,path:string[])=>boolean
 
 
@@ -77,9 +83,10 @@ export interface RegisteredWatchListener{
 class StoreWatcher<Store extends StoreSchema<any>>{
     listeners = new Map<any,RegisteredWatchListener>()
     private _off:()=>void = ()=>{}
-    private wacher = {off:()=>{}} 
-    private _enable:boolean=true            // 是否启用侦听器
-    private cache=new Map<any,any>()     // 用来缓存侦听函数的返回值
+    private _wacher = {off:()=>{}} 
+    private _enable:boolean=true                        // 是否启用侦听器
+    private cache=new Map<any,any>()                    // 用来缓存侦听函数的返回值
+    private listenerCache?:Map <string,Dict>
     constructor(private options:Omit<StoreExtendContext<ISharedCtx<Store["state"]>>,'params' | 'descriptor'>){
         this.createWacher()
     }
@@ -97,8 +104,7 @@ class StoreWatcher<Store extends StoreSchema<any>>{
     }
     set enable(value:boolean){
         this._enable = value
-    }
-    
+    }    
     /**
      * 创建全局侦听器,
      * 此侦听器会侦听根对象，当对象所有的状态变化,会执行所有监听过滤函数，如果返回true，则执行对应的监听函数
@@ -120,7 +126,7 @@ class StoreWatcher<Store extends StoreSchema<any>>{
                 } 
             })
         },()=>[this.stateCtx.state])
-        this.wacher = {off:unwatch}
+        this._wacher = {off:unwatch}
     }
     /**
      * 缓存侦听函数
@@ -165,6 +171,14 @@ class StoreWatcher<Store extends StoreSchema<any>>{
         }
         return false
     }
+    private getListenerCache(valuePath:string[]){
+        if(!this.listenerCache) this.listenerCache = new Map()
+        const key = valuePath.join(".")
+        if(!this.listenerCache.has(key)){
+            this.listenerCache.set(key,{})
+        }
+        return this.listenerCache.get(key)
+    }
 
     /**
      * 当srcPath指向的值变化时,运行watchListener函数,其返回值更新到destPath指向的值中
@@ -182,10 +196,11 @@ class StoreWatcher<Store extends StoreSchema<any>>{
                     // 提供一个函数用来获取自身当前的值,用函数是避免读取开销                            
                     const listenerOpts = {
                         getSelfValue : ()=> getVal(getSnap(this.stateCtx.state),destPath),
+                        getCache:()=>this.getListenerCache(destPath),
                         srcPath,
                         selfPath:destPath
                     }
-                    // 将监听函数添加到缓存中
+                    // 将监听函数添加到缓存中，以便下次可以直接执行
                     this.addListenerToCache(srcPath,destPath,listener,listenerOpts)                    
                     // 调用监听函数并获取返回值
                     const result = listener(srcValue,listenerOpts)             
