@@ -16,4 +16,7 @@ const Divider:React.FC<DividerProps> = (props)=>{
         <h4 style={{position:'absolute',background:'white',padding:"4px",color:"#bbb"}}>{title}</h4>
     </div>)
 }
+
+
+
 export default Divider

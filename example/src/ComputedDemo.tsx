@@ -52,7 +52,7 @@ function ComputedDemo() {
                     (
                         state.user.projects.error? (<tr><td colSpan={2}>加载错误:{state.user.projects.error.message}</td></tr>)
                         : (
-                          state.user.projects && state.user.projects.value.map((project,index)=>{
+                          state.user.projects && state.user.projects.result.map((project,index)=>{
                                 return <tr key={index}><td>{project.name}</td><td>{project.stars}</td></tr>
                             })
                         )

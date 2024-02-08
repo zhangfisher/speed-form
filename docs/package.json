@@ -71,6 +71,7 @@
     "stylelint": "^16.1.0"
   },
   "dependencies": {
+    "axios": "^1.6.2",
     "color": "^4.2.3",
     "helux": "^4.2.6",
     "helux-store": "workspace:^",

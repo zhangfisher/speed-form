@@ -125,3 +125,24 @@ export default ()=>{
   </table>
 }
 ```
+
+## 计算结果
+
+同步计算属性在声明时是一个函数，经过`createStore`处理后，会自动转换为一个属性，其值是计算结果。
+
+因此，在上例中，`fullName`是一个函数，但是在使用时，`fullName`是一个属性，其值是计算结果。详见上一节计算属性的说明。
+
+```ts {11}
+const state = {
+  user:{
+    firstName:"Zhang",
+    lastName:"Fisher",
+    fullName: (user)=>{
+      return user.firstName+user.lastName
+    }
+  }
+}  
+const store = createStore<typeof state>({state})
+store.state.user.fullName=="ZhangFisher" // 计算结果
+
+```
