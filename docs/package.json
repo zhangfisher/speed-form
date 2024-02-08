@@ -74,6 +74,7 @@
     "color": "^4.2.3",
     "helux": "^4.2.6",
     "helux-store": "workspace:^",
+    "react-loader-spinner": "^6.1.6",
     "speed-form": "workspace:^"
   }
 }

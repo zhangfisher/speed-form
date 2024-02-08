@@ -33,7 +33,6 @@ export interface StateValueDescriptor<Fn extends Function,Options extends Dict =
 }
 
 export enum ComputedScopeRef{
-    None    = 'none',
     Root    = 'root',
     Current = 'current',
     Parent  = 'parent',  

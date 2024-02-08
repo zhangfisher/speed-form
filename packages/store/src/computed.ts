@@ -257,6 +257,7 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
 
 
   opts.async = isAsync;
+  
   opts.depends = deps;
   
   if (isAsync && opts.depends?.length==0) {
@@ -559,7 +560,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
   const witness = stateCtx.mutate({ 
     // 依赖是相于对根对象的
     deps: (state: any) =>{
-      return deps.map((dep: any) =>getDepValues(dep,state, valuePath))
+      return getDepValues(deps,state, valuePath)
     },
     fn: (draft, params) => {
       if (params.isFirstCall) {     

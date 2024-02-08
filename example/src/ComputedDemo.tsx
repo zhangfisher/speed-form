@@ -37,7 +37,7 @@ function ComputedDemo() {
                 <Tips text="修改仓库地址将触发重新加载该仓库项目列表到{projects}"/>
                 仓库地址：<input value={state.user.repo} onChange={store.sync(["user","repo"])}/>
                 <button onClick={()=>store.state.user.repo = "https://api.github.com/users/zhangfisher/repos"}>加载</button>                
-                <button onClick={()=>store.state.user.projects.reset()}>重试</button> 
+                <button onClick={()=>store.state.user.projects.run()}>重试</button> 
             </div>
             <div>loading={store.state.user.repo}</div>
             <table className="projects-list">

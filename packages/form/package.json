@@ -19,12 +19,10 @@
     "helux-store": "workspace:^"
   },
   "devDependencies": {
-    "@helux/utils": "^3.5.11",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@types/react": "^18.2.42",
     "@vitejs/plugin-react": "^4.2.1",
-    "helux": "^4.2.6",
     "jsdom": "^23.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -33,7 +31,6 @@
     "vitest": "^0.34.6"
   },
   "peerDependencies": {
-    "@helux/utils": "^3.5.11",
     "@types/react": "^18.2.40",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

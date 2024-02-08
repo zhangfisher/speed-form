@@ -68,10 +68,8 @@ export interface SubmitOptions{
  */
 function getFormAttrs(formState:Dict){
     const result:Dict = {}
-    Object.entries(formState || {}).forEach(([key,value])=>{
-        if(key=='validate'){
-            result[key] = 'get' in value ? value.get() : true
-        }else if(!(isFieldValue(value) || isFieldGroup(value) || isFieldList(value))){
+    Object.entries(formState || {}).forEach(([key,value])=>{ 
+        if(!(isFieldValue(value) || isFieldGroup(value) || isFieldList(value))){
             result[key] = value      
         }
     }) 

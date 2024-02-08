@@ -31,7 +31,7 @@ export interface WatchOptions<R=any>{
  * curPath=当前watch函数所在的位置
  * srcPath=watch函数侦听的位置，即发生变化的源路径
  */
-export type WatchListenerOptions<Result=any> = {getSelfValue:()=>Result ,selfPath:string[] ,srcPath:string[]}
+export type WatchListenerOptions<Result=any> = {getSelfValue:()=>Result ,selfPath:string[] ,srcPath:string[],getCache:()=>Dict}
 export type WatchListener<Value=any, Result= Value> = (value:Value,options:WatchListenerOptions<Result>)=>(Exclude<Result,Promise<any>> | undefined)
 export type WatchDepends = (value:any,path:string[])=>boolean
 
@@ -177,7 +177,7 @@ class StoreWatcher<Store extends StoreSchema<any>>{
         if(!this.listenerCache.has(key)){
             this.listenerCache.set(key,{})
         }
-        return this.listenerCache.get(key)
+        return this.listenerCache.get(key)!
     }
 
     /**

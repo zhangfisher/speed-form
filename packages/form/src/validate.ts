@@ -1,4 +1,4 @@
-import { Dict, OBJECT_PATH_DELIMITER, isIncludePath, watch,markRaw,skipComputed, WatchListenerOptions } from "helux-store";
+import { OBJECT_PATH_DELIMITER, isIncludePath, watch,markRaw,skipComputed, WatchListenerOptions } from "helux-store";
 import { FIELDS_STATE_KEY } from "./consts";  
 
 export function isValidateField(path:string[]){
@@ -12,9 +12,7 @@ export function isValidateField(path:string[]){
 
 
 export type ValidateOptions<T=any> = {
-    entry?:string[]                 // 指定入口
-    // 提供一个函数
-    get?:(value:T,opts?:WatchListenerOptions)=>any 
+    entry?:string[]                 // 指定入口 
 }
 
 /**
@@ -23,42 +21,34 @@ export type ValidateOptions<T=any> = {
  *  表单的validate = field1.validate && field2.validate && field3.validate ..... && fieldN.validate
  * 
  *  这样就需要侦听到所有字段的validate属性时进行计算
+ *  
+ * 逻辑如下：
  * 
- *  因此,表单的validate属性值是一个Dict={字段1:字段1的validate,字段2:字段2的validate,字段3:字段3的validate,....字段N:字段N的validate}
- *  当任何一个字段的validate属性发生变化时，都会触发监听函数的执行,将其值回写到validate属性Dict中
+ * - 侦听到字段的validate属性时，如果=false则写入ListenerCache，=true则从ListenerCache移除对应的字段，这样当ListenerCache中不为空时，代表表单的validate=false
+ * - 如果ListenerCache为空则代表表单的validate=true
  * 
- *  validate({
- *      entry:"fields",
- *      get:(value)=>{},
- *      set:(value)=>{}
- * })
  * 
  * @returns 
  */
 export function validate<T=any>(options?:ValidateOptions){
-    const { entry,get:getValue } = Object.assign({},options)
-    return watch<boolean,Dict>((value,{ getSelfValue,srcPath,selfPath})=>{        
+    const { entry  } = Object.assign({},options)
+    return watch<boolean,boolean>((value,{ srcPath,selfPath,getCache})=>{        
         // 只侦听entry下的所有字段
         if(!isIncludePath(entry ? entry : selfPath,srcPath)) return   
-        const selfValue = getSelfValue()  // 得到的是一个Dict用来保存所有字段的validate属性值
-        // validate属性是一个boolean，只记录false值即可
+        const selfCache = getCache()  // 得到的是一个Dict用来保存所有字段的validate属性值
+        // validate属性是一个boolean
         if(typeof(value)=='boolean'){
-            const key = srcPath.join(OBJECT_PATH_DELIMITER)
+            const srcKey = srcPath.join(OBJECT_PATH_DELIMITER)
             if(value){
-                delete selfValue[key]
+                delete selfCache[srcKey]
             }else{
-                selfValue[key] = value
+                selfCache[srcKey] = value
             }
         }
-        // 首次初始化时，提供一个get函数，以便可以通过.validate.get()来获取值
-        if(typeof(selfValue)=='object' && typeof(getValue)=='function' && typeof(selfValue['get'])!=='function'){
-            selfValue['get'] = markRaw(skipComputed(()=>{
-                return getValue(selfValue,{selfPath:selfPath,srcPath:srcPath,getSelfValue})
-            }))
-        }
-        return selfValue
+        // 由于cache里面只记录validate=false的值，所以如果cache不为空则代表有字段的validate=false
+        return Object.keys(selfCache).length==0
     },(path)=>isValidateField(path),{
-        initial:{}
+        initial:true
     })
 }
  

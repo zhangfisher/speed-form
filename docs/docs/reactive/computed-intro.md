@@ -2,7 +2,7 @@
 group:
   title: 计算属性
   order: 2
-title: 基本原理
+title: 入门
 order: 0  
 demo:
   tocDepth: 5
@@ -74,11 +74,11 @@ export default ()=>{
 
 ```ts
 export enum ComputedScopeRef{
-  None = -1,              // 不指定上下文
-  Root = 'root',               // 指向State根对象
-  Current = 'current',            // 指向计算属性所在的对象
-  Parent = 'parent',             // 指向计算属性所在对象的父对象
-  Depends = 'depends'           // 指向异步计算的依赖数组，仅在异步计算时生效
+  None = 'none',                      // 不指定上下文
+  Root = 'root',                      // 指向State根对象
+  Current = 'current',                // 指向计算属性所在的对象
+  Parent = 'parent',                  // 指向计算属性所在对象的父对象
+  Depends = 'depends'                 // 指向异步计算的依赖数组，仅在异步计算时生效
   Self    = 'self'                    // 指向自身，默认值   
 }
 
@@ -87,7 +87,7 @@ export type StoreComputedScope  = ComputedScopeRef | string | string[] | ((state
 
 ```
 
-- **ComputedScopeRef.Root**
+### Root
 
 默认情况下，`helux-store`会将计算属函数的上下文指向`ComputedScopeRef.Root`，即当前的`State`根对象，如下：
 
@@ -118,7 +118,7 @@ export default ()=>{
 
 ``` 
 
-- **ComputedScopeRef.Current**
+### Current
 
 当`computedThis==ComputedScopeRef.Current`时，计算函数的`this`指向计算函数所在的对象。
 
@@ -152,7 +152,7 @@ export default ()=>{
 ```
 
 
-- **ComputedScopeRef.Parent**
+#### Parent
 
 当`computedThis==ComputedScopeRef.Parent`时，计算函数的`this`指向计算函数所在的对象的父对象。
 
@@ -186,7 +186,7 @@ export default ()=>{
 ```
 
 
-- **字符串** 
+### 字符串
 
 当`computedThis==<字符串>`时，此时`<字符串>`就是指向计算函数所在对象的键名称，`this`指向计算函数所在对象成员。
 
@@ -227,11 +227,11 @@ export default ()=>{
 - `computedThis='address.city'`代表`this`指向`user.address.city`
 - 总之，当`computedThis`是一个字符串时，代表是**当前计算函数所在对象的指定键名称**，并且这个键名称可以是多级的，如`address.city`。
 
-- **字符串数组** 
+### 字符串数组 
 
 ```tsx
 /**
- * title: <字符串数组*>
+ * title: <字符串数组>
  * description: store.computedThis==<字符串数组>
  */
 import { createStore } from 'helux-store'; 
@@ -266,7 +266,7 @@ export default ()=>{
 - `computedThis==<字符串>`代表是以**当前计算函数所在对象**为起点的路径，并且这个键名称可以是多级的，如`address.city`。
 
 
-- **ComputedScopeRef.Depends**
+### Depends
 
 当`computedThis==ComputedScopeRef.Depends`时，计算函数的`this`指向计算函数的依赖数组。
 
@@ -276,7 +276,7 @@ export default ()=>{
 
 ```tsx
 /**
- * title: <字符串数组*>
+ * title: <字符串数组>
  * description: store.computedThis==<字符串数组>
  */
 import { createStore,computed,ComputedScopeRef  } from 'helux-store'; 
@@ -287,7 +287,10 @@ const state = {
     lastName:"Fisher",
     fullName: computed(async (deps)=>{ 
       return deps[0] + deps[1]
-    },['user.firstName','user.lastName'],{      
+    },
+      // 声明依赖
+      ['user/firstName','user/lastName'], 
+    {      
       async:true,
       scope:ComputedScopeRef.Depends
     }) 
@@ -306,7 +309,7 @@ export default ()=>{
 
 ## 作用域
 
-计算属性的`作用域`指的是传递给**计算函数的第一个参数**。
+计算属性的`作用域`指的是传递给**计算函数的第一个参数**,取值与上下文`computedThis`相同。
 
 - `helux-store`提供了`computedScope`参数来指定计算函数的全局默认作用域。
 - 计算函数也可以在创建时指定作用域(通过`computed`指定，见后续介绍)，优先级高于全局`computedScope`参数。

@@ -63,6 +63,9 @@ importers:
       helux-store:
         specifier: workspace:^
         version: link:../packages/store
+      react-loader-spinner:
+        specifier: ^6.1.6
+        version: 6.1.6(react-dom@18.2.0)(react@18.2.0)
       speed-form:
         specifier: workspace:^
         version: link:../packages/form
@@ -204,9 +207,6 @@ importers:
         specifier: workspace:^
         version: link:../store
     devDependencies:
-      '@helux/utils':
-        specifier: ^3.5.11
-        version: 3.5.11
       '@testing-library/jest-dom':
         specifier: ^6.1.5
         version: 6.1.5(vitest@0.34.6)
@@ -219,9 +219,6 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.2.1
         version: 4.2.1(vite@5.0.6)
-      helux:
-        specifier: ^4.2.6
-        version: 4.2.6(react@18.2.0)
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -2353,10 +2350,6 @@ packages:
     resolution: {integrity: sha512-2ZUH4YmTQWJIhQwtr2mkszaOchvmr30ikO0bdGoXJp0QiRJjOp+k8bfldBTUl3w0e54bmhUIoZ46KXI/9VMsrw==}
     dev: false
 
-  /@helux/types@3.5.11:
-    resolution: {integrity: sha512-oO7Ah5L6nBOe6Lu6hJR3VVnqBRH2tMAHib/Yw1MisIqgfVWKN0ETuMTyV7EAIW3L4Q3gMFI8SX1LuGToXUQQOg==}
-    dev: true
-
   /@helux/types@4.2.6:
     resolution: {integrity: sha512-wh49tLl1um4iBS12JA17iwl0kn7i4v/+RQlba2xf5LSSAggQtCNmbtMlz8TT0dLmFbrckVjq1on1TjA5OGuAqw==}
 
@@ -2365,12 +2358,6 @@ packages:
     dependencies:
       '@helux/types': 3.5.1
     dev: false
-
-  /@helux/utils@3.5.11:
-    resolution: {integrity: sha512-vg66E89Dqr7QK5t8O1/aXGDWNNVmc2bK8kgX4TWbCeIjv78Kn3+1KO9ODCbyhpxdz3CQ81SI+GTjG6SyvlvAKw==}
-    dependencies:
-      '@helux/types': 3.5.11
-    dev: true
 
   /@helux/utils@4.2.6:
     resolution: {integrity: sha512-XN2g+uYwcl9SwjxnSF+7vXG3jWtiDHC3yEUUBctmo8aj29+QEJtx9EANcf6oRqHH3QAiHW1QjA/36EsNXrh9ig==}
@@ -12629,7 +12616,7 @@ packages:
       hoist-non-react-statics: 3.3.2
       intl-messageformat: 10.5.8
       react: 18.2.0
-      tslib: 2.5.0
+      tslib: 2.6.2
       typescript: 5.3.3
     dev: true
 
@@ -14366,6 +14353,7 @@ packages:
 
   /tslib@2.5.0:
     resolution: {integrity: sha512-336iVw3rtn2BUK7ORdIAHTyxHGRIHVReokCR3XjbckJMK7ms8FysBfhLR8IXnAgy7T0PTPNBWKiH514FOW/WSg==}
+    dev: false
 
   /tslib@2.6.2:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
