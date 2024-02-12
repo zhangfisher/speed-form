@@ -115,10 +115,22 @@ export function getError(e:any):Error{
 
 /**
  * 用来将依赖参数转换为数组
- * @param arg 返回 [[],[],[],[]]
+ * @param arg 返回 [[],[],[],"./ddd","../../xxxxx",[]]
  */
-export function getDeps(arg:ComputedDepends | undefined,ctx?:any):(string[])[]{
-    return (arg || []).map((d: any) =>Array.isArray(d) ? d : (typeof(d)=='string' ? d.split(OBJECT_PATH_DELIMITER) : []))   
+export function getDeps(arg:ComputedDepends | undefined,ctx?:any):(string | string[])[]{
+    return (arg || []).map((dep: any) =>{
+        if(Array.isArray(dep)){
+            return dep
+        }else if(typeof(dep)=='string'){
+            if(dep.startsWith("./") || dep.startsWith("../")){
+                return dep
+            }else{
+                return dep.includes(OBJECT_PATH_DELIMITER) ? dep.split(OBJECT_PATH_DELIMITER) : dep.split(".")
+            } 
+        }else{
+            return []
+        }
+    })
 }
 
 

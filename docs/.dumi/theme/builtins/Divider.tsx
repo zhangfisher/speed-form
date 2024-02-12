@@ -6,7 +6,7 @@ export type DividerProps ={
     title?:string
 }
 const Divider:React.FC<DividerProps> = (props)=>{
-    const { title,visible=true } =props
+    const { title='',visible=true } =props
     return (<div style={{
         height: "36px",
         borderBottom:"1px solid #eee",

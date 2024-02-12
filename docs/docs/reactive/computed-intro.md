@@ -32,13 +32,12 @@ demo:
 /**
  * defaultShowCode: true
  */
-import { createStore } from 'helux-store';
+import { createStore } from 'helux-store'; 
 import { Divider } from "speedform-docs"
-
 const user = {
   firstName:"Zhang",
   lastName:"Fisher",
-  fullName: (user)=>{
+  fullName: (user)=>{ 
     return user.firstName+user.lastName
   }
 }
@@ -47,13 +46,14 @@ const store = createStore<typeof user>({state:user},{singleton:false})
  
 export default ()=>{
   const [state,setState] = store.useState()
-  return <div>
-    <Divider title='声明时fullName是一个函数'/>
+  return (<div>
+    <h4>声明时fullName是一个函数</h4>
     <div>typeof(user.fullName)={typeof(user.fullName)}</div>
-    <Divider title='创建Store后,state.fullName是一个字符串'/>
+    <Divider />
+    <h4>创建Store后,state.fullName是一个字符串</h4>
     <div>typeof(store.state.fullName)={typeof(state.fullName)}</div>
-    <div>store.state.fullName=={state.fullName}</div>
-  </div>
+    <div>store.state.fullName=={state.fullName}</div> 
+  </div>)
 }
 ```
 
