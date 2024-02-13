@@ -1,6 +1,6 @@
 import React from "react"
 import { ReactFC } from "../types"
-import ColorBlock from "./ColorBlock"
+import { ColorBlock } from "./ColorBlock"
 import { Loading } from "./Loading"
 import { FieldRenderProps } from "speed-form"
 

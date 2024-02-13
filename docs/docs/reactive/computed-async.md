@@ -159,7 +159,7 @@ export type ComputedGetter<R,Scope=any> = (scope: Scope) => Exclude<R,Promise<an
 ```
 <Divider></Divider>
 
-## 依赖收集
+## 指定依赖收集
 
 不同于同步计算,异步计算属性的依赖收集需要在`computed`的第二个参数中手动**显式指定**.
 
@@ -250,20 +250,37 @@ export default ()=>{
 ```
 
 
-**重点：**
+**注意：**
 
 - 相对路径的相对指的是**相对使用`computed`声明的数据项所在的对象**，而不是使用`computed`声明的数据项
 - 依赖分割符推荐使用`/`
+- 如果异步计算没有指定依赖，则该计算属性不会被触发重新计算，会在控制台给出一个警告，也可以手动执行。
 
 <Divider></Divider>
 
 
 ## 异步计算对象
 
-不同于同步计算属性，异步计算属性则会在状态的原位置写入一个`AsyncComputedObject`对象，通过该对象：
+不同于同步计算属性，每一个便用`computed`声明的异步计算属性均会被替换成`AsyncComputedObject`对象（原地移花接木），通过该对象：
 - 可以读取到异步计算的进度以及结果等
 - 提供超时、重试等功能
 - 提供异步计算进度等功能
+
+`AsyncComputedObject`对象声明如下：
+
+```ts
+export type AsyncComputedObject<Result= any,ExtAttrs extends Dict = {}> ={
+  loading? : boolean;               // 是否正在计算
+  progress?: number;                // 进度值    
+  timeout? : number ;               // 超时时间，单位ms，当启用超时时进行倒计时
+  error?   : any;                   // 执行出错时的错误信息
+  retry?   : number                 // 重试次数，当执行重试操作时，会进行倒计时，每次重试-1，直到为0时停止重试
+  result   : Result;                // 计算函数的返回值保存到此处
+  run      : (options?:RuntimeComputedOptions) => {};    // 重新执行任务
+} & ExtAttrs                        // 额外的属性
+```
+
+以下是一个例子，`state.user.fullName`是一个`AsyncComputedObject`对象，通过该对象可以读取到异步计算的进度以及结果等。
 
 ```ts {13-20}
 
@@ -279,7 +296,7 @@ const state = {
 }  
 const store = createStore<typeof state>({state})
 // 经createStore处理后的fullName是一个AsyncComputedObject对象
-store.state.user.fullName={
+store.state.user.fullName=={
   loading:false,          // 是否正在计算
   error:null,             // 计算错误信息
   timout:0,               // 超时计算相关
@@ -290,17 +307,20 @@ store.state.user.fullName={
 }
 ```
 
-以下是一个异步计算的例子：
+ 
+<Divider></Divider>
 
+## 加载状态
 
-```tsx
+异步计算属性的加载状态保存在`AsyncComputedObject`对象的`loading`属性中，当`loading`为`true`时，代表异步计算正在进行中。
 
+以下是一个异步计算加载状态的例子：
+
+```tsx {25,26,27}
 import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
 import { useRef,useEffect } from "react"
-import { Box } from "speedform-docs"
-
-
-const delay = (ms:number=1000)=>new Promise(resolve=>setTimeout(resolve,ms))
+import { Box,delay } from "speedform-docs"
+ 
 const state = {
   user:{
     firstName:"Zhang",
@@ -320,7 +340,11 @@ export default ()=>{
   return (<Box><div>
     <div>FirstName:{state.user.firstName}</div>
     <div>LastName:{state.user.lastName}</div> 
-    <div>FullName:{state.user.fullName.loading ? '正在计算...' : (state.user.fullName.error ? `ERROR:${state.user.fullName.error}`: state.user.fullName.result)}</div>
+    <div>FullName:{
+      state.user.fullName.loading ? '正在计算...' : (
+        state.user.fullName.error ? `ERROR:${state.user.fullName.error}`: 
+        state.user.fullName.result
+      )}</div>
     {/* <div>error:{state.user.fullName.error}</div> */}
     <button onClick={()=>setState((state)=>state.user.firstName='ZHANG '+count.current++)}>修改FirstName</button>
     <button onClick={()=>setState((state)=>state.user.lastName='FISHER'+count.current++)}>修改LastName</button>
@@ -334,11 +358,286 @@ export default ()=>{
 }
 ```
  
+<Divider></Divider> 
+
+## 执行进度
+
+异步计算属性的执行进度保存在`AsyncComputedObject`对象的`progress`属性中，当`progress`为`0-100`时，代表异步计算的进度。开发者可以根据进度值来展示进度条等。
+
+使用方法如下：
+
+```tsx {25,26,27}
+import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
+import { useRef,useEffect } from "react"
+import { Box,delay } from "speedform-docs"
+ 
+const shop = {
+  order:{
+    bookName:"ZhangFisher",
+    price:100,
+    count:1,
+    total: computed(async ([count,price],{getProgressbar})=>{
+      const progressbar = getProgressbar()
+      return new Promise(async (resolve)=>{
+        for(let i=1;i<=100;i++){
+          await delay(20)
+          progressbar.value(i)
+        }
+        progressbar.end()
+        resolve(count*price)
+      }) 
+    },
+    ["order/count","order/price"],
+    {scope:ComputedScopeRef.Depends}) 
+  }
+}  
+const store = createStore({state:shop})
+
+export default ()=>{
+  const [state,setState] = store.useState()
+  return (<Box>
+    <table>
+      <thead><tr><td colSpan="2">订单信息</td></tr></thead>
+      <tbody>
+        <tr><td><b>书名</b></td><td>{state.order.bookName}</td></tr>
+        <tr><td><b>价格</b></td><td>{state.order.price}</td></tr>
+        <tr><td><b>数量</b></td><td>
+          <button onClick={()=>setState(draft=>draft.order.count=draft.order.count-1)}>-</button>
+          <input value={state.order.count} onChange={store.sync(to=>to.order.count)}/>
+          <button  onClick={()=>setState(draft=>draft.order.count=draft.order.count+1)}>+</button>
+        </td></tr>        
+      </tbody>
+      <tfoot>
+        <tr><td><b>总价</b></td><td>
+         {
+        state.order.total.loading ? `正在计算...${state.order.total.progress}%`  
+        : (
+          state.order.total.error ? `ERROR:${state.order.total.error}`: state.order.total.result
+        )}
+        </td></tr>
+        </tfoot>
+      </table>
+    
+    <div>
+      {JSON.stringify(state.order.total)}
+    </div>
+  </Box>)
+}
+```
 <Divider></Divider>
 
-## 快速声明
+## 超时处理
 
-直接在`State`中声明异步计算函数
+在创建`computed`时可以指定超时参数(单位为`ms`)，实现**超时处理**和**倒计时**功能。基本过程是这样的。
 
+1. 指定`options.timeout=超时时间`
+2. 当异步计算开始时，会启动一个定时器时，并更新`AsyncComputedObject`对象的`timeout`属性。
+3. 当超时触发时会触发`TIMEOUT`错误，将错误更新到`AsyncComputedObject.error`属性中。
+
+
+```tsx {25,26,27}
+import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
+import { useRef,useEffect } from "react"
+import { Box,delay } from "speedform-docs"
  
+const shop = {
+  order:{
+    bookName:"ZhangFisher",
+    price:100,
+    count:1,
+    total: computed(async ([count,price])=>{
+        await delay(2000)    // 模拟长时间计算
+        return count*price
+    },
+    ["order/count","order/price"],
+    {
+      timeout:1000 ,
+      scope:ComputedScopeRef.Depends
+    })
+  }
+}  
+const store = createStore({state:shop})
+
+export default ()=>{
+  const [state,setState] = store.useState()
+  return (<Box>
+    <table>
+      <thead><tr><td colSpan="2">订单信息</td></tr></thead>
+      <tbody>
+        <tr><td><b>书名</b></td><td>{state.order.bookName}</td></tr>
+        <tr><td><b>价格</b></td><td>{state.order.price}</td></tr>
+        <tr><td><b>数量</b></td><td>
+          <button onClick={()=>setState(draft=>draft.order.count=draft.order.count-1)}>-</button>
+          <input value={state.order.count} onChange={store.sync(to=>to.order.count)}/>
+          <button  onClick={()=>setState(draft=>draft.order.count=draft.order.count+1)}>+</button>
+        </td></tr>        
+      </tbody>
+      <tfoot>
+        <tr><td><b>总价</b></td><td>
+         {
+        state.order.total.loading ? `正在计算...(超时:${state.order.total.timeout})`  
+        : (
+          state.order.total.error ? `ERROR:${state.order.total.error}`: state.order.total.result
+        )}
+        </td></tr>
+        </tfoot>
+      </table>
+    
+    <div>
+      {JSON.stringify(state.order.total)}
+    </div>
+  </Box>)
+}
+```
+
+<Divider></Divider>
+
+## 倒计时
+
+在`超时`功能中不会自动更新`timeout`属性，可以通过`timeout=[超时时间,间隔更新时长]`来启用倒计时功能。
+
+基本过程如下：
+
+1. 指定`options.timoeut=[超时时间,间隔更新时长]`
+2. 当异步计算开始时，会启动一个定时器，更新`AsyncComputedObject`对象的`timeout`属性。
+3. 然后每隔`间隔更新时长`的，就更新一次`AsyncComputedObject.timoeut`
+4. 当超时触发时会触发`TIMEOUT`错误，将错误更新到`AsyncComputedObject.error`属性中。
+
+**例如：`options.timoeut=[5*1000,5]`代表超时时间为5秒，每1000ms更新一次`timeout`属性，倒计时`5`次。**
+
+
+```tsx  
+import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
+import { useRef,useEffect } from "react"
+import { Box,delay } from "speedform-docs"
  
+const shop = {
+  order:{
+    bookName:"ZhangFisher",
+    price:100,
+    count:1,
+    total: computed(async ([count,price])=>{
+        await delay(100000)    // 模拟长时间计算
+        return count*price
+    },
+    ["order/count","order/price"],
+    {
+      timeout:[5*1000,5] ,
+      scope:ComputedScopeRef.Depends
+    })
+  }
+}  
+const store = createStore({state:shop})
+
+export default ()=>{
+  const [state,setState] = store.useState()
+  return (<Box>
+    <table>
+      <thead><tr><td colSpan="2">订单信息</td></tr></thead>
+      <tbody>
+        <tr><td><b>书名</b></td><td>{state.order.bookName}</td></tr>
+        <tr><td><b>价格</b></td><td>{state.order.price}</td></tr>
+        <tr><td><b>数量</b></td><td>
+          <button onClick={()=>setState(draft=>draft.order.count=draft.order.count-1)}>-</button>
+          <input value={state.order.count} onChange={store.sync(to=>to.order.count)}/>
+          <button  onClick={()=>setState(draft=>draft.order.count=draft.order.count+1)}>+</button>
+        </td></tr>        
+      </tbody>
+      <tfoot>
+        <tr><td><b>总价</b></td><td>
+         {
+        state.order.total.loading ? `正在计算...(倒计时:${state.order.total.timeout})`  
+        : (
+          state.order.total.error ? `ERROR:${state.order.total.error}`: state.order.total.result
+        )}
+        </td></tr>
+        </tfoot>
+      </table>
+    
+    <div>
+      {JSON.stringify(state.order.total)}
+    </div>
+  </Box>)
+}
+```
+
+<Divider></Divider>
+
+## 重试
+
+在创建`computed`时可以指定重试参数，实现**出错重试执行**的功能。基本过程是这样的。
+
+- 指定`options.retry=[重试次数,重试间隔ms]`
+- 当开始执行异步计算前，会更新`AsyncComputedObject.retry`属性。
+- 当执行出错时，会同步更新`AsyncComputedObject.retry`属性。
+
+
+```tsx  
+import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
+import { useRef,useEffect } from "react"
+import { Box,delay } from "speedform-docs"
+ 
+let count = 0
+const shop = {
+  order:{
+    bookName:"ZhangFisher",
+    price:100,
+    count:1,
+    total: computed(async ([count,price])=>{
+      console.log("rey")
+        ++count
+        await delay()
+        throw new Error("计算出错"+(count))
+    },
+    ["order/count","order/price"],
+    {
+      retry:[5,1000] ,// 重试5次，每次间隔1秒
+      scope:ComputedScopeRef.Depends
+    })
+  }
+}  
+const store = createStore({state:shop})
+
+export default ()=>{
+  const [state,setState] = store.useState()
+  return (<Box>
+    <table>
+      <thead><tr><td colSpan="2">订单信息</td></tr></thead>
+      <tbody>
+        <tr><td><b>书名</b></td><td>{state.order.bookName}</td></tr>
+        <tr><td><b>价格</b></td><td>{state.order.price}</td></tr>
+        <tr><td><b>数量</b></td><td>
+          <button onClick={()=>setState(draft=>draft.order.count=draft.order.count-1)}>-</button>
+          <input value={state.order.count} onChange={store.sync(to=>to.order.count)}/>
+          <button  onClick={()=>setState(draft=>{count=0;draft.order.count=draft.order.count+1})}>+</button>
+        </td></tr>        
+      </tbody>
+      <tfoot>
+        <tr><td><b>总价</b></td><td>
+         {
+        state.order.total.loading ? `正在计算...`  
+        : (
+          state.order.total.error ? `ERROR:${state.order.total.error}`: state.order.total.result
+        )}
+        {state.order.total.retry >0 ? `重试:${state.order.total.retry}` : ''}
+        </td></tr>
+        </tfoot>
+      </table>
+    
+    <div>
+      {JSON.stringify(state.order.total)}
+    </div>
+  </Box>)
+}
+```
+
+**说明**
+
+- 重试期间`loading`会保持为`true`
+- 重试次数为0时，不会再次重试。重试次数为`N`时，实际会执行`N+1`次。
+- 重试期间`error`会更新为最后一次错误信息。
+
+
+<Divider></Divider>
+
+## 取消

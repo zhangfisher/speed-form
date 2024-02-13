@@ -454,14 +454,13 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
      
   for(let i=0;i<retryCount+1;i++){
       
-    let timerId:any,countdownId:any,hasError=false
-    let isTimeout=false 
+    let timerId:any,countdownId:any,hasError=false,isTimeout=false,isRetry=i>0
 
     const afterUpdated={} // 保存执行完成后需要更新的内容，以便在最后一起更新
     try {
       // 处理超时参数和倒计时
       let [timeoutValue=0,countdown=0] = Array.isArray(timeout) ? timeout : [timeout,0]
-      updateAsyncComputedState(setState,computedResultPath,{loading:true,error:null,retry:0,timeout:countdown > 1 ? countdown :timeoutValue,progress:0})
+      updateAsyncComputedState(setState,computedResultPath,{loading:true,error:null,retry:i>0 ? retryCount- i : 0,timeout:countdown > 1 ? countdown :timeoutValue,progress:0})
       // 超时处理
       if(timeoutValue>0){        
         timerId = setTimeout(()=>{                    
@@ -502,13 +501,17 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
     } finally {      
       clearTimeout(timerId)
       clearInterval(countdownId)
-      Object.assign(afterUpdated,{loading:false})
-      if(!hasError && !isTimeout) Object.assign(afterUpdated,{error:null})
+      // 重试时不更新loading状态
+      if(!hasError || (i==retryCount))  Object.assign(afterUpdated,{loading:false})
+      if((!hasError && !isTimeout)){
+        Object.assign(afterUpdated,{error:null})
+      }
       updateAsyncComputedState(setState,computedResultPath,afterUpdated)
     } 
     // 重试延迟
     if(hasError){
-      if(retryCount>0 && retryInterval>0){
+      // 最后一次不延迟
+      if(retryCount>0 && retryInterval>0 && i<retryCount){
         await delay(retryInterval)
       }
     }
