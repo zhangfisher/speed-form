@@ -184,7 +184,7 @@ const formSchema = {
 						setTimeout(()=>{
 							resolve()
 						},10* 1000)
-						abortSignal()?.addEventListener("abort",()=>{
+						abortSignal.addEventListener("abort",()=>{
 							console.log("已取消：cancelled")
 							reject("cancelled")
 						})
@@ -208,8 +208,7 @@ const formSchema = {
 					setTimeout(()=>{
 						resolve(count++)
 					},2000)
-					abortSignal()?.addEventListener("abort",()=>{
-						console.log("已取消: cancelled")
+					abortSignal.addEventListener("abort",()=>{
 						reject("cancelled")
 					})
 				})			 

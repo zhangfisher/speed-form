@@ -10,7 +10,19 @@ demo:
 
 ## 介绍
 
-可以在`Store`对象中声明`watch`函数，用来监视`State`数据的变化,当所监视的数据发生时，可以侦听器函数，然后将侦听器返回值写入声明`watch`函数所在的位置。
+`helux-Store`提供`watch`功能，用来监视`State`数据的变化,当所监视的数据发生时，可以执行侦听器函数。
+
+
+提供三种使用`watch`的方式：
+
+- 直接在`State`中声明`watch`函数,然后将侦听器返回值写入声明`watch`函数所在的位置。
+- 调用`store.watch`函数，用来侦听`State`中的数据变化。
+- 在组件中调用`store.useWatch`函数，用来侦听`store`对象的变化,当组件销毁自动取消订阅。
+
+
+## 状态内侦听
+
+`helux-store`提供了`watch`函数，用来在`state`声明来侦听`State`中的数据变化。
 
 `watch`函数的基本特性如下：
 
@@ -19,7 +31,7 @@ demo:
 - 侦听器函数的返回值会写入`watch`函数所在的位置。 
 
 
-## 基本用法
+### 基本用法
 
 `watch`函数签名如下：
 
@@ -103,7 +115,7 @@ export default ()=>{
 - `on`属性用来配置`watch`函数的触发条件，传入的是发生变化的值所在的路径。
 - `initial`属性用来配置`watch`函数所在位置的`total`的初始值。
 
-## 侦听函数
+### 侦听函数
 
 `watch`的侦听函数只能是一个**同步函数**，签名如下：
 
@@ -125,7 +137,7 @@ type WatchListenerOptions<Result=any> = {
 - 侦听函数的`srcPath`参数用来读取发生变化的值所在的路径。
 - 侦听函数的`getCache`参数用来读取当前`watch`所在位置的缓存对象，供保存一些临时值。
 
-## 缓存对象
+### 缓存对象
 
 侦听函数的`getCache`参数用来获取一个仅供当前侦听函数使用缓存对象`{}`，供保存一些临时值。
 
@@ -156,7 +168,9 @@ const formState={
 ```
 在进行表单验证时，我们可以使用`formState.validate`来获取整个表单的验证结果。
 
-## 与计算属性区别
+
+
+### 与计算属性区别
 
 :::info
 
@@ -170,7 +184,7 @@ const formState={
 - `computed`函数的返回值会写入`State`中的对应属性，`watch`函数的返回值会写入`watch`函数所在的位置。
 - `watch`只能是同步侦听函数，而`computed`可以是异步函数。
 
-## 适用范围
+### 适用范围
 
 大部份情况下，我们应该使用`computed`函数来声明计算属性，而不是使用`watch`函数来侦听`State`中的数据变化。但是在一些特殊情况下，我们可能需要使用`watch`函数，主要在于：
 
@@ -182,4 +196,95 @@ const formState={
 
 当某个字段需要进行复合计算时，我们可以使用`watch`函数来实现。比如在`SpeedForm`实现表单的`validate`和`dirty`属性的计算时，就是使用`watch`实现，有兴趣的朋友可以查看`SpeedForm`的源码。
 
+## 侦听状态
 
+除了可以在`State`中声明`watch`函数外，我们还可以在`Store`对象中声明`watch`函数，用来侦听`State`中的数据变化。
+
+```tsx 
+import { createStore,computed,ComputedScopeRef } from "helux-store" 
+import { useEffect,useState } from "react"
+const user = {
+  user:{
+    firstName:"zhang",
+    lastName:"fisher",
+    fullName: computed(async ([first,last])=>{ 
+      return first + last
+    },[
+      "user/firstName",
+      "user/lastName"
+    ],{   
+      scope:ComputedScopeRef.Depends
+    }) 
+  } 
+}
+
+const store = createStore({state:user})
+
+
+export default ()=>{
+  const [state]=store.useState()
+  const [watchKey,setWatchKey] = useState('')
+  useEffect(()=>{
+    const unwatch = store.watch((valuePaths:string[])=>{
+      setWatchKey(valuePaths.map(p=>p.join("/")).join(","))
+    },[
+      "user/firstName",
+      "user/lastName"
+    ])
+    return unwatch
+  },[])
+
+  return  (<div>
+      <div>watch: {watchKey}</div>
+      <div>firstName=<input value={state.user.firstName} onChange={store.sync(to=>to.user.firstName)}/></div>
+      <div>lastName=<input value={state.user.lastName} onChange={store.sync(to=>to.user.lastName)}/></div>
+      <div>fullName={state.user.fullName.result}</div> 
+    </div>)
+}
+
+```
+## 组件内侦听
+
+在组件内侦听可以使用`store.useWatch`函数，用来侦听`store`对象的变化,当组件销毁自动取消订阅。
+ 
+```tsx 
+import { createStore,computed,ComputedScopeRef } from "helux-store" 
+import { useEffect,useState } from "react"
+const user = {
+  user:{
+    firstName:"zhang",
+    lastName:"fisher",
+    fullName: computed(async ([first,last])=>{ 
+      return first + last
+    },[
+      "user/firstName",
+      "user/lastName"
+    ],{   
+      scope:ComputedScopeRef.Depends
+    }) 
+  } 
+}
+
+const store = createStore({state:user})
+
+
+export default ()=>{
+  const [state]=store.useState()
+  const [watchKey,setWatchKey] = useState('')
+
+  store.useWatch((valuePaths:string[])=>{
+      setWatchKey(valuePaths.map(p=>p.join("/")).join(","))
+    },[
+      "user/firstName",
+      "user/lastName"
+  ]) 
+
+  return  (<div>
+      <div>watch: {watchKey}</div>
+      <div>firstName=<input value={state.user.firstName} onChange={store.sync(to=>to.user.firstName)}/></div>
+      <div>lastName=<input value={state.user.lastName} onChange={store.sync(to=>to.user.lastName)}/></div>
+      <div>fullName={state.user.fullName.result}</div> 
+    </div>)
+}
+
+```

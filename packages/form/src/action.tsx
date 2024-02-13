@@ -54,7 +54,6 @@ export type DefaultActionRenderProps={
 } 
 
 export type ActionRunOptions = {    
-    abortController?:AbortController
     preventDefault?:boolean
 } & RuntimeComputedOptions
 
@@ -183,26 +182,18 @@ export function getAction<State extends FormActionState=FormActionState>(actionS
  * @returns 
  */
 function useActionRunner<State extends FormActionState=FormActionState>(actionState:State,actionOptions?:ActionRunOptions){
-    const controller = useRef<AbortController>() 
     const runner = useCallback((options?:ActionRunOptions )=>{ 
         const opts = Object.assign({},{noReentry:true,preventDefault:true},actionOptions,options)       
-        if(!controller.current || (controller.current && controller.current.signal.aborted)){
-            const abortController =  new AbortController()
-            controller.current =  abortController
-        }
-        opts.abortSignal = () => controller.current?.signal
         const run = getAction<State>(actionState,opts)
         return (event:any)=>{
-            run().then(()=>{
-            //controller.current = new AbortController()
-            })            
+            run()          
             if(event && opts.preventDefault && typeof(event.preventDefault)=='function'){
                 event.preventDefault()
             }
         }
     },[])         
     const canceller = useCallback((event:any)=>{        
-        controller.current?.abort()
+        actionState.execute.cancel()
         if(event && typeof(event.preventDefault)=='function'){
             event.preventDefault()
         }
@@ -212,6 +203,15 @@ function useActionRunner<State extends FormActionState=FormActionState>(actionSt
 
 
 
+function useActionCanceller<State extends FormActionState=FormActionState>(state:State,valuePath:string | string[]){
+    return useCallback((event:any)=>{  
+        const execute = getValueByPath(state,[...Array.isArray(valuePath) ? valuePath : valuePath.split(".") ,'execute'])      
+        execute.cancel()
+        if(event && typeof(event.preventDefault)=='function'){
+            event.preventDefault()
+        }
+    },[])
+}
 
 
 function createActionRenderProps<State extends FormActionState=FormActionState>(actionState:State,actionRunner:any,actionCanceller:any,ref:RefObject<HTMLElement>){  
@@ -268,7 +268,8 @@ export function createActionComponent<Store extends Dict = Dict>(store:Store,act
         const { name:actionKey } = props  
 
         const actionState = getValueByPath(state,actionKey,".")
-        const [actionRunner,actionCanceller] = useActionRunner(actionState,actionOptions)
+        const [actionRunner] = useActionRunner(actionState,actionOptions)
+        const actionCanceller = useActionCanceller(state,actionKey)
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
 

@@ -3,13 +3,13 @@
  
  */
 
-import { ISharedCtx, model  } from "helux"
+import { ISharedCtx, model,useEffect,watch  } from "helux"
 import { Actions, createActions } from './action';
 import { ComputedState, Dict, RequiredComputedState } from './types';
 import { ComputedOptions } from './computed';
 import { deepClone } from "flex-tools/object/deepClone";
-import { log } from "./utils"; 
-import { installExtends } from "./extends"
+import { getValueByPath, log } from "./utils"; 
+import { installExtends } from "./extends" 
 
 export interface StoreSchema<State> extends Dict{
     state:State
@@ -86,6 +86,34 @@ function useStateWrapper<State extends Dict>(stateCtx:ISharedCtx<State["state"]>
     }
 }
 
+/**
+ * 创建一个侦听器，用来侦听状态变化
+ * 
+ * store.watch(()=>{},["Ddd"])
+
+ * @param stateCtx 
+ * @returns 
+ */
+function createWatch<State extends Dict>(stateCtx:ISharedCtx<State["state"]>){
+    return (listener:(changedPaths:string[][])=>void,deps?:(string | string[])[])=>{
+        // @ts-ignore
+        const {unwatch} = watch(({triggerReasons})=>{
+            const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
+            listener(valuePaths)            
+        },()=>{
+            return deps?.map(dep=>getValueByPath(stateCtx.state,dep))
+        })
+        return unwatch
+    }
+}
+
+function createUseWatch<State extends Dict>(stateCtx:ISharedCtx<State["state"]>){
+    return (listener:(changedPaths:string[][])=>void,deps?:(string | string[])[])=>{
+        useEffect(()=>{
+            return createWatch(stateCtx)(listener,deps)
+        },[])        
+    }
+}
 
 
 export interface StoreOptions{
@@ -166,6 +194,8 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
           ...stateCtx,
           state:stateCtx.reactive,
           useState,
+          watch:createWatch(stateCtx),
+          useWatch:createUseWatch(stateCtx),
           ...extendObjects
         }
       }) as IStore<T['state']>

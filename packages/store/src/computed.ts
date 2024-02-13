@@ -40,8 +40,16 @@ export interface ComputedParams extends Record<string,any>{
   getSnap?:<T=Dict>(scope:any)=>T  
   /**
    * 在执行计算函数时，如果传入AbortController.signal可以用来传递给异步计算函数，用来取消异步计算
+   * 例如：fetch(url,{signal:signal})
    */
-  abortSignal?:()=>AbortSignal | null | void | undefined
+  abortSignal:AbortSignal  
+  /**
+   * 用来取消操作正在执行的异步计算函数
+   * 异步函数可以通过此方法来取消异步计算
+   * 
+   * @returns 
+   */
+  cancel:()=>void
 }
 
 export interface ComputedOptions<Value=any,Extras extends Dict={}> {
@@ -125,6 +133,7 @@ export type AsyncComputedObject<Result= any,ExtAttrs extends Dict = {}> ={
   retry?   : number                 // 重试次数，当执行重试操作时，会进行倒计时，每次重试-1，直到为0时停止重试
   result   : Result;                // 计算结果保存到此处
   run      : (options?:RuntimeComputedOptions) => {};        // 重新执行任务
+  cancel    : ()=>void                                         // 中止正在执行的异步计算
 } & ExtAttrs
 
  
@@ -381,11 +390,14 @@ function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial
     retry   : 0,          // 重试次数，3表示最多重试3次
     error   : null,
     progress: 0,
-    run     : markRaw(
-        skipComputed((args:Dict) => {
+    run     : markRaw(skipComputed((args:Dict) => {
           return stateCtx.runMutateTask({desc:mutateId,extraArgs:args});
         })
-    ) 
+    ),
+    cancel  : markRaw(skipComputed(() => {
+      console.log("cancel")
+      // 此命令会取消异步计算，仅在执行时有效。     
+    }))
   },valueObj)
 }
 
@@ -445,22 +457,37 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
 
   let timeoutCallback:Function 
 
+
+  const abortController = new AbortController()
   const computedParams:Required<ComputedParams> ={
     onTimeout:(cb:Function)=>timeoutCallback=cb,
     getProgressbar:(options)=>createComputeProgressbar(setState,valuePath,options),
     getSnap:(scope:any)=>getSnap(scope,false),
-    abortSignal:computedOptions.abortSignal
-  }  
-     
+    abortSignal:abortController.signal,
+    cancel:abortController.abort
+  }   
+  let hasAbort=false  // 是否接收到可中止信号
+
+  // 配置可中止信号，以便可以取消计算
+  updateAsyncComputedState(setState,computedResultPath,{cancel:markRaw(skipComputed(()=>abortController.abort())) as any})  
+  abortController.signal.addEventListener('abort',()=>{
+    hasAbort=true
+  })
+
   for(let i=0;i<retryCount+1;i++){
       
-    let timerId:any,countdownId:any,hasError=false,isTimeout=false,isRetry=i>0
+    let timerId:any,countdownId:any,hasError=false,isTimeout=false,isRetry=i>0    
+  
+    const afterUpdated={} // 保存执行完成后需要更新的内容，以便在最后一次执行后更新状态
 
-    const afterUpdated={} // 保存执行完成后需要更新的内容，以便在最后一起更新
-    try {
+    try {      
       // 处理超时参数和倒计时
       let [timeoutValue=0,countdown=0] = Array.isArray(timeout) ? timeout : [timeout,0]
       updateAsyncComputedState(setState,computedResultPath,{loading:true,error:null,retry:i>0 ? retryCount- i : 0,timeout:countdown > 1 ? countdown :timeoutValue,progress:0})
+      // 如果有中止信号，则取消计算 
+      if(hasAbort){
+        throw new Error('Aborted')
+      } 
       // 超时处理
       if(timeoutValue>0){        
         timerId = setTimeout(()=>{                    
@@ -478,14 +505,12 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
             if(countdown===0) clearInterval(countdownId)                    
           },timeoutValue/countdown)
         }
-      }
-      
+      }      
       // 执行计算函数
       const computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
       if(!isTimeout){
         Object.assign(afterUpdated,{result:computedResult,error:null,timeout:0})
       }    
-
     }catch (e:any) {
       hasError = true
       if (typeof computedOptions.onError == "function") {
@@ -507,6 +532,7 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
         Object.assign(afterUpdated,{error:null})
       }
       updateAsyncComputedState(setState,computedResultPath,afterUpdated)
+
     } 
     // 重试延迟
     if(hasError){

@@ -569,7 +569,7 @@ export default ()=>{
 
 - 指定`options.retry=[重试次数,重试间隔ms]`
 - 当开始执行异步计算前，会更新`AsyncComputedObject.retry`属性。
-- 当执行出错时，会同步更新`AsyncComputedObject.retry`属性。
+- 当执行出错时，会同步更新`AsyncComputedObject.retry`属性为重试次数。
 
 
 ```tsx  
@@ -583,8 +583,7 @@ const shop = {
     bookName:"ZhangFisher",
     price:100,
     count:1,
-    total: computed(async ([count,price])=>{
-      console.log("rey")
+    total: computed(async ([count,price])=>{ 
         ++count
         await delay()
         throw new Error("计算出错"+(count))
@@ -637,7 +636,91 @@ export default ()=>{
 - 重试次数为0时，不会再次重试。重试次数为`N`时，实际会执行`N+1`次。
 - 重试期间`error`会更新为最后一次错误信息。
 
-
 <Divider></Divider>
 
 ## 取消
+
+在创建`computed`时可以传入一个`abortSignal`参数，该参数返回一个`AbortSignal`，用来取消计算操作。
+
+基本操作方法是：
+
+- 在`computed`中传入`abortSignal`参数，该参数是一个`AbortSignal`，可用来订阅`abort`信号或者传递给`fetch`或`axios`等。
+- 取消时可以调用`AsyncComputedObject.cancel()`方法来触发一个`AbortSignal`信号。如下例中调用`state.order.total.cancel()`
+  
+ 
+```tsx  
+
+import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
+import { useRef,useEffect } from "react"
+import { Box,delay } from "speedform-docs"
+ 
+const shop = {
+  order:{
+    bookName:"ZhangFisher",
+    price:100,
+    count:1,
+    total: computed(async ([count,price],{abortSignal})=>{
+        return new Promise<number>((resolve,reject)=>{
+					setTimeout(()=>{
+						resolve(count*price)
+					},10 *1000)
+					abortSignal.addEventListener("abort",()=>{
+						reject("cancelled")
+					})
+				})	
+    },
+    ["order/count","order/price"],
+    {
+      timeout:[10*1000,10] ,
+      scope:ComputedScopeRef.Depends
+    })
+  }
+}  
+const store = createStore({state:shop})
+
+export default ()=>{
+  const [state,setState] = store.useState()
+  return (<Box>
+    <table>
+      <thead><tr><td colSpan="2">订单信息</td></tr></thead>
+      <tbody>
+        <tr><td><b>书名</b></td><td>{state.order.bookName}</td></tr>
+        <tr><td><b>价格</b></td><td>{state.order.price}</td></tr>
+        <tr><td><b>数量</b></td><td>
+          <button onClick={()=>setState(draft=>draft.order.count=draft.order.count-1)}>-</button>
+          <input value={state.order.count} onChange={store.sync(to=>to.order.count)}/>
+          <button  onClick={()=>setState(draft=>{draft.order.count=draft.order.count+1})}>+</button>
+        </td></tr>        
+      </tbody>
+      <tfoot>
+        <tr><td><b>总价</b></td><td>
+          
+         {
+        state.order.total.loading ? `正在计算...${state.order.total.timeout}`  
+        : (
+          state.order.total.error ? `ERROR:${state.order.total.error}`: state.order.total.result
+        )}
+        {state.order.total.loading ? <button  onClick={()=>state.order.total.cancel()}>取消</button> : ''  }
+        </td></tr>
+        </tfoot>
+      </table>
+    
+    <div>
+      {JSON.stringify(state.order.total)}
+    </div>
+  </Box>)
+}
+```
+**注意**：
+
+- `abortSignal`参数是一个`AbortSignal`对象，可以用来订阅`abort`信号或者传递给`fetch`或`axios`等。
+- 需要注意的，当调用`AsyncComputedObject.cancel()`时，计算函数如果订阅并接收到`abort`信号时，应该主动结束退出计算函数。如果计算函数没有订阅`abort`信号，调用`AsyncComputedObject.cancel()`是不会生效的。
+
+
+<Divider></Divider>
+
+## 不可重入
+
+默认情况下，每当依赖发生变化时均会执行异步计算函数，在连续变化时就会重复执行异步计算函数。
+
+在声明时，允许指定`options.noReentry=true`来防止重入，如果重入则只会在控制台显示一个警告。
