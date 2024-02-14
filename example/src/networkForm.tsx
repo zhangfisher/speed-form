@@ -1,11 +1,7 @@
 import React, { useCallback, useState } from "react";
-import Card from "./components/Card"  
 import Network from './forms/network';
-import JsonViewer from "./components/JsonViewer" 
 import classnames from 'classnames';
-import { Button } from "./components/Button"; 
-import { Divider } from "./components/Divider";
-import { Field, ValidResult } from "./components/Field";
+import {Card,JsonViewer, Button,Divider,Field  } from "@speedform/demo-components";
  
  
 const NetworkForm = ()=>{     
@@ -17,7 +13,6 @@ const NetworkForm = ()=>{
                 {({title,value,visible,validate,placeholder,sync})=>{                 
                     return <Field  name="title" visible={visible} title={title}>
                          <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
-                        <ValidResult validate={validate}/>
                     </Field>
                 } }
             </Network.Field>
@@ -29,16 +24,14 @@ const NetworkForm = ()=>{
                             {select.map((item:any, index:number) => (
                                 <option  key={index} value={item.value}>{item.title}</option>
                             ))}
-                            {value}
-                        </select>({value})       
+                        </select>
                     </Field>
                 }}
             </Network.Field> 
              <Network.Field<typeof Network.fields.ip> name="ip">                      
                 {({title,value,visible,validate,placeholder,sync})=>{ 
-                    return <Field  name="ip" visible={visible} title={title}>
+                    return <Field  name="ip" visible={visible} title={title} validate={validate}>
                          <input className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
-                        <ValidResult validate={validate}/> 
                     </Field> 
                 } }
             </Network.Field>
@@ -51,7 +44,6 @@ const NetworkForm = ()=>{
                                 state.gateway.value='192.168.1.2'
                             })}>恢复</button>
                         <button onClick={update('192.168.1.1')}>更新值</button>
-                        <ValidResult validate={validate}/>
                     </Field>
                 } }
             </Network.Field>
@@ -71,7 +63,6 @@ const NetworkForm = ()=>{
                             {({value,enable,validate,placeholder,help,sync})=>{ 
                                 return  <Field name="wifi.password" title="密码" enable={enable} className={classnames({invalid:!validate})} > 
                                          <input className={classnames({invalid:!validate})} data-help={help} value={value} placeholder={placeholder} onChange={sync()} readOnly={!enable}/>                               
-                                         <ValidResult help={help} validate={validate}/>
                                 </Field>
                             } }
                         </Network.Field> 
@@ -140,7 +131,7 @@ const NetworkForm = ()=>{
                 <Network.Submit>
                     {({title,dirty,validate})=>{ 
                         return <>
-                             <input type="submit" value={title}/>
+                             <button type="submit" value={title}/>
                              dirty={String(dirty)},validate={String(validate)}
                         </>
                     }}

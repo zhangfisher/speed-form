@@ -32,7 +32,7 @@ const state = {
 
 - 首先整个`state`已经被包装为一个深层的`proxy`对象
 - 当第一次运行时会自动执行`fullName`这个函数，然后会触发读取`firstName`和`lastName`的`proxy`，在读取`firstName`和`lastName`的`proxy`时，会自动收集`fullName`的依赖并保存起来，这样就可以自动获取到`fullName`的依赖了。
-- 以上仅仅依赖收集的是一个基本思路，实际上`helux-store`的依赖收集机制是非常复杂的，它可以自动处理`Array`和`Object`等等，其核心是由`helux`提供的支持。
+- 以上仅仅依赖收集的是一个基本思路，实际上`@speedform/reactive`的依赖收集机制是非常复杂的，它可以自动处理`Array`和`Object`等等，其核心是由`helux`提供的支持。
 
 
 ## 快速声明
@@ -57,7 +57,7 @@ const state = {
 
 ## `computed`
 
-直接在`State`中声明同步计算函数的方式，有一个缺点，就是无法指定计算函数的`this`和`作用域`，因此`helux-store`提供了`computed`函数来声明同步计算函数,允许做更多的控制。
+直接在`State`中声明同步计算函数的方式，有一个缺点，就是无法指定计算函数的`this`和`作用域`，因此`@speedform/reactive`提供了`computed`函数来声明同步计算函数,允许做更多的控制。
 
 
 ```ts {6,9}
@@ -79,7 +79,7 @@ const state = {
 
 
 ```tsx
-import { createStore,ComputedScopeRef } from 'helux-store';
+import { createStore,ComputedScopeRef } from '@speedform/reactive';
 
 const state = {
   books:[

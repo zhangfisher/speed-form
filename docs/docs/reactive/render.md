@@ -10,17 +10,17 @@ demo:
 
 ## 介绍
 
-当状态变化时将触发组件的重新渲染，`helux-store`可以提供更加细粒度的渲染。
+当状态变化时将触发组件的重新渲染，`@speedform/reactive`可以提供更加细粒度的渲染。
 
 ##  Context
 
 作为对比，我们先看一个传统的`Context`的渲染例子。
 
 ```tsx
-import { createStore } from 'helux-store';
+import { createStore } from '@speedform/reactive';
 import React,{createContext,useContext,useState} from "react"
-import { ColorBlock } from "speedform-docs"
- 
+import { ColorBlock } from "@speedform/demo-components"
+
 const ctx = createContext({
   firstName:"Zhang",
   lastName:"Fisher",
@@ -62,12 +62,12 @@ export default ()=>{
 
 ## useState
 
-使用`helux-store`的`useState`可以使**渲染颗粒度限定在组件范围**，只有使用到数据的组件才会重新渲染。
+使用`@speedform/reactive`的`useState`可以使**渲染颗粒度限定在组件范围**，只有使用到数据的组件才会重新渲染。
 
 ```tsx
-import { createStore } from 'helux-store';
+import { createStore } from '@speedform/reactive';
 import React,{createContext,useContext,useState} from "react"
-import { ColorBlock } from "speedform-docs" 
+import { ColorBlock } from "@speedform/demo-components"
 
 const state = {
   firstName:"Zhang",
@@ -113,14 +113,15 @@ export default ()=>{
 
 
 ## Signal
-`helux-store`提供的`state`是一个响应式对象，配置`signal`机制可以直接进行读取**渲染颗粒度限定在组件范围**，只有使用到数据的组件才会重新渲染。
+`@speedform/reactive`提供的`state`是一个响应式对象，配置`signal`机制可以直接进行读取**渲染颗粒度限定在组件范围**，只有使用到数据的组件才会重新渲染。
 
 基于`Signal`,**渲染颗粒度可以是组件中的一个片段**，更加精细，更加高效。
 
 ```tsx
-import { createStore } from 'helux-store';
+import { createStore } from '@speedform/reactive';
 import React,{createContext,useContext,useState} from "react"
-import { ColorBlock } from "speedform-docs"
+import { ColorBlock } from "@speedform/demo-components"
+
 import { $ } from "helux"
 
 const state = {

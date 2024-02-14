@@ -1,7 +1,6 @@
 import store  from "./store" 
-import ColorBlock from './components/ColorBlock'
 import { $  } from "helux" 
-import Card from "./components/Card" 
+import {ColorBlock,Card} from "@speedform/demo-components" 
 import { Tips } from "./Tips"
 
  

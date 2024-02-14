@@ -1,6 +1,6 @@
-// import { ComputedScopeRef, Dict, computed,watch } from "helux-store";
-import { computed } from "helux-store";
-import { createForm } from "speed-form";
+// import { ComputedScopeRef, Dict, computed,watch } from "@speedform/reactive";
+import { computed } from "@speedform/reactive";
+import { createForm } from "@speedform/core";
  
 
 const userSchema = {

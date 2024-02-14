@@ -1,9 +1,7 @@
 import React, { MouseEvent } from "react";
-import Card from "./components/Card"  
 import Network from './forms/network';
-import JsonViewer from "./components/JsonViewer" 
 import classnames from 'classnames';
-import { Field } from "./components/Field";
+import { Field,JsonViewer,Card } from "@speedform/demo-components";
 
 
 const NetworkForm = ()=>{    

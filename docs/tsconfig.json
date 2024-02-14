@@ -10,14 +10,14 @@
       "@@/*": [".dumi/tmp/*"],
       "speedform-docs": ["src"],
       "speedform-docs/*": ["src/*", "*"],
-      "speed-form": ["node_modules/speed-form/src"],
-      "helux-store": ["node_modules/speed-form/src"]
+      "@speedform/core": ["node_modules/speed-form/src"],
+      "@speedform/reactive": ["node_modules/speed-form/src"]
     }
   },
   "include": [
     ".dumirc.ts",
     "src/**/*",
     "node_modules/speed-form/src/**/*",
-    "node_modules/helux-store/src/**/*",
+    "node_modules/@speedform/reactive/src/**/*",
   ]
 }

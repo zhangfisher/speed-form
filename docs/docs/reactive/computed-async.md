@@ -25,7 +25,7 @@ demo:
 异步计算属性使用`computed`进行声明，方式如下：
 
 ```tsx 
-import { computed,createStore } from "helux-store"
+import { computed,createStore } from "@speedform/reactive"
 import { api } from "speedform-docs"
 
 const mygithub = {
@@ -192,7 +192,7 @@ export type ComputedDepends =Array<string | Array<string>>
 重点在于这个相对是相对谁，我们用一个例子来说明。
 
 ```tsx {10,11,20,21,32,33}
-import { createStore,computed,ComputedScopeRef } from "helux-store" 
+import { createStore,computed,ComputedScopeRef } from "@speedform/reactive" 
 
 const user = {
   user:{
@@ -317,10 +317,11 @@ store.state.user.fullName=={
 以下是一个异步计算加载状态的例子：
 
 ```tsx {25,26,27}
-import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
+import { createStore,computed,ComputedScopeRef,getSnap } from '@speedform/reactive';
 import { useRef,useEffect } from "react"
-import { Box,delay } from "speedform-docs"
- 
+import { delay } from "speedform-docs"
+import { Box} from "@speedform/demo-components"
+
 const state = {
   user:{
     firstName:"Zhang",
@@ -367,10 +368,11 @@ export default ()=>{
 使用方法如下：
 
 ```tsx {25,26,27}
-import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
+import { createStore,computed,ComputedScopeRef,getSnap } from '@speedform/reactive';
 import { useRef,useEffect } from "react"
-import { Box,delay } from "speedform-docs"
- 
+import { delay } from "speedform-docs"
+import { Box} from "@speedform/demo-components"
+
 const shop = {
   order:{
     bookName:"ZhangFisher",
@@ -436,10 +438,11 @@ export default ()=>{
 
 
 ```tsx {25,26,27}
-import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
+import { createStore,computed,ComputedScopeRef,getSnap } from '@speedform/reactive';
 import { useRef,useEffect } from "react"
-import { Box,delay } from "speedform-docs"
- 
+import { delay } from "speedform-docs"
+import { Box} from "@speedform/demo-components"
+
 const shop = {
   order:{
     bookName:"ZhangFisher",
@@ -507,10 +510,11 @@ export default ()=>{
 
 
 ```tsx  
-import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
+import { createStore,computed,ComputedScopeRef,getSnap } from '@speedform/reactive';
 import { useRef,useEffect } from "react"
-import { Box,delay } from "speedform-docs"
- 
+import { delay } from "speedform-docs"
+import { Box} from "@speedform/demo-components"
+
 const shop = {
   order:{
     bookName:"ZhangFisher",
@@ -573,10 +577,10 @@ export default ()=>{
 
 
 ```tsx  
-import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
+import { createStore,computed,ComputedScopeRef,getSnap } from '@speedform/reactive';
 import { useRef,useEffect } from "react"
-import { Box,delay } from "speedform-docs"
- 
+import { delay } from "speedform-docs"
+import { Box } from "@speedform/demo-components"
 let count = 0
 const shop = {
   order:{
@@ -650,10 +654,11 @@ export default ()=>{
  
 ```tsx  
 
-import { createStore,computed,ComputedScopeRef,getSnap } from 'helux-store';
+import { createStore,computed,ComputedScopeRef,getSnap } from '@speedform/reactive';
 import { useRef,useEffect } from "react"
-import { Box,delay } from "speedform-docs"
- 
+import { delay } from "speedform-docs"
+import { Box} from "@speedform/demo-components"
+
 const shop = {
   order:{
     bookName:"ZhangFisher",

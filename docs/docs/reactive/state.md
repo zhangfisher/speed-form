@@ -10,7 +10,7 @@ group:
 
 ## 介绍
 
-`helux-store`提供了三种不同的方式来存取状态。
+`@speedform/reactive`提供了三种不同的方式来存取状态。
 
 - `useState`: 用来在组件中访问和更新`Store`的状态数据，更新时会导致重新渲染。
 - `store.state`: 直接读写`Store`的状态数据，`store.state`返回的是一个响应式对象`reactive`，其实质是通过`Proxy`实现的，当读写`store.state`时，会触发内部的依赖收集，相关计算属性的运行，配合`signal`机制可以自动触发组件的细粒度重新渲染。
@@ -25,7 +25,7 @@ group:
 
 
 ```tsx
-import { createStore } from 'helux-store';
+import { createStore } from '@speedform/reactive';
 
 const state = {
   firstName:"Zhang",
@@ -50,8 +50,9 @@ export default () => {
 
 
 ```tsx 
-import { createStore } from 'helux-store';
-import { ColorBlock }  from "speedform-docs"
+import { createStore } from '@speedform/reactive';
+import { ColorBlock } from "@speedform/demo-components"
+
 const state = {
   firstName:"Zhang",
   lastName:"Fisher",
@@ -103,7 +104,7 @@ export default () => {
 * title: 读取状态
 * description: 通过`store.state.firstName`直接读取状态,不通过`useState`方法
 */
-import { createStore } from 'helux-store';
+import { createStore } from '@speedform/reactive';
 import { $ } from "helux"
 
 const state = {

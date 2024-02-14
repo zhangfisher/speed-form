@@ -5,8 +5,8 @@
 
 import React from "react"
 import { ReactFC } from "./types"; 
-import ColorBlock from "./components/ColorBlock";
-import { createStore } from "helux-store";
+import {ColorBlock} from "@speedform/demo-components";
+import { createStore } from "@speedform/reactive";
 
  
 export type AccountStateType = {

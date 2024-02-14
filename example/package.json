@@ -10,16 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@speedform/core": "workspace:^",
+    "@speedform/demo-components": "workspace:^",
+    "@speedform/reactive": "workspace:^",
     "axios": "^1.6.2",
     "classnames": "^2.3.2",
     "color": "^4.2.3",
     "helux": "^4.2.6",
-    "helux-store": "workspace:^",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-json-tree": "^0.18.0",
     "react-loader-spinner": "^6.1.6",
-    "speed-form": "workspace:^",
     "validator": "^13.11.0"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
-import { ComputedScopeRef, Dict, computed } from "helux-store";
-import { createForm,action } from "speed-form";
+import { ComputedScopeRef, Dict, computed } from "@speedform/reactive";
+import { createForm,action } from "@speedform/core";
 // import { Project, getProjects } from "../api/getProjects";
 import { delay } from "flex-tools/async/delay";
 import validator from "validator"; 
@@ -11,16 +11,8 @@ const formSchema = {
 	// },(path)=>{
 	// 	return path[path.length-1] ==='value'
 	// }),
-	enable:1,
-	visible:true,
 	title: "网络配置",
 	fields: {
-		// asyncTitle: { 
-		// 	value: "React-Helux-Form",
-		// 	placeholder: "输入网络配置名称",
-		// 	title: "网络名称",
-		// 	validate:computed<boolean>(async (value: string) => value.length > 3,)
-		// },
 		title: {
 			value: "React-Helux-Form",
 			placeholder: "输入网络配置名称",
@@ -84,9 +76,10 @@ const formSchema = {
 				// 将visible的context指向父对象即dhcp
 				visible: computed<boolean>((fields: any) => {
 						return fields.dhcp.enable.value;
-					},{ 
+					},
+					["dhcp.enable.value"],
+					{ 
 						scope: ComputedScopeRef.Root ,
-						depends:["dhcp.enable.value"]
 					}
 				),
 				validate: (value: any) => validator.isIP(value),

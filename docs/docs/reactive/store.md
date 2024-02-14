@@ -22,7 +22,7 @@ demo:
 
 ## 创建
 
-`helux-store`提供了`createStore`方法用来创建`Store`对象。
+`@speedform/reactive`提供了`createStore`方法用来创建`Store`对象。
 
 ```ts 
 const user = {

@@ -1,6 +1,6 @@
 ---
 nav: 
-  title: 参考
-  order: 1
+  title: API
+  order: 2
 ---
 This is a API example.

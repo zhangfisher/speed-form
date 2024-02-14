@@ -57,6 +57,7 @@
     "@commitlint/config-conventional": "^18.4.3",
     "@types/react": "^18.2.45",
     "@types/react-dom": "^18.2.18",
+    "@types/validator": "^13.11.7",
     "@umijs/lint": "^4.0.90",
     "dumi": "^2.2.16",
     "eslint": "^8.56.0",
@@ -71,11 +72,14 @@
     "stylelint": "^16.1.0"
   },
   "dependencies": {
+    "@speedform/core": "workspace:^",
+    "@speedform/demo-components": "workspace:^",
+    "@speedform/reactive": "workspace:^",
     "axios": "^1.6.2",
+    "classnames": "^2.3.2",
     "color": "^4.2.3",
     "helux": "^4.2.6",
-    "helux-store": "workspace:^",
     "react-loader-spinner": "^6.1.6",
-    "speed-form": "workspace:^"
+    "validator": "^13.11.0"
   }
 }

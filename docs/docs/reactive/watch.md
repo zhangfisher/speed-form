@@ -22,7 +22,7 @@ demo:
 
 ## 状态内侦听
 
-`helux-store`提供了`watch`函数，用来在`state`声明来侦听`State`中的数据变化。
+`@speedform/reactive`提供了`watch`函数，用来在`state`声明来侦听`State`中的数据变化。
 
 `watch`函数的基本特性如下：
 
@@ -46,8 +46,8 @@ function watch<Value = any,Result=Value>(
 
 
 ```tsx 
-import { createStore,watch } from 'helux-store';
-import { Divider,Field } from "speedform-docs"
+import { createStore,watch } from '@speedform/reactive';
+import { Divider,Field } from "@speedform/demo-components"
 
 const book = {
   orders:[
@@ -201,7 +201,7 @@ const formState={
 除了可以在`State`中声明`watch`函数外，我们还可以在`Store`对象中声明`watch`函数，用来侦听`State`中的数据变化。
 
 ```tsx 
-import { createStore,computed,ComputedScopeRef } from "helux-store" 
+import { createStore,computed,ComputedScopeRef } from "@speedform/reactive" 
 import { useEffect,useState } from "react"
 const user = {
   user:{
@@ -248,7 +248,7 @@ export default ()=>{
 在组件内侦听可以使用`store.useWatch`函数，用来侦听`store`对象的变化,当组件销毁自动取消订阅。
  
 ```tsx 
-import { createStore,computed,ComputedScopeRef } from "helux-store" 
+import { createStore,computed,ComputedScopeRef } from "@speedform/reactive" 
 import { useEffect,useState } from "react"
 const user = {
   user:{
