@@ -20,7 +20,7 @@ order: 1
   "ip":"IP地址",
   "gateway":"网关地址",
   "dhcp":{
-    "enable":"自动获取IP地址",
+    "enable":true,          //自动获取IP地址
     "start":"起始地址",
     "end":"结束地址"
   },
@@ -30,33 +30,6 @@ order: 1
   }
 }
 
-{
-  title:"订单",
-  user:{
-    name:"张三",
-    phone:"13800138000",
-    zip:"100000",
-    address:{
-      province:"北京",
-      city:"北京",
-      street:"朝阳区",            
-      full:"望京SOHO",
-    }
-  },
-  orders:[
-    {
-      name:"书籍名称",
-      price:23.1            //单价  
-      count:2               //数量
-      sum:46.2              //小价
-    }
-  ],
-  total:46.2,                // 总价    
-  pay:{
-    type:"微信",
-    status:"已支付" 
-  }  
-}
 ```
 
 - 表单字段具有以下特性：
@@ -556,102 +529,112 @@ export default ()=>{
 import { forms } from 'speedform-docs'
 import classnames from 'classnames';
 import { Card,Field,Row,Col,Input ,ValidResult} from "@speedform/demo-components"
+import { useCallback,useRef } from "react"
 
 const { Network } = forms
 
-export default ()=>{      
-    return <Network.Form>
-        <Card title="网络配置"> 
-          <Network.Field<string> name="title">                      
-                {({name,title,value,visible,validate,placeholder,sync})=>{                 
-                    return <Field  name="title" visible={visible} title={title} validate={validate}>
-                         <input name={name}  className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
-                    </Field>
-                } }
-            </Network.Field>
-             <Network.Field<typeof Network.fields.interface> name="interface">                      
-                {({name,title,required,visible,validate,enable,value,defaultValue,select,sync})=>{     
-                    return <Field name="interface" title={title}>                        
-                        <select value={value} onChange={sync()}>
-                            {select.map((item:any, index:number) => (
-                                <option  key={index} value={item.value}>{item.title}</option>
-                            ))} 
-                        </select> 
-                    </Field>
-                }}
-            </Network.Field> 
-             <Network.Field<typeof Network.fields.ip> name="ip">                      
-                {({name,title,value,visible,validate,placeholder,sync})=>{ 
-                    return <Field  name="ip" visible={visible} title={title} validate={validate}>
-                         <input name={name}  className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
-                    </Field> 
-                } }
-            </Network.Field>
-            <Network.Field<typeof Network.fields.gateway> name="gateway">                      
-                {({name,title,value,required,visible,validate,update,enable,placeholder,sync})=>{ 
-                    return <Field name="gateway" visible={visible} title={title}>
-                        <input name={name}  className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
-                        <button onClick={update((state:any)=>{
-                                state.gateway.value='192.168.1.2'
-                            })}>恢复</button>
-                        <button onClick={update('192.168.1.1')}>更新值</button>
-                    </Field>
-                } }
-            </Network.Field>
-          <Network.Group<typeof Network.fields.wifi> name="wifi">
-            {({title,visible} )=>{ 
-                return (  <Card title={title}  visible={visible}>
-                    <Network.Field name="wifi.ssid">                      
-                            {({name,value,required,visible,validate,enable,defaultValue,sync})=>{ 
-                                return  <Field  name="wifi.ssid" title="SSID" enable={enable}> 
-                                         <input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()} />
-                                </Field>
-                            } }
-                        </Network.Field>      
-                        <Network.Field name="wifi.password">                      
-                            {({name,value,enable,validate,placeholder,help,sync})=>{ 
-                                return  <Field name="wifi.password" title="密码" enable={enable} className={classnames({invalid:!validate})} > 
-                                         <input name={name}  className={classnames({invalid:!validate})} data-help={help} value={value} placeholder={placeholder} onChange={sync()} readOnly={!enable}/>                               
-                                </Field>
-                            } }
-                        </Network.Field> 
-                </Card>)
+export default ()=>{        
+  const ref = useRef()
+  const onSubmit=useCallback(()=>{
+    console.log("submit")
+    return false  //返回false阻止表单提交
+  },[])
+  return  (<Card title="网络配置表单"> 
+    <Network.Form onSubmit={onSubmit} action="/api" ref={ref}>       
+        <Network.Field<string> name="title">                      
+              {({name,title,value,visible,validate,placeholder,sync})=>{             
+                  console.log("title=",value)
+                  return <Field  name="title" visible={visible} title={title} validate={validate}>
+                        <Input 
+                          name={name} 
+                          className={classnames({invalid:!validate})} 
+                          placeholder={placeholder} 
+                          value={value} 
+                          onChange={sync()}
+                        />
+                  </Field>
+              } }
+        </Network.Field>
+        <Network.Field<typeof Network.fields.interface> name="interface">                      
+              {({name,title,required,visible,validate,enable,value,defaultValue,select,sync})=>{     
+                  return <Field name="interface" title={title}>                        
+                      <select value={value} onChange={sync()}>
+                          {select.map((item:any, index:number) => (
+                              <option  key={index} value={item.value}>{item.title}</option>
+                          ))} 
+                      </select> 
+                  </Field>
+              }}
+        </Network.Field> 
+        <Network.Field<typeof Network.fields.ip> name="ip">                      
+              {({name,title,value,visible,validate,placeholder,sync})=>{ 
+                  return <Field  name="ip" visible={visible} title={title} validate={validate}>
+                        <input name={name}  className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
+                  </Field> 
+              } }
+        </Network.Field>
+        <Network.Field<typeof Network.fields.gateway> name="gateway">                      
+              {({name,title,value,required,visible,validate,update,enable,placeholder,sync})=>{ 
+                  return <Field name="gateway" visible={visible} title={title}>
+                      <input name={name}  className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                      <button onClick={update((state:any)=>{
+                              state.gateway.value='192.168.1.2'
+                          })}>恢复</button>
+                      <button onClick={update('192.168.1.1')}>更新值</button>
+                  </Field>
+              } }
+        </Network.Field>
+        <Network.Group<typeof Network.fields.wifi> name="wifi">
+          {({title,visible} )=>{ 
+              return (  <Card title={title}  visible={visible}>
+                  <Network.Field name="wifi.ssid">                      
+                          {({name,value,required,visible,validate,enable,defaultValue,sync})=>{ 
+                              return  <Field  name="wifi.ssid" title="SSID" enable={enable}> 
+                                        <input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()} />
+                              </Field>
+                          } }
+                      </Network.Field>      
+                      <Network.Field name="wifi.password">                      
+                          {({name,value,enable,validate,placeholder,help,sync})=>{ 
+                              return  <Field name="wifi.password" title="密码" enable={enable} className={classnames({invalid:!validate})} > 
+                                        <input name={name}  className={classnames({invalid:!validate})} data-help={help} value={value} placeholder={placeholder} onChange={sync()} readOnly={!enable}/>                               
+                              </Field>
+                          } }
+                      </Network.Field> 
+              </Card>)
+          }}
+        </Network.Group>                
+        <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp.enable" >                                       
+              {({name,title,visible,value,validate,sync})=>{     
+                  return <Field  name='dhcp.enable' visible={visible} title={title}>
+                        <input name={name}  className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync()}/>
+                  </Field>
+              }}
+        </Network.Field> 
+        <Network.Field<typeof Network.fields.dhcp.start> name="dhcp.start">                      
+              {({name,value,validate,visible,title,sync})=>{ 
+                  return  <Field name="dhcp.start" visible={visible} title={title}>
+                      <input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
+                  </Field>
+              } }
+        </Network.Field>
+        <Network.Field<typeof Network.fields.dhcp.end> name="dhcp.end">                      
+              {({name,value,validate,visible,title,sync})=>{     
+                  return <Field name="dhcp.end" visible={visible} title={title}>
+                      <input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
+                  </Field>
+              }}
+        </Network.Field>             
+        <Network.Submit>
+            {({name,title,dirty,validate})=>{ 
+                return <>
+                    <input name={name}  type="submit" value='提交'/>
+                    dirty={String(dirty)},validate={String(validate)}
+                </>
             }}
-         </Network.Group>                
-           <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp.enable" >                                       
-                {({name,title,visible,value,validate,sync})=>{     
-                    return <Field  name='dhcp.enable' visible={visible} title={title}>
-                         <input name={name}  className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync()}/>
-                    </Field>
-                }}
-            </Network.Field> 
-           <Network.Field<typeof Network.fields.dhcp.start> name="dhcp.start">                      
-                {({name,value,validate,visible,title,sync})=>{ 
-                    return  <Field name="dhcp.start" visible={visible} title={title}>
-                        <input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
-                    </Field>
-                } }
-            </Network.Field>
-            <Network.Field<typeof Network.fields.dhcp.end> name="dhcp.end">                      
-                {({name,value,validate,visible,title,sync})=>{     
-                    return <Field name="dhcp.end" visible={visible} title={title}>
-                        <input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
-                    </Field>
-                }}
-            </Network.Field>   
-              
-            <Network.Submit>
-                {({name,title,dirty,validate})=>{ 
-                    return <>
-                          <input name={name}  type="submit" value={title}/>
-                          dirty={String(dirty)},validate={String(validate)}
-                    </>
-                }}
-            </Network.Submit>       
-            
-        </Card>
-    </Network.Form>   
-
+        </Network.Submit>       
+      </Network.Form>   
+    </Card>)
 }
 
 ```

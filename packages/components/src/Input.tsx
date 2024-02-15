@@ -3,7 +3,7 @@
 import React from "react"
 import { ReactFC } from "./types";
 
-export type InputProps = React.PropsWithChildren<{
+export type InputProps = React.PropsWithChildren<HTMLInputElement & {
   name?:string
   visible?:boolean
   enable?:boolean
@@ -23,7 +23,8 @@ export const Input:ReactFC<InputProps> = (props:InputProps)=>{
             margin:"4px" ,
             padding:"4px",
             display: visible ? 'block' : 'none',
-        }}
+        }} 
+        type="text"
         name={name}
         placeholder={placeholder}
         value={value}

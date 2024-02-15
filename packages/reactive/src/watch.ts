@@ -121,7 +121,8 @@ class StoreWatcher<Store extends StoreSchema<any>>{
                 for(const [destPath,listener] of this.listeners){
                     try{
                         this.executeListener(srcPath,JSON.parse(destPath),listener)
-                    }catch(e){
+                    }catch(e:any){
+                        console.warn("Error while run watchLisenter("+srcPath+"->"+destPath+")",e.stack)
                     }
                 } 
             })

@@ -89,7 +89,9 @@ export default ()=>{
   - 第二个参数是一个字符串数组，用来指定依赖的状态路径。可以指定多个依赖路径。
   - 第三个参数是一个`ComputedOptions`对象，用来指定计算属性的一些选项。
 
-- **重点：经过`createStore`处理后，`state.user.projects`转换为一个`AsyncComputedObject`对象，通过该对象可以读取到异步计算的进度以及结果等。**
+:::info
+**重点：经过`createStore`处理后，`state.user.projects`转换为一个`AsyncComputedObject`对象，通过该对象可以读取到异步计算的进度以及结果等信息。**
+:::
 
 **在上例中`state.user.projects`值为**
 
@@ -159,7 +161,7 @@ export type ComputedGetter<R,Scope=any> = (scope: Scope) => Exclude<R,Promise<an
 ```
 <Divider></Divider>
 
-## 指定依赖收集
+## 指定依赖
 
 不同于同步计算,异步计算属性的依赖收集需要在`computed`的第二个参数中手动**显式指定**.
 
@@ -236,14 +238,13 @@ const store = createStore({state:user})
 
 export default ()=>{
   const [state]=store.useState()
-  return  
-    <div>
+  return (<div>
       <div>firstName={state.user.firstName}</div>
       <div>lastName={state.user.lastName}</div>
       <div>fullName={state.user.fullName.result}</div>
       <div>fullName1={state.user.fullName1.result}</div>
       <div>fullName2={state.other.fullName2.result}</div>
-    </div> 
+    </div> )
 }
 
 
@@ -729,3 +730,114 @@ export default ()=>{
 默认情况下，每当依赖发生变化时均会执行异步计算函数，在连续变化时就会重复执行异步计算函数。
 
 在声明时，允许指定`options.noReentry=true`来防止重入，如果重入则只会在控制台显示一个警告。
+
+<Divider></Divider>
+
+## 简写异步计算
+
+一般情况下，异步计算属性均应该使用`computed`进行声明，但是在某些情况下，也可以直接使用一个异步函数。
+
+```ts | pure 
+const order = {
+    bookName:"ZhangFisher",
+    price:100,
+    count:3,
+    total:async (order)=>{
+      return order.price*order.count
+    }
+} 
+```
+
+上述简单的异步声明方式等效于以下方式：
+
+```tsx
+import { createStore,computed} from "@speedform/reactive"
+const order = {
+    bookName:"ZhangFisher",
+    price:100,
+    count:3,
+    total:computed(async (order)=>{
+      return order.price*order.count
+    },[]) // 依赖是空的
+}
+ 
+const store = createStore({state:order})
+
+export default ()=>{
+  const [state] = store.useState()
+  return (<div>
+    <div>书名:{state.bookName}</div>
+    <div>价格:{state.price}</div>
+    <div>数量:{state.count}</div>
+    <div>总价:{state.total.result}</div>
+  </div>)
+}
+```
+
+当不使用`computed`进行异步计算属性声明时，需要注意以下几点：
+
+- 默认`scope`指向的是`current`，即`total`所在的对象。
+- 其依赖是空，所以不会自动收集依赖，也不会自动重新计算。也就是说上例中的`price`和`count`变化时，`total`不会自动重新计算。但是在会在第一次访问时自动计算一次。
+
+:::warning
+**特别注意**：由于在不同的构建环境下，比如使用babel转码时，可能会将异步函数转码为同步函数，导致无法识别为异步函数而出现问题。
+:::
+
+看看以下例子：
+
+```tsx
+import { createStore} from "@speedform/reactive"
+const order = {
+    bookName:"ZhangFisher",
+    price:100,
+    count:3,
+    total:async (order)=>{
+      return order.price*order.count
+    }
+}   
+
+const store = createStore({state:order})
+
+export default ()=>{
+  const [state] = store.useState()
+  return (<div>
+    <div>书名:{state.bookName}</div>
+    <div>价格:{state.price}</div>
+    <div>数量:{state.count}</div>
+    <div>总价:{state.total.result}</div>
+    <div>state.total={String(state.total)}</div>
+  </div>)
+}
+```
+
+**为什么不能正常工作，正确计算出`total`的值？**
+
+可以看到上述例子中`state.total`的值是`[object Promise]`。
+这是因为在本站使用的构建工具`webpack`使用`babel`进行转码，以上的异步函数被转码为同步函数，类似这样的形式：
+
+```js
+total(_x15) {
+  return _total.apply(this, arguments);
+}
+```
+
+这导致`Speedform`将其识别为异步函数，也就不能相应地创建异步`AsyncComputedObject`，而只是将其当作一个普通的同步计算属性。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

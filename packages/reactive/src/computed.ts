@@ -237,7 +237,7 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
     async: false,
     timeout:0,
     depends: [],
-    scope:ComputedScopeRef.Current,
+    // scope:ComputedScopeRef.Current,
     toComputedResult:ComputedScopeRef.Self,
     immediate:true,
   }
@@ -469,7 +469,8 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
   let hasAbort=false  // 是否接收到可中止信号
 
   // 配置可中止信号，以便可以取消计算
-  updateAsyncComputedState(setState,computedResultPath,{cancel:markRaw(skipComputed(()=>abortController.abort())) as any})  
+  updateAsyncComputedState(setState,computedResultPath,{cancel:markRaw(skipComputed(()=>abortController.abort())) as any}) 
+  // 侦听中止信号，以便在中止时能停止 
   abortController.signal.addEventListener('abort',()=>{
     hasAbort=true
   })
@@ -566,6 +567,8 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
   // 在创建computed前运行,允许拦截更改计算函数的依赖,上下文,以及getter等
   if (typeof onCreateComputed == "function" && typeof getter === "function") {
     const newGetter = onCreateComputed.call(stateCtx,valuePath, getter, computedOptions);
+    if(!computedOptions.scope) computedOptions.scope = ComputedScopeRef.Current
+    if(!computedOptions.context) computedOptions.context = ComputedScopeRef.Root
     if (typeof newGetter == "function") getter = newGetter 
   }
   const {depends,initial,toComputedResult='self',immediate,noReentry=false } =computedOptions

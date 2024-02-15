@@ -25,21 +25,11 @@ export const schema = {
 		ip: {
 			value: "1.1.1.1",
 			title: "IP地址",
-			validate: async (value: any) => {
+			validate: computed(async (value: any) => {
 				await delay(2000);
 				return validator.isIP(String(value));
-			},
+			},[],{async:true}),
 		},
-		spareIps:[
-			{
-				value: "1.1.1.2",
-				title: "备用IP地址1"
-			},
-			{
-				value: "1.1.1.3",
-				title: "备用IP地址2"
-			},
-		],
 		gateway: {
 			value: "1.1.1.1",
 			title: "网关地址",
