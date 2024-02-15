@@ -69,6 +69,7 @@ export const Field:ReactFC<FieldProps> = (props)=>{
             boxSizing:"border-box",
             flexDirection:"row",
             width:'100%',
+            alignItems:"center",
             padding:"8px"
         }}>   
             <label  className="field-label"  style={{

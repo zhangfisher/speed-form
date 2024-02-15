@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Loading } from './Loading'
 
 export type ButtonProps =React.PropsWithChildren<
@@ -15,8 +15,15 @@ export type ButtonProps =React.PropsWithChildren<
 
 export const Button:React.FC<ButtonProps> = (props)=>{
     const { visible=true,loading,timeout=0,progress=0,cancel,onClick} =props 
+    const ref = useRef<HTMLDivElement>(null)
+    useEffect(()=>{
+        if(ref.current){
+            ref.current.style.display = visible ? 'flex' : 'none'
+        }    
+    })
     return (
         <div
+            ref={ref}
             className='speed-button'
             onClick={onClick}
          style={{
@@ -27,6 +34,9 @@ export const Button:React.FC<ButtonProps> = (props)=>{
             flexDirection:"row",
             borderRadius:"6px",
             alignItems:"center",
+            border:`1px solid #bbb`,
+            background:"#eee",
+            textAlign:'center'
         }}>
             {loading ? <Loading/> : null}
             <div 

@@ -8,7 +8,7 @@ export type InputProps = React.PropsWithChildren<HTMLInputElement & {
   visible?:boolean
   enable?:boolean
   placeholder?:string
-  onChange?:Function
+  onChange?:any
   value?:string
 }>
 
@@ -18,17 +18,17 @@ export const Input:ReactFC<InputProps> = (props:InputProps)=>{
     return (
         <input style={{ 
             border:`1px solid #bbb`,
-            borderRadius:"2px",
+            borderRadius:"4px",
             background: enable ? "white" : 'gray',
             margin:"4px" ,
-            padding:"4px",
+            padding:"8px",
             display: visible ? 'block' : 'none',
         }} 
         type="text"
         name={name}
         placeholder={placeholder}
-        value={value}
-        onChange={typeof(onChange)==='function' ? onChange() : null}
+        value={value ?? ''}
+        onChange={onChange}
         />
     );
 };

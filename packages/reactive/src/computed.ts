@@ -340,7 +340,9 @@ function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedC
 
   // 当创建计算属性前时运行hook，本Hook的目的是允许重新指定computedThis或者重新包装原始计算函数
   if (typeof onCreateComputed == "function" && typeof getter === "function") {
-    const newGetter = onCreateComputed.call( stateCtx,valuePath, getter,computedOptions);
+    const newGetter = onCreateComputed.call( stateCtx,valuePath, getter,computedOptions);    
+    if(!computedOptions.scope) computedOptions.scope = ComputedScopeRef.Current
+    if(!computedOptions.context) computedOptions.context = ComputedScopeRef.Root
     if (typeof newGetter == "function") getter = newGetter;
   }
   

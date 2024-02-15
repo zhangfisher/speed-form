@@ -83,9 +83,13 @@ function getFormAttrs(formState:Dict){
  * @param submitOptions 
  * @returns 
  */
-function useFormSubmit<State extends FormSubmitState=FormSubmitState>(formState:State,submitOptions?:SubmitOptions){
+function useFormSubmit<State extends FormSubmitState=FormSubmitState>(formState:State,ref:RefObject<HTMLElement>,submitOptions?:SubmitOptions){
     return useCallback((options:SubmitOptions)=>{
-     
+        const formELe = findFormElement(ref.current as HTMLElement) as HTMLFormElement
+        if(!formELe){
+            throw new Error("未找到表单元素")
+        }
+        formELe.submit()
     },[])
 }
 
@@ -116,34 +120,57 @@ const SubmitChildren = React.memo((props:{submitProps:SubmitRenderProps<any>,chi
     }) 
   })     
   
+function findFormElement(el:HTMLElement) {  
+    // 使用 closest 方法查找最近的祖先表单元素  
+    return el.closest('form');      
+ }  
   
+interface DefaultSubmitButtonProps{
+    visible?:boolean
+}
+const DefaultSubmitButton = React.forwardRef<HTMLInputElement,DefaultSubmitButtonProps>((props:DefaultSubmitButtonProps,ref)=>{
+    const {visible} = props
+    return <input type="submit"
+        onClick={(event)=>{
+            alert("alrty")
+            event.preventDefault()
+            return false
+        }}
+        style={{
+            display:visible ? 'none' : 'block'
+        }} ref={ref} value="提交"></input>
+})
+
 export function createSubmitComponent<Store extends Dict = Dict>(store:Store,submitOptions?:SubmitOptions,formOptions?:Required<FormOptions>) {
     function Submit<State extends FormSubmitState=FormSubmitState,Scope extends Dict=Dict>(props: SubmitProps<State,Scope>):ReactNode{
         const [state] = store.useState()  
-
+        const inputRef = useRef<HTMLInputElement>(null)
         const { scope } = props  
 
         const formState =getValueByPath(state,scope) 
-        const submit = useFormSubmit(formState,submitOptions)
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
+        const submit = useFormSubmit(formState,ref,submitOptions)
 
         // 创建动作组件的Props
         const submitRenderProps = createSubmitRenderProps(formState,submit,ref)        
+        // 0-无子组件 1-渲染函数 2-数组组件 3-单个组件
+        const childrenType = typeof(props.render)==='function' ? 1 : (Array.isArray(props.children) ? 2 : (typeof(props.children)==='function' ? 3 : 0))
 
-
-        // 执行渲染动作组件
-        if(typeof(props.render)==='function'){
-            return <SubmitChildren {...{submitProps:submitRenderProps,children:props.render}} />
-        }else if(props.children){
-            if(Array.isArray(props.children)){
-                return (props.children as any).map((children:any)=>{
-                    return <SubmitChildren {...{submitProps:submitRenderProps,children:children}} />
-                })
-            }else{
-                return <SubmitChildren {...{submitProps:submitRenderProps,children:props.children}} />
-            }            
-        } 
+        return <>
+            <DefaultSubmitButton ref={inputRef} visible={childrenType == 0 }/>
+            {/* 执行渲染动作组件 */}
+            {childrenType===1 ?
+                <SubmitChildren {...{submitProps:submitRenderProps,children:props.render}} />
+               : ( childrenType===2 ? 
+                    (props.children as any).map((children:any)=>{
+                        return <SubmitChildren {...{submitProps:submitRenderProps,children:children}} />
+                    })
+                    : <SubmitChildren {...{submitProps:submitRenderProps,children:props.children}} />
+               )
+            }   
+        </>
+        
     }
     return React.memo(Submit,(oldProps:any, newProps:any)=>{
         return oldProps.name === newProps.name  

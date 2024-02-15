@@ -443,7 +443,7 @@ export default ()=>{
     <Network.Field<typeof Network.fields.title> name="Network.fields.title">
       {({value,required,visible,validate,enable,defaultValue,sync})=>(
         // 此处负责渲染字段的具体内容
-        return <input value={value} onChange={sync()}/>
+        return <Input value={value} onChange={sync()}/>
       )}
     </Network.Field>
   )
@@ -502,7 +502,7 @@ export default ()=>{
     <Network.Submit>
       {({title,dirty,validate})=>{ 
       return <>
-            <input type="submit" value={title}/>
+            <Input type="submit" value={title}/>
             dirty={String(dirty)},validate={String(validate)}
       </>
   }}
@@ -528,7 +528,7 @@ export default ()=>{
 ```tsx 
 import { forms } from 'speedform-docs'
 import classnames from 'classnames';
-import { Card,Field,Row,Col,Input ,ValidResult} from "@speedform/demo-components"
+import { Card,Field,Row,Col,Input,Button,ValidResult} from "@speedform/demo-components"
 import { useCallback,useRef } from "react"
 
 const { Network } = forms
@@ -536,6 +536,7 @@ const { Network } = forms
 export default ()=>{        
   const ref = useRef()
   const onSubmit=useCallback(()=>{
+    alert("submit")
     console.log("submit")
     return false  //返回false阻止表单提交
   },[])
@@ -551,7 +552,7 @@ export default ()=>{
                           placeholder={placeholder} 
                           value={value} 
                           onChange={sync()}
-                        />
+                        />{value}
                   </Field>
               } }
         </Network.Field>
@@ -569,14 +570,14 @@ export default ()=>{
         <Network.Field<typeof Network.fields.ip> name="ip">                      
               {({name,title,value,visible,validate,placeholder,sync})=>{ 
                   return <Field  name="ip" visible={visible} title={title} validate={validate}>
-                        <input name={name}  className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
+                        <Input name={name}  className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
                   </Field> 
               } }
         </Network.Field>
         <Network.Field<typeof Network.fields.gateway> name="gateway">                      
               {({name,title,value,required,visible,validate,update,enable,placeholder,sync})=>{ 
                   return <Field name="gateway" visible={visible} title={title}>
-                      <input name={name}  className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                      <Input name={name}  className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
                       <button onClick={update((state:any)=>{
                               state.gateway.value='192.168.1.2'
                           })}>恢复</button>
@@ -590,14 +591,14 @@ export default ()=>{
                   <Network.Field name="wifi.ssid">                      
                           {({name,value,required,visible,validate,enable,defaultValue,sync})=>{ 
                               return  <Field  name="wifi.ssid" title="SSID" enable={enable}> 
-                                        <input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()} />
+                                        <Input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()} />
                               </Field>
                           } }
                       </Network.Field>      
                       <Network.Field name="wifi.password">                      
                           {({name,value,enable,validate,placeholder,help,sync})=>{ 
                               return  <Field name="wifi.password" title="密码" enable={enable} className={classnames({invalid:!validate})} > 
-                                        <input name={name}  className={classnames({invalid:!validate})} data-help={help} value={value} placeholder={placeholder} onChange={sync()} readOnly={!enable}/>                               
+                                        <Input name={name}  className={classnames({invalid:!validate})} data-help={help} value={value} placeholder={placeholder} onChange={sync()} readOnly={!enable}/>                               
                               </Field>
                           } }
                       </Network.Field> 
@@ -614,22 +615,22 @@ export default ()=>{
         <Network.Field<typeof Network.fields.dhcp.start> name="dhcp.start">                      
               {({name,value,validate,visible,title,sync})=>{ 
                   return  <Field name="dhcp.start" visible={visible} title={title}>
-                      <input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
+                      <Input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                   </Field>
               } }
         </Network.Field>
         <Network.Field<typeof Network.fields.dhcp.end> name="dhcp.end">                      
               {({name,value,validate,visible,title,sync})=>{     
                   return <Field name="dhcp.end" visible={visible} title={title}>
-                      <input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
+                      <Input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                   </Field>
               }}
         </Network.Field>             
-        <Network.Submit>
-            {({name,title,dirty,validate})=>{ 
+        <Network.Submit onSubmit={onSubmit}>
+            {({name,title,dirty,validate,submit})=>{ 
                 return <>
-                    <input name={name}  type="submit" value='提交'/>
-                    dirty={String(dirty)},validate={String(validate)}
+                    <Button onClick={submit}>提交</Button>
+                    Dirty={String(dirty)},validate={String(validate)}
                 </>
             }}
         </Network.Submit>       
