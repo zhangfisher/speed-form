@@ -43,7 +43,7 @@ export const schema = {
 			start: {
 				title: "起始地址",
 				value: "192.168.1.1",
-				visible: computed<boolean>((dhcp: any) => {
+				enable: computed<boolean>((dhcp: any) => {
 						return dhcp.enable.value;
 					},{
 						scope: ComputedScopeRef.Parent
@@ -55,11 +55,10 @@ export const schema = {
 				title: "结束地址",
 				value: "192.168.1.100",
 				// 将visible的context指向父对象即dhcp
-				visible: computed<boolean>((fields: any) => {
+				enable: computed<boolean>((fields: any) => {
 						return fields.dhcp.enable.value;
 					},{
-						scope: ComputedScopeRef.Root ,
-						depends:["dhcp.enable.value"]
+						scope: ComputedScopeRef.Root
 					}
 				),
 				validate: (value: any) => validator.isIP(value),

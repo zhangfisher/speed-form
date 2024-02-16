@@ -54,7 +54,9 @@ pnpm install @speedform/core @speedform/reactive
 yarn add @speedform/core @speedform/reactive
 npm install @speedform/core @speedform/reactive
 ```
+
 <Divider></Divider>
+
 ## 第2步：声明表单
 
 `SpeedForm`表单使用一个普通`JSON`对象来声明表单元数据，即表单`Schema`。
@@ -113,6 +115,29 @@ const schema = {
   }
 } 
 ```
+
+<Divider></Divider>
+
+### 声明字段组
+
+在实际场景中，我们可能会将一些相关的字段组合成一个字段组，如`wifi`字段组。
+
+```ts | pure
+{
+  wifi: {
+    ssid: {
+      value: "ssid",
+      title: "无线网络",
+    },
+    password: {
+      value: "password",
+      title: "无线密码",
+    }
+  }
+}
+```
+
+
 <Divider></Divider>
 ### 字段验证
 
@@ -131,40 +156,45 @@ import { assert } from "@speedform/core"
     }
   }
 } 
+
+`validate`属性是一个同步计算属性，其入参是字段的`value`值，返回值是一个`boolean`值，用来表示字段的有效性。
+
+
 ```
 :::info
 `SpeedForm`没有内置的验证规则，你可以使用任何你喜欢的验证库，如`yup`、`joi`、`zod`,`validator`等。
 :::
+ 
+
 
 <Divider></Divider>
 
-### 同步计算属性
+### 字段选择
 
-`SpeedForm`表单中的字段的任意元属性（如`select`,`visible`等）是可以直接声明为一个同步或异步函数。
+接下来我们添加`interface`字段，可以指定`wifi`或`ethernet`两种网卡类型。
 
-在本例中，`interface.select`是一个同步计算属性，用来返回`interface`的下拉选择的选项。
+字段的选择由`select`属性指定，`interface.select`是一个同步计算属性，用来返回`interface`的下拉选择的选项。
 
 ```ts | pure
 {
 	interface: {
-			value: "wifi",
-			title: "网卡类型",
-			select: () => {
-				return [
-					{ value: "wifi", title: "无线网卡" },
-					{ value: "ethernet", title: "有线网卡" },
-				];
-			},
-		}
+    value: "wifi",
+    title: "网卡类型",
+    select: () => {
+      return [
+        { value: "wifi", title: "无线网卡" },
+        { value: "ethernet", title: "有线网卡" },
+      ];
+    },
+  }
 }
 ```
+
 <Divider></Divider>
 
-### 异步计算属性
+### 异步校验
 
-`SpeedForm`表单也支持异步计算方式，即通过异步函数来获取数据。
-
-以下为`ip`字段添加异步校验功能，用来验证IP地址的有效性,当`ip`地址的值变化时会自动调用`validate`函数进行校验。
+接下来我们为`ip`字段添加异步校验功能，用来验证IP地址的有效性。当`ip`地址的值变化时会自动调用`validate`函数进行校验。
 
 
 ```ts | pure
@@ -180,17 +210,22 @@ import { assert } from "@speedform/core"
 }
 ```
 
+在实际场景中，我们可能会对`ip`地址进行`ping`等异步操作，本例中我们使用`delay`函数来模拟异步操作。
 
-### 字段显示控制
 
-在本例中，当`interface.value`的值为`wifi`时，`wifi`相关字段才会显示，否则隐藏。
+<Divider></Divider>
+
+
+### 字段联动显示
+
+在本例中，当`interface.value`的值为`wifi`时，`wifi`相关字段（`ssid`和`password`）才会显示，否则隐藏。
 
 这可以通过为`wifi`字段组提供一个`visible`计算属性来实现。
 
 ```ts | pure
 {
     wifi: {
-      visible: (net: any) => net.interface.value === "wifi",      
+      visible: (net) => net.interface.value === "wifi",      
       ssid: {
         value: "ssid",
         title: "无线网络",
@@ -203,9 +238,17 @@ import { assert } from "@speedform/core"
 }
 ```
 
-### 字段有效控制
+以上我们将`visible`声明为一个同步计算属性，其入参(`scope`)是表单根对象`fields`，返回值是一个`boolean`值，用来控制`wifi`字段组的显示。
 
-在本例中，当`dhcp.enable`的值为`false`时，`dhcp.start`、`dhcp.end`字段禁用。
+:::info
+**Q:** 为什么`visible`的计算函数的入参(`scope`)是表单根对象`fields`，而`validate`计算函数的入参是字段的`value`值？
+**A:** 计算函数的入参(`scope`)默认是当前所在的对象，但是可以通过`computed`进行配置。`validate`计算函数的入参经过`createForm`处理为默认指定所在字段的`value`值。
+:::
+
+
+### 字段使能
+
+在本例中，当启用自动获取IP地址，即`dhcp.enable`的值为`false`时，`dhcp.start`、`dhcp.end`字段禁用。
 
 这可以通过为字段提供一个`enable`计算属性来实现，当`dhcp.enable`为`false`时，`dhcp.start`和`dhcp.end`字段禁用。
  
@@ -231,8 +274,7 @@ import { assert } from "@speedform/core"
       value: "192.168.1.100", 
       enable: computed<boolean>((fields: any) => {
           return fields.dhcp.enable.value;
-        },
-        ["dhcp.enable.value"],
+        }, 
         { 
           scope: ComputedScopeRef.Root ,
         }
@@ -241,6 +283,13 @@ import { assert } from "@speedform/core"
   }
 }
 ```
+
+**说明"**
+
+- 以上`dhcp.start`、`dhcp.end`字段的`enable`属性被配置为计算属性，但是其依赖于`fields.dhcp.enable.value`，由于是同步计算，所以依赖是自动收集的，即当`fields.dhcp.enable.value`变更时会自动重新计算`fields.dhcp.start.enable`和`fields.dhcp.end.enable`的值。
+- 我们还可以看到`dhcp.start`、`dhcp.end`字段的`enable`属性声明的`scope`参数是不一样的，此参数决定了计算函数的第一个参数指向。详见[上下文](../reactive/computed-intro#上下文)。
+
+
 
 ### 异步高级控制
 
@@ -266,7 +315,7 @@ import { assert } from "@speedform/core"
 
 以上代表`computed`函数声明的`validate`属性是一个异步计算属性，其依赖于`value`值，当`ip.value`值变化时会自动执行`validate`函数。同时设定了执行超时限制。
 
-更多的异步高级控制功能请参考后续字段高级控制以及[@speedform/reactive](/reactive/computed-async)。
+更多的异步高级控制功能请参考后续字段高级控制以及[@speedform/reactive](../reactive/computed-async)。
 
 ### 字段属性
 
@@ -299,14 +348,18 @@ import { assert } from "@speedform/core"
 
 <Divider></Divider>
 
-### 完整表单
+### 完整表单声明
 
 以下是完整的表单声明:
 
 ```ts | pure
-const schema = {
+import { computed,ComputedScopeRef } from "@speedform/reactive";
+import { createForm } from "@speedform/core";
+import { delay } from "speedform-docs/utils";
+import validator from "validator";
+
+export const schema = {
 	title: "网络配置",
-  // 以下是字段声明
 	fields: {
 		title: {
 			value: "React-Helux-Form",
@@ -327,21 +380,11 @@ const schema = {
 		ip: {
 			value: "1.1.1.1",
 			title: "IP地址",
-			validate: async (value: any) => {
+			validate: computed(async (value: any) => {
 				await delay(2000);
-				return validator.isIP(value);
-			},
+				return validator.isIP(String(value));
+			},[],{async:true}),
 		},
-		spareIps:[
-			{
-				value: "1.1.1.2",
-				title: "备用IP地址1"
-			},
-			{
-				value: "1.1.1.3",
-				title: "备用IP地址2"
-			},
-		],
 		gateway: {
 			value: "1.1.1.1",
 			title: "网关地址",
@@ -354,12 +397,10 @@ const schema = {
 			},
 			start: {
 				title: "起始地址",
-				value: "192.168.1.1",        
-				visible: computed<boolean>((dhcp: any) => {
+				value: "192.168.1.1",
+				enable: computed<boolean>((dhcp: any) => {
 						return dhcp.enable.value;
-					},
-          ["dhcp/enable/value"],
-          { // visible默认scope指向start,此处将其指向父对象即dhcp
+					},{
 						scope: ComputedScopeRef.Parent
 					}
 				),
@@ -368,13 +409,11 @@ const schema = {
 			end: {
 				title: "结束地址",
 				value: "192.168.1.100",
-				// 将visible的scope指向父对象即dhcp
-				visible: computed<boolean>((fields: any) => {
+				// 将visible的context指向父对象即dhcp
+				enable: computed<boolean>((fields: any) => {
 						return fields.dhcp.enable.value;
-					},
-					["dhcp/enable/value"],
-					{  // visible默认scope指向start,此处将其指向根对象
-						scope: ComputedScopeRef.Root ,
+					},{
+						scope: ComputedScopeRef.Root 
 					}
 				),
 				validate: (value: any) => validator.isIP(value),
@@ -392,10 +431,12 @@ const schema = {
 				value: "123",
 				placeholder: "输入无线密码",
 				help: "密码长度应不小于6位",
-				validate: (value: string) => value.length >= 6
+				enable: (net: any) => (net as NetworkType).interface.value === "wifi",
+				validate: (value: string) => value.length >= 6,
 			}
     }
   }
+}
 ```
 
 **说明**
@@ -615,16 +656,16 @@ export default ()=>{
               }}
         </Network.Field> 
         <Network.Field<typeof Network.fields.dhcp.start> name="dhcp.start">                      
-              {({name,value,validate,visible,title,sync})=>{ 
-                  return  <Field name="dhcp.start" visible={visible} title={title}>
-                      <Input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
+              {({name,value,validate,enable,visible,title,sync})=>{ 
+                  return  <Field name="dhcp.start" title={title} enable={enable} >
+                      <Input name={name}  enable={enable}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                   </Field>
               } }
         </Network.Field>
         <Network.Field<typeof Network.fields.dhcp.end> name="dhcp.end">                      
-              {({name,value,validate,visible,title,sync})=>{     
-                  return <Field name="dhcp.end" visible={visible} title={title}>
-                      <Input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
+              {({name,value,validate,visible,title,enable,sync})=>{     
+                  return <Field name="dhcp.end" enable={enable} title={title}>
+                      <Input name={name} enable={enable} className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                   </Field>
               }}
         </Network.Field>             

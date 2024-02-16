@@ -10,7 +10,7 @@ export type InputProps = React.PropsWithChildren<HTMLInputElement & {
   placeholder?:string
   onChange?:any
   value?:string
-  style?:CSSProperties
+  style?:CSSProperties  
 }>
 
 export const Input:ReactFC<InputProps> = (props:InputProps)=>{
@@ -29,6 +29,7 @@ export const Input:ReactFC<InputProps> = (props:InputProps)=>{
         name={name}
         placeholder={placeholder}
         value={value ?? ''}
+        readOnly={!enable}
         onChange={onChange} 
         />
     );
