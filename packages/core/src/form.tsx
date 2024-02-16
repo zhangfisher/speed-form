@@ -163,7 +163,7 @@ function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOp
 		if(!options.scope) options.scope="value"
 		if(!options.depends) options.depends=[]
 		options.depends.push([...keyPath.slice(0,-1),"value"])
-		options.initial = true		// 初始化true
+		options.initial = true		// 默认总是true
 	}
 }
 
@@ -222,7 +222,7 @@ function createDepsHook(valuePath:string[],getter:Function,options:ComputedOptio
 
 export function createForm<State extends Dict=FormSchema>(define: State,options?:FormOptions) {
 	const opts = assignObject({
-		getFieldName:(valuePath:string[])=>valuePath.join("."),
+		getFieldName:(valuePath:string[])=>valuePath.length > 0 ? valuePath[valuePath.length-1]==='value' ? valuePath.slice(0,-1).join(".") : valuePath.join(".") : '',
 		singleton:true
 	},options) as Required<FormOptions>
 
@@ -302,6 +302,8 @@ function createFormComponent<Fields extends Dict>(this:FormOptions,store: any): 
 		// 提交表单
 		const onSubmit = useCallback((ev: React.FormEvent<HTMLFormElement>) => {
 			console.log("submit:",ev)
+			alert("submit")
+			return false
 		},[]);
 		// 重置表单
 		const onReset = useCallback((e: React.FormEvent<HTMLFormElement>) => {

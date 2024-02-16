@@ -78,7 +78,7 @@ export const schema = {
 				placeholder: "输入无线密码",
 				help: "密码长度应不小于6位",
 				enable: (net: any) => (net as NetworkType).interface.value === "wifi",
-				validate: (value: string) => value.length > 6,
+				validate: (value: string) => value.length >= 6,
 			}
     }
   }

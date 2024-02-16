@@ -1,6 +1,6 @@
 ---
 group:
-  title: 基础
+  title: 字段
   order: 1
 order: 2
 ---

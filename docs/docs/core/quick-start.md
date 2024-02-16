@@ -598,7 +598,9 @@ export default ()=>{
                       <Network.Field name="wifi.password">                      
                           {({name,value,enable,validate,placeholder,help,sync})=>{ 
                               return  <Field name="wifi.password" title="密码" enable={enable} className={classnames({invalid:!validate})} > 
-                                        <Input name={name}  className={classnames({invalid:!validate})} data-help={help} value={value} placeholder={placeholder} onChange={sync()} readOnly={!enable}/>                               
+                                        <Input name={name} style={{
+                                          border: validate ? '1px solid #ccc' : '1px solid red',                                  
+                                        }} data-help={help} value={value} placeholder={placeholder} onChange={sync()} readOnly={!enable}/><ValidResult validate={validate} help={help}/>                               
                               </Field>
                           } }
                       </Network.Field> 
@@ -626,14 +628,7 @@ export default ()=>{
                   </Field>
               }}
         </Network.Field>             
-        <Network.Submit onSubmit={onSubmit}>
-            {({name,title,dirty,validate,submit})=>{ 
-                return <>
-                    <Button onClick={submit}>提交</Button>
-                    Dirty={String(dirty)},validate={String(validate)}
-                </>
-            }}
-        </Network.Submit>       
+        <Network.Submit/>       
       </Network.Form>   
     </Card>)
 }
