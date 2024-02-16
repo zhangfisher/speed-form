@@ -40,7 +40,7 @@ input[type='text']:focus{
   outline: none;
 }
 
-input[type='submit']{
+/* input[type='submit']{
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
@@ -48,4 +48,4 @@ input[type='submit']{
   min-width: 80px;
   cursor: pointer;
   box-sizing: border-box;
-}
+} */
