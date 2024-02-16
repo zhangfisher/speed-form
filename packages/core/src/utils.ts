@@ -1,5 +1,6 @@
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject" 
 import type { Dict } from "@speedform/reactive"
+import { CSSProperties } from "react"
 
 
 /**
@@ -105,3 +106,31 @@ export function isFieldGroup(data:Dict){
     return isPlainObject(data) && !isFieldValue(data) && !isFormAction(data)
 }
 
+
+
+/**
+ * 创建一个支持CSS-IN-JS的React组件
+ * 
+ * 
+ * 
+ * createComponent((props)=>{
+ * 
+ * },{
+	  color:"fff",
+	  backgroundColor:"red"
+	  "font-size":"12px
+	  "&:hover":{
+
+	  },
+	  "&.active":{
+
+	  },
+	  "& > h1":{
+
+	  }
+ * })
+ * 
+ */
+function createComponent(component:React.FC,style?:CSSProperties){
+	
+}

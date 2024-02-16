@@ -468,9 +468,13 @@ export default Network
 
 接下来我们就可以在组件中使用`Network`表单对象来渲染表单。
 
+:::warning
+`@speedform/core`是一个`headless`组件库，只提供表单逻辑控制，不负责具体的渲染，所以我们在本例中我们使用标准的html组件来渲染表单。用户可以很容易就引入其他UI组件库来进行渲染。
+:::
+
 <Divider></Divider>
 
-### 字段组件
+### 渲染字段
 
 通过表单对象的`Field`组件用来渲染表单字段，如上例中的`Network.Field`。
 
@@ -482,9 +486,9 @@ export default ()=>{
 
   return (
     <Network.Field<typeof Network.fields.title> name="Network.fields.title">
-      {({value,required,visible,validate,enable,defaultValue,sync})=>(
-        // 此处负责渲染字段的具体内容
-        return <Input value={value} onChange={sync()}/>
+      {({name,value,required,visible,help,validate,enable,defaultValue,sync,update})=>(
+        // 此处负责渲染字段UI，可以使用任意HTML元素进行渲染字段内容
+        return <Input name={name} value={value} onChange={sync()}/>
       )}
     </Network.Field>
   )
@@ -492,15 +496,17 @@ export default ()=>{
 ```
 
 **说明：**
+
 - `Network.Field`组件用来控制如何进行表单字段的渲染。
 - `Network.Field`组件的`name`属性用来指定字段的路径,可以是嵌套路径，如`Network.fields.wifi.ssid`。
 - 可以为`Network.Field`组件指定类型，以便在`children`属性中获得字段的类型提示。
-- `Network.Field`组件的`children`属性是一个函数，用来渲染字段的具体内容，传入`props`是一个字段的控制属性，包括`value`、`required`、`visible`、`validate`、`enable`、`defaultValue`、`sync`等。并且这些字段控制属性均可以是一个计算属性，其值来自其他字段的派生计算结果。
+- `Network.Field`组件的`children`是一个函数，传入`props`是一个字段的控制属性，包括`value`、`required`、`visible`、`validate`、`enable`、`defaultValue`、`sync`等。并且这些字段控制属性均可以是一个计算属性，其值来自其他字段的派生计算结果。
 - `sync`函数用来同步字段的值。
+
 
 <Divider></Divider>
 
-### 表单组件
+### 渲染表单
 
 当需要进行标准表单提交时，需要使用一个`Form`组件来包裹所有的`Field`组件。
 
@@ -512,8 +518,7 @@ export default ()=>{
       {({name,value,required,visible,validate,enable,defaultValue,sync})=>(
         // 此处负责渲染字段的具体内容
       )}
-    </Network.Field>
-    
+    </Network.Field>    
     <Network.Field>....</Network.Field>
     <Network.Field>....</Network.Field>
     <Network.Field>....</Network.Field>
@@ -523,42 +528,77 @@ export default ()=>{
 
 **说明：**
 
-- `Network.Form`表单组件仅在进行标准表单提交时使用。
+- `Network.Form`表单组件仅在进行**标准表单**提交时使用。
 - `SpeedForm`支持进行`API`方式采用`AJAX`提交，此时可以不使用`Form`组件。
 
 <Divider></Divider>
 
 ## 第5步：提交表单
 
-最后，我们需要添加`Network.Submit`组件来进行提交操作。
+最后，我们需要添加`Network.Submit`组件来进行提交操作。`SpeedForm`支持标准提交或`AJAX/API`方式提交表单。
 
-```ts | pure
-<Network.Form>
+### 标准提交
+
+标准提交
+
+```tsx | pure
+<Network.Form action="/api/settings" method="post">
     {/* 声明所有需要的字段 */}
     <Network.Field<typeof Network.fields.title> name="Network.fields.title">
       {({name,value,required,visible,validate,enable,defaultValue,sync})=>(
         // 此处负责渲染字段的具体内容
       )}
     </Network.Field>    
-    <Network.Submit>
-      {({title,dirty,validate})=>{ 
-      return <>
-            <Input type="submit" value={title}/>
-            dirty={String(dirty)},validate={String(validate)}
-      </>
-  }}
-    </Network.Submit>
+    {/* 提供默认的提交按钮 */}
+    <Network.Submit/>
+    {/* 默认的重置按钮 */}
+    <Network.Reset/>
 </Network.Form>
 
 ```
 
 **说明:**
 
-- `Network.Submit`组件用来控制表单的提交操作逻辑，但不负责具体的UI渲染。,
+- 标准提交时，需要将所有字段包裹在`Network.Form`组件内部。
+- `Network.Submit`组件提供一个默认的提交按钮，用来控制表单的提交操作逻辑，但不负责具体的UI渲染。
+
+**一般情况下，我们会使用`Network.Submit`组件的`children`属性来自定义提交按钮的UI渲染。毕竟默认的提交按钮样式不太符合要求**
+
+```tsx | pure
+<Network.Form url="api/settings">
+    {/* 声明所有需要的字段 */}
+    <Network.Field>...</Network.Field>    
+    <Network.Field>...</Network.Field>    
+    <Network.Field>...</Network.Field>    
+    {/* 提供默认的提交按钮 */}
+    <Network.Submit>
+      {({title,dirty,validate})=>(
+        <button disabled={!dirty || !validate}>{title}</button>
+      )}
+    </Network.Submit>
+</Network.Form>
+```
+**说明**:
+
 - `Network.Submit`组件的`children`属性是一个函数，用来渲染提交按钮的具体内容，传入`props`是一个提交按钮的控制属性，包括`title`、`dirty`、`validate`等。
 - `title`属性用来指定提交按钮的标题。
 - `dirty`属性用来指示表单是否已经被编辑过。
 - `validate`属性用来指示表单是否有效，其值是由所有字段的`validate`计算属性的结果决定的。
+
+### AJAX提交
+
+
+```ts | pure
+
+```
+
+### Action提交
+
+
+```ts | pure
+
+```
+
 
 <Divider></Divider>
 
@@ -670,6 +710,7 @@ export default ()=>{
               }}
         </Network.Field>             
         <Network.Submit/>       
+        <Network.Reset/>
       </Network.Form>   
     </Card>)
 }

@@ -49,7 +49,7 @@ import { FIELDS_STATE_KEY } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
 import defaultFormProps from "./form.default"
-import { createSubmitComponent } from "./submit";
+import { createSubmitComponent,createResetComponent } from "./behaviors";
 
 
 
@@ -263,7 +263,8 @@ export function createForm<State extends Dict=FormSchema>(define: State,options?
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
 		Action: createActionComponent<StoreType>(store,{},opts),
-		Submit: createSubmitComponent<StoreType>(store,{preventDefault:false},opts),
+		Submit: createSubmitComponent<StoreType>(store,{},opts),
+		Reset: createResetComponent<StoreType>(store,{},opts),
 		getAction,
     	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
 		actions:createObjectProxy(()=>store.state.actions) as ActionsType,		
@@ -301,9 +302,7 @@ function createFormComponent<Fields extends Dict>(this:FormOptions,store: any): 
 		const {children } = props; 
 		// 提交表单
 		const onSubmit = useCallback((ev: React.FormEvent<HTMLFormElement>) => {
-			console.log("submit:",ev)
-			alert("submit")
-			return false
+			//ev.preventDefault();
 		},[]);
 		// 重置表单
 		const onReset = useCallback((e: React.FormEvent<HTMLFormElement>) => {
