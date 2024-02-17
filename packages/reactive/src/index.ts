@@ -16,3 +16,6 @@ export {
     isSkipComputed,
     skipComputed
 } from "./utils"
+
+
+declare module 'helux' {}

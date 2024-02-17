@@ -309,7 +309,7 @@ function createFormComponent<Fields extends Dict>(this:FormOptions,store: any): 
 
 		},[]);
 		return (
-			<form ref={ref} className="speedform"  {...props} onSubmit={onSubmit} onReset={onReset}>
+			<form ref={ref} className="speedform-form"  {...props} onSubmit={onSubmit} onReset={onReset}>
 				{children}
 			</form>
 		)

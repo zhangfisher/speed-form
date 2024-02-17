@@ -91,6 +91,8 @@ type NetworkType = NetworkFormType['fields'];
 export const Network = createForm<NetworkFormType>(schema,{debug:true});
 
 
+
+
 // @ts-ignore
 globalThis.Network = Network;
 
