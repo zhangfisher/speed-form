@@ -1,8 +1,8 @@
 {
   "name": "styledfc",
   "version": "1.0.0",
-  "description": "",
-  "main": "src/index.ts",
+  "description": "sample css-in-js for react",
+  "main": "src/index.tsx",
   "publishConfig": {
     "main": "dist/index.js",
     "module": "dist/index.mjs",
