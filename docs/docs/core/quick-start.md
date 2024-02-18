@@ -173,7 +173,7 @@ import { assert } from "@speedform/core"
 
 接下来我们添加`interface`字段，可以指定`wifi`或`ethernet`两种网卡类型。
 
-字段的选择由`select`属性指定，`interface.select`是一个同步计算属性，用来返回`interface`的下拉选择的选项。
+字段的选择由`select`属性指定，`interface.select`是一个同步计算属性（可以是`同步函数`，也可以是`异步函数`，事实上所有字段的属性均可以是同步或异步的），用来返回`interface`的下拉选择的选项。
 
 ```ts | pure
 {
@@ -242,6 +242,7 @@ import { assert } from "@speedform/core"
 
 :::info
 **Q:** 为什么`visible`的计算函数的入参(`scope`)是表单根对象`fields`，而`validate`计算函数的入参是字段的`value`值？
+
 **A:** 计算函数的入参(`scope`)默认是当前所在的对象，但是可以通过`computed`进行配置。`validate`计算函数的入参经过`createForm`处理为默认指定所在字段的`value`值。
 :::
 

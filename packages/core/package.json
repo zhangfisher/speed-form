@@ -15,8 +15,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@speedform/reactive": "workspace:^",
     "flex-tools": "^1.3.55",
-    "@speedform/reactive": "workspace:^"
+    "styledfc": "^1.0.2"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.5",

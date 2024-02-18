@@ -16,7 +16,8 @@
   "dependencies": {
     "color": "^4.2.3",
     "react-json-tree": "^0.18.0",
-    "react-loader-spinner": "^6.1.6"
+    "react-loader-spinner": "^6.1.6",
+    "styledfc": "^1.0.2"
   },
   "devDependencies": {
     "react": "^18.2.0",
