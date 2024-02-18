@@ -267,11 +267,7 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
 
   opts.async = isAsync;
   
-  opts.depends = deps;
-  
-  if (isAsync && opts.depends?.length==0) {
-    console.warn("async computed function should specify depends")
-  }
+  opts.depends = deps; 
 
   const descriptor = () => {
     return {
@@ -352,7 +348,7 @@ function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedC
 
   const witness = stateCtx.mutate({
     fn: (draft, params) => {
-      storeOptions.log(`Run sync mutate for : ${valuePath.join(OBJECT_PATH_DELIMITER)}`);
+      storeOptions.log(`Run sync computed for : ${valuePath.join(OBJECT_PATH_DELIMITER)}`);
       const { input } = params;
       // 1. 根据配置参数获取计算函数的上下文对象      
       const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,storeOptions,type:"context"})
@@ -587,6 +583,9 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
   },{defaultValue:valuePath})    
 
   const deps = getDeps(depends) //(depends || []).map((deps: any) =>Array.isArray(deps) ? deps : deps.split(OBJECT_PATH_DELIMITER))
+  if(deps.length==0){
+    storeOptions.log(`async computed <${valuePath.join(".")}> should specify depends`,'warn')
+  } 
   const mutateId = getComputedId(valuePath,computedOptions.id)
 
   storeOptions.log(`Create async computed: ${valuePath.join(OBJECT_PATH_DELIMITER)} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
@@ -610,7 +609,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
     },
     //  此函数在依赖变化时执行，用来异步计算
     task: async ({ draft, setState, input, extraArgs }) => {
-      storeOptions.log(`Run async mutate for : ${valuePath.join(OBJECT_PATH_DELIMITER)}`);
+      storeOptions.log(`Run async computed for : ${valuePath.join(OBJECT_PATH_DELIMITER)}`);
       // 当使用run方法时可以传入参数来覆盖默认的计算函数的配置参数
       const finalComputedOptions = Object.assign({},computedOptions,extraArgs) as Required<ComputedOptions>
       if(noReentry && isMutateRunning && storeOptions.debug) {

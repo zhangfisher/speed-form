@@ -4,9 +4,9 @@ hero:
   description: 无 以 伦 比 的 React 表 单 开 发 体 验
   actions:
     - text: 指南
-      link: /
+      link: /core
     - text: Github
-      link: /
+      link: https://ithub.com/zhangfisher/speed-form
 features:
   - title: Hello
     emoji: 💎
@@ -17,4 +17,8 @@ features:
   - title: '!'
     emoji: 🚀
     description: Put ! description here
+sidebar: true    
 ---
+
+
+Speed

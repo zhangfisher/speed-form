@@ -634,7 +634,7 @@ export default ()=>{
                           placeholder={placeholder} 
                           value={value} 
                           onChange={sync()}
-                        />{value}
+                        />
                   </Field>
               } }
         </Network.Field>
@@ -651,7 +651,7 @@ export default ()=>{
         </Network.Field> 
         <Network.Field<typeof Network.fields.ip> name="ip">                      
               {({name,title,value,visible,validate,placeholder,sync})=>{ 
-                  return <Field  name="ip" visible={visible} title={title} validate={validate}>
+                  return <Field  name="ip" visible={visible} title={title} validate={validate} memo="修改进行异步校验">
                         <Input name={name}  className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
                   </Field> 
               } }
@@ -669,6 +669,7 @@ export default ()=>{
         </Network.Field>
         <Network.Group<typeof Network.fields.wifi> name="wifi">
           {({title,visible} )=>{ 
+            console.log('visible=',title,visible)
               return (  <Card title={title}  visible={visible}>
                   <Network.Field name="wifi.ssid">                      
                           {({name,value,required,visible,validate,enable,defaultValue,sync})=>{ 

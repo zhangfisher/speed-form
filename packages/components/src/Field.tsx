@@ -58,10 +58,10 @@ export const ValidResult:React.FC<FieldProps> = ({validate,help})=>{
 }
 
 
-export type FieldProps = Partial<FieldRenderProps<any>>
+export type FieldProps = Partial<FieldRenderProps<any>> & {memo?:string}
 
 export const Field:ReactFC<FieldProps> = (props)=>{
-    const {enable=true,visible=true,title='',children=''} = props 
+    const {enable=true,visible=true,title='',children='',memo} = props 
     return  (
         <div  className="field"  style={{
             position:'relative',
@@ -81,8 +81,10 @@ export const Field:ReactFC<FieldProps> = (props)=>{
                 flexGrow:1,
                 display:'flex',
                 flexDirection:'row',
+                alignItems:'center',
                 color: enable===false ? 'gray' : 'inherit'
-            }}>{typeof(children)=='function' ? '' : children}</span>  
+            }}>{typeof(children)=='function' ? '' : children}{memo && <span style={{color:'gray'}}>{memo}</span>}</span>  
+            
             <ValidResult {...props}/>
             {/* <ColorBlock style={{
                 position:'absolute',

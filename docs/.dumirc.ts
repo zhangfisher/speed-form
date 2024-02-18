@@ -4,7 +4,9 @@ export default defineConfig({
   base:"/speed-form/",
   publicPath:"/speed-form/",
   outputPath: 'dist',
+  favicons:['speed-form/favicon.ico'],
   themeConfig: {
+    name:"SpeedForm",
     demo:{
 
     }
