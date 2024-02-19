@@ -66,10 +66,9 @@ export const schema = {
 		},
 		wifi: {
 			title: "无线配置",
-			visible: (net: any) => {
-        console.log("net=",net)
-        return (net as NetworkType).interface.value === "wifi"
-      },
+			visible: computed<boolean>((net: any) => {
+        return net.interface.value === "wifi"
+      },{scope:ComputedScopeRef.Root}),
 			ssid: {
 				value: "fast",
 				placeholder: "无线网络",

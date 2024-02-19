@@ -334,7 +334,7 @@ import { assert } from "@speedform/core"
   readonly?    : boolean;              // 是否只读
   visible?     : boolean;              // 是否可见
   enable?      : boolean               // 是否可用
-  dirty?      : boolean                // 数据已经更新过
+  dirty?       : boolean               // 数据已经更新过
   validate?    : boolean;              // 验证
   select?      : any[]                 // 枚举值
 }  
@@ -625,8 +625,7 @@ export default ()=>{
   return  (<Card title="网络配置表单"> 
     <Network.Form onSubmit={onSubmit} action="/api" ref={ref}>       
         <Network.Field<string> name="title">                      
-              {({name,title,value,visible,validate,placeholder,sync})=>{             
-                  console.log("title=",value)
+              {({name,title,value,visible,validate,placeholder,sync})=>{         
                   return <Field  name="title" visible={visible} title={title} validate={validate}>
                         <Input 
                           name={name} 
@@ -669,8 +668,7 @@ export default ()=>{
         </Network.Field>
         <Network.Group<typeof Network.fields.wifi> name="wifi">
           {({title,visible} )=>{ 
-            console.log('visible=',title,visible)
-              return (  <Card title={title}  visible={visible}>
+              return (  <Card title={title+"(仅interfact=wifi时显示)"}  visible={visible}>
                   <Network.Field name="wifi.ssid">                      
                           {({name,value,required,visible,validate,enable,defaultValue,sync})=>{ 
                               return  <Field  name="wifi.ssid" title="SSID" enable={enable}> 

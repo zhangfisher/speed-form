@@ -12,8 +12,8 @@
 import { Dict, getValueByPath } from "@speedform/reactive"; 
 import type { FormOptions, FormSchemaBase } from "./form";
 import React,{ CSSProperties, ReactNode,  useRef } from "react";
- import { isFieldGroup, isFieldList, isFieldValue } from "./utils";
-
+import { isFieldGroup, isFieldList, isFieldValue } from "./utils";
+import { styled } from  "styledfc"
 // 动作状态，必须包含一个名称为execute的异步计算属性
 export interface FormBehaviorState extends FormSchemaBase{
     
