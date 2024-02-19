@@ -102,22 +102,24 @@ interface DefaultBehaviorButtonProps{
     style?:CSSProperties
 }
 
-const DefaultFormBehaviorButton = React.forwardRef<HTMLInputElement,DefaultBehaviorButtonProps>((props:DefaultBehaviorButtonProps,ref)=>{
-    const {visible} = props
-    return <input  
-        type={props.type ?? 'submit'}
-        ref={ref}
-        value={props.title ?? '提交'}
-        style={{
-            display:visible ?  'inline-block':'none',           
-            minWidth:'80px',
-            cursor: 'pointer',
-            boxSizing: 'border-box',
-            margin:"2px",           
-            ...props.style
-        }}></input>
-})
+// const DefaultFormBehaviorButton = React.forwardRef<HTMLInputElement,DefaultBehaviorButtonProps>((props:DefaultBehaviorButtonProps,ref)=>{
+//     const {visible} = props
+//     return 
  
+
+
+const DefaultFormBehaviorButton =styled<DefaultBehaviorButtonProps>((props,{ref})=>{
+    const {visible} = props
+    return <input ref={ref} 
+        style={{display:visible ? 'inline-block':'none'}}
+        type={ props.type ?? 'submit'} value={props.title ?? '提交'}
+    />
+},{
+    minWidth:'80px',
+    cursor: 'pointer',
+    boxSizing: 'border-box',
+    margin:"2px" 
+})
 
 export function createFromBehaviorComponent<Store extends Dict = Dict>(store:Store,behaviorOptions?:BehaviorOptions,formOptions?:Required<FormOptions>) {
     const behaviorOpts = Object.assign({
@@ -150,9 +152,9 @@ export function createFromBehaviorComponent<Store extends Dict = Dict>(store:Sto
                     : <BehaviorChildren {...{submitProps:submitRenderProps,children:props.children}} />
                )
             }   
-        </>
-        
+        </>        
     }
+
     return React.memo(Behavior,(oldProps:any, newProps:any)=>{
         return oldProps.name === newProps.name  
     }) as (<State extends FormBehaviorState=FormBehaviorState,Scope extends Dict=Dict>(props: BehaviorProps<State,Scope>)=>ReactNode)
@@ -182,6 +184,7 @@ export function createResetComponent<Store extends Dict = Dict>(store:Store,subm
             background:"#eee",            
             border:"1px solid #bbb",
         },
-        ...submitOptions},formOptions)
+        ...submitOptions,
+        formOptions)
 }
 
