@@ -2,23 +2,25 @@
 
 import React, { CSSProperties } from "react"
 import { ReactFC } from "./types";
+import { validate } from '../../core/src/validate';
 
-export type InputProps = React.PropsWithChildren<HTMLInputElement & {
+export type InputProps = React.PropsWithChildren<Partial<HTMLInputElement> & {
   name?:string
   visible?:boolean
   enable?:boolean
+  validate?:boolean
   placeholder?:string
   onChange?:any
   value?:string
-  style?:CSSProperties  
+  style?:Partial<CSSProperties>
 }>
 
 export const Input:ReactFC<InputProps> = (props:InputProps)=>{
-    const { name,enable=true,visible=true,placeholder,onChange,value,style} =props
+    const { name,enable=true,validate=true,visible=true,placeholder,onChange,value,style} =props
 
     return (
         <input style={Object.assign({ 
-            border:`1px solid #bbb`,
+            border:validate ? `1px solid #bbb`: `1px solid red` ,
             borderRadius:"4px",
             background: enable ? "white" : 'gray',
             margin:"4px" ,

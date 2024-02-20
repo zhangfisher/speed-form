@@ -1,9 +1,7 @@
 import React from "react";
-import Card from "./components/Card"  
 import User from './forms/user';
-import JsonViewer from "./components/JsonViewer" 
 import classnames from 'classnames';
-import { Field } from "./components/Field";
+import {Field,Card,JsonViewer} from "@speedform/demo-components";
 
 
  

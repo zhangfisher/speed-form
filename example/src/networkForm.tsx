@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from "react";
 import Network from './forms/network';
 import classnames from 'classnames';
-import {Card,JsonViewer, Button,Divider,Field  } from "@speedform/demo-components";
+import {Card,JsonViewer, Button,Divider,Field,Input  } from "@speedform/demo-components";
  
  
 const NetworkForm = ()=>{     
@@ -10,14 +10,14 @@ const NetworkForm = ()=>{
        <div data-loader="circle"></div>
         <Card title="网络配置">
           <Network.Field<string> name="title">                      
-                {({title,value,visible,validate,placeholder,sync})=>{                 
+                {({name,title,value,visible,validate,placeholder,sync})=>{                 
                     return <Field  name="title" visible={visible} title={title}>
-                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                         <Input name={name}  className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
                     </Field>
                 } }
             </Network.Field>
              <Network.Field<typeof Network.fields.interface> name="interface">                      
-                {({title,required,visible,validate,enable,value,defaultValue,select,sync})=>{     
+                {({name,title,required,visible,validate,enable,value,defaultValue,select,sync})=>{     
                     console.log(required,visible,validate,enable,defaultValue)
                     return <Field name="interface" title={title}>                        
                         <select value={value} onChange={sync()}>
@@ -29,17 +29,17 @@ const NetworkForm = ()=>{
                 }}
             </Network.Field> 
              <Network.Field<typeof Network.fields.ip> name="ip">                      
-                {({title,value,visible,validate,placeholder,sync})=>{ 
+                {({name,title,value,visible,validate,placeholder,sync})=>{ 
                     return <Field  name="ip" visible={visible} title={title} validate={validate}>
-                         <input className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
+                         <Input name={name}  className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
                     </Field> 
                 } }
             </Network.Field>
             <Network.Field<typeof Network.fields.gateway> name="gateway">                      
-                {({title,value,required,visible,validate,update,enable,placeholder,sync})=>{ 
+                {({name,title,value,required,visible,validate,update,enable,placeholder,sync})=>{ 
                     console.log("更新网关地址：",required,visible,validate,enable)
                     return <Field name="gateway" visible={visible} title={title}>
-                        <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                        <Input name={name}  className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
                         <button onClick={update((state:any)=>{
                                 state.gateway.value='192.168.1.2'
                             })}>恢复</button>
@@ -48,21 +48,21 @@ const NetworkForm = ()=>{
                 } }
             </Network.Field>
           <Network.Group<typeof Network.fields.wifi> name="wifi">
-            {({title,visible} )=>{ 
+            {({name,title,visible} )=>{ 
                 return (
                 <Card title={title}  visible={visible}>
                     <Network.Field name="wifi.ssid">                      
                             {({value,required,visible,validate,enable,defaultValue,sync})=>{ 
                                 console.log(required,visible,validate,enable,defaultValue)
                                 return  <Field  name="wifi.ssid" title="SSID" enable={enable}> 
-                                         <input className={classnames({invalid:!validate})} value={value} onChange={sync()} />
+                                         <Input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()} />
                                 </Field>
                             } }
                         </Network.Field>      
                         <Network.Field name="wifi.password">                      
                             {({value,enable,validate,placeholder,help,sync})=>{ 
                                 return  <Field name="wifi.password" title="密码" enable={enable} className={classnames({invalid:!validate})} > 
-                                         <input className={classnames({invalid:!validate})} data-help={help} value={value} placeholder={placeholder} onChange={sync()} readOnly={!enable}/>                               
+                                         <Input name={name}  validate={validate} className={classnames({invalid:!validate})} data-help={help} value={value} placeholder={placeholder} onChange={sync()} readOnly={!enable}/>                               
                                 </Field>
                             } }
                         </Network.Field> 
@@ -70,23 +70,23 @@ const NetworkForm = ()=>{
             }}
          </Network.Group>                
            <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp.enable" >                                       
-                {({title,visible,value,validate,sync})=>{     
+                {({name,title,visible,value,validate,sync})=>{     
                     return <Field  name='dhcp.enable' visible={visible} title={title}>
-                         <input className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync()}/>
+                         <input name={name}  className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync()}/>
                     </Field>
                 }}
             </Network.Field> 
            <Network.Field<typeof Network.fields.dhcp.start> name="dhcp.start">                      
-                {({value,validate,visible,title,sync})=>{ 
-                    return  <Field name="dhcp.start" visible={visible} title={title}>
-                        <input className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
+                {({name,value,validate,visible,title,enable,sync})=>{ 
+                    return  <Field name="dhcp.start"  enable={enable} visible={visible} title={title}>
+                        <Input name={name}  enable={enable}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                     </Field>
                 } }
             </Network.Field>
             <Network.Field<typeof Network.fields.dhcp.end> name="dhcp.end">                      
-                {({value,validate,visible,title,sync})=>{     
-                    return <Field name="dhcp.end" visible={visible} title={title}>
-                        <input className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
+                {({name,value,validate,visible,title,enable,sync})=>{     
+                    return <Field name="dhcp.end" enable={enable} visible={visible} title={title}>
+                        <Input name={name}  enable={enable}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                     </Field>
                 }}
             </Network.Field>   
@@ -123,7 +123,7 @@ const NetworkForm = ()=>{
                 <Network.Action<typeof Network.fields.wifi.cancelableSubmit> name="fields.wifi.cancelableSubmit" >
                     {({title,visible,loading,enable,run,cancel,error,progress})=>{ 
                         return <>
-                            <input type="submit" value="提交"/>
+                            <Input type="submit" value="提交"/>
                             <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={run()}>{title}</Button>
                         </>
                     }}

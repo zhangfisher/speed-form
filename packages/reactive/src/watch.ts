@@ -8,7 +8,7 @@
  * 
  */
 import { ISharedCtx, watch as heluxWatch, IOperateParams,  getSnap } from 'helux';
-import type { StateValueDescriptor, StateValueDescriptorParams, StoreSchema } from "./store";
+import type { StateValueDescriptor, StateValueDescriptorParams, StoreDefine } from "./store";
 import { StoreExtendContext } from "./extends"; 
 import { getVal, setVal } from "./utils"; 
 import { OBJECT_PATH_DELIMITER } from './consts';
@@ -80,7 +80,7 @@ export interface RegisteredWatchListener{
     options:WatchOptions          // 侦听函数的选项
 }
 
-class StoreWatcher<Store extends StoreSchema<any>>{
+class StoreWatcher<Store extends StoreDefine<any>>{
     listeners = new Map<any,RegisteredWatchListener>()
     private _off:()=>void = ()=>{}
     private _wacher = {off:()=>{}} 
@@ -241,12 +241,12 @@ class StoreWatcher<Store extends StoreSchema<any>>{
     }
 }
 
-let storeWatcher:StoreWatcher<StoreSchema<any>> | undefined  
+let storeWatcher:StoreWatcher<StoreDefine<any>> | undefined  
 
  
 
  
-export function installWatch<Store extends StoreSchema<any>>(options:StoreExtendContext<ISharedCtx<Store["state"]>>) {
+export function installWatch<Store extends StoreDefine<any>>(options:StoreExtendContext<ISharedCtx<Store["state"]>>) {
     const { stateCtx,params,storeOptions,extendObjects} =options    
     if(!storeWatcher){
         storeWatcher=new StoreWatcher<Store>({

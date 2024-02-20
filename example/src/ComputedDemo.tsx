@@ -1,4 +1,4 @@
-import store  from "./store" 
+import store  from "./computed" 
 import { $  } from "helux" 
 import {ColorBlock,Card} from "@speedform/demo-components" 
 import { Tips } from "./Tips"

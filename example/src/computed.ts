@@ -1,4 +1,4 @@
-import { createStore,computed  } from "@speedform/reactive"
+import { createStore,computed, ComputedScopeRef  } from "@speedform/reactive"
 import { delay }  from "flex-tools/async/delay"
 import { getProjects,type Project } from "./api/getProjects";
    
@@ -53,7 +53,10 @@ const storeDefine= {
             projects:computed<Project[]>(async ([repoUrl])=>{
               await delay(1000)  
               return await getProjects(repoUrl) 
-            },["user.repo"],{initial:[]}),
+            },["user.repo"],{
+              initial:[],
+              scope:ComputedScopeRef.Depends
+            }),
             level:3,
             github:"https://github.com/zhangfisher",
             age:18, 
@@ -72,7 +75,7 @@ const storeDefine= {
         books:[
             {name:'张三',price:18,author:'tom',count:2,total:(book:BookType)=>book.price*book.count},
             {name:'李四',price:19,author:'jack',count:3,total:(book:BookType)=>book.price*book.count},
-            {name:'王五',price:20,author:'bob',count:4,total:computed((draft:MyStateType)=>draft.books[2].price*draft.books[2].count)}                
+            {name:'王五',price:20,author:'bob',count:4,total:(book:BookType)=>book.price*book.count}                
         ],
         orders:[],
         sales:{
@@ -82,19 +85,22 @@ const storeDefine= {
     actions:{
         addBook(data:{name:string,price:number,author:string,count:number}){
             return (state:MyStateType)=>state.books.push(data)
-        },
+        }, 
         async addBookAsync(data:{name:string,price:number,author:string,count:number}){
+            // 模拟异步请求
             return (state:MyStateType)=>state.books.push(data)
         }
     }
 }   
 
-
-
- 
 const store =  createStore<typeof storeDefine>(storeDefine)  
 
-store.actions.addBook({name:'赵六',price:21,author:'bob',count:5})
+// store.actions.addBook({name:'赵六',price:21,author:'bob',count:5})
+store.actions.addBook({name:'赵六',price:21,author:'bob',count:1})
+store.actions.addBookAsync({name:"",price:1,author:"",count:1})
+
+store.state.user
+
 
 // @ts-ignore
 globalThis.Store = store

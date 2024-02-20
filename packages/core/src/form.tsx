@@ -39,7 +39,7 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreSchema, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, Dict } from "@speedform/reactive";
+import { type StoreDefine, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, Dict } from "@speedform/reactive";
 import type { ReactFC,  ComputedAttr } from "./types";
 import { FieldComponent, createFieldComponent  } from './field'; 
 import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
@@ -230,7 +230,7 @@ export function createForm<State extends Dict=FormSchema>(define: State,options?
 	setFormDefault(define)  
 	
 	// 创建表单Store对象实例
-	const store = createStore<StoreSchema<FormSchema<State>>>({state:define as FormSchema<State>},{
+	const store = createStore<StoreDefine<FormSchema<State>>>({state:define as FormSchema<State>},{
 		debug:opts.debug,
 		singleton:opts.singleton,
 		// 所有计算函数的上下文均指向根

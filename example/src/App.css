@@ -1,7 +1,7 @@
 #app{
   display: flex;
   position: fixed;  
-  flex-direction: column;
+  flex-direction: row;
   top:0px;
   left:0px;
   width: 100%;
@@ -27,25 +27,20 @@ textarea:focus{
 
 #app>ul.navbar{
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   padding: 8px;
-  height:40px;
-  border-bottom: 1px solid #999;  
+  width:120px;
+  height:100%;
+  border-right: 1px solid #eee;  
   margin-top: 0;
   margin-bottom: 0;
-}
-.speed-button{
-  background: #fafafa;
-  border:1px solid #ddd;
-
-}
-.speed-button:hover{
-  background: #eee;
-  border:1px solid #5d80e2;
+  padding-top: 8px;
 }
 
 #app>ul.navbar>li{
   padding:4px 8px 4px 8px;
+  box-sizing: border-box;
+  text-align: center;
   cursor: pointer;
   list-style: none;
   line-height: 200%;
@@ -87,7 +82,15 @@ button:focus{
 input{
   padding:6px;
 }
+.speed-button{
+  background: #fafafa;
+  border:1px solid #ddd;
 
+}
+.speed-button:hover{
+  background: #eee;
+  border:1px solid #5d80e2;
+}
 
 
 .tips{

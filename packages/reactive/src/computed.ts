@@ -9,7 +9,7 @@
  */
 
 import { IOperateParams, ISharedCtx, markRaw, getSnap } from 'helux';
-import type { StoreSchema, ComputedScope, StoreOptions, ComputedContext, IStore, StoreExtendObjects, StateValueDescriptorParams, StateValueDescriptor } from "./store";
+import type { StoreDefine, ComputedScope, StoreOptions, ComputedContext, IStore, StoreExtendObjects, StateValueDescriptorParams, StateValueDescriptor } from "./store";
 import { ComputedScopeRef } from "./store"; 
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 import { skipComputed, getValueByPath, joinValuePath, getError, getDeps, getDepValues,getVal, setVal  } from "./utils";
@@ -322,7 +322,7 @@ function getComputedId(valuePath:string[],idArg:ComputedOptions['id']){
  * @param stateCtx
  * @param computedParams
  */
-function createComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>, computedParams: IOperateParams,computeObjects:StoreExtendObjects['computedObjects'], storeOptions: Required<StoreOptions>) {
+function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>, computedParams: IOperateParams,computeObjects:StoreExtendObjects['computedObjects'], storeOptions: Required<StoreOptions>) {
 
   const { fullKeyPath:valuePath, parent,value } = computedParams;
   const { onCreateComputed } = storeOptions;
@@ -549,7 +549,7 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
  * @param stateCtx
  * @param computedParams
  */
-function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISharedCtx<Store["state"]>,computedParams: IOperateParams,computeObjects:IStore['computedObjects'],storeOptions: Required<StoreOptions>) {
+function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,computedParams: IOperateParams,computeObjects:IStore['computedObjects'],storeOptions: Required<StoreOptions>) {
   const { fullKeyPath:valuePath, parent ,value } = computedParams;
   const { onCreateComputed } = storeOptions;
 
@@ -639,7 +639,7 @@ function createAsyncComputedMutate<Store extends StoreSchema<any>>(stateCtx: ISh
 }
 
 
-export function installComputed<Store extends StoreSchema<any>>(options:StoreExtendContext<ISharedCtx<Store["state"]>>) {
+export function installComputed<Store extends StoreDefine<any>>(options:StoreExtendContext<ISharedCtx<Store["state"]>>) {
   const { stateCtx,params,storeOptions,extendObjects} = options
   const descriptor = params.value
   //@ts-ignore

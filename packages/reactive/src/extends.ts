@@ -8,7 +8,7 @@
  */
 
 import { IOperateParams, ISharedCtx } from "helux";
-import type { StoreExtendObjects, StoreOptions, StoreSchema } from "./store";
+import type { StoreExtendObjects, StoreOptions, StoreDefine } from "./store";
 import { isSkipComputed } from "./utils";
 import {  installComputed } from "./computed"; 
 import { installWatch } from "./watch";
@@ -20,7 +20,7 @@ export interface StoreExtendContext<Ctx>{
     params:IOperateParams
 }
 
-export function installExtends<Store extends StoreSchema<any>>(params:IOperateParams,stateCtx: ISharedCtx<Store["state"]>,extendObjects:StoreExtendObjects,storeOptions: Required<StoreOptions>) {    
+export function installExtends<Store extends StoreDefine<any>>(params:IOperateParams,stateCtx: ISharedCtx<Store["state"]>,extendObjects:StoreExtendObjects,storeOptions: Required<StoreOptions>) {    
     // 拦截读取state的操作，在第一次读取时，
     // - 为计算函数创建mutate
     // - 将原始属性替换为计算属性值或异步对象

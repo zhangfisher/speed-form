@@ -8,6 +8,7 @@ import { Dict,getVal, setVal } from "@speedform/reactive";
 
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
+  name         : string
   value        : any
   defaultValue?: any
   oldValue?    : any

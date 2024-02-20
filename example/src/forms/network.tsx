@@ -1,25 +1,18 @@
-import { ComputedScopeRef, Dict, computed } from "@speedform/reactive";
-import { createForm,action } from "@speedform/core";
-// import { Project, getProjects } from "../api/getProjects";
+import { computed,ComputedScopeRef, Dict } from "@speedform/reactive";
+import { action, createForm } from "@speedform/core";
 import { delay } from "flex-tools/async/delay";
-import validator from "validator"; 
-let count =1 
-// 声明表单数据
-const formSchema = {
-	// dirty:watch<boolean>((value)=>{
-	// 	return value
-	// },(path)=>{
-	// 	return path[path.length-1] ==='value'
-	// }),
+import validator from "validator";
+
+let count = 0
+
+export const schema = {
 	title: "网络配置",
 	fields: {
 		title: {
 			value: "React-Helux-Form",
 			placeholder: "输入网络配置名称",
 			title: "网络名称",
-			// 为什么此处的validate函数的第一个参数总是当前字段的值value？
-			// 因为我们在创建表单时，对validate函数(计算函数)进行了处理，使得validate函数依赖于当前字段的值value
-			//validate: (value: string) => value.length > 3,
+			validate: (value: string) => value.length > 3,
 		},
 		interface: {
 			value: "wifi",
@@ -34,21 +27,11 @@ const formSchema = {
 		ip: {
 			value: "1.1.1.1",
 			title: "IP地址",
-			validate: async (value: any) => {
+			validate: computed(async (value: any) => {
 				await delay(2000);
-				return validator.isIP(value);
-			},
+				return validator.isIP(String(value));
+			},[],{async:true}),
 		},
-		spareIps:[
-			{
-				value: "1.1.1.2",
-				title: "备用IP地址1"
-			},
-			{
-				value: "1.1.1.3",
-				title: "备用IP地址2"
-			},
-		],
 		gateway: {
 			value: "1.1.1.1",
 			title: "网关地址",
@@ -62,32 +45,30 @@ const formSchema = {
 			start: {
 				title: "起始地址",
 				value: "192.168.1.1",
-				visible: computed<boolean>((dhcp: any) => {
+				enable: computed<boolean>((dhcp: any) => {
 						return dhcp.enable.value;
-					},{ 
-						scope: ComputedScopeRef.Parent
-					}
-				),
+				},{
+					scope: ComputedScopeRef.Parent
+				}),
 				validate: (value: any) => validator.isIP(value),
 			},
 			end: {
 				title: "结束地址",
 				value: "192.168.1.100",
 				// 将visible的context指向父对象即dhcp
-				visible: computed<boolean>((fields: any) => {
-						return fields.dhcp.enable.value;
-					},
-					["dhcp.enable.value"],
-					{ 
-						scope: ComputedScopeRef.Root ,
-					}
-				),
+				enable: computed<boolean>((fields: any) => {
+					return fields.dhcp.enable.value;
+				},{
+					scope: ComputedScopeRef.Root
+				}),
 				validate: (value: any) => validator.isIP(value),
 			},
 		},
 		wifi: {
 			title: "无线配置",
-			visible: (net: any) => (net as NetworkType).interface.value === "wifi",
+			visible: computed<boolean>((net: any) => {
+				return net.interface.value === "wifi"
+			},{scope:ComputedScopeRef.Root}),
 			ssid: {
 				value: "fast",
 				placeholder: "无线网络",
@@ -97,8 +78,7 @@ const formSchema = {
 				value: "123",
 				placeholder: "输入无线密码",
 				help: "密码长度应不小于6位",
-				enable: (net: any) => (net as NetworkType).interface.value === "wifi",
-				validate: (value: string) => value.length > 6,
+				validate: (value: string) => value.length >= 6,
 			},
 			submit: { // 这是一个动作,
 				title: "提交wifi",
@@ -247,36 +227,14 @@ const formSchema = {
 	},
 };
 
-type NetworkFormType = typeof formSchema;
+type NetworkFormType = typeof schema;
 type NetworkType = NetworkFormType['fields'];
 
-const Network = createForm<NetworkFormType>(formSchema,{debug:true});
+const Network = createForm<NetworkFormType>(schema,{debug:true});
 
 
 // @ts-ignore
 globalThis.Network = Network;
 export default Network;
 
-// 直接调用表单动作
-//Network.actions.ping.title
-
-
-
-
-// dns:[],
-// subnetMask:"",
-// mac:"",
-// openSource:{
-//     repo:{
-//         value:"",
-//         title:"项目仓库地址",
-//     },
-//     project:{
-//         value:"",
-//         title:"项目名称",
-//         select:computed<Project[]>(async ([repoUrl])=>{
-//             await delay(1000)
-//             return await getProjects(repoUrl)
-//         },["openSource.repo.value"],{initial:[]}),
-//     }
-// }     network.actions.ping.run.loading
+ 

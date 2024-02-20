@@ -4,16 +4,18 @@
  */
 
 import { ISharedCtx, model,useEffect,watch  } from "helux"
-import { Actions, createActions } from './action';
+import type { ActionDefines, Actions } from './action';
+import {  createActions } from './action';
 import { ComputedState, Dict, RequiredComputedState } from './types';
 import { ComputedOptions } from './computed';
 import { deepClone } from "flex-tools/object/deepClone";
 import { getValueByPath, log } from "./utils"; 
 import { installExtends } from "./extends" 
 
-export interface StoreSchema<State> extends Dict{
+
+export interface StoreDefine<State extends Dict=Dict>{
     state:State
-    actions?:Actions<State>
+    actions?:ActionDefines<State>
 }
 
 /**
@@ -156,14 +158,15 @@ export interface StoreExtendObjects{
     _replacedKey:Dict
 }
 
-export type IStore<State extends Dict=Dict> = ISharedCtx<ComputedState<State>> & {
-    state:ISharedCtx<ComputedState<State>>['reactive']
+export type IStore<T extends StoreDefine<any>= StoreDefine<any>> = ISharedCtx<ComputedState<T['state']>> & {
+    state:ComputedState<T['state']>
+    // state:ISharedCtx<ComputedState<T['State']>>['reactive']
     useState:ReturnType<typeof useStateWrapper> 
-    actions:Actions<State>
+    actions:Actions<T['state'],T['actions']>
 } & StoreExtendObjects
 
 
-export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOptions){
+export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
     const opts = Object.assign({
         id:Math.random().toString(16).substring(2),
         debug:true,
@@ -199,6 +202,6 @@ export function createStore<T extends StoreSchema<any>>(data:T,options?:StoreOpt
           useWatch:createUseWatch(stateCtx),
           ...extendObjects
         }
-      }) as IStore<T['state']>
+      }) as IStore<T>
 
 }
