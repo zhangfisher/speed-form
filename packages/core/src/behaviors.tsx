@@ -108,26 +108,29 @@ interface DefaultBehaviorButtonProps{
  
 
 
-const DefaultFormBehaviorButton =styled<DefaultBehaviorButtonProps>((props,{ref})=>{
-    const {visible} = props
-    return <input ref={ref} 
-        style={{display:visible ? 'inline-block':'none'}}
+const DefaultFormBehaviorButton =styled<DefaultBehaviorButtonProps>((props,{className})=>{
+    const { visible } = props
+    return <input className={className} 
+        style={Object.assign({display:visible ? 'inline-block':'none'},props.style)}
         type={ props.type ?? 'submit'} value={props.title ?? '提交'}
     />
 },{
     minWidth:'80px',
     cursor: 'pointer',
     boxSizing: 'border-box',
-    margin:"2px" 
+    margin:"2px",
+    transition: "filter 0.3s",
+    "&:hover":{
+        filter: "brightness(1.2)"
+    }
 })
 
-export function createFromBehaviorComponent<Store extends Dict = Dict>(store:Store,behaviorOptions?:BehaviorOptions,formOptions?:Required<FormOptions>) {
+export function createFormBehaviorComponent<Store extends Dict = Dict>(store:Store,behaviorOptions?:BehaviorOptions,formOptions?:Required<FormOptions>) {
     const behaviorOpts = Object.assign({
         preventDefault:false
     },behaviorOptions) as Required<BehaviorOptions>
     function Behavior<State extends FormBehaviorState=FormBehaviorState,Scope extends Dict=Dict>(props: BehaviorProps<State,Scope>):ReactNode{
         const [state] = store.useState()  
-        const inputRef = useRef<HTMLInputElement>(null)
         const { scope } = props  
 
         const formState =getValueByPath(state,scope)  
@@ -138,7 +141,6 @@ export function createFromBehaviorComponent<Store extends Dict = Dict>(store:Sto
         return <>
             {/* 默认提交按钮，当没有指定子组件时显示 */}
             <DefaultFormBehaviorButton 
-                ref={inputRef} 
                 visible={childrenType == 0} 
                 {...behaviorOpts}
             />
@@ -161,7 +163,7 @@ export function createFromBehaviorComponent<Store extends Dict = Dict>(store:Sto
 
 }
 export function createSubmitComponent<Store extends Dict = Dict>(store:Store,submitOptions?:BehaviorOptions,formOptions?:Required<FormOptions>) {
-    return createFromBehaviorComponent(store,{
+    return createFormBehaviorComponent(store,{
         type:'submit',
         title:"提交",
         style:{
@@ -175,7 +177,7 @@ export function createSubmitComponent<Store extends Dict = Dict>(store:Store,sub
 }
 
 export function createResetComponent<Store extends Dict = Dict>(store:Store,submitOptions?:BehaviorOptions,formOptions?:Required<FormOptions>) {
-    return createFromBehaviorComponent(store,{
+    return createFormBehaviorComponent(store,{
         type:'reset',
         title:"重置",
         style:{
@@ -184,7 +186,7 @@ export function createResetComponent<Store extends Dict = Dict>(store:Store,subm
             background:"#eee",            
             border:"1px solid #bbb",
         },
-        ...submitOptions,
+        ...submitOptions},
         formOptions)
 }
 

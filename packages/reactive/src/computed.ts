@@ -10,10 +10,9 @@
 
 import { IOperateParams, ISharedCtx, markRaw, getSnap } from 'helux';
 import type { StoreSchema, ComputedScope, StoreOptions, ComputedContext, IStore, StoreExtendObjects, StateValueDescriptorParams, StateValueDescriptor } from "./store";
-import { ComputedScopeRef } from "./store";
-import { getVal, setVal } from "@helux/utils";
+import { ComputedScopeRef } from "./store"; 
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
-import { skipComputed, getValueByPath, joinValuePath, getError, getDeps, getDepValues } from "./utils";
+import { skipComputed, getValueByPath, joinValuePath, getError, getDeps, getDepValues,getVal, setVal  } from "./utils";
 import { switchValue } from "flex-tools/misc/switchValue"; 
 import { Dict } from "./types";
 import { delay } from 'flex-tools/async/delay'; 

@@ -159,6 +159,7 @@ export interface StoreExtendObjects{
 export type IStore<State extends Dict=Dict> = ISharedCtx<ComputedState<State>> & {
     state:ISharedCtx<ComputedState<State>>['reactive']
     useState:ReturnType<typeof useStateWrapper> 
+    actions:Actions<State>
 } & StoreExtendObjects
 
 

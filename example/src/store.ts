@@ -79,20 +79,23 @@ const storeDefine= {
             total:0,
         }          
     },
-    // actions:{
-    //     addBook(data:{name:string,price:number,author:string,count:number}){
-    //         return (state:MyStateType)=>state.books.push(data)
-    //     },
-    //     async addBookAsync(data:{name:string,price:number,author:string,count:number}){
-    //         return (state:MyStateType)=>state.books.push(data)
-    //     }
-    // }
+    actions:{
+        addBook(data:{name:string,price:number,author:string,count:number}){
+            return (state:MyStateType)=>state.books.push(data)
+        },
+        async addBookAsync(data:{name:string,price:number,author:string,count:number}){
+            return (state:MyStateType)=>state.books.push(data)
+        }
+    }
 }   
 
 
 
  
 const store =  createStore<typeof storeDefine>(storeDefine)  
+
+store.actions.addBook({name:'赵六',price:21,author:'bob',count:5})
+
 // @ts-ignore
 globalThis.Store = store
 

@@ -4,7 +4,6 @@ export * from "./types"
 export * from "./action"
 export * from "./watch"
 export * from "./consts" 
-export {getVal,setVal} from "@helux/utils"
 export { 
     markRaw,
     getSnap,
@@ -14,7 +13,9 @@ export {
     getValueByPath,
     isIncludePath,
     isSkipComputed,
-    skipComputed
+    skipComputed,
+    getVal,
+    setVal
 } from "./utils"
 
 

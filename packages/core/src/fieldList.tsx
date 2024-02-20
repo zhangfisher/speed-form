@@ -22,8 +22,7 @@
 
 import { ReactNode } from "react";
 import { DefaultFieldPropTypes } from "./field";
-import { getVal } from "@helux/utils";
-import { Dict } from "@speedform/reactive";
+import { Dict,getVal } from "@speedform/reactive";
 
 export type DefaultFieldListPropTypes = Omit<DefaultFieldPropTypes,'value' | 'oldValue' | 'defaultValue' | 'validate'>
 

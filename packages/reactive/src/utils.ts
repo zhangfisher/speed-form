@@ -1,4 +1,3 @@
-import { getVal } from '@helux/utils'
 import type { ComputedDepends } from './computed'
 import { OBJECT_PATH_DELIMITER } from './consts'
 
@@ -158,3 +157,52 @@ export function isIncludePath(basePath:string[],destPath:string[]){
 }
 
  
+
+export function isMap(mayMap: any) {
+    return toString.call(mayMap) === '[object Map]';;
+  }
+
+/**
+ * string 获取不到，尝试转为 number 获取
+ */
+export function getMapVal(map: Map<any, any>, key: string) {
+    const strKeyVal = map.get(key);
+    if (strKeyVal !== undefined) {
+      return strKeyVal;
+    }
+    const numKeyVal = map.get(Number(key) || key);
+    if (numKeyVal !== undefined) {
+      return numKeyVal;
+    }
+    return undefined;
+  }
+  
+  export function getVal(obj: any, keyPath: string[]): any {
+    if(keyPath.length === 0) return obj
+    let val;
+    let parent = obj;
+    keyPath.forEach((key) => {
+      // console.log('\nisMap(parent)', isMap(parent));
+      // console.log('parent', parent);
+      // console.log('key', key);
+      val = isMap(parent) ? getMapVal(parent, key) : parent[key];
+      // val = parent[key];
+      // console.log('val', val);
+      parent = val;
+    });
+    return val;
+  }
+  
+export function setVal(obj: any, keyPath: string[], val: any) {
+    let parent = obj;
+    const lastIdx = keyPath.length - 1;
+    keyPath.forEach((key, idx) => {
+      const isMapObj = isMap(parent);
+      if (idx === lastIdx) {
+        isMapObj ? parent.set(key, val) : (parent[key] = val);
+        return;
+      }
+      const subVal = isMapObj ? getMapVal(parent, key) : parent[key];
+      parent = subVal; // for next forEach scb
+    });
+}

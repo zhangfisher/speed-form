@@ -23,7 +23,7 @@ export function createActions<Store extends StoreSchema<any>>(actions:Store['act
             results[key] =createAction(action as Action<any> ,ctx.state,api)
         }
         return results
-    },{}) as Store['actions']
+    },{}) 
 }
 
 

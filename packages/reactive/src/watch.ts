@@ -7,10 +7,10 @@
  * 
  * 
  */
-import { ISharedCtx, watch as heluxWatch, IOperateParams, flush, getSnap } from 'helux';
+import { ISharedCtx, watch as heluxWatch, IOperateParams,  getSnap } from 'helux';
 import type { StateValueDescriptor, StateValueDescriptorParams, StoreSchema } from "./store";
 import { StoreExtendContext } from "./extends"; 
-import { getVal, setVal } from "@helux/utils"; 
+import { getVal, setVal } from "./utils"; 
 import { OBJECT_PATH_DELIMITER } from './consts';
 import { Dict } from './types';
 
