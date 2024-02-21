@@ -112,6 +112,25 @@ export interface ComputedOptions<Value=any,Extras extends Dict={}> {
    */
   toComputedResult?: 'self' | 'root' | 'parent' | 'current' | 'none' | string[] | string 
   /**
+   * 为该计算函数指定一个分组名
+   * 
+   * 此属性用来将计算函数分组，比如一个store中具有相同group的计算函数
+   * 
+   * 然后就可以启用/关闭/运行指定分组的计算函数
+   * 
+   * 在表单中通过为所有validate指定统一的分组名称，这样就可以统一控制表单的验证是否计算
+   * 
+   * 
+   * store.computedObjects.get(["a","b"]).run() // 重新启动
+   * 
+   * 马上重新运行指定组的计算函数
+   * store.computedObjects.getGroup("a"]).run() // 运行组
+   * // 启用/禁用指定组的计算函数 =false 代表禁用计算 =true开启动计算
+   * store.computedObjects.enableGroup("b"]) 
+   * 
+   */
+  group?:string
+  /**
    * 额外合并到计算结果AsyncComputedObject中的属性
    */
   extras?:Extras
@@ -670,4 +689,10 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
     // 直接声明同步计算函数,使用全局配置的计算上下文
     createComputedMutate<Store>(stateCtx, params, extendObjects.computedObjects, storeOptions);
   }
+}
+
+
+
+export class ComputedObjects{
+  
 }

@@ -275,7 +275,10 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 		// 加载表单数据
 		load:createLoadApi(store as IStore,opts),
 		// 读取表单数据
-		getValues:createGetValuesApi(store as IStore,opts)
+		getValues:createGetValuesApi(store as IStore,opts),
+		// 引用所有计算属性
+		computedObjects:store.computedObjects,
+		store
 	};
 }
 

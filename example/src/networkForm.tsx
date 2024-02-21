@@ -144,7 +144,6 @@ const NetworkForm = ()=>{
 
 const FormDemo:React.FC = ()=>{
     const [formData,setFormData] = useState({})
-    const [fieldDirtys,setfieldDirtys] = useState([])
     const [formState,setFormState] = useState(Network.state)    
     const [fState]= Network.useState()
     const submit = useCallback((actionState:any)=>{
@@ -185,9 +184,6 @@ const FormDemo:React.FC = ()=>{
                     <div>Save: 获取表单数据</div>
                     <div>Load: 修改以上数据后，将数据加载到表单中</div>
                 </Card>                
-                <Card title="字段脏检查" buttons={[{title:'Update',onClick:()=>Network.load(formData)},]}>
-
-                </Card>
                 <Card title="表单结构" buttons={[
                     {title:"更新",onClick:()=>setFormState(JSON.parse(JSON.stringify(Network.state)))}
                 ]}>

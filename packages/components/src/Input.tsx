@@ -8,7 +8,7 @@ export type InputProps = React.PropsWithChildren<Partial<HTMLInputElement> & {
   name?:string
   visible?:boolean
   enable?:boolean
-  validate?:boolean
+  validate?:boolean | null
   placeholder?:string
   onChange?:any
   value?:string
@@ -20,7 +20,7 @@ export const Input:ReactFC<InputProps> = (props:InputProps)=>{
 
     return (
         <input style={Object.assign({ 
-            border:validate ? `1px solid #bbb`: `1px solid red` ,
+            border:validate===false ?  `1px solid red` : `1px solid #bbb` ,
             borderRadius:"4px",
             background: enable ? "white" : 'gray',
             margin:"4px" ,

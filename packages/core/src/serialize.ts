@@ -28,13 +28,15 @@ function getFiledGroupValue(data:Dict){
         if(isFieldValue(value)){
             result[key] = getFieldValue(value)
         }else if(isFieldGroup(value)){
-            result[key] = getFiledGroupValue(value)
+            const groupValuess  =  getFiledGroupValue(value)
+            if(groupValuess && Object.keys(groupValuess).length>0) result[key] = groupValuess
         }else if(isFieldList(value)){
             result[key] = getFieldListValue(value)
-        }else if(isFormAction(value)){
-        }else{
-            result[key] = value
-        }        
+        }
+        // else if(isFormAction(value)){
+        // }else{
+        //     result[key] = value
+        // }        
     })
     return result
 }
@@ -58,9 +60,7 @@ function getFieldListValue(data:Dict){
 
 
 export interface LoadOptions{
-    onNotMatch(keyPath:string[]):any
-    // 当数据是一个字符串时，判断是否是一个计算函数，如果是则返回computed函数
-    isComputed?(value:string):string | Function
+    onNotMatch(keyPath:string[]):any 
 }
 
 /**
@@ -168,6 +168,10 @@ export function createLoadApi<Store extends IStore>(store:Store,formOptions?:Req
             store.setEnableMutate(false)
             // 2. 加载数据
             loadDataToForm(data,store.state.fields)
+            store.setState(draft=>{
+                draft.dirty = false
+                draft.validate = null  // 未认证
+            })
         }catch(e){
             console.error(e)
         }finally{

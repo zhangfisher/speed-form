@@ -19,8 +19,7 @@ export interface DefaultFieldPropTypes{
   readonly?    : boolean;              // 是否只读
   visible?     : boolean;              // 是否可见
   enable?      : boolean               // 是否可用
-  dirty?       : boolean               // 数据已经更新过
-  validate?    : boolean;              // 验证
+  validate?    : null | boolean;              // 验证,undefined表示还没有验证,true=验证通过,false=验证失败
   select?      : any[]                 // 枚举值
 }  
 
@@ -56,15 +55,13 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
   return Object.assign({
     name,
     help        : "",
-    initial: undefined,
+    initial     : undefined,
     oldValue    : undefined,
     visible     : true,
     required    : false,
     readonly    : false,
-    validate    : true,        
-    enable      : true,
-    // 当value发生变化时，dirty会自动变为true，自动脏检查
-    dirty       : computed(()=>true,{scope:'value'}),
+    validate    : null,        
+    enable      : true, 
     placeholder : ""
   },{
     ...value,    
