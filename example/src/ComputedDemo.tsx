@@ -1,12 +1,18 @@
 import store  from "./computed" 
 import { $  } from "helux" 
-import {ColorBlock,Card} from "@speedform/demo-components" 
+import {ColorBlock,Card, Divider} from "@speedform/demo-components" 
 import { Tips } from "./Tips"
-
+import { useReactive } from "ahooks"
  
 function ComputedDemo() {
   const [state] = store.useState()   
- 
+  const newBook= useReactive({
+    name:"新书",
+    author:"zhang",
+    price:100,
+    count:1    
+  })
+
   // useEffect(()=>{
   //   const tid = setInterval(()=>{
   //       store.state.books[0].count++
@@ -83,19 +89,16 @@ function ComputedDemo() {
                 </div>
               })
             }
-
+          <Divider/>
             <div style={{width:'100%',display:'flex',flexDirection:"row",paddingTop:'12px'}}> 
-                <input  style={{flexGrow:1}}  value={state.user.age} onChange={store.sync(["user","age"])}/>
-                <input  style={{width:80}} value={state.user.age} onChange={store.sync(["user","age"])}/>
-                <input  style={{width:80}} value={state.user.age} onChange={store.sync(["user","age"])}/>
-                <input  style={{width:80}} value={state.user.age} onChange={store.sync(["user","age"])}/>
-                <input  style={{width:80}} value={state.user.age} onChange={store.sync(["user","age"])}/>
+                <input  style={{flexGrow:1}} value={newBook.name} onChange={(e)=>newBook.name=e.target.value}/>
+                <input  style={{width:80}} value={newBook.author} onChange={(e)=>newBook.author=e.target.value}/>
+                <input  style={{width:80}} value={newBook.price} onChange={(e)=>newBook.price=Number(e.target.value)}/>
+                <input  style={{width:80}} value={newBook.count} onChange={(e)=>newBook.count=Number(e.target.value)}/>
             </div>
-            <button onClick={()=>store.state.user.age=100}>添加书籍</button>  
-            
-
+            <button onClick={()=>store.actions.addBook(newBook.name,newBook.author,newBook.price,newBook.count)}>添加书籍</button>              
+            <button onClick={()=>store.actions.addBookAsync(newBook)}>异步添加书籍</button>              
           </div>  
-
         </Card> 
           
     </div>

@@ -325,7 +325,7 @@ import { assert } from "@speedform/core"
 ```ts | pure
 {
   value        : any                   // 字段值
-  defaultValue?: any                   // 默认值
+  initial?     : any                   // 默认值
   oldValue?    : any                   // 原始值 
   title?       : string;               // 标题
   help?        : string;               // 提示信息
@@ -487,7 +487,7 @@ export default ()=>{
 
   return (
     <Network.Field<typeof Network.fields.title> name="Network.fields.title">
-      {({name,value,required,visible,help,validate,enable,defaultValue,sync,update})=>(
+      {({name,value,required,visible,help,validate,enable,initial,sync,update})=>(
         // 此处负责渲染字段UI，可以使用任意HTML元素进行渲染字段内容
         return <Input name={name} value={value} onChange={sync()}/>
       )}
@@ -501,7 +501,7 @@ export default ()=>{
 - `Network.Field`组件用来控制如何进行表单字段的渲染。
 - `Network.Field`组件的`name`属性用来指定字段的路径,可以是嵌套路径，如`Network.fields.wifi.ssid`。
 - 可以为`Network.Field`组件指定类型，以便在`children`属性中获得字段的类型提示。
-- `Network.Field`组件的`children`是一个函数，传入`props`是一个字段的控制属性，包括`value`、`required`、`visible`、`validate`、`enable`、`defaultValue`、`sync`等。并且这些字段控制属性均可以是一个计算属性，其值来自其他字段的派生计算结果。
+- `Network.Field`组件的`children`是一个函数，传入`props`是一个字段的控制属性，包括`value`、`required`、`visible`、`validate`、`enable`、`initial`、`sync`等。并且这些字段控制属性均可以是一个计算属性，其值来自其他字段的派生计算结果。
 - `sync`函数用来同步字段的值。
 
 
@@ -516,7 +516,7 @@ export default ()=>{
 <Network.Form>
     {/* 声明所有需要的字段 */}
     <Network.Field<typeof Network.fields.title> name="Network.fields.title">
-      {({name,value,required,visible,validate,enable,defaultValue,sync})=>(
+      {({name,value,required,visible,validate,enable,initial,sync})=>(
         // 此处负责渲染字段的具体内容
       )}
     </Network.Field>    
@@ -546,7 +546,7 @@ export default ()=>{
 <Network.Form action="/api/settings" method="post">
     {/* 声明所有需要的字段 */}
     <Network.Field<typeof Network.fields.title> name="Network.fields.title">
-      {({name,value,required,visible,validate,enable,defaultValue,sync})=>(
+      {({name,value,required,visible,validate,enable,initial,sync})=>(
         // 此处负责渲染字段的具体内容
       )}
     </Network.Field>    
@@ -638,7 +638,7 @@ export default ()=>{
               } }
         </Network.Field>
         <Network.Field<typeof Network.fields.interface> name="interface">                      
-              {({name,title,required,visible,validate,enable,value,defaultValue,select,sync})=>{     
+              {({name,title,required,visible,validate,enable,value,initial,select,sync})=>{     
                   return <Field name="interface" title={title}>                        
                       <select value={value} onChange={sync()}>
                           {select.map((item:any, index:number) => (
@@ -670,7 +670,7 @@ export default ()=>{
           {({title,visible} )=>{ 
               return (  <Card title={title+"(仅interfact=wifi时显示)"}  visible={visible}>
                   <Network.Field name="wifi.ssid">                      
-                          {({name,value,required,visible,validate,enable,defaultValue,sync})=>{ 
+                          {({name,value,required,visible,validate,enable,initial,sync})=>{ 
                               return  <Field  name="wifi.ssid" title="SSID" enable={enable}> 
                                         <Input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()} />
                               </Field>

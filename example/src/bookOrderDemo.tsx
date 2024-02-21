@@ -17,8 +17,8 @@ const NetworkForm = ()=>{
                 } }
             </Network.Field>
              <Network.Field<typeof Network.fields.interface> name="interface">                      
-                {({title,required,visible,validate,enable,value,defaultValue,select,sync})=>{     
-                    console.log(required,visible,validate,enable,defaultValue)
+                {({title,required,visible,validate,enable,value,initial,select,sync})=>{     
+                    console.log(required,visible,validate,enable,initial)
                     return <Field label={title}>                        
                         <select value={value} onChange={sync()}>
                             {select.map((item:any, index:number) => (
@@ -59,8 +59,8 @@ const NetworkForm = ()=>{
                 return (
                 <Card title={title}  visible={visible}>
                     <Network.Field name="wifi.ssid">                      
-                            {({value,required,visible,validate,enable,defaultValue,sync})=>{ 
-                                console.log(required,visible,validate,enable,defaultValue)
+                            {({value,required,visible,validate,enable,initial,sync})=>{ 
+                                console.log(required,visible,validate,enable,initial)
                                 return  <Field label="SSID" enable={enable}> 
                                          <input className={classnames({invalid:!validate})} value={value} onChange={sync()} />
                                 </Field>

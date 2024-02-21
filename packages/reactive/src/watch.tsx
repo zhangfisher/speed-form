@@ -10,9 +10,10 @@
 import { ISharedCtx, watch as heluxWatch, IOperateParams,  getSnap } from 'helux';
 import type { StateValueDescriptor, StateValueDescriptorParams, StoreDefine } from "./store";
 import { StoreExtendContext } from "./extends"; 
-import { getVal, setVal } from "./utils"; 
+import { getVal, getValueByPath, setVal } from "./utils"; 
 import { OBJECT_PATH_DELIMITER } from './consts';
 import { Dict } from './types';
+import { useEffect } from 'react';
 
 
 
@@ -266,3 +267,37 @@ export function installWatch<Store extends StoreDefine<any>>(options:StoreExtend
 }
 
  
+
+
+/**
+ * 创建一个侦听器，用来侦听状态变化
+ * 
+ * store.watch(()=>{},["Ddd"])
+
+ * @param stateCtx 
+ * @returns 
+ */
+export function createWatch<State extends Dict>(stateCtx:ISharedCtx<State["state"]>){
+    return (listener:(changedPaths:string[][])=>void,deps?:(string | string[])[])=>{
+        // @ts-ignore
+        const {unwatch} = heluxWatch(({triggerReasons})=>{
+            const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
+            listener(valuePaths)            
+        },()=>{
+            return deps?.map(dep=>getValueByPath(stateCtx.state,dep))
+        })
+        return unwatch
+    }
+}
+/**
+ * createWatch的hook版本
+ * @param stateCtx 
+ * @returns 
+ */
+export function createUseWatch<State extends Dict>(stateCtx:ISharedCtx<State["state"]>){
+    return (listener:(changedPaths:string[][])=>void,deps?:(string | string[])[])=>{
+        useEffect(()=>{
+            return createWatch(stateCtx)(listener,deps)
+        },[])        
+    }
+}

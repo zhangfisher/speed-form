@@ -6,7 +6,7 @@ hero:
     - text: 指南
       link: /core
     - text: Github
-      link: https://ithub.com/zhangfisher/speed-form
+      link: https://github.com/zhangfisher/speed-form
 features:
   - title: Hello
     emoji: 💎

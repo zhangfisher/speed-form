@@ -28,7 +28,7 @@ import type { FormOptions } from "./form";
 import { Dict,getVal } from "@speedform/reactive";
 
 
-export type DefaultFieldGroupPropTypes = Omit<DefaultFieldPropTypes,'value' | 'oldValue' | 'defaultValue' | 'validate'>
+export type DefaultFieldGroupPropTypes = Omit<DefaultFieldPropTypes,'value' | 'oldValue' | 'initial' | 'validate'>
 
 export type FieldGroupRenderProps<PropTypes extends Dict>= Required<DefaultFieldGroupPropTypes & PropTypes> & {
     update: (fn: (group: Required<DefaultFieldGroupPropTypes & PropTypes> )=>void)=>void	   	   

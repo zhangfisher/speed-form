@@ -7,7 +7,7 @@ export default defineConfig([
         entry: [
             'src/index.ts'
         ],
-        outDir: 'dist/shared',
+        outDir: 'dist/slim',
         format: ['esm','cjs'],
         dts: true,
         splitting: true,
@@ -15,13 +15,13 @@ export default defineConfig([
         clean: true,
         treeshake:true,  
         minify: true,
-        noExternal:['@helux/utils','flex-tools']
+        noExternal:['flex-tools']
     },    
     {
         entry: [
             'src/index.ts'
         ],
-        outDir: 'dist/standalone',
+        outDir: 'dist',
         format: ['esm','cjs'],
         dts: true,
         splitting: true,
@@ -29,12 +29,11 @@ export default defineConfig([
         clean: true,
         treeshake:true,  
         minify: true,
-        noExternal:['helux','@helux/utils','flex-tools']
+        noExternal:['helux','flex-tools']
     }
 ])
 
 
-        // external:['helux','@helux/utils'],
         // esbuildPlugins:[
         //     // @ts-ignore
         //     copy({

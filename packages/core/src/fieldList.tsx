@@ -24,7 +24,7 @@ import { ReactNode } from "react";
 import { DefaultFieldPropTypes } from "./field";
 import { Dict,getVal } from "@speedform/reactive";
 
-export type DefaultFieldListPropTypes = Omit<DefaultFieldPropTypes,'value' | 'oldValue' | 'defaultValue' | 'validate'>
+export type DefaultFieldListPropTypes = Omit<DefaultFieldPropTypes,'value' | 'oldValue' | 'initial' | 'validate'>
 
 export type FieldListRenderProps<PropTypes extends Dict>= Required<DefaultFieldListPropTypes & PropTypes> & {
     update: (fn: (group: Required<DefaultFieldListPropTypes & PropTypes> )=>void)=>void	   	   

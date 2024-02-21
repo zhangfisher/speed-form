@@ -1,7 +1,5 @@
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject" 
-import type { Dict } from "@speedform/reactive"
-import { CSSProperties } from "react"
-
+import type { Dict } from "@speedform/reactive" 
 
 /**
  * 判定一个值是否是原子类型
@@ -83,7 +81,7 @@ export function createObjectProxy<T extends Record<string | symbol,any>=Record<s
 
 
 export function isFormAction(data:Dict){
-    return 'execute' in data && !isFieldValue(data)
+    return isPlainObject(data) && ('execute' in data) && isPlainObject(data.execute) && ('loading' in data.execute)
 }
 export function isFieldValue(data:Dict){
     return isPlainObject(data) && 'value' in data
@@ -107,30 +105,6 @@ export function isFieldGroup(data:Dict){
 }
 
 
+ 
 
-/**
- * 创建一个支持CSS-IN-JS的React组件
- * 
- * 
- * 
- * createComponent((props)=>{
- * 
- * },{
-	  color:"fff",
-	  backgroundColor:"red"
-	  "font-size":"12px
-	  "&:hover":{
 
-	  },
-	  "&.active":{
-
-	  },
-	  "& > h1":{
-
-	  }
- * })
- * 
- */
-function createComponent(component:React.FC,style?:CSSProperties){
-	
-}

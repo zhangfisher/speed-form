@@ -7,8 +7,8 @@ import { ChangeEventHandler } from "react"
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
     value        : any
-    defaultValue?: any
-    oldValue?    : any
+    initial?     : any                   // 表单默认值
+    oldValue?    : any                   // 旧值
     title?       : string;               // 标题
     help?        : string;               // 提示信息
     placeholder? : string;               // 占位符
@@ -16,7 +16,7 @@ export interface DefaultFieldPropTypes{
     readonly?    : boolean;              // 是否只读
     visible?     : boolean;              // 是否可见
     enable?      : boolean               // 是否可用
-    dirty?      : boolean                // 数据已经更新过
+    dirty?       : boolean                // 数据已经更新过
     validate?    : boolean;              // 验证
     select?      : any[]                 // 枚举值
   }  
@@ -31,7 +31,7 @@ export interface DefaultFieldPropTypes{
     sync	  	    : (debounce?:number)=>ChangeEventHandler	   		  		                    // 同步状态表单计算
     update	  	  : (valueOrUpdater:PropTypes['value'] | ((field:PropTypes)=>void),options?:{debounce?:number})=>any
     cancel        : ()=>void        	  	   
-    defaultValue  : PropTypes['value'] | undefined
+    initial       : PropTypes['value'] | undefined
     oldValue      : PropTypes['value'] 
   } 
 

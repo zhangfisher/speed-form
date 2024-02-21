@@ -206,3 +206,11 @@ export function setVal(obj: any, keyPath: string[], val: any) {
       parent = subVal; // for next forEach scb
     });
 }
+
+
+export function isPromise(obj:any){
+    return (typeof(obj)=='function' && obj.then && typeof(obj.then)=='function') || (obj && obj instanceof Promise)
+
+}
+
+ 

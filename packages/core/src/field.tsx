@@ -3,14 +3,14 @@ import { debounce as debounceWrapper } from './utils';
 import { ComputedAttr } from "./types";   
 import type { FormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
-import { Dict,getVal, setVal } from "@speedform/reactive";  
+import { Dict,computed,getVal, setVal } from "@speedform/reactive";  
 
 
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
   name         : string
   value        : any
-  defaultValue?: any
+  initial?: any
   oldValue?    : any
   title?       : string;               // 标题
   help?        : string;               // 提示信息
@@ -19,7 +19,7 @@ export interface DefaultFieldPropTypes{
   readonly?    : boolean;              // 是否只读
   visible?     : boolean;              // 是否可见
   enable?      : boolean               // 是否可用
-  dirty?      : boolean                // 数据已经更新过
+  dirty?       : boolean               // 数据已经更新过
   validate?    : boolean;              // 验证
   select?      : any[]                 // 枚举值
 }  
@@ -34,7 +34,7 @@ export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultField
   sync	  	    : (debounce?:number)=>ChangeEventHandler	   		  		                    // 同步状态表单计算
   update	  	  : (valueOrUpdater:PropTypes['value'] | ((field:PropTypes)=>void),options?:{debounce?:number})=>any
   cancel        : ()=>void        	  	   
-  defaultValue  : PropTypes['value'] | undefined
+  initial  : PropTypes['value'] | undefined
   oldValue      : PropTypes['value'] 
 } 
 
@@ -56,14 +56,15 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
   return Object.assign({
     name,
     help        : "",
-    defaultValue: undefined,
+    initial: undefined,
     oldValue    : undefined,
     visible     : true,
     required    : false,
     readonly    : false,
     validate    : true,        
     enable      : true,
-    dirty       : false,
+    // 当value发生变化时，dirty会自动变为true，自动脏检查
+    dirty       : computed(()=>true,{scope:'value'}),
     placeholder : ""
   },{
     ...value,    
@@ -181,7 +182,7 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
 export interface IFieldProps<T=any>{
   value        : T;
   title?       : string;                       // 标题
-  defaultValue?: T;                            // 默认值
+  initial?: T;                            // 默认值
   oldValue?    : T;                            // 默认值
   help?        : string;                       // 提示信息
   placeholder? : string;                       // 占位符
@@ -197,7 +198,7 @@ export interface IFieldProps<T=any>{
 export interface Field<T=any>{
   value        : T;
   title?       : ComputedAttr<string>;                       // 标题
-  defaultValue?: ComputedAttr<T>;                          // 默认值
+  initial?: ComputedAttr<T>;                          // 默认值
   oldValue?    : ComputedAttr<T>;                          // 默认值
   help?        : ComputedAttr<string>;                       // 提示信息
   placeholder? : ComputedAttr<string>;                       // 占位符

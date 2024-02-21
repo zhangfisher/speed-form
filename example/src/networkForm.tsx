@@ -17,8 +17,8 @@ const NetworkForm = ()=>{
                 } }
             </Network.Field>
              <Network.Field<typeof Network.fields.interface> name="interface">                      
-                {({name,title,required,visible,validate,enable,value,defaultValue,select,sync})=>{     
-                    console.log(required,visible,validate,enable,defaultValue)
+                {({name,title,required,visible,validate,enable,value,initial,select,sync})=>{     
+                    console.log(required,visible,validate,enable,initial)
                     return <Field name="interface" title={title}>                        
                         <select value={value} onChange={sync()}>
                             {select.map((item:any, index:number) => (
@@ -31,7 +31,7 @@ const NetworkForm = ()=>{
              <Network.Field<typeof Network.fields.ip> name="ip">                      
                 {({name,title,value,visible,validate,placeholder,sync})=>{ 
                     return <Field  name="ip" visible={visible} title={title} validate={validate}>
-                         <Input name={name}  className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
+                         <Input name={name} validate={validate.result}  className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
                     </Field> 
                 } }
             </Network.Field>
@@ -52,8 +52,8 @@ const NetworkForm = ()=>{
                 return (
                 <Card title={title}  visible={visible}>
                     <Network.Field name="wifi.ssid">                      
-                            {({value,required,visible,validate,enable,defaultValue,sync})=>{ 
-                                console.log(required,visible,validate,enable,defaultValue)
+                            {({value,required,visible,validate,enable,initial,sync})=>{ 
+                                console.log(required,visible,validate,enable,initial)
                                 return  <Field  name="wifi.ssid" title="SSID" enable={enable}> 
                                          <Input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()} />
                                 </Field>
@@ -137,7 +137,6 @@ const NetworkForm = ()=>{
                     }}
                 </Network.Submit>            
             </div> 
-            
         </Card>
     </Network.Form>        
 }
@@ -145,6 +144,7 @@ const NetworkForm = ()=>{
 
 const FormDemo:React.FC = ()=>{
     const [formData,setFormData] = useState({})
+    const [fieldDirtys,setfieldDirtys] = useState([])
     const [formState,setFormState] = useState(Network.state)    
     const [fState]= Network.useState()
     const submit = useCallback((actionState:any)=>{
@@ -171,12 +171,24 @@ const FormDemo:React.FC = ()=>{
                 </span> 
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
-                <Card title="表单状态">
+                <Card title="表单状态" buttons={[
+                    {title:'Save',onClick:()=>setFormData(Network.getValues())},
+                    {title:'Load',onClick:()=>Network.load(formData)},
+                ]}>
                      <Field name="dirty" title="dirty">{String(fState.dirty)}</Field>
                     <Field name="validate" title="validate">{String(fState.validate)}</Field>
-                    <textarea style={{width:"100%",height:"80px"}} value={JSON.stringify(formData)} readOnly></textarea>
+                    <textarea 
+                        style={{width:"100%",height:"200px"}} 
+                        value={JSON.stringify(formData)}
+                        onChange={(e)=>setFormData(JSON.parse(e.target.value))}
+                    ></textarea>
+                    <div>Save: 获取表单数据</div>
+                    <div>Load: 修改以上数据后，将数据加载到表单中</div>
+                </Card>                
+                <Card title="字段脏检查" buttons={[{title:'Update',onClick:()=>Network.load(formData)},]}>
+
                 </Card>
-                <Card title="表单数据" buttons={[
+                <Card title="表单结构" buttons={[
                     {title:"更新",onClick:()=>setFormState(JSON.parse(JSON.stringify(Network.state)))}
                 ]}>
                     <JsonViewer data={formState}/> 

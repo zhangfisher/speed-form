@@ -39,17 +39,19 @@
  */
 
 import React, {	useCallback } from "react";
-import { type StoreDefine, createStore,RequiredComputedState, ComputedScopeRef, ComputedOptions, Dict } from "@speedform/reactive";
+import type {  StoreDefine,RequiredComputedState, ComputedOptions, Dict, IStore } from "@speedform/reactive";
+import { createStore ,ComputedScopeRef } from "@speedform/reactive";
 import type { ReactFC,  ComputedAttr } from "./types";
-import { FieldComponent, createFieldComponent  } from './field'; 
-import { FieldGroupComponent, createFieldGroupComponent } from "./fieldGroup";
+import { createFieldComponent  } from './field'; 
+import { createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import { FormActions,  createActionComponent, getAction } from './action';
+import {   createActionComponent, getAction } from './action';
 import { FIELDS_STATE_KEY } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
 import defaultFormProps from "./form.default"
 import { createSubmitComponent,createResetComponent } from "./behaviors";
+import { createLoadApi, createGetValuesApi } from "./serialize";
 
 
 
@@ -71,30 +73,18 @@ export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{
 // 表单组件
 export type FormComponent<State extends Record<string, any>> = ReactFC<FormProps<State>>;
 
-// 表单对象
-export interface FormObject<State extends Record<string, any>> {
-	Form: FormComponent<State>;
-	Field: FieldComponent;
-	Group: FieldGroupComponent
-  	fields:State
-	actions:FormActions,
-	submit:()=>void
-	reset:()=>{}
-	load:(data:Dict)=>void							// 加载表单数据 
+export type FormSchemaBase = {
+	title?:string					    
+    help?:string					    
+    tips?:string					    
+ 	visible?:boolean					
+	enable?:boolean					
+	validate?:boolean					
+	readonly?:boolean			
+	dirty?:boolean					
 }
 
 // 表单元数据
-export interface FormSchemaBase{
-	title:string					    
-    help:string					    
-    tips:string					    
- 	visible:boolean					
-	enable:boolean					
-	validate:boolean					
-	readonly:boolean			
-	dirty:boolean					
-}
-
 export type FormSchema<State extends Dict=Dict> = State & Omit<FormSchemaBase,keyof State>
 
 // 创建表单时的参数
@@ -219,18 +209,28 @@ function createDepsHook(valuePath:string[],getter:Function,options:ComputedOptio
 	}
 }
 
+/**
+ * 
+ * 冻结表单，即表单计算函数不再执行
+ * 
+ * @param value 
+ */
+function freezeForm(store:any){
+	return (value:boolean=true)=>{
+		(store as IStore).setEnableMutate(value)
+	}
+}
 
-export function createForm<State extends Dict=FormSchema>(define: State,options?:FormOptions) {
+export function createForm<State extends Dict=Dict>(schema: State,options?:FormOptions) {
 	const opts = assignObject({
 		getFieldName:(valuePath:string[])=>valuePath.length > 0 ? valuePath[valuePath.length-1]==='value' ? valuePath.slice(0,-1).join(".") : valuePath.join(".") : '',
 		singleton:true
 	},options) as Required<FormOptions>
 
 	// 注入表单默认属性
-	setFormDefault(define)  
-	
+	setFormDefault(schema)  
 	// 创建表单Store对象实例
-	const store = createStore<StoreDefine<FormSchema<State>>>({state:define as FormSchema<State>},{
+	const store:IStore<StoreDefine<FormSchema<State>>> = createStore<StoreDefine<FormSchema<State>>>({state:schema as FormSchema<State>},{
 		debug:opts.debug,
 		singleton:opts.singleton,
 		// 所有计算函数的上下文均指向根
@@ -269,7 +269,13 @@ export function createForm<State extends Dict=FormSchema>(define: State,options?
     	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
 		actions:createObjectProxy(()=>store.state.actions) as ActionsType,		
 		state:store.state as FormSchema<StateType>, 
-		useState:store.useState
+		useState:store.useState,
+		// 冻结表单，即表单计算函数不再执行，当初始化表单数据后，可以调用该函数来冻结表单
+		freeze:freezeForm(store),
+		// 加载表单数据
+		load:createLoadApi(store as IStore,opts),
+		// 读取表单数据
+		getValues:createGetValuesApi(store as IStore,opts)
 	};
 }
 
