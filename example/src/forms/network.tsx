@@ -35,7 +35,10 @@ export const schema = {
 		gateway: {
 			value: "1.1.1.1",
 			title: "网关地址",
-			validate: (value: any) => validator.isIP(value),
+			validate: computed(async (value: any) => {
+				await delay(2000);
+				return validator.isIP(value)
+			},[],{async:true}),
 		},
 		dhcp: {
 			enable: {

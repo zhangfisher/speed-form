@@ -278,6 +278,7 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 		getValues:createGetValuesApi(store as IStore,opts),
 		// 引用所有计算属性
 		computedObjects:store.computedObjects,
+		watchObjects:store.watchObjects,
 		store
 	};
 }

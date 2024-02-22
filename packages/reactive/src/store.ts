@@ -10,7 +10,7 @@ import { ComputedState, Dict, RequiredComputedState } from './types';
 import { ComputedObjects, ComputedOptions } from './computed';
 import { deepClone } from "flex-tools/object/deepClone";
 import { installExtends } from "./extends" 
-import { createUseWatch, createWatch } from "./watch";
+import { StoreWatcher, createUseWatch, createWatch } from "./watch";
 import { log } from "./utils";
 
 
@@ -124,15 +124,14 @@ export interface StoreOptions{
 }
 
 
-export interface StoreExtendObjects<T>{
+export interface StoreExtendObjects<T extends Dict = Dict>{
     computedObjects:ComputedObjects<T>
-    watchObjects:Dict<{run:()=>void}>
+    watchObjects?:StoreWatcher<StoreDefine<T>>
     _replacedKey:Dict
 }
 
 export type IStore<T extends StoreDefine<any>= StoreDefine<any>> = ISharedCtx<ComputedState<T['state']>> & {
     state:ComputedState<T['state']>
-    // state:ISharedCtx<ComputedState<T['State']>>['reactive']
     useState:ReturnType<typeof useStateWrapper> 
     actions:Actions<T['state'],T['actions']> 
 } & StoreExtendObjects<T['state']>
@@ -151,7 +150,11 @@ export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOpt
     }
 
     const storeData = opts.singleton ? data : deepClone(data)
-    const extendObjects:StoreExtendObjects<T['state']>={computedObjects:new ComputedObjects<T['state']>(),watchObjects:{},_replacedKey:{}}
+    const extendObjects:StoreExtendObjects<T['state']>={
+        computedObjects:new ComputedObjects<T['state']>(),
+        watchObjects:new StoreWatcher<T>(opts),
+        _replacedKey:{}
+    }
     return  model((api) => {
         const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any, {
             stopArrDep: false,
@@ -172,7 +175,7 @@ export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOpt
             useState,
             watch: createWatch(stateCtx),
             useWatch: createUseWatch(stateCtx),
-            computedObjects: extendObjects.computedObjects
+            ...extendObjects
         };
     }) as unknown as IStore<T>
 

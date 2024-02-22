@@ -37,9 +37,8 @@ const NetworkForm = ()=>{
             </Network.Field>
             <Network.Field<typeof Network.fields.gateway> name="gateway">                      
                 {({name,title,value,required,visible,validate,update,enable,placeholder,sync})=>{ 
-                    console.log("更新网关地址：",required,visible,validate,enable)
-                    return <Field name="gateway" visible={visible} title={title}>
-                        <Input name={name}  className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                    return <Field name="gateway" visible={visible} title={title} validate={validate} >
+                        <Input name={name}   validate={validate.result}  className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
                         <button onClick={update((state:any)=>{
                                 state.gateway.value='192.168.1.2'
                             })}>恢复</button>

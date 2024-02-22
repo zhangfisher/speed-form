@@ -8,7 +8,7 @@
  * 
  */
 import { ISharedCtx, watch as heluxWatch, IOperateParams,  getSnap } from 'helux';
-import type { StateValueDescriptor, StateValueDescriptorParams, StoreDefine } from "./store";
+import type { StateValueDescriptor, StateValueDescriptorParams, StoreDefine, StoreOptions } from "./store";
 import { StoreExtendContext } from "./extends"; 
 import { getVal, getValueByPath, setVal } from "./utils"; 
 import { OBJECT_PATH_DELIMITER } from './consts';
@@ -81,24 +81,21 @@ export interface RegisteredWatchListener{
     options:WatchOptions          // 侦听函数的选项
 }
 
-class StoreWatcher<Store extends StoreDefine<any>>{
+export class StoreWatcher<Store extends StoreDefine<any>>{
     listeners = new Map<any,RegisteredWatchListener>()
     private _off:()=>void = ()=>{}
     private _wacher = {off:()=>{}} 
+    private _ctx?:ISharedCtx<Store["state"]>
+    private _storeOptions:StoreOptions
     private _enable:boolean=true                        // 是否启用侦听器
     private cache=new Map<any,any>()                    // 用来缓存侦听函数的返回值
     private listenerCache?:Map <string,Dict>
-    constructor(private options:Omit<StoreExtendContext<ISharedCtx<Store["state"]>>,'params' | 'descriptor'>){
+    constructor(storeOptions:StoreOptions){
+        this._storeOptions = storeOptions        
+    }  
+    bind(ctx:ISharedCtx<Store["state"]>){
+        if(!this._ctx) this._ctx = ctx
         this.createWacher()
-    }
-    get stateCtx(){
-        return this.options.stateCtx
-    }
-    get storeOptions(){
-        return this.options.storeOptions
-    }
-    get extendObjects(){
-        return this.options.extendObjects
     }
     get enable(){
         return this._enable
@@ -127,7 +124,7 @@ class StoreWatcher<Store extends StoreDefine<any>>{
                     }
                 } 
             })
-        },()=>[this.stateCtx.state])
+        },()=>[this._ctx!.state])
         this._wacher = {off:unwatch}
     }
     /**
@@ -157,14 +154,14 @@ class StoreWatcher<Store extends StoreDefine<any>>{
     private hitListenerFromCache(srcPath:string[]){
         const srcKey = this.getValueKey(srcPath)
         if(this.cache.has(srcKey)){
-            const srcValue = getVal(this.stateCtx.state,srcPath)
+            const srcValue = getVal(this._ctx!.state,srcPath)
             const listeners = this.cache.get(srcKey)
             listeners.forEach(([destPath,listener,listenerOpts]:[string[],WatchListener,any])=>{
                  const result = listener(srcValue,listenerOpts)             
                  // 将返回值回写到状态中
                  if(result!==undefined){
                      // @ts-ignore
-                     this.stateCtx.setState((draft:any)=>{
+                     this._ctx!.setState((draft:any)=>{
                          setVal(draft,destPath,result)
                      })
                  }              
@@ -192,12 +189,12 @@ class StoreWatcher<Store extends StoreDefine<any>>{
         const { fn:listener,options } = watchListener
         const filter = options.on
         if(typeof(filter)=='function'){
-            const srcValue = getVal(this.stateCtx.state,srcPath)
+            const srcValue = getVal(this._ctx!.state,srcPath)
             try{
                 if(filter(srcPath,srcValue)==true){    
                     // 提供一个函数用来获取自身当前的值,用函数是避免读取开销                            
                     const listenerOpts = {
-                        getSelfValue : ()=> getVal(getSnap(this.stateCtx.state),destPath),
+                        getSelfValue : ()=> getVal(getSnap(this._ctx!.state),destPath),
                         getCache:()=>this.getListenerCache(destPath),
                         srcPath,
                         selfPath:destPath
@@ -209,13 +206,14 @@ class StoreWatcher<Store extends StoreDefine<any>>{
                     // 将返回值回写到状态中
                     if(result!==undefined){
                         // @ts-ignore
-                        this.stateCtx.setState((draft:any)=>{
+                        this._ctx.setState((draft:any)=>{
                             setVal(draft,destPath,result)
                         })
                     }                    
                 }
             }catch(e:any){
-                this.storeOptions.log(`Error while run watchLisenter(${srcPath}->${destPath})`+e.stack,'error')
+                // @ts-ignore
+                this._storeOptions.log(`Error while run watchLisenter(${srcPath}->${destPath})`+e.stack,'error')
             }
         }        
     }
@@ -242,26 +240,20 @@ class StoreWatcher<Store extends StoreDefine<any>>{
     }
 }
 
-let storeWatcher:StoreWatcher<StoreDefine<any>> | undefined  
-
- 
-
+// let storeWatcher:StoreWatcher<StoreDefine<any>> | undefined  
  
 export function installWatch<Store extends StoreDefine<any>>(options:StoreExtendContext<ISharedCtx<Store["state"]>>) {
-    const { stateCtx,params,storeOptions,extendObjects} =options    
-    if(!storeWatcher){
-        storeWatcher=new StoreWatcher<Store>({
-            stateCtx,storeOptions,extendObjects
-        })
-    }     
+    const { stateCtx,params,storeOptions,extendObjects } =options    
+    const { watchObjects } = extendObjects
+    watchObjects?.bind(stateCtx)
     storeOptions.log(`install watch for <${params.fullKeyPath.join(OBJECT_PATH_DELIMITER)}>`)
     const watchDescriptor = params.value() as unknown as WatchDescriptorParams
-    storeWatcher.add(watchDescriptor,params)
+    watchObjects!.add(watchDescriptor,params)
     // params.replaceValue(watchDescriptor.options.initial)
     // @ts-ignore
     stateCtx.setState((draft)=>{
         setVal(draft,params.fullKeyPath,watchDescriptor.options.initial)
-    })
+    }) 
     
     
 }
