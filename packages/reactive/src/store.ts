@@ -7,7 +7,7 @@ import { ISharedCtx, model } from "helux"
 import type { ActionDefines, Actions } from './action';
 import {  createActions } from './action';
 import { ComputedState, Dict, RequiredComputedState } from './types';
-import { ComputedOptions } from './computed';
+import { ComputedObjects, ComputedOptions } from './computed';
 import { deepClone } from "flex-tools/object/deepClone";
 import { installExtends } from "./extends" 
 import { createUseWatch, createWatch } from "./watch";
@@ -124,8 +124,8 @@ export interface StoreOptions{
 }
 
 
-export interface StoreExtendObjects{
-    computedObjects:Dict<{run:()=>void}>
+export interface StoreExtendObjects<T>{
+    computedObjects:ComputedObjects<T>
     watchObjects:Dict<{run:()=>void}>
     _replacedKey:Dict
 }
@@ -134,8 +134,8 @@ export type IStore<T extends StoreDefine<any>= StoreDefine<any>> = ISharedCtx<Co
     state:ComputedState<T['state']>
     // state:ISharedCtx<ComputedState<T['State']>>['reactive']
     useState:ReturnType<typeof useStateWrapper> 
-    actions:Actions<T['state'],T['actions']>
-} & StoreExtendObjects
+    actions:Actions<T['state'],T['actions']> 
+} & StoreExtendObjects<T['state']>
 
 
 export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
@@ -151,29 +151,29 @@ export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOpt
     }
 
     const storeData = opts.singleton ? data : deepClone(data)
-    const extendObjects:StoreExtendObjects ={computedObjects:{},watchObjects:{},_replacedKey:{}}
-    return  model((api) => { 
-        const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any,{
+    const extendObjects:StoreExtendObjects<T['state']>={computedObjects:new ComputedObjects<T['state']>(),watchObjects:{},_replacedKey:{}}
+    return  model((api) => {
+        const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any, {
             stopArrDep: false,
-            moduleName:opts.id,
-            onRead:(params)=>{   // 处理extends,主要是处理computed，watch等                
-                installExtends<T>(params,stateCtx,extendObjects,opts)
+            moduleName: opts.id,
+            onRead: (params) => {
+                installExtends<T>(params, stateCtx, extendObjects, opts);
             }
-        })
+        });
         // 1. 创建Actions
-        const actions = createActions<T>(storeData.actions,stateCtx,api,opts)
+        const actions = createActions<T>(storeData.actions, stateCtx, api, opts);
         // 2. 处理useState
-        const useState = useStateWrapper<T['state']>(stateCtx)
-        
+        const useState = useStateWrapper<T['state']>(stateCtx);
+
         return {
-          actions,
-          ...stateCtx,
-          state:stateCtx.reactive,
-          useState,
-          watch:createWatch(stateCtx),
-          useWatch:createUseWatch(stateCtx),
-          ...extendObjects
-        }
-      }) as IStore<T>
+            actions,
+            ...stateCtx,
+            state: stateCtx.reactive,
+            useState,
+            watch: createWatch(stateCtx),
+            useWatch: createUseWatch(stateCtx),
+            computedObjects: extendObjects.computedObjects
+        };
+    }) as unknown as IStore<T>
 
 }

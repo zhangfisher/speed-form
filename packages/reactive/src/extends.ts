@@ -12,15 +12,16 @@ import type { StoreExtendObjects, StoreOptions, StoreDefine } from "./store";
 import { isSkipComputed } from "./utils";
 import {  installComputed } from "./computed"; 
 import { installWatch } from "./watch";
+import { Dict } from "./types";
 
-export interface StoreExtendContext<Ctx>{
-    stateCtx:Ctx
-    extendObjects:StoreExtendObjects
+export interface StoreExtendContext<State extends Dict>{
+    stateCtx:ISharedCtx<State>
+    extendObjects:StoreExtendObjects<State>
     storeOptions: Required<StoreOptions>
     params:IOperateParams
 }
 
-export function installExtends<Store extends StoreDefine<any>>(params:IOperateParams,stateCtx: ISharedCtx<Store["state"]>,extendObjects:StoreExtendObjects,storeOptions: Required<StoreOptions>) {    
+export function installExtends<Store extends StoreDefine<any>>(params:IOperateParams,stateCtx: ISharedCtx<Store["state"]>,extendObjects:StoreExtendObjects<Store["state"]>,storeOptions: Required<StoreOptions>) {    
     // 拦截读取state的操作，在第一次读取时，
     // - 为计算函数创建mutate
     // - 将原始属性替换为计算属性值或异步对象

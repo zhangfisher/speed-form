@@ -8,7 +8,7 @@
  *
  */
 
-import { IOperateParams, ISharedCtx, markRaw, getSnap } from 'helux';
+import { IOperateParams, ISharedCtx, markRaw, getSnap, IMutateWitness } from 'helux';
 import type { StoreDefine, ComputedScope, StoreOptions, ComputedContext, IStore, StoreExtendObjects, StateValueDescriptorParams, StateValueDescriptor } from "./store";
 import { ComputedScopeRef } from "./store"; 
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
@@ -341,7 +341,7 @@ function getComputedId(valuePath:string[],idArg:ComputedOptions['id']){
  * @param stateCtx
  * @param computedParams
  */
-function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>, computedParams: IOperateParams,computeObjects:StoreExtendObjects['computedObjects'], storeOptions: Required<StoreOptions>) {
+function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>, computedParams: IOperateParams,computeObjects:ComputedObjects<Store["state"]>, storeOptions: Required<StoreOptions>) {
 
   const { fullKeyPath:valuePath, parent,value } = computedParams;
   const { onCreateComputed } = storeOptions;
@@ -364,7 +364,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
   
   const mutateId = getComputedId(valuePath,computedOptions.id)
 
-  const witness = stateCtx.mutate({
+  const mutate = stateCtx.mutate({
     fn: (draft, params) => {
       storeOptions.log(`Run sync computed for : ${valuePath.join(OBJECT_PATH_DELIMITER)}`);
       const { input } = params;
@@ -389,8 +389,12 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
     // 关闭死循环检测，信任开发者
     checkDeadCycle: false,
   });
-  computedParams.replaceValue(getVal(witness.snap, valuePath));
-  return computeObjects[mutateId] 
+  computedParams.replaceValue(getVal(mutate.snap, valuePath));
+  computeObjects!.set(valuePath.join(OBJECT_PATH_DELIMITER),{
+    mutate,
+    group:computedOptions.group,
+    async:false
+  })   
 }
 
 
@@ -608,7 +612,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
 
   storeOptions.log(`Create async computed: ${valuePath.join(OBJECT_PATH_DELIMITER)} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
 
-  const witness = stateCtx.mutate({ 
+  const mutate = stateCtx.mutate({ 
     // 依赖是相于对根对象的
     deps: (state: any) =>{
       return getDepValues(deps,state, valuePath)
@@ -652,13 +656,16 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     desc:mutateId,
     checkDeadCycle: false,
   });
-  computedParams.replaceValue(getVal(witness.snap, valuePath));
-  computeObjects[mutateId]  = witness
-  return computeObjects[mutateId] 
+  computedParams.replaceValue(getVal(mutate.snap, valuePath));
+  computeObjects!.set(valuePath.join(OBJECT_PATH_DELIMITER),{
+    mutate,
+    group:computedOptions.group,
+    async:true
+  })   
 }
 
 
-export function installComputed<Store extends StoreDefine<any>>(options:StoreExtendContext<ISharedCtx<Store["state"]>>) {
+export function installComputed<Store extends StoreDefine<any>>(options:StoreExtendContext<Store["state"]>) {
   const { stateCtx,params,storeOptions,extendObjects} = options
   const descriptor = params.value
   //@ts-ignore
@@ -666,7 +673,7 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
     createAsyncComputedMutate<Store>(stateCtx,params,extendObjects.computedObjects, storeOptions);
   //@ts-ignore
   }else if (descriptor.__COMPUTED__=='sync') {
-    createComputedMutate<Store>(stateCtx, params,extendObjects.computedObjects, storeOptions);
+    createComputedMutate<Store>(stateCtx, params,extendObjects.computedObjects!, storeOptions);
   }else if (isAsyncFunction(descriptor)) { // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次   
       params.value = () => ({
         fn: descriptor,
@@ -687,12 +694,41 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
       }
     })
     // 直接声明同步计算函数,使用全局配置的计算上下文
-    createComputedMutate<Store>(stateCtx, params, extendObjects.computedObjects, storeOptions);
+    createComputedMutate<Store>(stateCtx, params, extendObjects.computedObjects!, storeOptions);
   }
 }
 
 
-
-export class ComputedObjects{
-  
+export interface ComputedObject<T=Dict>{
+  mutate:IMutateWitness<T>
+  group?:string 
+  async?:boolean 
+}
+ /**
+  * 
+  */
+export class ComputedObjects<T=Dict> extends Map<string,ComputedObject<T>>{
+  /**
+   * 运行计算函数
+   * 
+   * run("a/b")  运行指定的计算函数
+   * run("@groupName") 运行指定组的计算函数，组名称以'@'开头
+   * 
+   * @param string 
+   * @param 
+   * @param string 
+   * @param param3 
+   */
+  async run(groupOrPath:string){    
+    if(groupOrPath.startsWith("@")){
+      return Promise.all([...this.values()].filter(v=>v.group==groupOrPath.substring(1)).map(v=> v.async ? v.mutate.runTask() : v.mutate.run()))
+    }else{
+      const obj = this.get(groupOrPath)
+      if(obj){
+        return obj?.async ?  await obj.mutate.runTask() : obj?.mutate.run()
+      }else{
+        throw new Error(`ComputedObject not found: ${groupOrPath}`)
+      }      
+    }
+  }
 }
