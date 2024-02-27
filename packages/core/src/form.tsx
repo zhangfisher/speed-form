@@ -52,6 +52,7 @@ import { createObjectProxy } from "./utils";
 import defaultFormProps from "./form.default"
 import { createSubmitComponent,createResetComponent } from "./behaviors";
 import { createLoadApi, createGetValuesApi } from "./serialize";
+import { validate } from './validate';
 
 
 
@@ -91,8 +92,8 @@ export type FormSchema<State extends Dict=Dict> = State & Omit<FormSchemaBase,ke
 export interface FormOptions{
 	debug?:boolean										// 是否调试模式
 	/**
-	 * 何时进行数据验证
-	 * - once : 实时校验 
+	 * 何时进行数据校验
+	 * - once : 实时校验
 	 * - lost-focus : 失去焦点时校验 
 	 * - submit : 提交时校验
 	 */
@@ -105,6 +106,11 @@ export interface FormOptions{
 	* @returns  {string}
 	*/
 	getFieldName?:(valuePath:string[])=>string,
+	/**
+	 * 单例模式
+	 * = true时，所有的计算属性都是共享的，否则每个实例都有自己的计算属性	
+	 * = false时，会在创建表单时进行深度克隆，这样就可以创建多个互相不干扰的实例
+	 */
 	singleton?:boolean
 }
 
@@ -145,6 +151,7 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
  * 处理方式:
  *  - 同步计算函数的scope指向当前字段值
  *  - 异步函数的第一个依赖指向当前字段的值value
+ *  - 所有validator的group名称均为validate，这样就可以调用computedObjects.run("validate")实现分组验证
  * 
  */
 function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOptions){		
@@ -153,7 +160,8 @@ function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOp
 		if(!options.scope) options.scope="value"
 		if(!options.depends) options.depends=[]
 		options.depends.push([...keyPath.slice(0,-1),"value"])
-		options.initial = true		// 默认总是true
+		options.initial = null		// 默认总是true
+		options.group='validate'	// 默认分组为validate
 	}
 }
 
@@ -279,7 +287,9 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 		// 引用所有计算属性
 		computedObjects:store.computedObjects,
 		watchObjects:store.watchObjects,
-		store
+		store,
+		// 校验整个表单：即执行所有校验计算函数
+		validate:async ()=>store.computedObjects.run("validate")
 	};
 }
 

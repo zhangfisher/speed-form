@@ -19,7 +19,7 @@ export interface DefaultFieldPropTypes{
   readonly?    : boolean;              // 是否只读
   visible?     : boolean;              // 是否可见
   enable?      : boolean               // 是否可用
-  validate?    : null | boolean;              // 验证,undefined表示还没有验证,true=验证通过,false=验证失败
+  validate?    : boolean | null;       // 验证,null表示还没有验证, true=验证通过,false=验证失败
   select?      : any[]                 // 枚举值
 }  
 

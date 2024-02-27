@@ -13,6 +13,7 @@ import { getSnap, type Dict, type IStore } from "@speedform/reactive"
 import { isFieldGroup, isFieldList, isFieldValue, isFormAction } from "./utils"
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject"
 import type { FormOptions } from "./form"
+import { validate } from './validate';
  
 
 function getFieldValue(data:Dict){
@@ -60,7 +61,19 @@ function getFieldListValue(data:Dict){
 
 
 export interface LoadOptions{
+    /**
+     * 当加载的数据键在表单中没有对应的声明时触发
+     * @param keyPath 
+     */
     onNotMatch(keyPath:string[]):any 
+    /**
+     * 是否忽略计算属性
+     */
+    ignoreComputed?:boolean
+    /**
+     * 加载后是否马上进行校验
+     */
+    validate:boolean
 }
 
 /**
@@ -158,11 +171,15 @@ export function createFormData(data:Dict,options?:CreateFormDataOptions):FormDat
 }
 
 
-
-export function createLoadApi<Store extends IStore>(store:Store,formOptions?:Required<FormOptions>) {
-    
+/**
+ * 加载数据到表单中
+ * @param store 
+ * @param formOptions 
+ * @returns 
+ */
+export function createLoadApi<Store extends IStore>(store:Store,formOptions?:Required<FormOptions>) {    
     return function load(data:Dict,options?:LoadOptions){
-        const opts = Object.assign({},options)
+        const opts = Object.assign({validate:true},options)
         try{ 
             // 1. 先停止依赖收集
             store.setEnableMutate(false)
@@ -175,10 +192,11 @@ export function createLoadApi<Store extends IStore>(store:Store,formOptions?:Req
         }catch(e){
             console.error(e)
         }finally{
-            store.setEnableMutate(true)
+            store.setEnableMutate(true) 
+            if(opts?.validate){
+                store.computedObjects.run("@validate")
+            }
         }
-        
-
     }
 }
 

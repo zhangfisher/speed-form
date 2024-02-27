@@ -131,6 +131,14 @@ export interface ComputedOptions<Value=any,Extras extends Dict={}> {
    */
   group?:string
   /**
+   * 计算开关
+   * 当=false时不会执行计算
+   * 
+   */
+
+  enable?:boolean
+
+  /**
    * 额外合并到计算结果AsyncComputedObject中的属性
    */
   extras?:Extras
@@ -253,6 +261,7 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
   let deps:ComputedDepends = []
   const opts : ComputedOptions<R,ExtraAttrs> = {
     async: false,
+    enable:true,
     timeout:0,
     depends: [],
     // scope:ComputedScopeRef.Current,
@@ -359,14 +368,18 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
     if(!computedOptions.context) computedOptions.context = ComputedScopeRef.Root
     if (typeof newGetter == "function") getter = newGetter;
   }
-  
-  storeOptions.log(`Create sync computed: ${valuePath.join(OBJECT_PATH_DELIMITER)}`);
+  const strValuePath = valuePath.join(OBJECT_PATH_DELIMITER)
+  storeOptions.log(`Create sync computed: ${strValuePath}`);
   
   const mutateId = getComputedId(valuePath,computedOptions.id)
-
+  
   const mutate = stateCtx.mutate({
     fn: (draft, params) => {
-      storeOptions.log(`Run sync computed for : ${valuePath.join(OBJECT_PATH_DELIMITER)}`);
+      if(!computedOptions.enable){
+        storeOptions.log(`Async computed <${strValuePath}> is disabled`,'warn')
+        return 
+      }
+      storeOptions.log(`Run sync computed for : ${strValuePath}`);
       const { input } = params;
       // 1. 根据配置参数获取计算函数的上下文对象      
       const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,storeOptions,type:"context"})
@@ -390,10 +403,11 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
     checkDeadCycle: false,
   });
   computedParams.replaceValue(getVal(mutate.snap, valuePath));
-  computeObjects!.set(valuePath.join(OBJECT_PATH_DELIMITER),{
+  computeObjects!.set(strValuePath,{
     mutate,
     group:computedOptions.group,
-    async:false
+    async:false,
+    run:(throwError?)=>mutate.run(throwError)
   })   
 }
 
@@ -609,8 +623,9 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     storeOptions.log(`async computed <${valuePath.join(".")}> should specify depends`,'warn')
   } 
   const mutateId = getComputedId(valuePath,computedOptions.id)
+  const strValuePath = valuePath.join(OBJECT_PATH_DELIMITER)
 
-  storeOptions.log(`Create async computed: ${valuePath.join(OBJECT_PATH_DELIMITER)} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
+  storeOptions.log(`Create async computed: ${strValuePath} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
 
   const mutate = stateCtx.mutate({ 
     // 依赖是相于对根对象的
@@ -631,11 +646,15 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     },
     //  此函数在依赖变化时执行，用来异步计算
     task: async ({ draft, setState, input, extraArgs }) => {
-      storeOptions.log(`Run async computed for : ${valuePath.join(OBJECT_PATH_DELIMITER)}`);
+      if(!computedOptions.enable){
+        storeOptions.log(`Async computed <${strValuePath}> is disabled`,'warn')
+        return 
+      }
+      storeOptions.log(`Run async computed for : ${strValuePath}`);
       // 当使用run方法时可以传入参数来覆盖默认的计算函数的配置参数
       const finalComputedOptions = Object.assign({},computedOptions,extraArgs) as Required<ComputedOptions>
       if(noReentry && isMutateRunning && storeOptions.debug) {
-        storeOptions.log(`Reentry async computed: ${valuePath.join(OBJECT_PATH_DELIMITER)}`,'warn');
+        storeOptions.log(`Reentry async computed: ${strValuePath}`,'warn');
         return
       }
       isMutateRunning=true
@@ -657,10 +676,12 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     checkDeadCycle: false,
   });
   computedParams.replaceValue(getVal(mutate.snap, valuePath));
-  computeObjects!.set(valuePath.join(OBJECT_PATH_DELIMITER),{
+  
+  computeObjects!.set(strValuePath,{
     mutate,
     group:computedOptions.group,
-    async:true
+    async:true,
+    run:(throwError?)=>mutate.runTask(throwError)
   })   
 }
 
@@ -681,6 +702,7 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
           depends  : [],                    // 未指定依赖
           initial  : undefined,             // 也没有初始化值
           immediate: true,                  // 立即执行
+          enable   : true,
           context  : storeOptions.computedThis,  
       },
       });
@@ -690,6 +712,7 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
       fn: descriptor,
       options: {
         initial  : undefined, 
+        enable   : true,
         context: storeOptions.computedThis, 
       }
     })
@@ -699,10 +722,9 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
 }
 
 
-export interface ComputedObject<T=Dict>{
-  mutate:IMutateWitness<T>
-  group?:string 
-  async?:boolean 
+export interface ComputedObject<T=Dict> extends ComputedOptions{
+  mutate:IMutateWitness<T> 
+  run:(throwError?:boolean)=>Promise<any> | any
 }
  /**
   * 
