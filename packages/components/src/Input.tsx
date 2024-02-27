@@ -16,7 +16,7 @@ export type InputProps = React.PropsWithChildren<Partial<HTMLInputElement> & {
 }>
 
 export const Input:ReactFC<InputProps> = (props:InputProps)=>{
-    const { name,enable=true,validate=true,visible=true,placeholder,onChange,value,style} =props
+    const { name,enable=true,validate=true,visible=true,placeholder,onChange=()=>{},value,style} =props
 
     return (
         <input style={Object.assign({ 

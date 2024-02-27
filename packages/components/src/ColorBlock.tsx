@@ -13,9 +13,9 @@ function getRandomColor(){
     const c = `${Math.floor(Math.random() * 16777215).toString(16)}`;
     return `#${c.padStart(6,'0')}`
 }
-export const ColorBlock:ReactFC<React.PropsWithChildren<{value?:any,name?:string,title?:string,inline?:boolean}>> = (props)=>{
+export const ColorBlock:ReactFC<React.PropsWithChildren<{value?:any,name?:string,title?:string}>> = (props)=>{
   const renderCount = useRef(0)
-  const { name,value='',inline} = props
+  const { name,value=''} = props
   const backgroundColor = getRandomColor()
   let textColor = 'block'
   if(color.rgb(backgroundColor).isDark()){
