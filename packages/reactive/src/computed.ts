@@ -741,16 +741,7 @@ export class ComputedObjects<T=Dict> extends Map<string,ComputedObject<T>>{
    * @param string 
    * @param param3 
    */
-  async run(groupOrPath:string){    
-    if(groupOrPath.startsWith("@")){
-      return Promise.all([...this.values()].filter(v=>v.group==groupOrPath.substring(1)).map(v=> v.async ? v.mutate.runTask() : v.mutate.run()))
-    }else{
-      const obj = this.get(groupOrPath)
-      if(obj){
-        return obj?.async ?  await obj.mutate.runTask() : obj?.mutate.run()
-      }else{
-        throw new Error(`ComputedObject not found: ${groupOrPath}`)
-      }      
-    }
+  async runGroup(group:string){       
+      return Promise.all([...this.values()].filter(v=>v.group==group).map(v=> v.async ? v.mutate.runTask() : v.mutate.run()))   
   }
 }

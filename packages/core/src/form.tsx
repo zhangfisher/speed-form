@@ -289,7 +289,7 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 		watchObjects:store.watchObjects,
 		store,
 		// 校验整个表单：即执行所有校验计算函数
-		validate:async ()=>store.computedObjects.run("validate")
+		validate:async ()=>store.computedObjects.runGroup("validate")
 	};
 }
 
