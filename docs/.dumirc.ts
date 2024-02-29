@@ -7,6 +7,9 @@ export default defineConfig({
   favicons:['speed-form/favicon.ico'],
   themeConfig: {
     name:"SpeedForm",
+    socialLinks: {
+      github: 'https://github.com/zhangfisher/speed-form',
+    },
     demo:{
 
     }
