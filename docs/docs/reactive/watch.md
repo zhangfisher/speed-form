@@ -10,7 +10,7 @@ demo:
 
 ## 介绍
 
-`helux-Store`提供`watch`功能，用来监视`State`数据的变化,当所监视的数据发生时，可以执行侦听器函数。
+`@speedform/reactive`提供`watch`功能，用来监视`State`数据的变化,当所监视的数据发生时，可以执行侦听器函数。
 
 
 提供三种使用`watch`的方式：
@@ -132,10 +132,10 @@ type WatchListenerOptions<Result=any> = {
 
 - 当`State`中的数据发生变化时，会调用`watch`第二个参数指定的函数，如果返回`true`，则会调用执行侦听函数。
 - 侦听函数的第一个入参是`value`，指的是发生变化的新值。显然，如果`watch`函数的依赖范围很广，则`value`类型也可能是不固定的。
-- 侦听函数的`getSelfValue`参数用来读取当前`watch`所在位置的当前值。
-- 侦听函数的`selfPath`参数用来读取当前`watch`所在位置的路径。
-- 侦听函数的`srcPath`参数用来读取发生变化的值所在的路径。
-- 侦听函数的`getCache`参数用来读取当前`watch`所在位置的缓存对象，供保存一些临时值。
+- `getSelfValue`参数用来读取当前`watch`所在位置的当前值。
+- `selfPath`参数用来读取当前`watch`所在位置的路径。
+- `srcPath`参数用来读取发生变化的值所在的路径。
+- `getCache`参数用来读取当前`watch`所在位置的缓存对象，供保存一些临时值。
 
 ### 缓存对象
 

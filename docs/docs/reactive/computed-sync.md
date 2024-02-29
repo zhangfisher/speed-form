@@ -30,9 +30,30 @@ const state = {
 ```
 上例中，`fullName`是一个计算属性，其依赖于`firstName`和`lastName`,内部的实现机制是这样的：
 
-- 首先整个`state`已经被包装为一个深层的`proxy`对象
-- 当第一次运行时会自动执行`fullName`这个函数，然后会触发读取`firstName`和`lastName`的`proxy`，在读取`firstName`和`lastName`的`proxy`时，会自动收集`fullName`的依赖并保存起来，这样就可以自动获取到`fullName`的依赖了。
+- 首先整个`state`已经被包装为一个深层的`proxy`对象。
+- 当第一次运行时读取`fullName`时，然后会触发读取`firstName`和`lastName`，在`firstName`和`lastName`的`proxy`内部就可以知道其依赖`firstName`和`lastName`了。将依赖信息保存起来就可以了，这样就可以自动获取到`fullName`的依赖了。
+- 通俗地说，就是运行一次`fullName`函数，就可以自动收集`firstName`和`lastName`的依赖,因此不需要手动指定依赖参数。
 - 以上仅仅依赖收集的是一个基本思路，实际上`@speedform/reactive`的依赖收集机制是非常复杂的，它可以自动处理`Array`和`Object`等等，其核心是由`helux`提供的支持。
+- 同步依赖收集是基于`Proxy`实现的，因此不支持`IE`浏览器。
+- 同步自动依赖收集也有一些限制，从上面的原理上可以看到，依赖的收集是通过第一次运行一次计算函数来获取的。因此，必须保证首次运行就可以得到所有依赖，如果计算函数中存在一些条件分支等，就可能不能正确收集依赖了。
+
+**以下是一个错误收集依赖的例子：**
+
+```ts | pure
+const state = {
+    firstName:"Zhang",
+    lastName:"Fisher",
+    age:18,
+    fullName: (user)=>{
+      if(user.age>0 ) user.firstName
+      return user.firstName+user.lastName
+    } 
+  }
+```
+
+由于第一次运行时，`age`是`18`，因此只收集到`user.firstName`是依赖的,而`user.lastName`没有被收集到，所以不是依赖的。
+以为`fullName`依赖于`firstName`和`lastName`，但是实际上`fullName`只依赖于`firstName`，
+
 
 
 ## 快速声明

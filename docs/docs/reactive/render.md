@@ -30,7 +30,7 @@ const ctx = createContext({
 const Child = React.memo((props)=>{
     const context=useContext(ctx)
     return <ColorBlock name={`子组件:${props.name}`}>
-      <div>Hello :{context.firstName}{' '}{context.lastName}</div> 
+      <span>Hello :{context.firstName}{' '}{context.lastName}</span> 
     </ColorBlock>
 })
 let count:number = 0
@@ -81,14 +81,14 @@ const FirstName = React.memo((props)=>{
     const [state,setState] = store.useState()
     const {firstName} = state
     return <ColorBlock name={`子组件:FirstName`}>
-      <div>Hello :{firstName}</div> 
+      <span>Hello :{firstName}</span> 
     </ColorBlock>
 })
 const LastName = React.memo((props)=>{
     const [state,setState] = store.useState()
     const {lastName} = state
     return <ColorBlock name={`子组件:lastName`}>
-      <div>Hello :{lastName}</div> 
+      <span>Hello :{lastName}</span> 
     </ColorBlock>
 })
 let count=0
@@ -134,12 +134,12 @@ const store = createStore<typeof state>({state})
 
 const FirstName = React.memo((props)=>{
     return <ColorBlock name={`子组件:FirstName`}>
-      <div>Hello :{store.state.firstName}{' '}{store.state.lastName}(没有使用Signal)</div> 
+      <span>Hello :{store.state.firstName}{' '}{store.state.lastName}(没有使用Signal)</span> 
     </ColorBlock>
 })
 const LastName = React.memo((props)=>{
     return <ColorBlock name={`子组件:LastName`}>
-      <div>Hello :{$(store.state.firstName)}{' '}{store.state.lastName}</div> 
+      <span>Hello :{$(store.state.firstName)}{' '}{store.state.lastName}</span> 
     </ColorBlock>
 })
 let count=0
@@ -160,4 +160,4 @@ export default ()=>{
 - 在上例中，当更新`Age`时，仅根组件会重新渲染，而`FirstName`和`LastName`不会重新渲染，因为它们并没有使用到`Age`。
 - 当更新`FirstName`时，仅`FirstName`会重新渲染。而`LastName`组件中虽然用到了`FirstName`，但是没有使用`$(FirstName)`，也就是使用信号，所以不会重新渲染。
 - `store.state`是一个响应式对象`reactive`,本质上是一个`Proxy`对象来收集依赖。然后使用`$(<reactive>)`数据变更仅触发`$`符号区域内重渲染，从而实现最细粒度的渲染。
-- 关于`Signal`的更多内容请参考[Signal](https://heluxjs.github.io/helux/guide/signal)。
+- 关于`Signal`机制的更多内容请参考[helux/Signal](https://heluxjs.github.io/helux/guide/signal)。
