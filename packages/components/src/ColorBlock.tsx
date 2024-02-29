@@ -30,7 +30,7 @@ export const ColorBlock:ReactFC<React.PropsWithChildren<{value?:any,name?:string
 
   return (
     <div  {...props} style={{  backgroundColor,padding:'4px',color:textColor,display:'flex',...props.style,alignItems:'center' }}>
-      <span style={{flexGrow:1}}>{name ? (<span style={{padding:'2px'}}>{name}=</span>) : ''}<span style={{padding:'2px'}}>{String(value)}</span></span>
+      <span style={{flexGrow:1}}>{name ? (<span style={{padding:'2px'}}>{name}=</span>) : ''}<span style={{padding:'2px'}}>{String(value)}{props.children}</span></span>
       <span style={{fontSize:'8px'}}>{renderCount.current}</span>
     </div>
   );
