@@ -18,6 +18,7 @@ import { Dict } from "./types";
 import { delay } from 'flex-tools/async/delay'; 
 import { type StoreExtendContext } from './extends';
 import { OBJECT_PATH_DELIMITER } from './consts';
+import { getComputedContext } from './context';
  
 
 export interface ComputedProgressbar{
@@ -186,55 +187,15 @@ export type ComputedSyncReturns<T=any> = (...args: any) => Exclude<T,Promise<any
  * @returns 
  */
 function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 'scope',computedContext:IOperateParams,computedOptions: ComputedOptions, storeOptions: StoreOptions}) {
-
   const { input:depends, type, computedContext, computedOptions, storeOptions } = params;
-
-  let rootDraft = draft;
-
-  // 1. 执行hook，允许可以修改计算函数的根上下文以及相关配置参数
-  if (typeof storeOptions.onComputedContext == "function") {
-    const newDraft = storeOptions.onComputedContext.call(draft,draft,{type,valuePath:computedContext.fullKeyPath});
-    if (newDraft !== undefined) {
-      rootDraft = newDraft;
-    }
-  }
-
-  const { keyPath, fullKeyPath } = computedContext;
-
-  // 2. 读取计算函数的上下文配置参数
-  const contexRef = getContextOption(draft, 
-      type=='context' ? computedOptions.context : computedOptions.scope ,
-      type=='context' ? storeOptions.computedThis : storeOptions.computedScope
-  );
-
-  // 3. 根据配置参数获取计算函数的上下文对象
-  try { 
-    if(contexRef === ComputedScopeRef.Current) {
-        return getValueByPath(draft, keyPath);
-    }else if (contexRef === ComputedScopeRef.Parent) {
-      return getValueByPath(draft,fullKeyPath.slice(0, fullKeyPath.length - 2));
-    }else if (contexRef === ComputedScopeRef.Root) {
-        return rootDraft;
-    }else if (contexRef === ComputedScopeRef.Depends) {      // 异步计算的依赖值      
-      return Array.isArray(depends) ? depends : [];
-    }else if (typeof contexRef == "string") {               // 当前对象的指定键      
-      return getValueByPath(draft, [...keyPath, ...contexRef.split(OBJECT_PATH_DELIMITER)]);
-    }else if (Array.isArray(contexRef)) {                   // 从根对象开始的完整路径
-      if(contexRef.length>0 && contexRef[0].startsWith("@")){
-        const finalKeys = getValueByPath(draft, [...contexRef[0].substring(1).split(OBJECT_PATH_DELIMITER),...contexRef.slice(1)]);
-        return getValueByPath(draft,finalKeys);
-      }else{
-        return getValueByPath(draft, contexRef);
-      }      
-    }else if (typeof contexRef == "number") {
-      const endIndex = contexRef > fullKeyPath.length - 2 ? fullKeyPath.length - contexRef - 1 : 0;
-      return getValueByPath(draft, fullKeyPath.slice(0, endIndex));
-    }else {
-      return draft;
-    }
-  }catch (e) {
-        return draft;
-  }
+  return getComputedContext(draft,{
+    input:depends,
+    contextType:type,
+    value:computedContext,
+    funcOptions:computedOptions,
+    storeOptions,
+    computedType:'Computed'
+  })
 }
  
 

@@ -254,10 +254,11 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 			// 3. 将表单actions的execute的onComputedResult指向其current
 			createActionHook(valuePath,getter,options)
 		},
-		onComputedContext(draft,{type,valuePath}){
+		onComputedContext(draft,{computedType,contextType: type,valuePath}){
+			// 针对计属性
 			// 修改fields下的所有计算函数的作用域根，使之总是指向fields开头
 			// 这样可以保证在计算函数中,当scope->Root时，总是指向fields，否则就需要state.fields.xxx.xxx
-			if(type=='scope' && valuePath.length >0 && valuePath[0]==FIELDS_STATE_KEY){
+			if(computedType==='Computed' && type=='scope' && valuePath.length >0 && valuePath[0]==FIELDS_STATE_KEY){
 				return draft.fields
 			}
 		}

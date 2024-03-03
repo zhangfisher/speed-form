@@ -40,6 +40,26 @@ function watch<Value = any,Result=Value>(
   listener:WatchListener<Value,Result>,
   on:WatchOptions['on'],
   options?:WatchOptions<Result>):WatchDescriptor<Value,Result>
+
+  
+export interface WatchOptions<R=any>{ 
+    // 指定额外的过滤条件，如果返回true，才会触发listener的执行
+    // 此函数会在表单中的每一个值发生变化时执行，如果返回true，则会触发listener的执行  
+    // 由于此函数会在表单中的每一个值发生变化时均会执行，所以此函数应该尽量简单，不要有复杂的逻辑      
+    // 如果大量的表单字段均需要监听，则可能会有性能问题
+    // 一般在动态依赖时使用
+    on?:(path:string[],value:any)=>boolean 
+    initial?:R,  
+    /**
+     * 用来对表单内的watch进行分组，以便能按组进行enable或disable或其他操作
+     */  
+    group?:string
+    /**
+     *  启用或禁用watch，默认为true
+     */
+    enable?:boolean
+}
+ 
 ```
 
 `watch`函数基本使用如下：
@@ -114,6 +134,7 @@ export default ()=>{
 - `watch`函数的第二个参数是一个对象，用来配置`watch`函数的行为。
 - `on`属性用来配置`watch`函数的触发条件，传入的是发生变化的值所在的路径。
 - `initial`属性用来配置`watch`函数所在位置的`total`的初始值。
+- ``
 
 ### 侦听函数
 
@@ -287,4 +308,64 @@ export default ()=>{
     </div>)
 }
 
+```
+
+## 侦听对象
+
+通过`Store.watchObjects`可以访问所有声明的`watch`对象，可以进行相关的动态移除/禁用等操作。
+
+
+```tsx 
+import { createStore,computed,ComputedScopeRef,watch } from "@speedform/reactive" 
+import { useEffect,useState } from "react"
+import { ColorBlock,Divider } from "@speedform/demo-components"
+
+function createTotalWatch(group){
+  return watch((count,{state})=>{ 
+      return state.price * count
+    },(valuePath:string[])=>{
+      return valuePath[valuePath.length-1]==='count'
+    },{
+      initial:2,
+      group
+    }) 
+}
+
+
+const user = {
+    bookName:"zhang",
+    price:2,
+    count:1,
+    total1: createTotalWatch("a"),
+    total2: createTotalWatch("a"),
+    total3: createTotalWatch("b"),
+    total4: createTotalWatch("b"),
+    total5: createTotalWatch("b")
+  } 
+
+const store = createStore({state:user})
+
+
+export default ()=>{
+  const [state,setState]=store.useState()
+
+  return  (<div>
+      <div>bookName={state.bookName}</div>
+      <div>price={state.price}</div>
+      <div>count=
+        <button onClick={()=>setState(book=>book.count=book.count-1)}>-</button>
+        <input value={state.count} onChange={store.sync(to=>to.count)}/>
+        <button onClick={()=>setState(book=>book.count=book.count+1)}>+</button>
+      </div>
+      <Divider name="A Group"/>
+      <ColorBlock name="Total-1" value={state.total1}/>
+      <ColorBlock name="Total-2" value={state.total1}/>
+      <button onClick={()=>store.watchObjects.enableGroup("a",true)}>Enable A Group</button>
+      <button onClick={()=>store.watchObjects.enableGroup("a",false)}>Disable A Group</button>
+      <Divider name="B Group"/>
+      <ColorBlock name="Total-3" value={state.total1}/>
+      <ColorBlock name="Total-4" value={state.total1}/>
+      <ColorBlock name="Total-5" value={state.total1}/>
+    </div>)
+}
 ```

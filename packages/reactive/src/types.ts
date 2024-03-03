@@ -47,3 +47,7 @@ export type RequiredComputedState<T extends Record<string, any>> = {
 
 
 export type Dict<T=any> = Record<string,T>
+
+// 表示Store中的函数的类型， =Computed代表是一个计算属性，=Watch代表是一个观察函数
+export type StateComputedType = 'Computed' | 'Watch'
+

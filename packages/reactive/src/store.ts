@@ -6,7 +6,7 @@
 import { ISharedCtx, model } from "helux"
 import type { ActionDefines, Actions } from './action';
 import {  createActions } from './action';
-import { ComputedState, Dict, RequiredComputedState } from './types';
+import { ComputedState, Dict, RequiredComputedState, StateComputedType } from './types';
 import { ComputedObjects, ComputedOptions } from './computed';
 import { deepClone } from "flex-tools/object/deepClone";
 import { installExtends } from "./extends" 
@@ -41,7 +41,6 @@ export enum ComputedScopeRef{
     Parent  = 'parent',  
     Depends = 'depends',                // 指向依赖数组
     Self    = 'self'                    // 指向自身，默认值
-
 }
 
 export type NonDependsScopeRef = Exclude<ComputedScopeRef, ComputedScopeRef.Depends>;
@@ -98,6 +97,9 @@ export interface StoreOptions{
     // 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
     computedThis?: ComputedContext
     computedScope?: ComputedScope
+    // 
+    watchThis?: ComputedContext
+    watchScope?: ComputedScope
     // 是否是单例模式，如果是单例模式，那么所有的计算属性都是共享的，否则每个实例都有自己的计算属性
     // =false时会对传入的data进行深度克隆，这样就可以创建多个互相不干扰的实例
     singleton?:boolean    
@@ -118,7 +120,7 @@ export interface StoreOptions{
      * 在传递给计算函数的context和scope时调用
      * 可以返回一个新的context和scope来代替默认的
      */
-    onComputedContext(draft:any,options:{type:'context' | 'scope',valuePath:string[]}):any
+    onComputedContext(draft:any,options:{computedType:StateComputedType, contextType:'context' | 'scope',valuePath:string[]}):any
     // 输出日志信息
     log?:(message:any,level?:'log' | 'error' | 'warn')=>void
 }
