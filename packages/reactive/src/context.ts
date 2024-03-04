@@ -37,7 +37,7 @@ import { getValueByPath } from "./utils";
 * @param computedThis
 * @param storeCtxOption
 */
-function getContextOption(state: any,computedCtxOption?: ComputedScope,storeCtxOption?: ComputedScope) {
+function getContextOptions(state: any,computedCtxOption?: ComputedScope,storeCtxOption?: ComputedScope) {
  let ctx = computedCtxOption == undefined ? storeCtxOption : computedCtxOption;
  if (typeof ctx == "function") {
    try { ctx = ctx.call(state, state) } catch { }
@@ -45,14 +45,11 @@ function getContextOption(state: any,computedCtxOption?: ComputedScope,storeCtxO
  return ctx == undefined ? (storeCtxOption == undefined ? ComputedScopeRef.Root: storeCtxOption) : ctx;
 }
 
-export type GetFuncPropertyContextOptions ={
+export type GetComputedContextOptions ={
+    type:'context' | 'scope',                   // 要获取的是什么: context或scope
     computedType:StateComputedType,         // 取值， 'Computed' | 'Watch 
     input:any[],                                // 当前计算函数依赖值，或watch的侦听的值
-    contextType:'context' | 'scope',                   // 要获取的是什么: context或scope
-    value:{                                     // 当前值信息
-        keyPath:string[], 
-        fullKeyPath:string[]
-    },
+    valuePath:string[],
     funcOptions: {                             // computed或者watch的配置参数
         context?:any,
         scope?:any
@@ -67,43 +64,39 @@ export type GetFuncPropertyContextOptions ={
  * @param params 
  * @returns 
  */
-export function getComputedContext(draft: any,params:GetFuncPropertyContextOptions) {
+export function getComputedContext(draft: any,params:GetComputedContextOptions) {
 
-    const { input:depends, contextType, value, funcOptions, storeOptions,computedType } = params;
+    const { input:depends, type, valuePath, funcOptions, storeOptions,computedType } = params;
   
     let rootDraft = draft;
   
     // 1. 执行hook，允许可以修改计算函数的根上下文以及相关配置参数
     if (typeof storeOptions.onComputedContext == "function") {
-      const newDraft = storeOptions.onComputedContext.call(draft,draft,{computedType,contextType,valuePath:value.fullKeyPath});
+      const newDraft = storeOptions.onComputedContext.call(draft,draft,{computedType,contextType:type,valuePath});
       if (newDraft !== undefined) {
         rootDraft = newDraft;
       }
     }
-    const { keyPath, fullKeyPath } = value;
+    const parentPath = valuePath.length>=1 ? valuePath.slice(0, valuePath.length - 1) : [];
 
    // 2. 读取计算函数的上下文配置参数
-   const contexRef = getContextOption(draft, 
-        contextType=='context' ? funcOptions.context : funcOptions.scope ,
-        // 全局配置
-        contextType=='context' ? 
-            (computedType =='Computed' ? storeOptions.computedThis : storeOptions.watchThis) 
-            : (computedType =='Computed' ? storeOptions.computedScope : storeOptions.watchScope)
-   );
-
+   const contexRef = getContextOptions(draft, 
+        type=='context' ? funcOptions.context : funcOptions.scope,
+        type=='context' ? (storeOptions.computedThis && storeOptions.computedThis(computedType)) : (storeOptions.computedScope && storeOptions.computedScope(computedType))
+   )
   
     // 3. 根据配置参数获取计算函数的上下文对象
     try { 
       if(contexRef === ComputedScopeRef.Current) {
-          return getValueByPath(draft, keyPath);
+          return getValueByPath(draft, parentPath);
       }else if (contexRef === ComputedScopeRef.Parent) {
-        return getValueByPath(draft,fullKeyPath.slice(0, fullKeyPath.length - 2));
+        return getValueByPath(draft,valuePath.slice(0, valuePath.length - 2));
       }else if (contexRef === ComputedScopeRef.Root) {
           return rootDraft;
       }else if (contexRef === ComputedScopeRef.Depends) {      // 异步计算的依赖值      
-        return Array.isArray(depends) ? depends : [];
+        return Array.isArray(depends) ? depends.map(dep=>typeof(dep)=='function' ? dep() : dep) : [];
       }else if (typeof contexRef == "string") {               // 当前对象的指定键      
-        return getValueByPath(draft, [...keyPath, ...contexRef.split(OBJECT_PATH_DELIMITER)]);
+        return getValueByPath(draft, [...parentPath, ...contexRef.split(OBJECT_PATH_DELIMITER)]);
       }else if (Array.isArray(contexRef)) {                   // 从根对象开始的完整路径
         if(contexRef.length>0 && contexRef[0].startsWith("@")){
           const finalKeys = getValueByPath(draft, [...contexRef[0].substring(1).split(OBJECT_PATH_DELIMITER),...contexRef.slice(1)]);
@@ -112,8 +105,8 @@ export function getComputedContext(draft: any,params:GetFuncPropertyContextOptio
           return getValueByPath(draft, contexRef);
         }      
       }else if (typeof contexRef == "number") {
-        const endIndex = contexRef > fullKeyPath.length - 2 ? fullKeyPath.length - contexRef - 1 : 0;
-        return getValueByPath(draft, fullKeyPath.slice(0, endIndex));
+        const endIndex = contexRef > valuePath.length - 2 ? valuePath.length - contexRef - 1 : 0;
+        return getValueByPath(draft, valuePath.slice(0, endIndex));
       }else {
         return draft;
       }

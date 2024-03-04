@@ -95,11 +95,8 @@ export interface StoreOptions{
     debug?:boolean
     // 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象
     // 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
-    computedThis?: ComputedContext
-    computedScope?: ComputedScope
-    // 
-    watchThis?: ComputedContext
-    watchScope?: ComputedScope
+    computedThis?:(computedType:StateComputedType)=>ComputedContext
+    computedScope?:(computedType:StateComputedType)=> ComputedScope 
     // 是否是单例模式，如果是单例模式，那么所有的计算属性都是共享的，否则每个实例都有自己的计算属性
     // =false时会对传入的data进行深度克隆，这样就可以创建多个互相不干扰的实例
     singleton?:boolean    

@@ -190,8 +190,8 @@ function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 's
   const { input:depends, type, computedContext, computedOptions, storeOptions } = params;
   return getComputedContext(draft,{
     input:depends,
-    contextType:type,
-    value:computedContext,
+    type,
+    valuePath:computedContext.fullKeyPath,
     funcOptions:computedOptions,
     storeOptions,
     computedType:'Computed'
