@@ -101,7 +101,6 @@ export interface WatcherObject extends WatchOptions{
 }
 
 export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,WatcherObject>{
-    listeners = new Map<any,RegisteredWatchListener>()
     private _off?:()=>{} 
     private _ctx?:ISharedCtx<Store["state"]>
     private _storeOptions:StoreOptions
@@ -285,7 +284,7 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
         })
     }
     remove(keyPath:string | string[]){
-        this.listeners.delete(this.getValueKey(keyPath))
+        this.delete(this.getValueKey(keyPath))
     }
     /**
      * 控制某个组的侦听器是否启用
@@ -293,11 +292,11 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
      * @param value 
      */
     enableGroup(groupName:string,value:boolean=true){
-        Object.entries(this.listeners).forEach(([key,listener])=>{
-            if(listener.options.group==groupName){
-                listener.options.enable = value
+        for(const watcher of this.values()){
+            if(watcher.group==groupName){
+                watcher.enable = value
             }
-        })
+        }
     }
 }
 
