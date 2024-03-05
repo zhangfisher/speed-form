@@ -664,7 +664,7 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
           initial  : undefined,             // 也没有初始化值
           immediate: true,                  // 立即执行
           enable   : true,
-          context  : storeOptions.computedThis,  
+          context  :storeOptions.computedThis && storeOptions.computedThis('Computed'),  
       },
       });
       createAsyncComputedMutate<Store>(stateCtx,params,extendObjects.computedObjects, storeOptions);
@@ -674,7 +674,7 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
       options: {
         initial  : undefined, 
         enable   : true,
-        context: storeOptions.computedThis, 
+        context  : storeOptions.computedThis && storeOptions.computedThis('Computed'), 
       }
     })
     // 直接声明同步计算函数,使用全局配置的计算上下文

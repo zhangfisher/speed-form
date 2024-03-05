@@ -140,8 +140,8 @@ export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOpt
     const opts = Object.assign({
         id:Math.random().toString(16).substring(2),
         debug:true,
-        computedThis:ComputedScopeRef.Root,
-        computedScope:ComputedScopeRef.Current,
+        computedThis:()=>ComputedScopeRef.Root,
+        computedScope:()=>ComputedScopeRef.Current,
         singleton:true
     },options) as Required<StoreOptions>
     opts.log = (...args:any[])=>{

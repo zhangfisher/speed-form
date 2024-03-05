@@ -40,8 +40,8 @@ export interface WatchOptions<R=any>{
 }
  
 /**
- * curPath=当前watch函数所在的位置
- * srcPath=watch函数侦听的位置，即发生变化的源路径
+ * selfPath=当前watch函数所在的位置
+ * triggerPath=watch函数侦听的位置，即发生变化的源路径
  */
 export type WatchListenerOptions<Result=any> = {getSelfValue:()=>Result ,selfPath:string[] ,triggerPath:string[],getCache:()=>Dict,state:any}
 export type WatchListener<Value=any, Result= Value> = (value:Value,options:WatchListenerOptions<Result>)=>(Exclude<Result,Promise<any>> | undefined)
@@ -102,12 +102,14 @@ export interface WatcherObject extends WatchOptions{
 
 export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,WatcherObject>{
     listeners = new Map<any,RegisteredWatchListener>()
-    private _wacher = {off:()=>{}} 
+    private _off?:()=>{} 
     private _ctx?:ISharedCtx<Store["state"]>
     private _storeOptions:StoreOptions
-    private _enable:boolean=true                        // 是否启用侦听器
-    private cache=new Map<any,WatcherObject[]>()      // 用来缓存侦听函数的返回值
-    private listenerCache?:Map <string,Dict>
+    private _enable:boolean=true                            // 是否启用侦听器
+    // key=triggerPath value=WatcherObject
+    // 为了避免每次发生heluxWatch时进行遍历所有的监听函数，这里缓存起来，当对应的triggerPath触发变化时，可以从缓存中读取直接运行相应的watcher
+    private cache=new Map<string,WatcherObject[]>()         
+    private watcherCache?:Map <string,Dict>                 // 每个watcher的自我缓存
     constructor(storeOptions:StoreOptions){
         super()
         this._storeOptions = storeOptions        
@@ -121,11 +123,7 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
     }
     set enable(value:boolean){
         this._enable = value
-    }    
-
-    private getWatchScope(){
-
-    }
+    }     
     /**
      * 创建全局侦听器,
      * 此侦听器会侦听根对象，当对象所有的状态变化,会执行所有监听过滤函数，如果返回true，则执行对应的监听函数
@@ -134,30 +132,45 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
     private createWacher(){
         // @ts-ignore
         const {unwatch} = heluxWatch(({triggerReasons})=>{
+            if(!this._enable) return 
             const triggerPaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
             triggerPaths.forEach((triggerPath)=>{  
+                // 从缓存中读取能匹配的watchers
                 const matchedWatchers:WatcherObject[] = this.getCachedWatchers(triggerPath)!
+                // 读取发生变化的值
                 const triggerValue = getVal(this._ctx!.state,triggerPath)
-                if(matchedWatchers.length===0){    // 如果有缓存，则直接从缓存中取值                    
-                    // 没有缓存时，遍历所有的监听函数，找到匹配的监听函数
-                    for(let watcher of this.values()){
-                        if(this.isMatchWatcher(triggerPath,triggerValue,watcher)){
+                // 如果没有缓存，则需要直接从缓存中取值                    
+                if(matchedWatchers.length===0){    
+                    // 没有缓存时，需要遍历所有的监听函数，找到匹配的监听函数
+                    for(const watcher of this.values()){
+                        if(this.isMatchWatcher(triggerPath,triggerValue,watcher)){                            
+                            // 添加到缓存中
+                            this.addWatcherToCache(triggerPath,watcher.path,watcher)
                             matchedWatchers.push(watcher)
                         }
                     } 
                 } 
-                // 如果没有缓存，则执行所有的监听函数
-                for(const [watchPath,watcher] of Object.entries(matchedWatchers)){
+                // 执行所有的监听函数
+                for(const watcher of matchedWatchers){
                     try{
                         watcher.run(triggerPath)
                     }catch(e:any){
-                        console.warn("Error while run watchLisenter("+triggerPath+"->"+watchPath+")",e.stack)
+                        console.warn("Error while run watchLisenter("+triggerPath.join(OBJECT_PATH_DELIMITER)+"->"+watcher.path.join(OBJECT_PATH_DELIMITER)+")",e.stack)
                     }
                 } 
                 
             })
         },()=>[this._ctx!.state])
-        this._wacher = {off:unwatch}
+        this._off = unwatch
+    }
+    /**
+     * 重置侦听器
+     */
+    reset(){
+        this.cache.clear()
+        this._off && this._off()
+        this.watcherCache?.clear()
+        this.createWacher()
     }
     /**
      * 找到匹配的侦听器
@@ -176,30 +189,37 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
     /**
      * 缓存侦听函数
      * 当匹配到过滤条件时，进行缓存以便下次当匹配的路径变化时可以直接执行侦听函数,而不是遍历所有的侦听过滤函数
-     * @param srcPath 
+     * @param triggerPath 
      * @param destPath 
      * @param listener 
      * @param listenerOpts 
      */
-    private addListenerToCache(srcPath:string[],destPath:string[],listener:WatchListener,listenerOpts:any){
-        const srcKey = this.getValueKey(srcPath)
-        if(!this.cache.has(srcKey)){
-            this.cache.set(srcKey,[])
+    private addWatcherToCache(triggerPath:string[],watchPath:string[],watcher:WatcherObject){
+        const key = this.getValueKey(triggerPath)
+        if(!this.cache.has(key)){
+            this.cache.set(key,[])
         }
-        const listenerCache = this.cache.get(srcKey)
-        listenerCache.push()
+        const watcherCache = this.cache.get(key)
+        watcherCache!.push(watcher)
     }
 
     private getValueKey(valuePath:string | string[]){
         return JSON.stringify(valuePath)
     } 
-    private getListenerCache(valuePath:string[]){
-        if(!this.listenerCache) this.listenerCache = new Map()
-        const key = valuePath.join(".")
-        if(!this.listenerCache.has(key)){
-            this.listenerCache.set(key,{})
+    /**
+     * 每个watcher可以通过getCache获取到一个独立的缓存用来保存一些信息
+     * 
+     * 
+     * @param watchPath 
+     * @returns 
+     */
+    private getWatcherCache(watchPath:string[]){
+        if(!this.watcherCache) this.watcherCache = new Map()
+        const key = watchPath.join(".")
+        if(!this.watcherCache.has(key)){
+            this.watcherCache.set(key,{})
         }
-        return this.listenerCache.get(key)!
+        return this.watcherCache.get(key)!
     }
     /**
      * 检测是否匹配watcher
@@ -224,7 +244,7 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
         // 1. 构建参数
         const listenerOpts = {
             getSelfValue : ()=> getVal(getSnap(this._ctx!.state),watchedPath),
-            getCache:()=>this.getListenerCache(watchedPath),
+            getCache:()=>this.getWatcherCache(watchedPath),
             triggerPath,
             selfPath:watchedPath,
             state:this._ctx!.state
@@ -240,8 +260,9 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
             },
             storeOptions:this._storeOptions
         })
+        const value =(options.scope==ComputedScopeRef.Depends && Array.isArray(scope)) ? scope[0] : scope
         // 3.  执行监听函数
-        const result = watchListener.call(this._ctx!.state,scope,listenerOpts)             
+        const result = watchListener.call(this._ctx!.state,value,listenerOpts)             
         // 4. 将返回值回写到状态中
         if(result!==undefined){
             // @ts-ignore
@@ -250,20 +271,17 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
             })
         }    
     }
-
-
     /**
      * 添加一个侦听器对象
      * @param descriptor 
      * @param params 
      */
-    add(descriptor:WatchDescriptorParams,params:IOperateParams){
-        const {fullKeyPath:watchPath} = params
+    add(watchPath:string[],listener:(...args:any[])=>any,options:WatchOptions){
         this.set(this.getValueKey(watchPath),{
             path:watchPath,
-            listener:descriptor.fn,
-            ...descriptor.options,
-            run:(triggerPath:string[])=>this.executeListener(triggerPath,watchPath,descriptor.fn,descriptor.options)
+            listener,
+            ...options,
+            run:(triggerPath:string[])=>this.executeListener(triggerPath,watchPath,listener,options)
         })
     }
     remove(keyPath:string | string[]){
@@ -291,13 +309,12 @@ export function installWatch<Store extends StoreDefine<any>>(options:StoreExtend
     watchObjects?.bind(stateCtx)
     storeOptions.log(`install watch for <${params.fullKeyPath.join(OBJECT_PATH_DELIMITER)}>`)
     const watchDescriptor = params.value() as unknown as WatchDescriptorParams
-    watchObjects!.add(watchDescriptor,params)
+    watchObjects!.add(params.fullKeyPath,watchDescriptor.fn,watchDescriptor.options)
     // params.replaceValue(watchDescriptor.options.initial)
     // @ts-ignore
     stateCtx.setState((draft)=>{
         setVal(draft,params.fullKeyPath,watchDescriptor.options.initial)
-    }) 
-    
+    })    
     
 }
 
