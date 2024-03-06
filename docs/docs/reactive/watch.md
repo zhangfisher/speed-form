@@ -191,31 +191,6 @@ const formState={
 
 
 
-### 与计算属性区别
-
-:::info
-
-本节请在阅读完计算属性一节后再阅读。 
-
-:::
-
-`watch`函数与`computed`函数功能的区别如下：
-
-- `computed`函数是用来声明计算属性的，`watch`函数是用来侦听`State`中的数据变化的。
-- `computed`函数的返回值会写入`State`中的对应属性，`watch`函数的返回值会写入`watch`函数所在的位置。
-- `watch`只能是同步侦听函数，而`computed`可以是异步函数。
-
-### 适用范围
-
-大部份情况下，我们应该使用`computed`函数来声明计算属性，而不是使用`watch`函数来侦听`State`中的数据变化。但是在一些特殊情况下，我们可能需要使用`watch`函数，主要在于：
-
-- **指定动态依赖**
-
-`computed`计算函数的依赖一般是显式或隐式的，而`watch`函数的依赖是动态的。这比较适合一些需要动态侦听的场景，比如上例中，我们动态侦听`orders[].count`的变化来计算`total`。而`computed`函数的依赖是静态的，一旦声明就不会变化。
-
-- **多字段复合计算**
-
-当某个字段需要进行复合计算时，我们可以使用`watch`函数来实现。比如在`SpeedForm`实现表单的`validate`和`dirty`属性的计算时，就是使用`watch`实现，有兴趣的朋友可以查看`SpeedForm`的源码。
 
 ## 侦听状态
 
@@ -345,10 +320,14 @@ const user = {
 
 const store = createStore({state:user})
 
+globalThis.Store = store
 
 export default ()=>{
   const [state,setState]=store.useState()
-
+  if(typeof(state.total1)==='function'){
+   console.warn("state.total1 is function")
+   
+  }
   return  (<div>
       <div>bookName={state.bookName}</div>
       <div>price={state.price}</div>
@@ -359,13 +338,73 @@ export default ()=>{
       </div>
       <Divider name="A Group"/>
       <ColorBlock name="Total-1" value={state.total1}/>
-      <ColorBlock name="Total-2" value={state.total1}/>
+      <ColorBlock name="Total-2" value={state.total2}/>
       <button onClick={()=>store.watchObjects.enableGroup("a",true)}>Enable A Group</button>
       <button onClick={()=>store.watchObjects.enableGroup("a",false)}>Disable A Group</button>
+      <div>当禁用A Group时，修改count时不会导致total变化，因为该组被禁止执行了</div>
       <Divider name="B Group"/>
-      <ColorBlock name="Total-3" value={state.total1}/>
-      <ColorBlock name="Total-4" value={state.total1}/>
-      <ColorBlock name="Total-5" value={state.total1}/>
+      <ColorBlock name="Total-3" value={state.total3}/>
+      <ColorBlock name="Total-4" value={state.total4}/>
+      <ColorBlock name="Total-5" value={state.total5}/>      
+      <button onClick={()=>store.watchObjects.enableGroup("b",true)}>Enable B Group</button>
+      <button onClick={()=>store.watchObjects.enableGroup("b",false)}>Disable B Group</button>
     </div>)
 }
 ```
+
+## 与计算属性区别
+
+:::info
+
+本节请在阅读完计算属性一节后再阅读。 
+
+:::
+
+`watch`函数与`computed`函数功能的区别如下：
+
+- `computed`函数是用来声明计算属性的，`watch`函数是用来侦听`State`中的数据变化的。
+- `computed`函数的返回值会写入`State`中的对应属性，`watch`函数的返回值会写入`watch`函数所在的位置。
+- `computed`函数的创建的计算属性是基于依赖收集的，而`watch`函数是基于侦听的,每当`State`状态变化时均会调用`watchOptions.on`过滤函数来匹配侦听函数，因此理论上，`computed`函数的性能更好，而`watch`函数性能会差些。
+- `watch`只能是同步侦听函数，而`computed`可以是异步函数。
+
+## 适用范围
+
+大部份情况下，我们应该使用`computed`函数来声明计算属性，而不是使用`watch`函数来侦听`State`中的数据变化。但是在一些特殊情况下，我们可能需要使用`watch`函数，主要在于：
+
+- **指定动态依赖**
+
+`computed`计算函数的依赖一般是确定的，而`watch`函数的依赖是动态的。这比较适合一些需要动态侦听的场景，比如上例中，我们动态侦听`orders[].count`的变化来计算`total`。而`computed`函数的依赖是静态的，一旦声明就不会变化。
+
+- **多字段复合计算**
+
+当某个字段需要进行复合计算时，我们可以使用`watch`函数来实现。比如在`SpeedForm`实现表单的`validate`和`dirty`属性的计算时，就是使用`watch`实现。
+
+比如这是检测表单`validate`计算：
+
+```tsx | pure
+export function validate<T=any>(options?:ValidateOptions){
+    const { entry  } = Object.assign({},options)
+    return watch<boolean,boolean>((value,{ triggerPath,selfPath,getCache})=>{        
+        // 只侦听entry下的所有字段
+        if(!isIncludePath(entry ? entry : selfPath,triggerPath)) return   
+        const selfCache = getCache()  // 得到的是一个Dict用来保存所有字段的validate属性值
+        // validate属性是一个boolean
+        if(typeof(value)=='boolean'){
+            const srcKey = triggerPath.join(OBJECT_PATH_DELIMITER)
+            if(value){
+                delete selfCache[srcKey]
+            }else{
+                selfCache[srcKey] = value
+            }
+        }
+        // 由于cache里面只记录validate=false的值，所以如果cache不为空则代表有字段的validate=false
+        return Object.keys(selfCache).length==0
+    },(path)=>isValidateField(path),{
+        initial:true
+    })
+}
+ 
+```
+
+
+

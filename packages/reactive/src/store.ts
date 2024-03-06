@@ -10,7 +10,7 @@ import { ComputedState, Dict, RequiredComputedState, StateComputedType } from '.
 import { ComputedObjects, ComputedOptions } from './computed';
 import { deepClone } from "flex-tools/object/deepClone";
 import { installExtends } from "./extends" 
-import { StoreWatcher, createUseWatch, createWatch } from "./watch";
+import { WatchObjects, createUseWatch, createWatch } from "./watch";
 import { log } from "./utils";
 
 
@@ -125,7 +125,7 @@ export interface StoreOptions{
 
 export interface StoreExtendObjects<T extends Dict = Dict>{
     computedObjects:ComputedObjects<T>
-    watchObjects?:StoreWatcher<StoreDefine<T>>
+    watchObjects?:WatchObjects<StoreDefine<T>>
     _replacedKey:Dict
 }
 
@@ -151,7 +151,7 @@ export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOpt
     const storeData = opts.singleton ? data : deepClone(data)
     const extendObjects:StoreExtendObjects<T['state']>={
         computedObjects:new ComputedObjects<T['state']>(),
-        watchObjects:new StoreWatcher<T>(opts),
+        watchObjects:new WatchObjects<T>(opts),
         _replacedKey:{}
     }
     return  model((api) => {

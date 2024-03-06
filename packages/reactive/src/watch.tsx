@@ -7,7 +7,7 @@
  * 
  * 
  */
-import { ISharedCtx, watch as heluxWatch, IOperateParams,  getSnap } from 'helux';
+import { ISharedCtx, watch as heluxWatch, IOperateParams,  getSnap, flush } from 'helux';
 import { ComputedScopeRef, type ComputedScope, type StateValueDescriptor, type StateValueDescriptorParams, type StoreDefine, type StoreOptions } from "./store";
 import { StoreExtendContext } from "./extends"; 
 import { getVal, getValueByPath, setVal } from "./utils"; 
@@ -100,7 +100,7 @@ export interface WatcherObject extends WatchOptions{
     listener:(...args:any[])=>any
 }
 
-export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,WatcherObject>{
+export class WatchObjects<Store extends StoreDefine<any>> extends Map<string,WatcherObject>{
     private _off?:()=>{} 
     private _ctx?:ISharedCtx<Store["state"]>
     private _storeOptions:StoreOptions
@@ -114,8 +114,10 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
         this._storeOptions = storeOptions        
     }  
     bind(ctx:ISharedCtx<Store["state"]>){
-        if(!this._ctx) this._ctx = ctx
-        this.createWacher()
+        if(!this._ctx) {
+            this._ctx = ctx
+            this.createWacher()
+        }
     }
     get enable(){
         return this._enable
@@ -123,6 +125,10 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
     set enable(value:boolean){
         this._enable = value
     }     
+    
+    private getValueKey(valuePath:string | string[]){
+        return JSON.stringify(valuePath)
+    }  
     /**
      * 创建全局侦听器,
      * 此侦听器会侦听根对象，当对象所有的状态变化,会执行所有监听过滤函数，如果返回true，则执行对应的监听函数
@@ -202,9 +208,6 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
         watcherCache!.push(watcher)
     }
 
-    private getValueKey(valuePath:string | string[]){
-        return JSON.stringify(valuePath)
-    } 
     /**
      * 每个watcher可以通过getCache获取到一个独立的缓存用来保存一些信息
      * 
@@ -240,6 +243,11 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
      * @param watchListener 
      */
     private executeListener(triggerPath:string[],watchedPath:string[],watchListener:Function,options:WatchOptions ){
+        if(!options.enable) {
+            this._storeOptions!.log!(`watcher <${watchedPath.join(OBJECT_PATH_DELIMITER)}> is disabled`)
+            return 
+        }
+        
         // 1. 构建参数
         const listenerOpts = {
             getSelfValue : ()=> getVal(getSnap(this._ctx!.state),watchedPath),
@@ -276,12 +284,13 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
      * @param params 
      */
     add(watchPath:string[],listener:(...args:any[])=>any,options:WatchOptions){
-        this.set(this.getValueKey(watchPath),{
+        const watchOptions = {
             path:watchPath,
             listener,
-            ...options,
-            run:(triggerPath:string[])=>this.executeListener(triggerPath,watchPath,listener,options)
-        })
+            ...options
+        } as WatcherObject
+        watchOptions.run = (triggerPath:string[])=>this.executeListener(triggerPath,watchPath,listener,watchOptions)
+        this.set(this.getValueKey(watchPath),watchOptions)
     }
     remove(keyPath:string | string[]){
         this.delete(this.getValueKey(keyPath))
@@ -300,7 +309,7 @@ export class StoreWatcher<Store extends StoreDefine<any>> extends Map<string,Wat
     }
 }
 
-// let storeWatcher:StoreWatcher<StoreDefine<any>> | undefined  
+// let storeWatcher:WatchObjects<StoreDefine<any>> | undefined  
  
 export function installWatch<Store extends StoreDefine<any>>(options:StoreExtendContext<ISharedCtx<Store["state"]>>) {
     const { stateCtx,params,storeOptions,extendObjects } =options    
@@ -309,12 +318,13 @@ export function installWatch<Store extends StoreDefine<any>>(options:StoreExtend
     storeOptions.log(`install watch for <${params.fullKeyPath.join(OBJECT_PATH_DELIMITER)}>`)
     const watchDescriptor = params.value() as unknown as WatchDescriptorParams
     watchObjects!.add(params.fullKeyPath,watchDescriptor.fn,watchDescriptor.options)
-    // params.replaceValue(watchDescriptor.options.initial)
+    params.replaceValue(watchDescriptor.options.initial)
     // @ts-ignore
     stateCtx.setState((draft)=>{
         setVal(draft,params.fullKeyPath,watchDescriptor.options.initial)
     })    
     
+    flush(stateCtx.state as any)
 }
 
  

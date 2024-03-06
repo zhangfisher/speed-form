@@ -2,7 +2,7 @@
 
 import React, { CSSProperties } from "react"
 import { ReactFC } from "./types";
-import { validate } from '../../core/src/validate';
+import { validate } from '../../core/src/validate'; 
 
 export type InputProps = React.PropsWithChildren<Partial<HTMLInputElement> & {
   name?:string
@@ -27,7 +27,7 @@ export const Input:ReactFC<InputProps> = (props:InputProps)=>{
             padding:"8px",
             display: visible ? 'block' : 'none',
         },style)} 
-        type="text"
+        type="text" 
         name={name}
         placeholder={placeholder}
         value={value ?? ''}

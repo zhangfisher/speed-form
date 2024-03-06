@@ -651,14 +651,14 @@ export default ()=>{
         <Network.Field<typeof Network.fields.ip> name="ip">                      
               {({name,title,value,visible,validate,placeholder,sync})=>{ 
                   return <Field  name="ip" visible={visible} title={title} validate={validate} memo="修改进行异步校验">
-                        <Input name={name}  className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
+                        <Input name={name} validate={validate.result} placeholder={placeholder} value={value} onChange={sync(100)}/>
                   </Field> 
               } }
         </Network.Field>
         <Network.Field<typeof Network.fields.gateway> name="gateway">                      
               {({name,title,value,required,visible,validate,update,enable,placeholder,sync})=>{ 
                   return <Field name="gateway" visible={visible} title={title}>
-                      <Input name={name}  className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                      <Input name={name}   validate={validate}  placeholder={placeholder} value={value} onChange={sync()}/>
                       <button onClick={update((state:any)=>{
                               state.gateway.value='192.168.1.2'
                           })}>恢复</button>
@@ -672,7 +672,7 @@ export default ()=>{
                   <Network.Field name="wifi.ssid">                      
                           {({name,value,required,visible,validate,enable,initial,sync})=>{ 
                               return  <Field  name="wifi.ssid" title="SSID" enable={enable}> 
-                                        <Input name={name}  className={classnames({invalid:!validate})} value={value} onChange={sync()} />
+                                        <Input name={name}   className={classnames({invalid:!validate})} value={value} onChange={sync()} />
                               </Field>
                           } }
                       </Network.Field>      
