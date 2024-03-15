@@ -81,6 +81,9 @@ importers:
       react-loader-spinner:
         specifier: ^6.1.6
         version: 6.1.6(react-dom@18.2.0)(react@18.2.0)
+      styledfc:
+        specifier: ^1.0.9
+        version: 1.0.9(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0)
       validator:
         specifier: ^13.11.0
         version: 13.11.0
@@ -13950,6 +13953,19 @@ packages:
 
   /styledfc@1.0.5(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-DvauHA+8mdelB3mmbGDrCzkaXZRFl1VTDuOc2RYd+Xchgh3O24oUm24uH10fqV+9pxKvxkJeTDO0UzECJXj9XA==}
+    peerDependencies:
+      '@types/react': ^18.2.40
+      react: ^18.2.0
+      react-dom: ^18.2.0
+    dependencies:
+      '@changesets/cli': 2.27.1
+      '@types/react': 18.2.46
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
+  /styledfc@1.0.9(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-xOZfsCOwQtfEoQUsHOJCqTl/YRy21HVLPHYvJwF7QIauhO/lmuM9xB0OjCTIk0uauL8z+s7NBCtzsYtpJzkXPQ==}
     peerDependencies:
       '@types/react': ^18.2.40
       react: ^18.2.0

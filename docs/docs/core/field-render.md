@@ -1,7 +1,7 @@
 ---
 group:
   title: 字段
-  order: 1
+  order: 2
 order: 7
 ---
 

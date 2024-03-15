@@ -38,3 +38,27 @@ export const ColorBlock:ReactFC<React.PropsWithChildren<{value?:any,name?:string
   return prev.name === next.name && prev.value === next.value
 })
        
+
+export const Block:ReactFC<React.PropsWithChildren<{value?:any,name?:string,title?:string}>> =(props)=>{
+  const renderCount = useRef(0)
+  const { name,value=''} = props 
+  const backgroundColor = getRandomColor()
+  let textColor = 'block'
+  if(color.rgb(backgroundColor).isDark()){
+    textColor = 'white'
+    }else{
+      textColor ="block"
+    }
+
+    useEffect(()=>{
+      renderCount.current++
+    })
+
+  return (
+    <div  {...props} style={{  backgroundColor,padding:'4px',color:textColor,display:'flex',...props.style,alignItems:'center' }}>
+      <span style={{flexGrow:1}}>{name ? (<span style={{padding:'2px'}}>{name}=</span>) : ''}<span style={{padding:'2px'}}>{String(value)}{props.children}</span></span>
+      <span style={{fontSize:'8px'}}>{renderCount.current}</span>
+    </div>
+  );
+}
+       

@@ -19,7 +19,7 @@ demo:
 ```tsx
 import { createStore } from '@speedform/reactive';
 import React,{createContext,useContext,useState} from "react"
-import { ColorBlock } from "@speedform/demo-components"
+import { Block } from "@speedform/demo-components"
 
 const ctx = createContext({
   firstName:"Zhang",
@@ -29,9 +29,9 @@ const ctx = createContext({
 
 const Child = React.memo((props)=>{
     const context=useContext(ctx)
-    return <ColorBlock name={`子组件:${props.name}`}>
+    return <Block name={`子组件:${props.name}`}>
       <span>Hello :{context.firstName}{' '}{context.lastName}</span> 
-    </ColorBlock>
+    </Block>
 })
 let count:number = 0
 export default ()=>{
@@ -54,7 +54,7 @@ export default ()=>{
 
 ```
 
-从上面的例子可看到，当更新`Context.age`时，所有的子组件不管是否有使用`Age`均会重新渲染，而这是不必要的，因为子组件并没有使用到`Context`的数据，为此我们需要引入一些第三方库来进行优化渲染。
+从上面的例子可看到，当更新`Context.age`时，所有的子组件不管是否有使用`Age`均会重新渲染，而这是不必要的，因为子组件并没有使用到`Context`的数据，为此我们一般需要使用`React.memo`或一些第三方库来进行优化渲染。
 
 :::info
 **最大的问题在于，当更新根Context时，所有的子组件都会重新渲染，这是不必要的，因为子组件并没有使用到根Context的数据。我们希望能实现更细粒度的渲染，只有当子组件使用到的数据发生变化时，才会重新渲染。**
@@ -67,7 +67,7 @@ export default ()=>{
 ```tsx
 import { createStore } from '@speedform/reactive';
 import React,{createContext,useContext,useState} from "react"
-import { ColorBlock } from "@speedform/demo-components"
+import { Block } from "@speedform/demo-components"
 
 const state = {
   firstName:"Zhang",
@@ -80,16 +80,16 @@ const store = createStore<typeof state>({state})
 const FirstName = React.memo((props)=>{
     const [state,setState] = store.useState()
     const {firstName} = state
-    return <ColorBlock name={`子组件:FirstName`}>
+    return <Block name={`子组件:FirstName`}>
       <span>Hello :{firstName}</span> 
-    </ColorBlock>
+    </Block>
 })
 const LastName = React.memo((props)=>{
     const [state,setState] = store.useState()
     const {lastName} = state
-    return <ColorBlock name={`子组件:lastName`}>
+    return <Block name={`子组件:lastName`}>
       <span>Hello :{lastName}</span> 
-    </ColorBlock>
+    </Block>
 })
 let count=0
 export default ()=>{ 
@@ -120,7 +120,7 @@ export default ()=>{
 ```tsx
 import { createStore } from '@speedform/reactive';
 import React,{createContext,useContext,useState} from "react"
-import { ColorBlock } from "@speedform/demo-components"
+import { Block } from "@speedform/demo-components"
 
 import { $ } from "helux"
 
@@ -133,14 +133,14 @@ const state = {
 const store = createStore<typeof state>({state})
 
 const FirstName = React.memo((props)=>{
-    return <ColorBlock name={`子组件:FirstName`}>
+    return <Block name={`子组件:FirstName`}>
       <span>Hello :{store.state.firstName}{' '}{store.state.lastName}(没有使用Signal)</span> 
-    </ColorBlock>
+    </Block>
 })
 const LastName = React.memo((props)=>{
-    return <ColorBlock name={`子组件:LastName`}>
+    return <Block name={`子组件:LastName`}>
       <span>Hello :{$(store.state.firstName)}{' '}{store.state.lastName}</span> 
-    </ColorBlock>
+    </Block>
 })
 let count=0
 export default ()=>{ 
