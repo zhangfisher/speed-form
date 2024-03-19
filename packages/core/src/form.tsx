@@ -229,6 +229,12 @@ function freezeForm(store:any){
 	}
 }
 
+/**
+ * 声明表单
+ * @param schema 
+ * @param options 
+ * @returns 
+ */
 export function createForm<State extends Dict=Dict>(schema: State,options?:FormOptions) {
 	const opts = assignObject({
 		getFieldName:(valuePath:string[])=>valuePath.length > 0 ? valuePath[valuePath.length-1]==='value' ? valuePath.slice(0,-1).join(".") : valuePath.join(".") : '',

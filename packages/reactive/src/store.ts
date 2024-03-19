@@ -3,7 +3,7 @@
  
  */
 
-import { ISharedCtx, model } from "helux"
+import { ISharedCtx, model,flush } from "helux"
 import type { ActionDefines, Actions } from './action';
 import {  createActions } from './action';
 import { ComputedState, Dict, RequiredComputedState, StateComputedType } from './types';
@@ -67,7 +67,7 @@ export type StateSetter<State,Value=any> = (state:State,value:Value)=>void
  */
 function useStateWrapper<State extends Dict>(stateCtx:ISharedCtx<State["state"]>){
     return function<Value=any,SetValue=Value>(getter?:StateGetter<RequiredComputedState<State>,Value>,setter?:StateSetter<RequiredComputedState<State>,SetValue>){
-        const useState = stateCtx.useState
+        const useState = stateCtx.useState 
         if(getter==undefined){
             return useState()
         }

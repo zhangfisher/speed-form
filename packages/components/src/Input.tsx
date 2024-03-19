@@ -5,18 +5,19 @@ import { ReactFC } from "./types";
 import { validate } from '../../core/src/validate'; 
 
 export type InputProps = React.PropsWithChildren<Partial<HTMLInputElement> & {
-  name?:string
-  visible?:boolean
-  enable?:boolean
-  validate?:boolean | null
-  placeholder?:string
-  onChange?:any
-  value?:string
-  style?:Partial<CSSProperties>
+    type?:"text" | 'submit' | 'reset'
+    name?:string
+    visible?:boolean
+    enable?:boolean
+    validate?:boolean | null
+    placeholder?:string
+    onChange?:any
+    value?:string
+    style?:Partial<CSSProperties>
 }>
 
 export const Input:ReactFC<InputProps> = (props:InputProps)=>{
-    const { name,enable=true,validate=true,visible=true,placeholder,onChange=()=>{},value,style} =props
+    const { name,enable=true,type="text",validate=true,visible=true,placeholder,onChange=()=>{},value,style} =props
 
     return (
         <input style={Object.assign({ 
@@ -27,7 +28,7 @@ export const Input:ReactFC<InputProps> = (props:InputProps)=>{
             padding:"8px",
             display: visible ? 'block' : 'none',
         },style)} 
-        type="text" 
+        type={type} 
         name={name}
         placeholder={placeholder}
         value={value ?? ''}

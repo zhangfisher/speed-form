@@ -31,14 +31,14 @@ const NetworkForm = ()=>{
              <Network.Field<typeof Network.fields.ip> name="ip">                      
                 {({name,title,value,visible,validate,placeholder,sync})=>{ 
                     return <Field  name="ip" visible={visible} title={title} validate={validate}>
-                         <Input name={name} validate={validate.result}  className={classnames({invalid:validate===false.result})} placeholder={placeholder} value={value} onChange={sync(100)}/>
+                         <Input name={name} validate={validate.result}  className={classnames({invalid:validate.result===false})} placeholder={placeholder} value={value} onChange={sync(100)}/>
                     </Field> 
                 } }
             </Network.Field>
             <Network.Field<typeof Network.fields.gateway> name="gateway">                      
                 {({name,title,value,visible,validate,update,placeholder,sync})=>{ 
                     return <Field name="gateway" visible={visible} title={title} validate={validate} >
-                        <Input name={name}   validate={validate.result}  className={classnames({invalid:validate===false})} placeholder={placeholder} value={value} onChange={sync()}/>
+                        <Input name={name}   validate={validate.result}  className={classnames({invalid:validate.result===false})} placeholder={placeholder} value={value} onChange={sync()}/>
                         <button onClick={update((state:any)=>{
                                 state.gateway.value='192.168.1.2'
                             })}>恢复</button>
@@ -134,7 +134,15 @@ const NetworkForm = ()=>{
                              dirty={String(dirty)},validate={String(validate)}
                         </>
                     }}
-                </Network.Submit>            
+                </Network.Submit>      
+                
+                <Network.Action<typeof Network.actions.timeoutSubmit> name="actions.timeoutSubmit" >
+                    {({title,visible,loading,enable,run,cancel,error,progress})=>{ 
+                        return <>
+                            <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={run()}>{title}</Button>
+                        </>
+                    }}
+                </Network.Action>        
             </div> 
         </Card>
     </Network.Form>        

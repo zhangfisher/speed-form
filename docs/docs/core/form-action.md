@@ -7,7 +7,7 @@ order: 2
 
 # 表单动作
 
-表单动作用来定义表单的提交、重置等行为，你也可以自定义表单动作。
+表单动作用来定义表单的提交、重置,或者任意行为，你也可以自定义表单动作。
 
 通俗地说，表单动作就是声明一个函数，用来对表单数据进行处理。
 
@@ -52,7 +52,7 @@ export const schema = {
   actions:{
     login:{
       title:"登录",
-      execute:(scope,options)=>{
+      execute:async (scope,options)=>{
         console.log("登录")
       }
     }
@@ -78,12 +78,14 @@ export const Login=createForm<typeof schema>(schema,options)
 
 直接使用异步函数声明
 
-```tsx | pure 
+```tsx  
 
-import { createForm }  from "@speedform/core"
-export const schema = { 
+import { createForm,action }  from "@speedform/core"
+import { Row, Col,Button, Input} from "@speedform/demo-components"
+
+const schema = { 
   fields:{  
-    name: {
+    username: {
       value: "fisher",
       required: true,
       title: "姓名"
@@ -91,46 +93,48 @@ export const schema = {
     password: {
       value: "123",
       required: true,
-      title: "年龄"
+      title: "密码"
     } 
   },
   // 表单动作
   actions:{
     login:{
       title:"登录",
-      execute:(scope,options)=>{
-        
-      }
+      execute:action(async (scope,options)=>{
+        console.log("登录",scope)
+      })
     }
   }
 }
 
-export const Login=createForm<typeof schema>(schema)
+const Login = createForm<typeof schema>(schema,{debug:true})
 
 export default ()=>{
-  const form=Login.useForm()
-  const {login}=form.actions
-  return <div>
-    <div>
-      <Login.Field name="username">{
-        ({value,sync})=>{
-          return <div>用户名：<input value={value} onChange={sync()}/></div>
-        }
-      }</Login.Field> 
-      <Login.Field name="password">{
-        ({value,sync})=>{
-          return <div>密码：<input value={value} onChange={sync()}/></div>
-        }
-      }</Login.Field>       
-      <Network.Action<typeof Network.fields.wifi.cancelableSubmit> name="" >
-          {({title,visible,loading,enable,run,cancel,error,progress})=>{ 
-              return <>
-                  <Input type="submit" value="提交"/>
-                  <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={run()}>{title}</Button>
-              </>
-          }}
-      </Network.Action> 
-  </div>  
+  return (<Row>
+      <Col>
+          <Login.Field name="username">{
+            ({value,sync})=>{
+              return <div>用户名：<input value={value} onChange={sync()}/></div>
+            }
+          }</Login.Field> 
+          <Login.Field name="password">{
+            ({value,sync})=>{
+              return <div>密码：<input value={value} onChange={sync()}/></div>
+            }
+          }</Login.Field>       
+          <Login.Action<typeof Login.actions.login> name="login" >
+              {({title,visible,loading,enable,run,cancel,error,progress})=>{ 
+                  return <>
+                      <Input type="submit" value="提交"/>
+                      <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={()=>run()}>{title}</Button>
+                  </>
+              }}
+          </Login.Action> 
+        </Col>  
+        <Col>
+        dsdsd
+        </Col>
+    </Row>)
 }
 
 ```

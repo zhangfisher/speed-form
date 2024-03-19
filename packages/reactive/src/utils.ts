@@ -214,3 +214,20 @@ export function isPromise(obj:any){
 }
 
 
+/**
+ * 判断是否是一个异步计算对象
+ * @param obj 
+ * @returns 
+ */
+export function isAsyncComputedObject(obj:any){
+    return typeof(obj)=='object' && ["result","loading","timeout","retry","run"].every(s=>obj.hasOwnProperty(s))
+}
+
+
+export function isAsyncComputedDescriptor(obj:any){
+    return typeof(obj)=='object' 
+        && obj.hasOwnProperty("__COMPUTED__") 
+        && ["async","sync"].includes(obj.__COMPUTED__)
+        && obj.hasOwnProperty("fn")  && typeof(obj.fn)=='function'
+        && obj.hasOwnProperty("options") && typeof(obj.options)=='object'
+}

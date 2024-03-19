@@ -191,13 +191,13 @@ function useActionRunner<State extends FormActionState=FormActionState>(actionSt
                 event.preventDefault()
             }
         }
-    },[])         
+    },[actionState])         
     const canceller = useCallback((event:any)=>{        
         actionState.execute.cancel()
         if(event && typeof(event.preventDefault)=='function'){
             event.preventDefault()
         }
-    },[])
+    },[actionState])
     return [runner,canceller]
 }
 
@@ -264,8 +264,10 @@ export function createActionComponent<Store extends Dict = Dict>(store:Store,act
      */
     function Action<State extends FormActionState=FormActionState,Scope extends Dict=Dict>(props: ActionProps<State,Scope>):ReactNode{
         const [state] = store.useState()  
-
-        const { name:actionKey } = props  
+        
+        let { name:actionKey } = props  
+        // 如果动作是声明在actions里面可以省略actions前缀
+        if(!actionKey.includes(".")) actionKey = `actions.${actionKey}`
 
         const actionState = getValueByPath(state,actionKey,".")
         const [actionRunner] = useActionRunner(actionState,actionOptions)
