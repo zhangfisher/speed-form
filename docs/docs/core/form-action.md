@@ -110,6 +110,7 @@ const schema = {
 const Login = createForm<typeof schema>(schema,{debug:true})
 
 export default ()=>{
+  const [ formData,setFormData ] = useState('')
   return (<Row>
       <Col>
           <Login.Field name="username">{
@@ -126,7 +127,7 @@ export default ()=>{
               {({title,visible,loading,enable,run,cancel,error,progress})=>{ 
                   return <>
                       <Input type="submit" value="提交"/>
-                      <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={()=>run()}>{title}</Button>
+                      <Button loading={loading} cancel={cancel} timeout={progress} visible={visible} enable={enable} error={error} onClick={ run()}>{title}</Button>
                   </>
               }}
           </Login.Action> 

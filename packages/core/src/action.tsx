@@ -321,6 +321,7 @@ export type SubmitAsyncComputedGetter<R> = AsyncComputedGetter<R,FormData>
 
 /**
  * 特殊的对象传入一个FormData对象
+ * 声明一个提交动作
  * @param getter 
  * @param options 
  * @returns 
@@ -333,3 +334,27 @@ export function submit<R=any>(getter: SubmitAsyncComputedGetter<R>,options?: Com
 
 }
 
+
+/**
+ * 在表单访问Action动作
+ * 
+ * 
+ * const { execute } = useAction<typeof Network.actions.submit>('Network.actions.submit',(scope)=>{
+ *      
+ * })
+ * 
+ */
+export function createUseActionHook<Store extends Dict = Dict>(store:Store,actionOptions?:ActionRunOptions,formOptions?:Required<FormOptions>) {
+
+    // return function useAction<State extends FormActionState=FormActionState,Scope extends Dict=Dict>(name:string,getter:AsyncComputedGetter<any,Scope>,options?:ComputedOptions<any>){
+        
+    //     let { name } 
+    //     // 如果动作是声明在actions里面可以省略actions前缀
+    //     if(!actionKey.includes(".")) actionKey = `actions.${actionKey}`
+
+    //     const actionState = getValueByPath(state,actionKey,".")
+    //     const [actionRunner] = useActionRunner(actionState,actionOptions)
+    //     const actionCanceller = useActionCanceller(state,actionKey)
+    // }
+
+}
