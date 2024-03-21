@@ -45,15 +45,13 @@ import type { ReactFC,  ComputedAttr } from "./types";
 import { createFieldComponent  } from './field'; 
 import { createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import {   createActionComponent, getAction } from './action';
+import {   UseActionType, createActionComponent, createUseAction, getAction } from './action';
 import { FIELDS_STATE_KEY } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
 import defaultFormProps from "./form.default"
 import { createSubmitComponent,createResetComponent } from "./behaviors";
-import { createLoadApi, createGetValuesApi } from "./serialize";
-import { validate } from './validate';
-
+import { createLoadApi, createGetValuesApi } from "./serialize"; 
 
 
 export type FormEnctypeType = 'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain'
@@ -281,6 +279,7 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 		Submit: createSubmitComponent<StoreType>(store,{},opts),
 		Reset: createResetComponent<StoreType>(store,{},opts),
 		getAction,
+		useAction:createUseAction<StoreType>(store,opts) as UseActionType,
     	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
 		actions:createObjectProxy(()=>store.state.actions) as ActionsType,		
 		state:store.state as FormSchema<StateType>, 

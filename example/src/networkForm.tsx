@@ -163,6 +163,12 @@ const FormDemo:React.FC = ()=>{
 
     Network.state.dirty
     Network.state.enable
+
+    const { run } = Network.useAction(async (scope:any,params)=>{
+        console.log("scope=",scope,params)
+    })
+
+
  
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>
@@ -172,8 +178,7 @@ const FormDemo:React.FC = ()=>{
                 <button onClick={()=>submit(Network.state.actions.next)}>提交</button>
                 <button onClick={()=>submit(Network.state.actions.timeoutSubmit)}>提交超时</button>
                 <span>
-                <button onClick={()=>submit(Network.state.actions.errorSubmit)}>提交出错</button>
-                <button onClick={()=>submit}>取消</button>
+                <button onClick={()=>run()}>UseAction</button>
                 </span> 
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 

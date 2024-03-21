@@ -9,10 +9,10 @@
  */
 
 import { IOperateParams, ISharedCtx, markRaw, getSnap, IMutateWitness } from 'helux';
-import type { StoreDefine, ComputedScope, StoreOptions, ComputedContext, IStore, StoreExtendObjects, StateValueDescriptorParams, StateValueDescriptor } from "./store";
+import type { StoreDefine, ComputedScope, StoreOptions, ComputedContext, IStore, StateValueDescriptorParams, StateValueDescriptor } from "./store";
 import { ComputedScopeRef } from "./store"; 
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
-import { skipComputed, getValueByPath, joinValuePath, getError, getDeps, getDepValues,getVal, setVal  } from "./utils";
+import { skipComputed,  joinValuePath, getError, getDeps, getDepValues,getVal, setVal  } from "./utils";
 import { switchValue } from "flex-tools/misc/switchValue"; 
 import { Dict } from "./types";
 import { delay } from 'flex-tools/async/delay'; 
@@ -363,12 +363,14 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
     // 关闭死循环检测，信任开发者
     checkDeadCycle: false,
   });
-  computedParams.replaceValue(getVal(mutate.snap, valuePath));
+  // computedParams.replaceValue(getVal(mutate.snap, valuePath));
+  computedParams.replaceValue(getVal(stateCtx.state, valuePath));
   computeObjects!.set(strValuePath,{
     mutate,
     group:computedOptions.group,
     async:false,
-    run:(throwError?)=>mutate.run(throwError)
+    // run:(throwError?)=>mutate.run(throwError)
+    run:(options?:RuntimeComputedOptions)=> stateCtx.runMutateTask({desc:mutateId,extraArgs:options})   
   })   
 }
 
@@ -390,8 +392,7 @@ function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial
         })
     ),
     cancel  : markRaw(skipComputed(() => {
-      console.log("cancel")
-      // 此命令会取消异步计算，仅在执行时有效。     
+      console.log("cancel")       // 此命令会取消异步计算，仅在执行时有效。     
     }))
   },valueObj)
 }
@@ -557,7 +558,6 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
   }
   let { fn: getter, options: computedOptions }  = value() as ComputedDescriptorParams<any>
   computedOptions.async = true; 
-
  
   // 在创建computed前运行,允许拦截更改计算函数的依赖,上下文,以及getter等
   if (typeof onCreateComputed == "function" && typeof getter === "function") {
@@ -636,13 +636,14 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     desc:mutateId,
     checkDeadCycle: false,
   });
-  computedParams.replaceValue(getVal(mutate.snap, valuePath));
+  computedParams.replaceValue(getVal(stateCtx.state, valuePath));
   
   computeObjects!.set(strValuePath,{
     mutate,
     group:computedOptions.group,
     async:true,
-    run:(throwError?)=>mutate.runTask(throwError)
+    // run:(throwError?)=>mutate.runTask(throwError)
+    run:(options?:RuntimeComputedOptions)=> stateCtx.runMutateTask({desc:mutateId,extraArgs:options})   
   })   
 }
 
@@ -685,7 +686,7 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
 
 export interface ComputedObject<T=Dict> extends ComputedOptions{
   mutate:IMutateWitness<T> 
-  run:(throwError?:boolean)=>Promise<any> | any
+  run:(options?:RuntimeComputedOptions)=>Promise<any> | any
 }
  /**
   * 
