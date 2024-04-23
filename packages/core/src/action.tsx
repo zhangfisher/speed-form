@@ -34,7 +34,7 @@
 import { ReactNode, useCallback, useRef, RefObject,useState, useEffect} from "react";
 import React from "react";
 import type { FormOptions } from "./form";
-import { getSnap, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedOptions, ComputedParams,  Dict, RuntimeComputedOptions, computed, getValueByPath, watch } from '@speedform/reactive'; 
+import { getSnap, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedOptions, ComputedParams,  Dict, RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
 
@@ -218,7 +218,7 @@ function useActionCanceller<State extends FormActionState=FormActionState>(state
 }
 
 
-function createActionRenderProps<State extends FormActionState=FormActionState>(actionState:State,actionRunner:any,actionCanceller:any,ref:RefObject<HTMLElement>){  
+function createActionRenderProps<State extends FormActionState=FormActionState>(actionState:State,actionRunner:any,actionCanceller:any,ref?:RefObject<HTMLElement>){  
     return Object.assign({            
         help       : "",
         title      : "",
@@ -230,8 +230,7 @@ function createActionRenderProps<State extends FormActionState=FormActionState>(
         ...actionState.execute,
         run:actionRunner,
         cancel:actionCanceller,
-        ref,
-        
+        ref
     })
 } 
 
@@ -304,10 +303,7 @@ export function createActionComponent<Store extends Dict = Dict>(store:Store,act
  * 使用action来声明一个动作
  * 
  * 该函数实现以下功能:
- * - 从store中获取动作的状态数据传递给Action的getter函数
- * - 
- * 
- * 
+ * - 从store中获取动作的状态数据传递给Action的getter函数 * 
  * 
  * @param getter 
  * @param options 
@@ -339,9 +335,11 @@ export function submit<R=any>(getter: SubmitAsyncComputedGetter<R>,options?: Com
 }
 
 export type UseActionType = <Scope extends Dict=Dict>(executor:FormActionExecutor<Scope>,options?:Omit<ActionRunOptions,"execute">)=>FormActionState['execute']
+
+
 /**
  * 
- * 在组件中使用创建一个动作
+ * 在组件中动态创建一个使用创建一个动作
  * 在表单访问Action动作 
  * 
  * 
@@ -350,50 +348,31 @@ export type UseActionType = <Scope extends Dict=Dict>(executor:FormActionExecuto
  *      
  * },{
         abortSignal
+        name:"可选的action名称"
 
  * })
  * 
  */
-export function createUseAction<Store extends Dict = Dict>(store:Store,formOptions?:Required<FormOptions>) {
+export function createUseAction<Store extends Dict = Dict>(store:Store) {
+    return function useAction<Scope extends Dict=Dict,R=any>(executor:FormActionExecutor<Scope>,options?:ActionRunOptions & {name?:string}){
+        const ref = useRef<string | null>()
 
-    return function useAction<Scope extends Dict=Dict>(executor:FormActionExecutor<Scope>,options?:Omit<ActionRunOptions,"execute">){
+        const [state,setState] = store.useState()        
+        const [actionKey] = useState(()=>options?.name ?  options?.name : Math.random().toString(36).substring(2))
 
-        const [state,setState] = store.useState()
-        const [actionKey,setActionKey] = useState(()=>Math.random().toString(36).substring(2))
-        setState((draft:any)=>{
-            if(!(actionKey in draft.actions)){
-                draft.actions[actionKey] = {
-                    execute:computed(async (scope:Scope,opts)=>{
-                        return await executor(scope,opts)
-                    },[],options)
-                }                    
-            }
-        })   
-        useEffect(()=>{
-            // setActionKey(actionKey)
-            // setState((draft:any)=>{
-            //     draft.actions[actionKey] = {
-            //         execute:computed(async (scope:Scope,opts)=>{
-            //             return await executor(scope,opts)
-            //         },[],options)
-            //     }                    
-            // })   
-            // getValueByPath(state,['actions',actionKey]) 
-            return ()=>{
-                setState((draft:any)=>{
-                    try{
-                        debugger
-                        store.computedObjects.delete(`actions/${actionKey}/execute`)
-                        delete draft.actions[actionKey]
-                        
-                    }catch{
-                        debugger
-                    }                    
-                })                
-            } 
-        },[])        
+        if(!ref.current){
+            setState((draft:any)=>{
+                if(!(actionKey in draft.actions)){
+                    draft.actions[actionKey] = {
+                        execute:computed(async (scope:Scope,opts)=>{
+                            return await executor(scope,opts)
+                        },[],options)
+                    }                       
+                }
+            })   
+            ref.current = actionKey
+        } 
         return getValueByPath(state,['actions',actionKey]).execute as FormActionState['execute']
-
     }
 
 }

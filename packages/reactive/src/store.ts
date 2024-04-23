@@ -174,6 +174,7 @@ export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOpt
             useState,
             watch: createWatch(stateCtx),
             useWatch: createUseWatch(stateCtx),
+            flush:()=>flush(stateCtx.state),
             ...extendObjects
         };
     }) as unknown as IStore<T>

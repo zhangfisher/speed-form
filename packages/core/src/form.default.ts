@@ -14,6 +14,7 @@ export default {
     }),
     readonly:false,
     enable:true,
-    visible:true
+    visible:true,
+    actions:{}
 }
     

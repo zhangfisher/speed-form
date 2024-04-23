@@ -38,7 +38,7 @@
  *
  */
 
-import React, {	useCallback } from "react";
+import React, {	useCallback, useRef } from "react";
 import type {  StoreDefine,RequiredComputedState, ComputedOptions, Dict, IStore } from "@speedform/reactive";
 import { createStore ,ComputedScopeRef } from "@speedform/reactive";
 import type { ReactFC,  ComputedAttr } from "./types";
@@ -279,7 +279,7 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 		Submit: createSubmitComponent<StoreType>(store,{},opts),
 		Reset: createResetComponent<StoreType>(store,{},opts),
 		getAction,
-		useAction:createUseAction<StoreType>(store,opts) as UseActionType,
+		useAction:createUseAction<StoreType>(store) as UseActionType,
     	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
 		actions:createObjectProxy(()=>store.state.actions) as ActionsType,		
 		state:store.state as FormSchema<StateType>, 
@@ -344,3 +344,24 @@ function createFormComponent<Fields extends Dict>(this:FormOptions,store: any): 
 
 
  
+/**
+ * 在组件中使用
+ * 
+ * const Book = useForm<>(()=>{{
+ * 		name:"书籍名称"
+ * 		fields:{
+ * 		}
+ * }},options)
+ * 
+ * 
+ * @param schema 
+ * @param options 
+ * @returns 
+ */
+export function useForm<State extends Dict=Dict>(schema:()=>State,options?:FormOptions) {
+	const ref = useRef<ReturnType<typeof createForm<ReturnType<typeof schema>>>>()
+	if(ref.current==null){
+		ref.current = createForm<ReturnType<typeof schema>>(schema(),options)
+	}
+	return ref.current
+}

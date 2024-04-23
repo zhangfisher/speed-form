@@ -626,7 +626,7 @@ export default ()=>{
     <Network.Form onSubmit={onSubmit} action="/api" ref={ref}>       
         <Network.Field<string> name="title">                      
               {({name,title,value,visible,validate,placeholder,sync})=>{         
-                  return <Field  name="title" visible={visible} title={title} validate={validate}>
+                  return <Field  name="title" visible={visible} label={title} validate={validate}>
                         <Input 
                           name={name} 
                           className={classnames({invalid:!validate})} 
@@ -639,7 +639,7 @@ export default ()=>{
         </Network.Field>
         <Network.Field<typeof Network.fields.interface> name="interface">                      
               {({name,title,required,visible,validate,enable,value,initial,select,sync})=>{     
-                  return <Field name="interface" title={title}>                        
+                  return <Field name="interface" label={title}>                        
                       <select value={value} onChange={sync()}>
                           {select.map((item:any, index:number) => (
                               <option  key={index} value={item.value}>{item.title}</option>
@@ -650,14 +650,14 @@ export default ()=>{
         </Network.Field> 
         <Network.Field<typeof Network.fields.ip> name="ip">                      
               {({name,title,value,visible,validate,placeholder,sync})=>{ 
-                  return <Field  name="ip" visible={visible} title={title} validate={validate} memo="修改进行异步校验">
+                  return <Field  name="ip" visible={visible} label={title} validate={validate} memo="修改进行异步校验">
                         <Input name={name} validate={validate.result} placeholder={placeholder} value={value} onChange={sync(100)}/>
                   </Field> 
               } }
         </Network.Field>
         <Network.Field<typeof Network.fields.gateway> name="gateway">                      
               {({name,title,value,required,visible,validate,update,enable,placeholder,sync})=>{ 
-                  return <Field name="gateway" visible={visible} title={title}>
+                  return <Field name="gateway" visible={visible} label={title}>
                       <Input name={name}   validate={validate}  placeholder={placeholder} value={value} onChange={sync()}/>
                       <button onClick={update((state:any)=>{
                               state.gateway.value='192.168.1.2'
@@ -690,21 +690,21 @@ export default ()=>{
         </Network.Group>                
         <Network.Field<typeof Network.fields.dhcp.enable> name="dhcp.enable" >                                       
               {({name,title,visible,value,validate,sync})=>{     
-                  return <Field  name='dhcp.enable' visible={visible} title={title}>
+                  return <Field  name='dhcp.enable' visible={visible} label={title}>
                         <input name={name}  className={classnames({invalid:!validate})} type='checkbox' checked={value}  onChange={sync()}/>
                   </Field>
               }}
         </Network.Field> 
         <Network.Field<typeof Network.fields.dhcp.start> name="dhcp.start">                      
               {({name,value,validate,enable,visible,title,sync})=>{ 
-                  return  <Field name="dhcp.start" title={title} enable={enable} >
+                  return  <Field name="dhcp.start" label={title} enable={enable} >
                       <Input name={name}  enable={enable}  className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                   </Field>
               } }
         </Network.Field>
         <Network.Field<typeof Network.fields.dhcp.end> name="dhcp.end">                      
               {({name,value,validate,visible,title,enable,sync})=>{     
-                  return <Field name="dhcp.end" enable={enable} title={title}>
+                  return <Field name="dhcp.end" enable={enable} label={title}>
                       <Input name={name} enable={enable} className={classnames({invalid:!validate})} value={value} onChange={sync()}/>
                   </Field>
               }}
