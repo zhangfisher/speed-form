@@ -186,7 +186,7 @@ export function getAction<State extends FormActionState=FormActionState>(actionS
  * @returns 
  */
 function useActionRunner<State extends FormActionState=FormActionState>(actionState:State,actionOptions?:ActionRunOptions){
-    const runner = useCallback((options?:ActionRunOptions )=>{ 
+    return useCallback((options?:ActionRunOptions )=>{ 
         const opts = Object.assign({},{noReentry:true,preventDefault:true},actionOptions,options)       
         const run = getAction<State>(actionState,opts)
         return (event:any)=>{
@@ -196,13 +196,13 @@ function useActionRunner<State extends FormActionState=FormActionState>(actionSt
             }
         }
     },[actionState])         
-    const canceller = useCallback((event:any)=>{        
-        actionState.execute.cancel()
-        if(event && typeof(event.preventDefault)=='function'){
-            event.preventDefault()
-        }
-    },[actionState])
-    return [runner,canceller]
+    // const canceller = useCallback((event:any)=>{        
+    //     actionState.execute.cancel()
+    //     if(event && typeof(event.preventDefault)=='function'){
+    //         event.preventDefault()
+    //     }
+    // },[actionState])
+    // return [runner,canceller]
 }
 
 
@@ -273,7 +273,7 @@ export function createActionComponent<Store extends Dict = Dict>(store:Store,act
         if(!actionKey.includes(".")) actionKey = `actions.${actionKey}`
 
         const actionState = getValueByPath(state,actionKey,".")
-        const [actionRunner] = useActionRunner(actionState,actionOptions)
+        const actionRunner = useActionRunner(actionState,actionOptions)
         const actionCanceller = useActionCanceller(state,actionKey)
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
