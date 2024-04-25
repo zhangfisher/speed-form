@@ -65,7 +65,13 @@ export function compareObject<T extends Record<string,any>>(a:T,b:T):Partial<T>{
 	return result
 }
 
-
+/**
+ * 生成一个随机id
+ * @returns 
+ */
+export function getId(){
+	return Math.random().toString(36).substring(2)
+}
 
 /**
  * 创建一个Proxy对象,返回对fn的调用结果的代理
@@ -105,6 +111,6 @@ export function isFieldGroup(data:Dict){
 }
 
 
- 
-
-
+export function isDev(){
+	return process.env.NODE_ENV == 'development' || process.env.NODE_ENV === 'test';
+}

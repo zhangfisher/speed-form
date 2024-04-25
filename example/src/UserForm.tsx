@@ -1,13 +1,14 @@
-import React from "react";
+import React ,{useState} from "react";
 import classnames from 'classnames';
 import {Field,Card,JsonViewer, Button} from "@speedform/demo-components";
 import { useForm } from "@speedform/core";
+import { delay } from "flex-tools/async/delay";
 
  
 
 
 const FormDemo:React.FC = ()=>{
-    
+    const  [ formData ,setFormData] = useState('')
     const User = useForm(()=>{
         return {
             fields: {
@@ -30,10 +31,24 @@ const FormDemo:React.FC = ()=>{
         }})
     const [state] = User.useState()
 
-    const { run } = User.useAction(async (scope,opts)=>{
-        console.log("scope=",scope,opts)
-    },{})
-
+    const { run,loading,progress } = User.useAction(async (scope,{getProgressbar})=>{
+        setFormData(JSON.stringify(scope))
+        const progressbar = getProgressbar()
+        return new Promise(async (resolve)=>{            
+            for(let i=1;i<=100;i++){
+                await delay(20)
+                progressbar.value(i)
+            }
+            progressbar.end()            
+            resolve(scope)
+        }) 
+    },{name:"x"})
+    const { run : timeoutRun,timeout } = User.useAction(async (scope)=>{
+        setFormData(JSON.stringify(scope))
+        await delay(100000)
+    },{name:"y",timeout:[2500,5]})
+    // @ts-ignore 方便调试用
+    globalThis.User = User
 
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>
@@ -57,15 +72,18 @@ const FormDemo:React.FC = ()=>{
                         </User.Field> 
                         <div>FullName:{state.fields.fullName}</div>
                         <Button onClick={()=>run()}>执行Action</Button>                        
+                        <Button onClick={()=>run()} loading={loading}>执行Action - 执行中状态</Button>                        
+                        <Button onClick={()=>run()} progress={progress}>执行Action - 显示进度</Button>                        
+                        <Button onClick={()=>timeoutRun()} timeout={timeout}>执行Action - 倒计时</Button>      
                     </Card>
                 </User.Form>        
+                <textarea style={{width:'100%',height:"5em"}} value={formData}></textarea>
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 
                 <Card title="表单数据">
                     <JsonViewer data={User.state}/> 
                 </Card>
-            </div>
-            
+            </div>            
         </div>
         
     )

@@ -31,12 +31,13 @@
  */
 
 
-import { ReactNode, useCallback, useRef, RefObject,useState, useEffect} from "react";
+import { ReactNode, useCallback, useRef, RefObject,useState} from "react";
 import React from "react";
 import type { FormOptions } from "./form";
 import { getSnap, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedOptions, ComputedParams,  Dict, RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
+import { getId } from "./utils";
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
   | ((fields:Fields)=>Promise<R>) 
@@ -195,14 +196,7 @@ function useActionRunner<State extends FormActionState=FormActionState>(actionSt
                 event.preventDefault()
             }
         }
-    },[actionState])         
-    // const canceller = useCallback((event:any)=>{        
-    //     actionState.execute.cancel()
-    //     if(event && typeof(event.preventDefault)=='function'){
-    //         event.preventDefault()
-    //     }
-    // },[actionState])
-    // return [runner,canceller]
+    },[actionState])          
 }
 
 
@@ -320,6 +314,8 @@ export type SubmitAsyncComputedGetter<R> = AsyncComputedGetter<R,FormData>
 
 
 /**
+ * 
+ * 
  * 特殊的对象传入一个FormData对象
  * 声明一个提交动作
  * @param getter 
@@ -334,7 +330,9 @@ export function submit<R=any>(getter: SubmitAsyncComputedGetter<R>,options?: Com
 
 }
 
-export type UseActionType = <Scope extends Dict=Dict>(executor:FormActionExecutor<Scope>,options?:Omit<ActionRunOptions,"execute">)=>FormActionState['execute']
+
+
+export type UseActionType = <Scope extends Dict=Dict,R=any>(executor:AsyncComputedGetter<R,Scope>,options?:ComputedOptions<R> & {name?:string})=>FormActionState['execute']
 
 
 /**
@@ -342,31 +340,29 @@ export type UseActionType = <Scope extends Dict=Dict>(executor:FormActionExecuto
  * 在组件中动态创建一个使用创建一个动作
  * 在表单访问Action动作 
  * 
+ 
  * 
  * 
  * const { run } = useAction(async (scope,parmas)=>{
  *      
  * },{
         abortSignal
-        name:"可选的action名称"
+        name:"可选的action名称,如果没有指定则生成"
 
  * })
  * 
  */
 export function createUseAction<Store extends Dict = Dict>(store:Store) {
-    return function useAction<Scope extends Dict=Dict,R=any>(executor:FormActionExecutor<Scope>,options?:ActionRunOptions & {name?:string}){
+    // useAction本质上就是创建一个计算属性
+    return function useAction<Scope extends Dict=Dict,R=any>(executor:AsyncComputedGetter<R,Scope>,options?:ComputedOptions<R> & {name?:string}){
         const ref = useRef<string | null>()
-
         const [state,setState] = store.useState()        
-        const [actionKey] = useState(()=>options?.name ?  options?.name : Math.random().toString(36).substring(2))
-
+        const [actionKey] = useState(()=>options?.name ?  options?.name : getId())
         if(!ref.current){
             setState((draft:any)=>{
                 if(!(actionKey in draft.actions)){
                     draft.actions[actionKey] = {
-                        execute:computed(async (scope:Scope,opts)=>{
-                            return await executor(scope,opts)
-                        },[],options)
+                        execute:action(executor,options)
                     }                       
                 }
             })   
