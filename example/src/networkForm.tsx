@@ -186,8 +186,8 @@ const FormDemo:React.FC = ()=>{
                     {title:'Save',onClick:()=>setFormData(Network.getValues())},
                     {title:'Load',onClick:()=>Network.load(formData)},
                 ]}>
-                     <Field name="dirty" title="dirty">{String(fState.dirty)}</Field>
-                    <Field name="validate" title="validate">{String(fState.validate)}</Field>
+                     <Field name="dirty" label="dirty">{String(fState.dirty)}</Field>
+                    <Field name="validate" label="validate">{String(fState.validate)}</Field>
                     <textarea 
                         style={{width:"100%",height:"200px"}} 
                         value={JSON.stringify(formData)}

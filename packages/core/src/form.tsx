@@ -46,7 +46,7 @@ import { createFieldComponent  } from './field';
 import { createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
 import {   UseActionType, createActionComponent, createUseAction, getAction } from './action';
-import { FIELDS_STATE_KEY } from "./consts";
+import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from "./consts";
 import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
 import defaultFormProps from "./form.default"
@@ -139,7 +139,7 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
 }
 
 /**
- * 对表单字段中的validator属性进行处理,使用该属性的传入参数总是当前字段的值
+ * 对表单字段中的validator属性进行处理,使得用该属性的传入参数总是当前字段的值
  * 
  * 经过处理后
  * 
@@ -295,7 +295,7 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 		watchObjects:store.watchObjects,
 		store,
 		// 校验整个表单：即执行所有校验计算函数
-		validate:async ()=>store.computedObjects.runGroup("validate")
+		validate:async ()=>store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
 	};
 }
 

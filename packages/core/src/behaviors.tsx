@@ -136,7 +136,7 @@ export function createFormBehaviorComponent<Store extends Dict = Dict>(store:Sto
         const [state] = store.useState()  
         const { scope } = props  
 
-        const formState =getValueByPath(state,scope)  
+        const formState = getValueByPath(state,scope)  
         // 创建动作组件的Props
         const submitRenderProps = createBehaviorRenderProps(formState)        
         // 0-无子组件 1-渲染函数 2-组件数组 3-单个组件

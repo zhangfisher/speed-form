@@ -14,6 +14,7 @@ import { isFieldGroup, isFieldList, isFieldValue, isFormAction } from "./utils"
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject"
 import type { FormOptions } from "./form"
 import { validate } from './validate';
+import { VALIDATE_COMPUTED_GROUP } from "./consts";
  
 
 function getFieldValue(data:Dict){
@@ -194,7 +195,7 @@ export function createLoadApi<Store extends IStore>(store:Store,formOptions?:Req
         }finally{
             store.setEnableMutate(true) 
             if(opts?.validate){
-                store.computedObjects.run("@validate")
+                store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
             }
         }
     }

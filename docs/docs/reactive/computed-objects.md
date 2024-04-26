@@ -155,6 +155,110 @@ export default ()=>{
 
 ```
 
+- 以上我们将所有计算函数的依赖均设为`[]`，也就是无依赖，因此当`book.price`,`book.count`的值变化时，`Total Group`和`Average Group`的计算属性并不会自动重新计算，此时就需要手动执行计算。
+
+:::warning{title=提示} 
+  **Q**: 为什么此处要指定`async=true`?<br/>
+  **A**: 因此本站使用`webpack/babel`进行转码，异步函数会被转码为同步函数，导致无法自动识别`async`函数，因此需要手动指定`async=true`
+:::
+
+
+## 启用/禁用计算
+
+`computed`提供了一个`enable`属性用来控制是否进行计算。当`enable=false`时，当依赖变化时不会进行计算，直至`enable=true`。
+
+**我们可以通过以下方法来启用/禁用计算。**
+
+- 可以在使用`computed`创建计算属性时，传入`enable`来指定计算属性的默认状态。
+- 可以通过`ComputedObjects.get(<路径名称>)`来启用/禁用计算。
+- 可以通过`ComputedObjects.enableGroup(<true/false>)`来启用/禁用某个组的计算。
+
+
+
+```tsx 
+import { createStore,computed } from '@speedform/reactive';
+import { Divider,ColorBlock } from "@speedform/demo-components"
+import { delay } from "speedform-docs"
+
+let count=0
+const state = {
+  book:{
+    name:"Zhang",
+    count:4,
+    price: 100,
+    total1: computed(async (book)=>{
+      await delay()
+      return book.count*book.price 
+    },['book.count','book.price'],{async:true,group:"total"}),
+    total2: computed(async (book)=>{
+      await delay()
+      return book.count*book.price 
+    },['book.count','book.price'],{async:true,group:"total",initial:100,enable:false}),
+    total3: computed(async (book)=>{
+      await delay()
+      return book.count*book.price 
+    },[],{async:true,group:"total"}),
+    average1: computed(async (book)=>{
+      await delay()
+      return book.price/book.count
+    },[],{async:true,group:"average"}),
+    average2: computed(async (book)=>{
+      await delay()
+      return book.price/book.count
+    },[],{async:true,group:"average"}),
+    average3: computed(async (book)=>{
+      await delay()
+      return book.price/book.count
+    },[],{async:true,group:"average"})
+
+
+  }
+} 
+
+const store = createStore<typeof state>({state})
+
+export default ()=>{
+  const [state] = store.useState()
+
+  return (<div>
+    <div>BookName ={state.book.name}</div>
+    <div>count = <input value={state.book.count} onChange={store.sync(["book","count"])}/></div>
+    <div>price = <input value={state.book.price} onChange={store.sync(["book","price"])}/></div>
+    <Divider title="Total Group"/>
+    <table>
+      <tbody>
+        <tr>
+          <td>Total1 =</td>
+          <td>{state.book.total1.loading ? '计算中...' : state.book.total1.result}</td>
+          <td>默认自动计算</td>
+        </tr>
+        <tr>
+          <td>Total2 =</td>
+          <td>{state.book.total2.loading ? '计算中...' : state.book.total2.result}</td>
+          <td>禁用计算，指定了默认值(<input type="checkbox" checked={store.computedObjects.get("book/total2")} onChange={(e)=>{
+            console.log("ff=,",e.target,store.computedObjects.get("book/total2"))
+          }} />)</td>
+        </tr>        
+        <tr>
+          <td>Total3 =</td>
+          <td>{state.book.total3.loading ? '计算中...' : state.book.total3.result}</td>
+          <td>无依赖，需要手动计算</td>
+        </tr>
+      </tbody>
+    </table> 
+    <button onClick={()=>store.computedObjects.runGroup("total")}>执行组total计算函数</button> 
+    <Divider title="Average Group"/>
+    <div>Average1 ={state.book.average1.loading ? '计算中...' : state.book.average1.result}</div> 
+    <div>Average2 ={state.book.average2.loading ? '计算中...' : state.book.average2.result}</div> 
+    <div>Average3 ={state.book.average3.loading ? '计算中...' : state.book.average3.result}</div> 
+    <button onClick={()=>store.computedObjects.runGroup("average")}>执行组average计算函数</button> 
+  </div>)
+}
+
+
+```
+
+
 ## 计算参数
 
 默认情况下，我们推荐使用`computed(getter,deps,options)`方法来创建计算属性,通过`store.computedObject.get("<路径>")`获取到`ComputedObject`实例，然后通过`ComputedObject`实例来读取和修改计算属性的参数。

@@ -1,4 +1,5 @@
 ---
+nav: 指南1
 group:
   title: 表单
   order: 1

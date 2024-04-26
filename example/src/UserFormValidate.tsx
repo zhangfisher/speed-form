@@ -10,6 +10,8 @@ import validator from 'validator';
 
 const FormDemo:React.FC = ()=>{
     const  [ formData ,setFormData] = useState('')
+    const  [ validateAt ,setValidateAt] = useState('realtime')
+    
     const User = useForm(()=>{
         return {
             fields: {
@@ -32,7 +34,7 @@ const FormDemo:React.FC = ()=>{
         }})
     const [state] = User.useState()
 
-    const { run,loading,progress } = User.useAction(async (scope,{getProgressbar})=>{
+    const { run } = User.useAction(async (scope,{getProgressbar})=>{
         setFormData(JSON.stringify(scope))
         const progressbar = getProgressbar()
         return new Promise(async (resolve)=>{            
@@ -43,14 +45,10 @@ const FormDemo:React.FC = ()=>{
             progressbar.end()            
             resolve(scope)
         }) 
-    },{name:"x"})
-    const { run : timeoutRun,timeout } = User.useAction(async (scope)=>{
-        setFormData(JSON.stringify(scope))
-        await delay(100000)
-    },{name:"y",timeout:[2500,5]})
-    // @ts-ignore 方便调试用
-    globalThis.User = User
-
+    },{name:"x"}) 
+    const handleValidateAtChange = (event) => {
+        setValidateAt(event.target.value);
+      };
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>
             <div style={{padding:"8px",margin:'8px',width:'60%'}}>              
@@ -73,12 +71,20 @@ const FormDemo:React.FC = ()=>{
                         </User.Field> 
                         <div>FullName:{state.fields.fullName}</div>
                         <div>Validate:{String(state.validate)}</div>
-                        <Button onClick={()=>run()}>执行Action</Button>                        
-                        <Button onClick={()=>run()} loading={loading}>执行Action - 执行中状态</Button>                        
-                        <Button onClick={()=>run()} progress={progress}>执行Action - 显示进度</Button>                        
-                        <Button onClick={()=>timeoutRun()} timeout={timeout}>执行Action - 倒计时</Button>      
+                        <Button onClick={()=>run()}>执行Action</Button>                         
                     </Card>
                 </User.Form>    
+                    
+                {/* 单选组件，可选: 实时校验，编辑时校验，提交时校验， */}
+                <div>               
+                    {validateAt}
+                    <input type="radio" id="optionA1" name="validateAt"  value="realtime"   onChange={handleValidateAtChange} />  
+                    <label htmlFor="optionA1">实时校验</label>              
+                    <input type="radio" id="optionB1" name="validateAt" value="lose-focus"  onChange={handleValidateAtChange}/>  
+                    <label htmlFor="optionB1">丢失焦点时校验</label>  
+                    <input type="radio" id="optionC1" name="validateAt" value="submit"   onChange={handleValidateAtChange}/>  
+                    <label htmlFor="optionC1">提交时校验</label>
+                </div>    
                 <textarea style={{width:'100%',height:"5em"}} value={formData}></textarea>
             </div>
             <div style={{padding:"8px",margin:'8px',width:'40%'}}> 

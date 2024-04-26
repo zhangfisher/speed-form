@@ -369,6 +369,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
     mutate,
     group:computedOptions.group,
     async:false,
+    options:computedOptions,
     // run:(throwError?)=>mutate.run(throwError)
     run:(options?:RuntimeComputedOptions)=> stateCtx.runMutateTask({desc:mutateId,extraArgs:options})   
   })   
@@ -642,7 +643,7 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     mutate,
     group:computedOptions.group,
     async:true,
-    // run:(throwError?)=>mutate.runTask(throwError)
+    options:computedOptions,
     run:(options?:RuntimeComputedOptions)=> stateCtx.runMutateTask({desc:mutateId,extraArgs:options})   
   })   
 }
@@ -687,16 +688,18 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
 export interface ComputedObject<T=Dict> extends ComputedOptions{
   mutate:IMutateWitness<T> 
   run:(options?:RuntimeComputedOptions)=>Promise<any> | any
+  options:ComputedOptions  
+  group?:string
+  async:boolean
 }
  /**
   * 
   */
 export class ComputedObjects<T=Dict> extends Map<string,ComputedObject<T>>{
+
   /**
-   * 运行计算函数
-   * 
-   * run("a/b")  运行指定的计算函数
-   * run("@groupName") 运行指定组的计算函数，组名称以'@'开头
+   * 运行指定组的计算函数
+   *  
    * 
    * @param string 
    * @param 
@@ -705,5 +708,14 @@ export class ComputedObjects<T=Dict> extends Map<string,ComputedObject<T>>{
    */
   async runGroup(group:string){       
       return Promise.all([...this.values()].filter(v=>v.group==group).map(v=> v.async ? v.mutate.runTask() : v.mutate.run()))   
+  }
+  /**
+   * 启用或禁用计算
+   * @param value 
+   */
+  async enableGroup(value:boolean){
+    for(let computedObject of this.values()){
+      computedObject.enable = value
+    }
   }
 }

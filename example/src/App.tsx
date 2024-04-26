@@ -5,12 +5,13 @@ import classnames from "classnames"
 import ComputedDemo from './ComputedDemo'
 import NetworkForm from './networkForm'
 import UserForm from './UserForm'
-
+import UserFormWithValidate from "./UserFormValidate"
 
 const menuItems=[
   // {id:"render",title:"useState",component:<UseStateDemo/>},
   {id:"computed",title:"计算属性",component:<ComputedDemo/>},
-  {id:"user",title:"用户",component:<UserForm/>,default:true},
+  {id:"user",title:"用户",component:<UserForm/>},
+  {id:"user_vala",title:"校验",component:<UserFormWithValidate/>,default:true},
   {id:"network",title:"网络",component:<NetworkForm/>},  
 ] 
 

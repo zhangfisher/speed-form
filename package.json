@@ -4,7 +4,7 @@
   "description": "high-performance and easy-to-use final form management for react",
   "main": "src/index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "docs:dev": "cd docs && pnpm dev"
   },
   "keywords": [],
   "author": "",

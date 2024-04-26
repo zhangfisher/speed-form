@@ -671,14 +671,14 @@ export default ()=>{
               return (  <Card title={title+"(仅interfact=wifi时显示)"}  visible={visible}>
                   <Network.Field name="wifi.ssid">                      
                           {({name,value,required,visible,validate,enable,initial,sync})=>{ 
-                              return  <Field  name="wifi.ssid" title="SSID" enable={enable}> 
+                              return  <Field  name="wifi.ssid" label="SSID" enable={enable}> 
                                         <Input name={name}   className={classnames({invalid:!validate})} value={value} onChange={sync()} />
                               </Field>
                           } }
                       </Network.Field>      
                       <Network.Field name="wifi.password">                      
                           {({name,value,enable,validate,placeholder,help,sync})=>{ 
-                              return  <Field name="wifi.password" title="密码" enable={enable} className={classnames({invalid:!validate})} > 
+                              return  <Field name="wifi.password" label="密码" enable={enable} className={classnames({invalid:!validate})} > 
                                         <Input name={name} style={{
                                           border: validate ? '1px solid #ccc' : '1px solid red',                                  
                                         }} data-help={help} value={value} placeholder={placeholder} onChange={sync()} readOnly={!enable}/><ValidResult validate={validate} help={help}/>                               
