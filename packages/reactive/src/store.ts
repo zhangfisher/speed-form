@@ -7,7 +7,7 @@ import { ISharedCtx, model,flush } from "helux"
 import type { ActionDefines, Actions } from './action';
 import {  createActions } from './action';
 import { ComputedState, Dict, RequiredComputedState, StateComputedType } from './types';
-import { ComputedObjects, ComputedOptions } from './computed';
+import { type ComputedObject, ComputedObjects, ComputedOptions } from './computed';
 import { deepClone } from "flex-tools/object/deepClone";
 import { installExtends } from "./extends" 
 import { WatchObjects, createUseWatch, createWatch } from "./watch";
@@ -120,6 +120,10 @@ export interface StoreOptions{
     onComputedContext(draft:any,options:{computedType:StateComputedType, contextType:'context' | 'scope',valuePath:string[]}):any
     // 输出日志信息
     log?:(message:any,level?:'log' | 'error' | 'warn')=>void
+    /**
+     * 当计算对象创建时调用
+     */
+    onCreateComputedObject?(keyPath:string[],computedObject:ComputedObject):void
 }
 
 

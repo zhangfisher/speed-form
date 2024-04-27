@@ -1,7 +1,7 @@
 import React ,{useState} from "react";
 import classnames from 'classnames';
 import {Field,Card,JsonViewer, Button} from "@speedform/demo-components";
-import { useForm } from "@speedform/core";
+import { useForm,computed } from "@speedform/core";
 import { delay } from "flex-tools/async/delay"; 
 
 const userDefine =  {
@@ -17,9 +17,17 @@ const userDefine =  {
             placeholder: "",
             title: "密码", 
             validate: async (value: string) => {
-                await delay(1000)
+                await delay(100)
                 return value.length > 3
             }
+        },
+        verifyCode: {
+            value: "",
+            placeholder: "",
+            title: "验证码", 
+            validate: computed(async (value: string) => { 
+                return value.length > 3
+            })
         }
     }
 
@@ -58,6 +66,9 @@ const FormDemo:React.FC = ()=>{
                 <User.Form className="panel">
                 <div data-loader="circle"></div>
                     <Card title={`用户 - validAt='once'`}>
+                        <div>
+                            <div>validate={String(User.state.validate)}</div>
+                        </div>
                         <User.Field<typeof User.fields.username> name="username">                      
                                 {({title,value,visible,validate,placeholder,sync})=>{ 
                                     return <Field visible={visible} label={title} validate={validate}>
@@ -68,7 +79,14 @@ const FormDemo:React.FC = ()=>{
                         <User.Field<typeof User.fields.password> name="password">                      
                             {({title,value,visible,validate,placeholder,sync})=>{ 
                                 return <Field visible={visible} label={title} validate={validate}>
-                                    <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                                    <input className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync()}/>
+                                </Field>
+                            } }
+                        </User.Field>  
+                        <User.Field<typeof User.fields.verifyCode> name="verifyCode">                      
+                            {({title,value,visible,validate,placeholder,sync})=>{ 
+                                return <Field visible={visible} label={title} validate={validate}>
+                                    <input className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync()}/>
                                 </Field>
                             } }
                         </User.Field>  

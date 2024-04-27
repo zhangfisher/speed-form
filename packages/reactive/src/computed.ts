@@ -311,7 +311,7 @@ function getComputedId(valuePath:string[],idArg:ComputedOptions['id']){
  * @param stateCtx
  * @param computedParams
  */
-function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>, computedParams: IOperateParams,computeObjects:ComputedObjects<Store["state"]>, storeOptions: Required<StoreOptions>) {
+function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>, computedParams: IOperateParams,computeObjects:ComputedObjects<Store["state"]>, storeOptions: Required<StoreOptions>):ComputedObject | undefined{
 
   const { fullKeyPath:valuePath, parent,value } = computedParams;
   const { onCreateComputed } = storeOptions;
@@ -365,14 +365,18 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
   });
   // computedParams.replaceValue(getVal(mutate.snap, valuePath));
   computedParams.replaceValue(getVal(stateCtx.state, valuePath));
-  computeObjects!.set(strValuePath,{
+  const computeObject = {
     mutate,
     group:computedOptions.group,
     async:false,
     options:computedOptions,
+    get enable(){return computedOptions.enable as boolean},
+    set enable(val:boolean){computedOptions.enable=val},
     // run:(throwError?)=>mutate.run(throwError)
     run:(options?:RuntimeComputedOptions)=> stateCtx.runMutateTask({desc:mutateId,extraArgs:options})   
-  })   
+  }
+  computeObjects!.set(strValuePath,computeObject)   
+  return  computeObject
 }
 
 
@@ -549,7 +553,7 @@ async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,
  * @param stateCtx
  * @param computedParams
  */
-function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,computedParams: IOperateParams,computeObjects:IStore['computedObjects'],storeOptions: Required<StoreOptions>) {
+function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,computedParams: IOperateParams,computeObjects:IStore['computedObjects'],storeOptions: Required<StoreOptions>) :ComputedObject | undefined{
   const { fullKeyPath:valuePath, parent ,value } = computedParams;
   const { onCreateComputed } = storeOptions;
 
@@ -638,26 +642,30 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
     checkDeadCycle: false,
   });
   computedParams.replaceValue(getVal(stateCtx.state, valuePath));
-  
-  computeObjects!.set(strValuePath,{
+  const computeObject = {
     mutate,
     group:computedOptions.group,
     async:true,
     options:computedOptions,
+    get enable(){ return computedOptions.enable as boolean },
+    set enable(value:boolean){ computedOptions.enable = value },
     run:(options?:RuntimeComputedOptions)=> stateCtx.runMutateTask({desc:mutateId,extraArgs:options})   
-  })   
+  }
+  computeObjects!.set(strValuePath,computeObject)  
+  return  computeObject
 }
 
 
 export function installComputed<Store extends StoreDefine<any>>(options:StoreExtendContext<Store["state"]>) {
   const { stateCtx,params,storeOptions,extendObjects} = options
   const descriptor = params.value
+  let computedObject:ComputedObject | undefined
   //@ts-ignore
   if (descriptor.__COMPUTED__=='async') {
-    createAsyncComputedMutate<Store>(stateCtx,params,extendObjects.computedObjects, storeOptions);
+    computedObject = createAsyncComputedMutate<Store>(stateCtx,params,extendObjects.computedObjects, storeOptions);
   //@ts-ignore
   }else if (descriptor.__COMPUTED__=='sync') {
-    createComputedMutate<Store>(stateCtx, params,extendObjects.computedObjects!, storeOptions);
+    computedObject = createComputedMutate<Store>(stateCtx, params,extendObjects.computedObjects!, storeOptions);
   }else if (isAsyncFunction(descriptor)) { // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次   
       params.value = () => ({
         fn: descriptor,
@@ -669,7 +677,7 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
           context  :storeOptions.computedThis && storeOptions.computedThis('Computed'),  
       },
       });
-      createAsyncComputedMutate<Store>(stateCtx,params,extendObjects.computedObjects, storeOptions);
+      computedObject = createAsyncComputedMutate<Store>(stateCtx,params,extendObjects.computedObjects, storeOptions);
   }else { // 简单的同步计算函数，没有通过computed函数创建
     params.value = () => ({
       fn: descriptor,
@@ -680,17 +688,27 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
       }
     })
     // 直接声明同步计算函数,使用全局配置的计算上下文
-    createComputedMutate<Store>(stateCtx, params, extendObjects.computedObjects!, storeOptions);
+    computedObject = createComputedMutate<Store>(stateCtx, params, extendObjects.computedObjects!, storeOptions);
   }
+  // 当创建计算完毕后的回调
+  if(computedObject && typeof(storeOptions.onCreateComputedObject)=='function'){
+    try{
+      storeOptions.onCreateComputedObject(params.fullKeyPath,computedObject)
+    }catch(e:any){
+      storeOptions.log(e.stack,'error')
+    }   
+
+  }  
 }
 
 
-export interface ComputedObject<T=Dict> extends ComputedOptions{
+export interface ComputedObject<T=Dict>{
   mutate:IMutateWitness<T> 
   run:(options?:RuntimeComputedOptions)=>Promise<any> | any
   options:ComputedOptions  
-  group?:string
+  group:string | undefined
   async:boolean
+  enable:boolean
 }
  /**
   * 
@@ -715,7 +733,7 @@ export class ComputedObjects<T=Dict> extends Map<string,ComputedObject<T>>{
    */
   async enableGroup(value:boolean){
     for(let computedObject of this.values()){
-      computedObject.enable = value
+      computedObject.options.enable = value
     }
   }
 }
