@@ -142,7 +142,7 @@ export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOpt
         debug:true,
         computedThis:()=>ComputedScopeRef.Root,
         computedScope:()=>ComputedScopeRef.Current,
-        singleton:true
+        singleton:false
     },options) as Required<StoreOptions>
     opts.log = (...args:any[])=>{
         if(opts.debug) (log as any)(...args)
@@ -172,8 +172,8 @@ export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOpt
             ...stateCtx,
             state: stateCtx.reactive,
             useState,
-            watch: createWatch(stateCtx),
-            useWatch: createUseWatch(stateCtx),
+            watch: createWatch(stateCtx,opts),
+            useWatch: createUseWatch(stateCtx,opts),
             flush:()=>flush(stateCtx.state),
             ...extendObjects
         };

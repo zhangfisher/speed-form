@@ -17,6 +17,19 @@ export type ValidateOptions<T=any> = {
 }
 
 /**
+ * 
+ * 用来标识表单的validate属性
+ *  如下：
+ *  {
+ *     myValidate:validate({
+        entry:['fields']
+    }),
+ * 
+     代表validate属性侦听fields下所有字段的validate属性,并计算所有字段的validate属性值进行计算
+
+     当entry范围内的所有字段的validate均为true时，myValidate的值才为true    
+ * 
+ * 
  *  侦听表单中entryPath下所有字段的validate属性，当任何一个字段的validate属性发生变化时，都会触发监听函数的执行并更新validate()所在的值
  *  只要有一个字段的validate为false，则整个表单的validate为false
  *  表单的validate = field1.validate && field2.validate && field3.validate ..... && fieldN.validate

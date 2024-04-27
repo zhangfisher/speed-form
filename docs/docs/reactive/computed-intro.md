@@ -141,7 +141,7 @@ const state = {
 } 
 const store = createStore<typeof user>({state},{
   // 指定计算属性的默认上下文指向计算函数所有的当前对象
-  computedThis: ComputedScopeRef.Current,
+  computedThis: ()=>ComputedScopeRef.Current,
 })
 
 export default ()=>{
@@ -175,7 +175,7 @@ const state = {
 } 
 const store = createStore<typeof user>({state},{
   // 指定计算属性的默认上下文指向计算函数所有的当前对象
-  computedThis: ComputedScopeRef.Parent,
+  computedThis: ()=>ComputedScopeRef.Parent,
 })
 
 export default ()=>{
@@ -212,7 +212,7 @@ const state = {
   }
 } 
 const store = createStore<typeof user>({state},{
-  computedThis: 'firstName'
+  computedThis: ()=>'firstName'
 })
 
 export default ()=>{
@@ -251,7 +251,7 @@ const state = {
   }
 } 
 const store = createStore<typeof user>({state},{
-  computedThis: ['user','address','city']
+  computedThis: ()=>['user','address','city']
 })
 
 export default ()=>{

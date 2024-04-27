@@ -70,19 +70,22 @@ export default ()=>{
 每一个计算函数均会创建一个`ComputedObject`实例，保存在`store.computedObjects`,该对象有以下属性和方法:
 
 ```tsx | pure
-export interface ComputedObject<T=Dict> extends ComputedOptions{
+export interface ComputedObject<T=Dict> {
   mutate:IMutateWitness<T> 
   run:(throwError?:boolean)=>Promise<any> | any
+  async:boolean               // 是否是异步属性
+  options:ComputedOptions     // 异步参数
 }
 export class ComputedObjects<T=Dict> extends Map<string,ComputedObject<T>>{  
-  async runGroup(group:string)
+  async runGroup(group:string)        // 手动运行指定组的计算函数
+  enableGroup(value:boolean)          // 启用或禁用指定组的计算函数
 }
 ```
 
 - `ComputedObject`是一个普通的`{}`,里面保存了所有`ComputedOptions`，因此通过`ComputedObject`实例可以读取到计算函数的所有属性。
 - `ComputedObject`提供了一个`run`方法用来手动执行计算函数。
 - `ComputedObjects`是一个`Map`对象，其中的`key`是计算对象的`valuePath`，`value`是的`ComputedObject`。
-- 在使用`computed(getter,deps,options)`创建计算属性时，`options`可以通过`ComputedObject`读取和修改
+- 在使用`computed(getter,deps,options)`创建计算属性时，`options`可以通过`ComputedObject.options`读取和修改，比如可以通过`ComputedObject.options.enable=false`来禁用计算。
 
 ## 计算分组
 

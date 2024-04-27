@@ -46,7 +46,7 @@ import { createFieldComponent  } from './field';
 import { createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
 import {   UseActionType, createActionComponent, createUseAction, getAction } from './action';
-import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from "./consts";
+import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from './consts';
 import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
 import defaultFormProps from "./form.default"
@@ -91,7 +91,7 @@ export interface FormOptions{
 	debug?:boolean										// 是否调试模式
 	/**
 	 * 何时进行数据校验
-	 * - once : 实时校验
+	 * - once : 默认值：实时校验
 	 * - lost-focus : 失去焦点时校验 
 	 * - submit : 提交时校验
 	 */
@@ -107,7 +107,7 @@ export interface FormOptions{
 	/**
 	 * 单例模式
 	 * = true时，所有的计算属性都是共享的，否则每个实例都有自己的计算属性	
-	 * = false时，会在创建表单时进行深度克隆，这样就可以创建多个互相不干扰的实例
+	 * = false时，默认会在创建表单时进行深度克隆，这样就可以创建多个互相不干扰的实例
 	 */
 	singleton?:boolean
 }
@@ -139,6 +139,9 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
 }
 
 /**
+ * 
+ * 在处理表单字段的validate属性时，对其进行处理
+ * 
  * 对表单字段中的validator属性进行处理,使得用该属性的传入参数总是当前字段的值
  * 
  * 经过处理后
@@ -149,17 +152,22 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
  * 处理方式:
  *  - 同步计算函数的scope指向当前字段值
  *  - 异步函数的第一个依赖指向当前字段的值value
- *  - 所有validator的group名称均为validate，这样就可以调用computedObjects.run("validate")实现分组验证
+ *  - 所有validator的group名称均为validate，这样就可以调用computedObjects.runGroup("validate")实现分组验证
+ *    或者调用computedObjects.enableGroup(true/false)来启用或禁用分组验证
  * 
  */
-function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOptions){		
-	if(keyPath.length>=2 && keyPath[0]==FIELDS_STATE_KEY && keyPath[keyPath.length-1]=='validate'){	
+function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOptions,formOptions:Required<FormOptions>){		
+	if(keyPath.length>=2 && keyPath[0]==FIELDS_STATE_KEY && keyPath[keyPath.length-1]==VALIDATE_COMPUTED_GROUP){	
 		// 如果没有指定scope,则默认指向value
 		if(!options.scope) options.scope="value"
 		if(!options.depends) options.depends=[]
 		options.depends.push([...keyPath.slice(0,-1),"value"])
-		options.initial = null		// 默认总是true
-		options.group='validate'	// 默认分组为validate
+		// 默认=null代表还未校验
+		options.initial = null	
+		// 默认分组为validate
+		options.group=VALIDATE_COMPUTED_GROUP	
+		// 默认值
+		options.enable = true
 	}
 }
 
@@ -252,7 +260,7 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 		// 创建计算函数时的钩子函数，可以在创建前做一些不可描述的处理
 		onCreateComputed(valuePath,getter,options) {		 
 			// 1. 只对validator进行处理,目的是使validate函数依赖于当前字段的值value，将使得validate函数的第一个参数总是当前字段的值
-			createValidatorHook(valuePath,getter,options)
+			createValidatorHook(valuePath,getter,options,opts)
 			// 2. 对所有位于fields下的的依赖均自动添加fields前缀，这样在声明依赖时就可以省略fields前缀
 			createDepsHook(valuePath,getter,options)
 			// 3. 将表单actions的execute的onComputedResult指向其current

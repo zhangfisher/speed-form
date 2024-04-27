@@ -216,7 +216,7 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: AsyncCom
 export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: ComputedGetter<R>, options?: ComputedOptions<R,ExtraAttrs>): R
 export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depends?:any, options?: ComputedOptions<R,ExtraAttrs>):any {
 	
-  if (typeof getter != "function")  throw new Error("getter must be a function");
+  if (typeof getter != "function")  throw new Error("computed getter must be a function");
   
   // 解析参数：同时支持同步和异步计算函数两种方式声明
   let deps:ComputedDepends = []
@@ -224,9 +224,9 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
     async: false,
     enable:true,
     timeout:0,
-    depends: [],
-    // scope:ComputedScopeRef.Current,
+    depends: [],    
     toComputedResult:ComputedScopeRef.Self,
+    // scope:ComputedScopeRef.Current,
     immediate:true,
   }
 
@@ -382,7 +382,7 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
 */
 function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial<AsyncComputedObject>){
   return Object.assign({
-    value   : undefined, 
+    // value   : undefined,  
     loading : false,
     timeout : 0,
     retry   : 0,          // 重试次数，3表示最多重试3次

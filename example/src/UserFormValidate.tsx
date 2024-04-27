@@ -2,36 +2,39 @@ import React ,{useState} from "react";
 import classnames from 'classnames';
 import {Field,Card,JsonViewer, Button} from "@speedform/demo-components";
 import { useForm } from "@speedform/core";
-import { delay } from "flex-tools/async/delay";
-import validator from 'validator';
+import { delay } from "flex-tools/async/delay"; 
 
- 
+const userDefine =  {
+    fields: {
+        username: {
+            value: "fisher",
+            placeholder: "",
+            title: "用户名", 
+            validate: (value: string) => value.length > 3,
+        },
+        password: {
+            value: "123",
+            placeholder: "",
+            title: "密码", 
+            validate: async (value: string) => {
+                await delay(1000)
+                return value.length > 3
+            }
+        }
+    }
 
-
+}
 const FormDemo:React.FC = ()=>{
     const  [ formData ,setFormData] = useState('')
-    const  [ validateAt ,setValidateAt] = useState('realtime')
+
+    const  [ validateAt ,setValidateAt] = useState('once')
     
     const User = useForm(()=>{
-        return {
-            fields: {
-                firstName: {
-                    value: "zhang",
-                    placeholder: "",
-                    title: "姓", 
-                    validate: (value: string) => value.length > 3,
-                },
-                lastName: {
-                    value: "fr",
-                    placeholder: "",
-                    title: "名", 
-                    validate: (value: string) => value.length > 3,
-                },
-                fullName:(scope:any)=>{
-                    return scope.firstName.value+scope.lastName.value
-                }
-            }
-        }})
+        return Object.assign({},userDefine)
+    },{
+        validAt:"once"
+    })
+
     const [state] = User.useState()
 
     const { run } = User.useAction(async (scope,{getProgressbar})=>{
@@ -46,7 +49,7 @@ const FormDemo:React.FC = ()=>{
             resolve(scope)
         }) 
     },{name:"x"}) 
-    const handleValidateAtChange = (event) => {
+    const handleValidateAtChange = (event:any) => {
         setValidateAt(event.target.value);
       };
     return (
@@ -54,31 +57,28 @@ const FormDemo:React.FC = ()=>{
             <div style={{padding:"8px",margin:'8px',width:'60%'}}>              
                 <User.Form className="panel">
                 <div data-loader="circle"></div>
-                    <Card title="帐号">
-                        <User.Field<typeof User.fields.firstName> name="firstName">                      
+                    <Card title={`用户 - validAt='once'`}>
+                        <User.Field<typeof User.fields.username> name="username">                      
                                 {({title,value,visible,validate,placeholder,sync})=>{ 
                                     return <Field visible={visible} label={title} validate={validate}>
                                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
                                     </Field>
                                 } }
                         </User.Field>             
-                        <User.Field<typeof User.fields.lastName> name="lastName">                      
+                        <User.Field<typeof User.fields.password> name="password">                      
                             {({title,value,visible,validate,placeholder,sync})=>{ 
                                 return <Field visible={visible} label={title} validate={validate}>
                                     <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
                                 </Field>
                             } }
-                        </User.Field> 
-                        <div>FullName:{state.fields.fullName}</div>
-                        <div>Validate:{String(state.validate)}</div>
-                        <Button onClick={()=>run()}>执行Action</Button>                         
+                        </User.Field>  
+                        <Button onClick={()=>run()}>登录</Button>                         
                     </Card>
                 </User.Form>    
                     
                 {/* 单选组件，可选: 实时校验，编辑时校验，提交时校验， */}
-                <div>               
-                    {validateAt}
-                    <input type="radio" id="optionA1" name="validateAt"  value="realtime"   onChange={handleValidateAtChange} />  
+                <div>                
+                    <input type="radio" id="optionA1" name="validateAt"  value="once"   onChange={handleValidateAtChange} />  
                     <label htmlFor="optionA1">实时校验</label>              
                     <input type="radio" id="optionB1" name="validateAt" value="lose-focus"  onChange={handleValidateAtChange}/>  
                     <label htmlFor="optionB1">丢失焦点时校验</label>  
