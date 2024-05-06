@@ -1,5 +1,8 @@
+import { ISharedCtx } from 'helux'
 import type { ComputedDepends } from './computed'
 import { OBJECT_PATH_DELIMITER } from './consts'
+import { Dict, RequiredComputedState } from './types'
+import type { StateGetter, StateSetter } from './store'
 
 
 
@@ -230,4 +233,39 @@ export function isAsyncComputedDescriptor(obj:any){
         && ["async","sync"].includes(obj.__COMPUTED__)
         && obj.hasOwnProperty("fn")  && typeof(obj.fn)=='function'
         && obj.hasOwnProperty("options") && typeof(obj.options)=='object'
+}
+
+
+/**
+ *  StateGetter函数返回
+ *
+ *  [ fullName,setFullName ] = useState<string,[string,string]>((state)=>state.user.firstName+state.user.lastName,(state,fullName:[string,string])=>{
+ *        state.user.firstName = fullName[0]
+ *        state.user.lastName = fullName[1]
+ *  })
+ *
+ *
+ * @param useState
+ */
+export function useStateWrapper<State extends Dict>(stateCtx:ISharedCtx<State["state"]>){
+    return function<Value=any,SetValue=Value>(getter?:StateGetter<RequiredComputedState<State>,Value>,setter?:StateSetter<RequiredComputedState<State>,SetValue>){
+        const useState = stateCtx.useState 
+        if(getter==undefined){
+            return useState()
+        }
+        const [ state,setState ] = useState()
+        const value = getter(state)
+        // @ts-ignore
+        let setValue = setState
+        if( typeof(setter)=='function' ){
+            // @ts-ignore
+            setValue=(value:SetValue)=>{
+                // @ts-ignore
+                setState((draft)=>{
+                    setter.call(draft,draft,value)
+                })                
+            }
+        }
+        return [ value,setValue ]
+    }
 }

@@ -11,7 +11,7 @@ import { type ComputedObject, ComputedObjects, ComputedOptions } from './compute
 import { deepClone } from "flex-tools/object/deepClone";
 import { installExtends } from "./extends" 
 import { WatchObjects, createUseWatch, createWatch } from "./watch";
-import { log } from "./utils";
+import { log, useStateWrapper } from "./utils";
 
 
 export interface StoreDefine<State extends Dict=Dict>{
@@ -54,39 +54,6 @@ export type ComputedContext  = NonDependsScopeRef | string | string[] | ((state:
 export type StateGetter<State,Value=any> = (state:State)=>Value
 export type StateSetter<State,Value=any> = (state:State,value:Value)=>void
 
-/**
- *  StateGetter函数返回
- *
- *  [ fullName,setFullName ] = useState<string,[string,string]>((state)=>state.user.firstName+state.user.lastName,(state,fullName:[string,string])=>{
- *        state.user.firstName = fullName[0]
- *        state.user.lastName = fullName[1]
- *  })
- *
- *
- * @param useState
- */
-function useStateWrapper<State extends Dict>(stateCtx:ISharedCtx<State["state"]>){
-    return function<Value=any,SetValue=Value>(getter?:StateGetter<RequiredComputedState<State>,Value>,setter?:StateSetter<RequiredComputedState<State>,SetValue>){
-        const useState = stateCtx.useState 
-        if(getter==undefined){
-            return useState()
-        }
-        const [ state,setState ] = useState()
-        const value = getter(state)
-        // @ts-ignore
-        let setValue = setState
-        if( typeof(setter)=='function' ){
-            // @ts-ignore
-            setValue=(value:SetValue)=>{
-                // @ts-ignore
-                setState((draft)=>{
-                    setter.call(draft,draft,value)
-                })                
-            }
-        }
-        return [ value,setValue ]
-    }
-}
 
 
 export interface StoreOptions{

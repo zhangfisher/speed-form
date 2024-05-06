@@ -4,10 +4,12 @@ export * from "./types"
 export * from "./action"
 export * from "./watch"
 export * from "./consts" 
+export * from "./reactive"
 export { 
     markRaw,
     getSnap,
-    $
+    $,
+    share as createObject
 } from "helux"
 export { 
     getValueByPath,
@@ -17,6 +19,4 @@ export {
     getVal,
     setVal
 } from "./utils"
-
-
-declare module 'helux' {}
+ 
