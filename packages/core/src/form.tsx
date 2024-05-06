@@ -52,6 +52,7 @@ import { createObjectProxy } from "./utils";
 import defaultFormProps from "./form.default"
 import { createSubmitComponent,createResetComponent } from "./behaviors";
 import { createLoadApi, createGetValuesApi } from "./serialize"; 
+import { isValidateField } from "./validate";
 
 
 export type FormEnctypeType = 'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain'
@@ -244,7 +245,8 @@ function freezeForm(store:any){
 export function createForm<State extends Dict=Dict>(schema: State,options?:FormOptions) {
 	const opts = assignObject({
 		getFieldName:(valuePath:string[])=>valuePath.length > 0 ? valuePath[valuePath.length-1]==='value' ? valuePath.slice(0,-1).join(".") : valuePath.join(".") : '',
-		singleton:true
+		singleton:true,
+		validAt:'once',
 	},options) as Required<FormOptions>
 
 	// 注入表单默认属性
@@ -273,7 +275,21 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 			if(computedType==='Computed' && type=='scope' && valuePath.length >0 && valuePath[0]==FIELDS_STATE_KEY){
 				return draft.fields
 			}
-		}
+		},
+		/**
+		 * 当建立计算对象后时，会调用该函数
+		 * 
+		 * 如果validAt!=once，则禁用validate的计算，需要在lost-focus或submit时手动校验
+		 * 
+		 * @param keyPath 
+		 * @param computedObject 
+		 */
+		onCreateComputedObject(keyPath, computedObject) {
+			//  如果不马上校验，则禁用计算属性,需要在lost-focus或submit时手动校验
+			if(isValidateField(keyPath)){
+				computedObject.options.enable = opts.validAt==='once'
+			}			
+		},
 	});  
 	type StoreType = typeof store
 	type StateType = typeof store.state

@@ -73,8 +73,20 @@ export function getId(){
 	return Math.random().toString(36).substring(2)
 }
 
+export type CreateObjectProxyOptions = {
+	onBefore(key:string):void			// 读取对象之前的回调
+	onAfter(key:string):void			// 读取对象之后的回调
+}
 /**
  * 创建一个Proxy对象,返回对fn的调用结果的代理
+ * 
+ * let d = createObjectProxy(()=>({a:1,b:2}))
+ * 
+ * 访问d对象时，会调用fn()返回的对象
+ * 
+ * 
+ * 
+ * 
  */
 export function createObjectProxy<T extends Record<string | symbol,any>=Record<string | symbol,any>>(fn: () => T): T {
 	return new Proxy<T>({} as T, {
