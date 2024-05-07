@@ -372,7 +372,6 @@ function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedC
     options:computedOptions,
     get enable(){return computedOptions.enable as boolean},
     set enable(val:boolean){computedOptions.enable=val},
-    // run:(throwError?)=>mutate.run(throwError)
     run:(options?:RuntimeComputedOptions)=> stateCtx.runMutateTask({desc:mutateId,extraArgs:options})   
   }
   computeObjects!.set(strValuePath,computeObject)   

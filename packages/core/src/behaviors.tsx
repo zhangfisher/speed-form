@@ -1,5 +1,5 @@
 /**
- * 表单的行为组件
+ * 标准表单的动作行为组件
  * 
  *  - submit
  *  - reset
@@ -11,7 +11,7 @@
 
 import { Dict, getValueByPath } from "@speedform/reactive"; 
 import type { FormOptions, FormSchemaBase } from "./form";
-import React,{ CSSProperties, ReactNode,  useRef } from "react";
+import React,{ CSSProperties, ReactElement, ReactNode,  useRef } from "react";
 import { isFieldGroup, isFieldList, isFieldValue } from "./utils";
 import { styled } from  "styledfc"
 
@@ -43,23 +43,25 @@ export type BehaviorRender<State extends Dict,Params extends Dict = Dict>= (prop
 
 
 export type BehaviorProps<State extends FormBehaviorState=FormBehaviorState,PropTypes extends Dict = Dict,Params extends Dict = Dict> = {
-    scope? :string | string[]              // 声明该动作对应的状态路径
-    render? : BehaviorRender<State,Params>  
+    title?:string                                   // 显示的标题
+    scope? :string | string[]                       // 声明该动作对应的状态路径
+    render? : BehaviorRender<State,Params>          // 指定渲染函数
     children?: BehaviorRender<State,Params>  
-}    
+}        
  
-
+ 
 export interface BehaviorOptions{
     preventDefault?:boolean
     type?:"submit" | 'reset'
     title?:string    
     style?:CSSProperties    
-}
+    className?:string  
+}   
 
 
 /**
  * 
- * 提取一个字段组中除了字段以后的所有属性
+ * 提取一个字段组中除了字段的所有属性
  * 
  * @param formState 
  * @returns 
@@ -102,36 +104,41 @@ interface DefaultBehaviorButtonProps{
     title?:string
     type?:'submit' | 'reset'
     visible?:boolean
+    className?:string
     style?:CSSProperties
 }
-
-// const DefaultFormBehaviorButton = React.forwardRef<HTMLInputElement,DefaultBehaviorButtonProps>((props:DefaultBehaviorButtonProps,ref)=>{
-//     const {visible} = props
-//     return 
  
-
 
 const DefaultFormBehaviorButton =styled<DefaultBehaviorButtonProps>((props,{className})=>{
     const { visible } = props
-    return <input className={className} 
-        style={Object.assign({display:visible ? 'inline-block':'none'},props.style)}
-        type={ props.type ?? 'submit'} value={props.title ?? '提交'}
+    return <input className={className + ' ' + props.className} 
+        style={props.style}
+        type={ props.type ?? 'submit'} value={props.title}
     />
 },{
-    minWidth:'80px',
     cursor: 'pointer',
+    width:"100%",
+    display: 'block',
     boxSizing: 'border-box',
-    margin:"2px",
+    padding:"8px",
+    borderRadius:"8px",
     transition: "filter 0.3s",
     "&:hover":{
         filter: "brightness(1.2)"
+    },
+    "&.speedform-submit":{
+        backgroundColor:"#54b2ff",
+        color:"white",
+        border:"1px solid #1e5786"
     }
 })
+export type FormBehaviorComponentProps = React.PropsWithChildren<BehaviorOptions>
 
 export function createFormBehaviorComponent<Store extends Dict = Dict>(store:Store,behaviorOptions?:BehaviorOptions,formOptions?:Required<FormOptions>) {
     const behaviorOpts = Object.assign({
-        preventDefault:false
+        preventDefault:false,
     },behaviorOptions) as Required<BehaviorOptions>
+
     function Behavior<State extends FormBehaviorState=FormBehaviorState,Scope extends Dict=Dict>(props: BehaviorProps<State,Scope>):ReactNode{
         const [state] = store.useState()  
         const { scope } = props  
@@ -139,15 +146,15 @@ export function createFormBehaviorComponent<Store extends Dict = Dict>(store:Sto
         const formState = getValueByPath(state,scope)  
         // 创建动作组件的Props
         const submitRenderProps = createBehaviorRenderProps(formState)        
-        // 0-无子组件 1-渲染函数 2-组件数组 3-单个组件
+        // 0-无子组件 1-指定渲染函数 2-组件数组 3-单个组件
         const childrenType = typeof(props.render)==='function' ? 1 : (Array.isArray(props.children) ? 2 : (typeof(props.children)==='function' ? 3 : 0))
         return <>
-            {/* 默认提交按钮，当没有指定子组件时显示 */}
+            {/* 默认按钮，当没有指定子组件时显示 */}
             <DefaultFormBehaviorButton 
                 visible={childrenType == 0} 
                 {...behaviorOpts}
             />
-            {/* 执行渲染动作组件 */}
+            {/* 也可以自定义渲染动作组件 */}
             {childrenType===1 ?
                 <BehaviorChildren {...{submitProps:submitRenderProps,children:props.render}} />
                 : ( childrenType===2 ? 
@@ -161,21 +168,17 @@ export function createFormBehaviorComponent<Store extends Dict = Dict>(store:Sto
     }
 
     return React.memo(Behavior,(oldProps:any, newProps:any)=>{
-        return oldProps.name === newProps.name  
-    }) as (<State extends FormBehaviorState=FormBehaviorState,Scope extends Dict=Dict>(props: BehaviorProps<State,Scope>)=>ReactNode)
+        return oldProps.scope === newProps.scope 
+    }) as (<State extends FormBehaviorState=FormBehaviorState,Scope extends Dict=Dict>(props: BehaviorProps<State,Scope>)=>ReactElement<FormBehaviorComponentProps>)
 
 }
+
+
 export function createSubmitComponent<Store extends Dict = Dict>(store:Store,submitOptions?:BehaviorOptions,formOptions?:Required<FormOptions>) {
     return createFormBehaviorComponent(store,{
         type:'submit',
         title:"提交",
-        style:{
-            borderRadius:"4px",
-            padding:"8px",
-            background:"#1c8ceb",
-            border:"1px solid #1c8ceb",
-            color:"#fff" 
-        },
+        className:'speedform-submit',
         ...submitOptions},formOptions)
 }
 
@@ -183,12 +186,7 @@ export function createResetComponent<Store extends Dict = Dict>(store:Store,subm
     return createFormBehaviorComponent(store,{
         type:'reset',
         title:"重置",
-        style:{
-            borderRadius:"4px",
-            padding:"8px",
-            background:"#eee",            
-            border:"1px solid #bbb",
-        },
+        className:'speedform-reset',
         ...submitOptions},
         formOptions)
 }

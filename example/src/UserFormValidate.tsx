@@ -88,9 +88,10 @@ const FormDemo:React.FC = ()=>{
                                 return <Field visible={visible} label={title} validate={validate}>
                                     <input className={classnames({invalid:!validate.result})} placeholder={placeholder} value={value} onChange={sync()}/>
                                 </Field>
-                            } }
-                        </User.Field>  
-                        <Button onClick={()=>run()}>登录</Button>                         
+                            } } 
+                        </User.Field>   
+                        <Button onClick={()=>run()}>登录</Button>    
+                        <User.Submit title="确认提交" scope="dd.dd"></User.Submit>                     
                     </Card>
                 </User.Form>    
                     

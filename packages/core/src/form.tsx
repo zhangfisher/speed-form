@@ -347,19 +347,25 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
  * @param store 
  * @returns 
  */
-function createFormComponent<Fields extends Dict>(this:FormOptions,store: any): FormComponent<Fields> {
+function createFormComponent<Fields extends Dict>(this:FormOptions,store: IStore): FormComponent<Fields> {
+		
 	return React.forwardRef<HTMLFormElement>((props: FormProps<Fields>,ref:React.ForwardedRef<HTMLFormElement>) => {
 		const {children } = props; 
 		// 提交表单
 		const onSubmit = useCallback((ev: React.FormEvent<HTMLFormElement>) => {
-			//ev.preventDefault();
+			// 手动运行校验
+			if(this.validAt==='submit'){
+				store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
+			}
+			
+
 		},[]);
 		// 重置表单
 		const onReset = useCallback((e: React.FormEvent<HTMLFormElement>) => {
 
 		},[]);
 		return (
-			<form ref={ref} className="speedform-form"  {...props} onSubmit={onSubmit} onReset={onReset}>
+			<form ref={ref} className="speedform"  {...props} onSubmit={onSubmit} onReset={onReset}>
 				{children}
 			</form>
 		)
