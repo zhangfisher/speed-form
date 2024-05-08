@@ -140,7 +140,9 @@ export type ActionRender<State extends Dict,Params extends Dict = Dict>= (props:
  * 
  */
 export type ActionProps<State extends FormActionState=FormActionState,PropTypes extends Dict = Dict,Params extends Dict = Dict> = {
-    name:string | string[]              // 声明该动作对应的状态路径
+    name:string | string[]                      // 声明该动作对应的状态路径
+    // 动作作用域，用来指定动作作用的表单数据范围,用来传递数据给动作
+    scope?:string[]                             
     render?: ActionRender<State,Params>  
     children?: ActionRender<State,Params>  
 }    
@@ -293,6 +295,7 @@ export function createActionComponent<Store extends Dict = Dict>(store:Store,act
     }) as (<State extends FormActionState=FormActionState,Scope extends Dict=Dict>(props: ActionProps<State,Scope>)=>ReactNode)
 }
  
+
 /**
  * 使用action来声明一个动作
  * 
@@ -304,15 +307,17 @@ export function createActionComponent<Store extends Dict = Dict>(store:Store,act
  */
 export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGetter<R,Values>,options?: ComputedOptions<R>){
     return computed<R>(async (scope:any,opts)=>{
-        const data = getFormData(getSnap(scope,false).fields)
+        // 注意： getSnap(scope,false)无论scope是状态中的哪一个值，总是返回整个状态的快照
+        // 比如 getSnap(state.fields.xxx.xxx)也是返回整个state的快照
+        const data = getFormData(Object.assign({},scope))        
         return await (getter as unknown as AsyncComputedGetter<R>)(data,opts)
     },[],options)
-
 }
 
+
+
+
 export type SubmitAsyncComputedGetter<R> = AsyncComputedGetter<R,FormData>
-
-
 /**
  * 
  * 

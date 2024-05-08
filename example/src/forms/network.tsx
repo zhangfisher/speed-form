@@ -165,6 +165,8 @@ export const schema = {
 							reject("cancelled")
 						})
 					})					
+				},{
+					scope:["dhcp"]
 				})
 			}
 		}

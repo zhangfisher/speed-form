@@ -202,7 +202,17 @@ function setFormDefault(define:any){
 function createActionHook(valuePath:string[],getter:Function,options:ComputedOptions){
 	if(valuePath.length>1 && valuePath[valuePath.length-1]=='execute'){
 		options.immediate = false			// 默认不自动执行,需要手动调用action.execute.run()来执行
-		options.scope = [FIELDS_STATE_KEY]	// 默认指向fields
+		// 如果没有指定scope，则默认指向fields,这样就可以直接使用fields下的字段,而不需要fields前缀
+		if(options.scope){
+			if(Array.isArray(options.scope)){
+				// 如果scope中没有fields,则添加fields,并且保证fields在第一个位置
+				if(options.scope.length>0 && options.scope[0]!=FIELDS_STATE_KEY){
+					options.scope.unshift(FIELDS_STATE_KEY)
+				}				
+			}
+		}else{
+			options.scope = [FIELDS_STATE_KEY]	
+		}
 		options.noReentry = true			// 禁止重入
 	}
 }
@@ -318,7 +328,7 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 		computedObjects:store.computedObjects,
 		watchObjects:store.watchObjects,
 		store,
-		// 校验整个表单：即执行所有校验计算函数
+		// 手动执行表单校验：即运行所有校验计算函数
 		validate:async ()=>store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
 	};
 }
@@ -357,7 +367,7 @@ function createFormComponent<Fields extends Dict>(this:FormOptions,store: IStore
 			if(this.validAt==='submit'){
 				store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
 			}
-			
+
 
 		},[]);
 		// 重置表单

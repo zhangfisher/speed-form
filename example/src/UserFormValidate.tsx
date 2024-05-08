@@ -1,7 +1,7 @@
-import React ,{useState} from "react";
+import React ,{useCallback, useState} from "react";
 import classnames from 'classnames';
 import {Field,Card,JsonViewer, Button} from "@speedform/demo-components";
-import { useForm,computed } from "@speedform/core";
+import { useForm,computed, action } from "@speedform/core";
 import { delay } from "flex-tools/async/delay"; 
 
 const userDefine =  {
@@ -28,7 +28,14 @@ const userDefine =  {
             validate: computed(async (value: string) => { 
                 return value.length > 3
             })
-        }
+        },
+        submit: { // 这是一个动作,
+            title: "提交wifi",
+            execute:action(async (data:any)=>{
+                await delay(1000)
+                console.log("data=",data)
+            })
+        },
     }
 
 }
@@ -36,6 +43,8 @@ const FormDemo:React.FC = ()=>{
     const  [ formData ,setFormData] = useState('')
 
     const  [ validateAt ,setValidateAt] = useState('once')
+
+
     
     const User = useForm(()=>{
         return Object.assign({},userDefine)
@@ -57,6 +66,16 @@ const FormDemo:React.FC = ()=>{
             resolve(scope)
         }) 
     },{name:"x"}) 
+
+    const submit = useCallback(()=>{
+        User.getAction(User.fields.submit)().then((result)=>{            
+            setFormData(result)
+        }).catch((error)=>{
+            setFormData("Error: "+error.message)
+        })
+    },[])
+
+
     const handleValidateAtChange = (event:any) => {
         setValidateAt(event.target.value);
       };
@@ -90,7 +109,7 @@ const FormDemo:React.FC = ()=>{
                                 </Field>
                             } } 
                         </User.Field>   
-                        <Button onClick={()=>run()}>登录</Button>    
+                        <Button onClick={()=>submit()}>登录</Button>    
                         <User.Submit title="确认提交" scope="dd.dd"></User.Submit>                     
                     </Card>
                 </User.Form>    
