@@ -14,6 +14,8 @@ import type { FormOptions, FormSchemaBase } from "./form";
 import React,{ CSSProperties, ReactElement, ReactNode,  useRef } from "react";
 import { isFieldGroup, isFieldList, isFieldValue } from "./utils";
 import { styled } from  "styledfc"
+import { ActionProps, ActionRunOptions, createActionComponent } from "./action";
+import { DEFAULT_SUBMIT_ACTION } from "./consts";
 
 
 
@@ -173,21 +175,39 @@ export function createFormBehaviorComponent<Store extends Dict = Dict>(store:Sto
 
 }
 
+export type SubmitComponentProps = React.PropsWithChildren<{
+    
+} & ActionProps>
 
-export function createSubmitComponent<Store extends Dict = Dict>(store:Store,submitOptions?:BehaviorOptions,formOptions?:Required<FormOptions>) {
-    return createFormBehaviorComponent(store,{
-        type:'submit',
-        title:"提交",
-        className:'speedform-submit',
-        ...submitOptions},formOptions)
+/**
+ *  创建一个提交组件，某行为
+ * 
+ * 提交整个表单
+ * <Submit title="" timeout={12}></Submit>
+ * 提交表单局部，scope=只能指定一个字段组
+ * <Submit title="" timeout={12} scope={["xx","xx"]}></Submit>
+ * 
+ * @param store 
+ * @param formOptions 
+ * @returns 
+ */
+export function createSubmitComponent<Store extends Dict = Dict>(store:Store,formOptions?:Required<FormOptions>) {
+    const Action = createActionComponent(store,formOptions)
+
+    return ((props:SubmitComponentProps)=>{
+        return (<Action {...props} name={DEFAULT_SUBMIT_ACTION}>        
+            {
+                ({title,visible,loading,enable,run,cancel,error,progress})=>{ 
+                    return (
+                        <div className="speedform-submit">
+                            提交
+                            <input type="submit"/>       
+                            <span>{loading ? '提交中' : '已提交'}</span>
+                        </div>
+                    )
+                }
+            }
+        </Action>)
+    }) as React.FC<SubmitComponentProps>
+
 }
-
-export function createResetComponent<Store extends Dict = Dict>(store:Store,submitOptions?:BehaviorOptions,formOptions?:Required<FormOptions>) {
-    return createFormBehaviorComponent(store,{
-        type:'reset',
-        title:"重置",
-        className:'speedform-reset',
-        ...submitOptions},
-        formOptions)
-}
-

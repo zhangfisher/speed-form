@@ -38,6 +38,7 @@ import { getSnap, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
 import { getId } from "./utils";
+import { FIELDS_STATE_KEY } from "./consts";
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
   | ((fields:Fields)=>Promise<R>) 
@@ -139,13 +140,13 @@ export type ActionRender<State extends Dict,Params extends Dict = Dict>= (props:
  * 
  * 
  */
-export type ActionProps<State extends FormActionState=FormActionState,PropTypes extends Dict = Dict,Params extends Dict = Dict> = {
+export type ActionProps<State extends FormActionState=FormActionState,Params extends Dict = Dict> = {
     name:string | string[]                      // 声明该动作对应的状态路径
     // 动作作用域，用来指定动作作用的表单数据范围,用来传递数据给动作
     scope?:string[]                             
     render?: ActionRender<State,Params>  
     children?: ActionRender<State,Params>  
-}    
+}  & ActionRunOptions
  
 
 /**
@@ -166,6 +167,9 @@ export type ActionProps<State extends FormActionState=FormActionState,PropTypes 
 export function getAction<State extends FormActionState=FormActionState>(actionState:State,options?:ActionRunOptions){         
     return async (opts?:ActionRunOptions)=>{     
         const finalOpts = Object.assign({},options,opts) as Required<ActionRunOptions>        
+        if(Array.isArray(finalOpts.scope) && finalOpts.scope.length>0 && finalOpts.scope[0]!==FIELDS_STATE_KEY){
+            finalOpts.scope.unshift(FIELDS_STATE_KEY)
+        }
         await actionState.execute.run(finalOpts)      
         if(actionState.execute.error){
             throw new Error(actionState.execute.error)
@@ -251,7 +255,7 @@ export const ActionChildren = React.memo((props: {actionProps:ActionRenderProps<
  * @param store 
  * @returns 
  */
-export function createActionComponent<Store extends Dict = Dict>(store:Store,actionOptions?:ActionRunOptions,formOptions?:Required<FormOptions>) {
+export function createActionComponent<Store extends Dict = Dict>(store:Store,formOptions?:Required<FormOptions>) {
 
     /**
      * State:  指的是动作的对应状态数据，在schema中就是具有execute的一个对象
@@ -269,7 +273,7 @@ export function createActionComponent<Store extends Dict = Dict>(store:Store,act
         if(!actionKey.includes(".")) actionKey = `actions.${actionKey}`
 
         const actionState = getValueByPath(state,actionKey,".")
-        const actionRunner = useActionRunner(actionState,actionOptions)
+        const actionRunner = useActionRunner(actionState,props)
         const actionCanceller = useActionCanceller(state,actionKey)
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
@@ -318,23 +322,25 @@ export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGett
 
 
 export type SubmitAsyncComputedGetter<R> = AsyncComputedGetter<R,FormData>
+export type SubmitActionOptions<R> =  ComputedOptions<R> 
+
 /**
- * 
  * 
  * 特殊的对象传入一个FormData对象
  * 声明一个提交动作
+ * submit动作总是返回一个FormData对象
+ * 
  * @param getter 
  * @param options 
  * @returns 
  */
-export function submit<R=any>(getter: SubmitAsyncComputedGetter<R>,options?: ComputedOptions<R>){
+export function submit<R=any>(getter: SubmitAsyncComputedGetter<R>,options?: SubmitActionOptions<R>){
     return action<Dict,R>(async (data:Dict,opts)=>{
         const formData = new FormData()
         return await (getter as unknown as SubmitAsyncComputedGetter<R>)(formData,opts)
     },options)
 
 }
-
 
 
 export type UseActionType = <Scope extends Dict=Dict,R=any>(executor:AsyncComputedGetter<R,Scope>,options?:ComputedOptions<R> & {name?:string})=>FormActionState['execute']
@@ -344,9 +350,6 @@ export type UseActionType = <Scope extends Dict=Dict,R=any>(executor:AsyncComput
  * 
  * 在组件中动态创建一个使用创建一个动作
  * 在表单访问Action动作 
- * 
- 
- * 
  * 
  * const { run } = useAction(async (scope,parmas)=>{
  *      

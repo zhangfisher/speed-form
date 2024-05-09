@@ -1,5 +1,5 @@
-import { OBJECT_PATH_DELIMITER, isIncludePath, watch } from "@speedform/reactive";
-import { FIELDS_STATE_KEY } from "./consts";  
+import { IStore, OBJECT_PATH_DELIMITER, isIncludePath, watch } from "@speedform/reactive";
+import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from "./consts";  
 import { ValidationError } from "./errors";
 
 export function isValidateField(path:string[]){
@@ -76,5 +76,31 @@ export function assert(condition:boolean | ((...args:any[])=>boolean),tips:strin
     const cond = typeof(condition)=='function' ? condition() : condition
     if(!cond){
         throw new ValidationError(typeof(tips)=='function' ? tips() : tips)
+    }
+}
+
+
+/**
+ * 创建校验函数
+ * 
+ * createValidate(store)(['fields']代表校验所以fields下的字段
+ * 也就是fields,x
+ * 
+ * 
+ * @param store 
+ * @returns 
+ */
+export function createValidator(store:IStore){
+    return  async (scope?:string[])=>{
+        if(Array.isArray(scope) && scope.length>0){        
+            let key= scope.join(OBJECT_PATH_DELIMITER)    
+            for(let [valuePath,obj] of store.computedObjects){
+                if(valuePath.startsWith(key)){
+                    obj.run()
+                }
+            }
+        }else{
+            store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
+        }        
     }
 }

@@ -50,9 +50,10 @@ import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from './consts';
 import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
 import defaultFormProps from "./form.default"
-import { createSubmitComponent,createResetComponent } from "./behaviors";
 import { createLoadApi, createGetValuesApi } from "./serialize"; 
-import { isValidateField } from "./validate";
+import { createValidator, isValidateField } from "./validate";
+import { createSubmitComponent } from "./submit";
+import { createResetComponent } from "./reset";
 
 
 export type FormEnctypeType = 'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain'
@@ -306,12 +307,13 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 	type FieldsType = (StateType)['fields'] 
 	type ActionsType = (StateType)['actions'] 
 	return {
+		store,
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<State>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
-		Action: createActionComponent<StoreType>(store,{},opts),
-		Submit: createSubmitComponent<StoreType>(store,{},opts),
-		Reset: createResetComponent<StoreType>(store,{},opts),
+		Action: createActionComponent<StoreType>(store,opts),
+		Submit: createSubmitComponent<StoreType>(store,opts),
+		Reset: createResetComponent<StoreType>(store,opts),
 		getAction,
 		useAction:createUseAction<StoreType>(store) as UseActionType,
     	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
@@ -326,10 +328,9 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 		getValues:createGetValuesApi(store as IStore,opts),
 		// 引用所有计算属性
 		computedObjects:store.computedObjects,
-		watchObjects:store.watchObjects,
-		store,
-		// 手动执行表单校验：即运行所有校验计算函数
-		validate:async ()=>store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
+		watchObjects:store.watchObjects,		
+		// 手动执行表单校验：即运行所有校验计算函数,scope:
+		validate:createValidator(store as IStore)
 	};
 }
 

@@ -10,10 +10,9 @@
  */
 
 import { getSnap, type Dict, type IStore } from "@speedform/reactive"
-import { isFieldGroup, isFieldList, isFieldValue, isFormAction } from "./utils"
+import { isFieldGroup, isFieldList, isFieldValue } from "./utils"
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject"
-import type { FormOptions } from "./form"
-import { validate } from './validate';
+import type { FormOptions } from "./form" 
 import { VALIDATE_COMPUTED_GROUP } from "./consts";
  
 
@@ -34,11 +33,7 @@ function getFiledGroupValue(data:Dict){
             if(groupValuess && Object.keys(groupValuess).length>0) result[key] = groupValuess
         }else if(isFieldList(value)){
             result[key] = getFieldListValue(value)
-        }
-        // else if(isFormAction(value)){
-        // }else{
-        //     result[key] = value
-        // }        
+        }      
     })
     return result
 }

@@ -6,6 +6,14 @@ import { delay } from "flex-tools/async/delay";
 
 const userDefine =  {
     fields: {
+        user:{
+            username: {
+                value: "fisher",
+                placeholder: "",
+                title: "用户名", 
+                validate: (value: string) => value.length > 3,
+            },
+        },        
         username: {
             value: "fisher",
             placeholder: "",
@@ -68,7 +76,7 @@ const FormDemo:React.FC = ()=>{
     },{name:"x"}) 
 
     const submit = useCallback(()=>{
-        User.getAction(User.fields.submit)().then((result)=>{            
+        User.getAction(User.fields.submit)({scope:["user"]}).then((result)=>{            
             setFormData(result)
         }).catch((error)=>{
             setFormData("Error: "+error.message)

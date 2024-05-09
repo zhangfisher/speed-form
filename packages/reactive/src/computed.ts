@@ -150,7 +150,8 @@ export type ComputedGetter<R,Scope=any> = (scopeDraft: Scope) => Exclude<R,Promi
 export type AsyncComputedGetter<R,Scope=any> = (scopeDraft:Scope,options:Required<ComputedParams>) => Promise<R>
 
 // 当调用run方法时，用来传参覆盖原始的计算参数
-export type RuntimeComputedOptions = Pick<ComputedOptions,'abortSignal' | 'noReentry' | 'retry' | 'onError' | 'timeout' | 'extras'>
+export type RuntimeComputedOptions = Pick<ComputedOptions, 
+  'context' |'scope' | 'abortSignal' | 'noReentry' | 'retry' | 'onError' | 'timeout' | 'extras'>
 
 export type AsyncComputedObject<Result= any,ExtAttrs extends Dict = {}> ={
   loading? : boolean;
@@ -610,8 +611,10 @@ function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISh
       }
     },
     //  此函数在依赖变化时执行，用来异步计算
+    // extraArgs是在调用run方法时传入的额外参数，可用来覆盖计算参数
     task: async ({ draft, setState, input, extraArgs }) => {
-      if(!computedOptions.enable){
+      // 如果额外参数中包含enable=true，则覆盖
+      if(!computedOptions.enable && extraArgs?.enable!==true){
         storeOptions.log(`Async computed <${strValuePath}> is disabled`,'warn')
         return 
       }
