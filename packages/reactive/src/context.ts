@@ -20,10 +20,12 @@
  *  watch函数的使用方式与computed类似，使用相同的逻辑
  * 
  */
+import { IOperateParams } from "helux";
 import { OBJECT_PATH_DELIMITER } from "./consts";
 import { type ComputedScope, ComputedScopeRef, StoreOptions } from "./store";
 import { StateComputedType } from "./types";
 import { getValueByPath } from "./utils";
+import { ComputedOptions } from "./computed";
 
 /*
 * 计算函数的context可以在全局Store中通过computedThis参数指定
@@ -114,3 +116,25 @@ export function getComputedContext(draft: any,params:GetComputedContextOptions) 
           return draft;
     }
   }
+
+  /**
+
+ * 
+ * 根据当前计算函数的信息和配置参数获取计算函数的上下文或作用域
+ * 
+ * @param draft 
+ * @param params 
+ * @returns 
+ */
+export function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 'scope',computedContext:IOperateParams,computedOptions: ComputedOptions, storeOptions: StoreOptions}) {
+  const { input:depends, type, computedContext, computedOptions, storeOptions } = params;
+  return getComputedContext(draft,{
+    input:depends,
+    type,
+    valuePath:computedContext.fullKeyPath,
+    funcOptions:computedOptions,
+    storeOptions,
+    computedType:'Computed'
+  })
+}
+ 

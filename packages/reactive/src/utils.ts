@@ -1,5 +1,5 @@
 import { ISharedCtx } from 'helux'
-import type { ComputedDepends } from './computed'
+import type { ComputedDepends, ComputedOptions } from './computed'
 import { OBJECT_PATH_DELIMITER } from './consts'
 import { Dict, RequiredComputedState } from './types'
 import type { StateGetter, StateSetter } from './store'
@@ -269,3 +269,21 @@ export function useStateWrapper<State extends Dict>(stateCtx:ISharedCtx<State["s
         return [ value,setValue ]
     }
 }
+ 
+/**
+ * 生成计算属性的id
+ * @param valuePath 
+ * @param idArg 
+ * @returns 
+ */
+export function getComputedId(valuePath:string[],idArg:ComputedOptions['id']){
+    let id = ''
+    if(typeof idArg == 'function'){
+      id = idArg(valuePath)
+    }else if(typeof idArg == 'string' ) {
+      id = idArg
+    }else{
+      id = joinValuePath(valuePath)
+    }
+    return id 
+  }
