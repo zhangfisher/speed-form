@@ -69,7 +69,9 @@ export function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: I
       checkDeadCycle: false,
     });
     computedParams.replaceValue(getVal(stateCtx.state, valuePath));
-    const computeObject = {
+    // 创建计算对象实例
+    const computeObject = {      
+      id:strValuePath,
       mutate,
       group:computedOptions.group,
       async:false,

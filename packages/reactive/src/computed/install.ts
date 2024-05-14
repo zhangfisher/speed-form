@@ -6,8 +6,14 @@ import { createAsyncComputedMutate } from "./async";
 import { createComputedMutate } from "./sync";
 
 
+
+
+/**
+ * 安装计算函数
+ * @param options 
+ */
 export function installComputed<Store extends StoreDefine<any>>(options:StoreExtendContext<Store["state"]>) {
-    const { stateCtx,params,storeOptions,extendObjects} = options
+    const { stateCtx,params,storeOptions,extendObjects,target} = options
     const descriptor = params.value
     let computedObject:ComputedObject | undefined
     //@ts-ignore
@@ -46,7 +52,6 @@ export function installComputed<Store extends StoreDefine<any>>(options:StoreExt
         storeOptions.onCreateComputedObject(params.fullKeyPath,computedObject)
       }catch(e:any){
         storeOptions.log(e.stack,'error')
-      }   
-  
+      }     
     }  
   }

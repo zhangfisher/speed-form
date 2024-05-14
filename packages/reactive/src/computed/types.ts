@@ -168,6 +168,7 @@ export interface ComputedProgressbar{
 
   
 export interface ComputedObject<T=Dict>{
+    id:string
     mutate:IMutateWitness<T> 
     run:(options?:RuntimeComputedOptions)=>Promise<any> | any
     options:ComputedOptions  

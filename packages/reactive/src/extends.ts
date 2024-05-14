@@ -19,6 +19,12 @@ export interface StoreExtendContext<State extends Dict>{
     extendObjects:StoreExtendObjects<State>
     storeOptions: Required<StoreOptions>
     params:IOperateParams
+    // 默认情况下，计算函数是根据当前state中的某个字段创建
+    // 当我们想创建一个动态的计算对象时，就需要传递此参数，此参数是一个新的state对象
+    // 用于存储异步计算对象信息AsyncComputedObject
+    target?:{
+        stateCtx:ISharedCtx
+    }
 }
 
 export function installExtends<Store extends StoreDefine<any>>(params:IOperateParams,stateCtx: ISharedCtx<Store["state"]>,extendObjects:StoreExtendObjects<Store["state"]>,storeOptions: Required<StoreOptions>) {    

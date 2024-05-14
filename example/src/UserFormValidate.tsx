@@ -118,7 +118,7 @@ const FormDemo:React.FC = ()=>{
                             } } 
                         </User.Field>   
                         <Button onClick={()=>submit()}>登录</Button>    
-                        <User.Submit title="确认提交" scope="dd.dd"></User.Submit>                     
+                        {/* <User.Submit title="确认提交" scope="dd.dd"></User.Submit>                      */}
                     </Card>
                 </User.Form>    
                     

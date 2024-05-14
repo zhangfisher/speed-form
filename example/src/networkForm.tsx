@@ -127,14 +127,14 @@ const NetworkForm = ()=>{
                         </>
                     }}
                 </Network.Action>     
-                <Network.Submit>
+                {/* <Network.Submit>
                     {({title,dirty,validate})=>{ 
                         return <>
                              <button type="submit" value={title}/>
                              dirty={String(dirty)},validate={String(validate)}
                         </>
                     }}
-                </Network.Submit>      
+                </Network.Submit>       */}
                 
                 <Network.Action<typeof Network.actions.timeoutSubmit> name="actions.timeoutSubmit" >
                     {({title,visible,loading,enable,run,cancel,error,progress})=>{ 

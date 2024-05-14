@@ -78,7 +78,7 @@
     "axios": "^1.6.2",
     "classnames": "^2.3.2",
     "color": "^4.2.3",
-    "helux": "^4.2.6",
+    "helux": "^4.3.2",
     "react-loader-spinner": "^6.1.6",
     "styledfc": "^1.0.9",
     "validator": "^13.11.0"

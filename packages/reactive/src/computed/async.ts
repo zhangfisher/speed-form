@@ -18,7 +18,7 @@ import { ComputedObject } from '../computed';
  * 创建异步计算属性的数据结构
  * 
 */
-function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial<AsyncComputedObject>){
+export function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial<AsyncComputedObject>){
     return Object.assign({
       // value   : undefined,  
       loading : false,
@@ -36,11 +36,11 @@ function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial
     },valueObj)
   }
   
-  function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[],mutateDesc:string,valueObj:Partial<AsyncComputedObject>){
+export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[],mutateDesc:string,valueObj:Partial<AsyncComputedObject>){
     const asyncObj = createAsyncComputedObject(stateCtx,mutateDesc,valueObj)
     const reusltValue = getVal(draft,resultPath)
     Object.assign(reusltValue,asyncObj,valueObj)
-  }
+}
   
   /**
    * computed(async (scope,{getProgressbar})=>{
@@ -189,8 +189,8 @@ function createAsyncComputedObject(stateCtx:any,mutateId:string,valueObj:Partial
    */
 export  function createAsyncComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,computedParams: IOperateParams,computeObjects:IStore['computedObjects'],storeOptions: Required<StoreOptions>) :ComputedObject | undefined{
     const { fullKeyPath:valuePath, parent ,value } = computedParams;
-    const { onCreateComputed } = storeOptions;
-  
+    const { onCreateComputed } = storeOptions; 
+    
     // 排除掉所有非own属性,例如valueOf等
     if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
       return;
@@ -278,14 +278,16 @@ export  function createAsyncComputedMutate<Store extends StoreDefine<any>>(state
       checkDeadCycle: false,
     });
     computedParams.replaceValue(getVal(stateCtx.state, valuePath));
+    // 创建计算对象实例
     const computeObject = {
+      id:strValuePath,
       mutate,
       group:computedOptions.group,
       async:true,
       options:computedOptions,
       get enable(){ return computedOptions.enable as boolean },
       set enable(value:boolean){ computedOptions.enable = value },
-      run:(options?:RuntimeComputedOptions)=> stateCtx.runMutateTask({desc:mutateId,extraArgs:options})   
+      run:(options?:RuntimeComputedOptions)=> stateCtx.runMutateTask({desc:mutateId,extraArgs:options})
     }
     computeObjects!.set(strValuePath,computeObject)  
     return  computeObject
