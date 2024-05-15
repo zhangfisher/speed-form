@@ -158,12 +158,12 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
  *    或者调用computedObjects.enableGroup(true/false)来启用或禁用分组验证
  * 
  */
-function createValidatorHook(keyPath:string[],getter:Function,options:ComputedOptions,formOptions:Required<FormOptions>){		
-	if(keyPath.length>=2 && keyPath[0]==FIELDS_STATE_KEY && keyPath[keyPath.length-1]==VALIDATE_COMPUTED_GROUP){	
+function createValidatorHook(valuePath:string[],getter:Function,options:ComputedOptions,formOptions:Required<FormOptions>){		
+	if(valuePath.length>=2 && valuePath[0]==FIELDS_STATE_KEY && valuePath[valuePath.length-1]==VALIDATE_COMPUTED_GROUP){	
 		// 如果没有指定scope,则默认指向value
 		if(!options.scope) options.scope="value"
 		if(!options.depends) options.depends=[]
-		options.depends.push([...keyPath.slice(0,-1),"value"])
+		options.depends.push([...valuePath.slice(0,-1),"value"])
 		// 默认=null代表还未校验
 		options.initial = null	
 		// 默认分组为validate

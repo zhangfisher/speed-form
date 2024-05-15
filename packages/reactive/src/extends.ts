@@ -14,7 +14,7 @@ import {  installComputed } from "./computed";
 import { installWatch } from "./watch";
 import { Dict } from "./types";
 
-export interface StoreExtendContext<State extends Dict>{
+export interface StoreExtendContext<State extends Dict=Dict>{
     stateCtx:ISharedCtx<State>
     extendObjects:StoreExtendObjects<State>
     storeOptions: Required<StoreOptions>
@@ -22,7 +22,7 @@ export interface StoreExtendContext<State extends Dict>{
     // 默认情况下，计算函数是根据当前state中的某个字段创建
     // 当我们想创建一个动态的计算对象时，就需要传递此参数，此参数是一个新的state对象
     // 用于存储异步计算对象信息AsyncComputedObject
-    target?:{
+    computedTarget?:{
         stateCtx:ISharedCtx
     }
 }

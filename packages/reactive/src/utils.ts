@@ -119,7 +119,7 @@ export function getError(e:any):Error{
  * 用来将依赖参数转换为数组
  * @param arg 返回 [[],[],[],"./ddd","../../xxxxx",[]]
  */
-export function getDeps(arg:ComputedDepends | undefined,ctx?:any):(string | string[])[]{
+export function getDeps(arg:ComputedDepends | undefined):(string | string[])[]{
     return (arg || []).map((dep: any) =>{
         if(Array.isArray(dep)){
             return dep
