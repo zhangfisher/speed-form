@@ -3,7 +3,7 @@
  
  */
 
-import { ISharedCtx, model,flush } from "helux"
+import { ISharedCtx, model,flush, sharex } from "helux"
 import type { ActionDefines, Actions } from './action';
 import {  createActions } from './action';
 import { ComputedState, Dict, RequiredComputedState, StateComputedType } from './types';
@@ -12,9 +12,10 @@ import { deepClone } from "flex-tools/object/deepClone";
 import { installExtends } from "./extends" 
 import { WatchObjects, createUseWatch, createWatch } from "./watch";
 import { log, useStateWrapper } from "./utils";
+import { computedObjectCreator } from "./computed/create";
 
 
-export interface StoreDefine<State extends Dict=Dict>{
+export interface StoreDefine<State extends Dict = Dict>{
     state:State
     actions?:ActionDefines<State>
 }
@@ -100,43 +101,61 @@ export interface StoreExtendObjects<T extends Dict = Dict>{
     _replacedKey:Dict
 }
 
-export type IStore<T extends StoreDefine<any>= StoreDefine<any>> = ISharedCtx<ComputedState<T['state']>> & {
-    state:ComputedState<T['state']>
-    useState:ReturnType<typeof useStateWrapper> 
-    actions:Actions<T['state'],T['actions']> 
-} & StoreExtendObjects<T['state']>
+export type IStore<T extends StoreDefine<any>= StoreDefine<any>> = {
+    state          : ComputedState<T['state']>
+    computedObjects: ComputedObjects<T>
+    watchObjects   : WatchObjects<T>
+    useState       : ReturnType<typeof useStateWrapper> 
+    actions        : Actions<T['state'],T['actions']> 
+    createComputed : ReturnType<typeof computedObjectCreator>
+    options        : StoreOptions
+    _replacedKey   : Dict
+} 
 
 
-export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOptions){
+export function createStore<T extends StoreDefine>(data:T,options?:StoreOptions){
+    // 1.初始化配置参数
     const opts = Object.assign({
         id:Math.random().toString(16).substring(2),
         debug:true,
         computedThis:()=>ComputedScopeRef.Root,
         computedScope:()=>ComputedScopeRef.Current,
-        singleton:false
+        singleton:true
     },options) as Required<StoreOptions>
     opts.log = (...args:any[])=>{
         if(opts.debug) (log as any)(...args)
     }
+    const storeDefine = opts.singleton ? data : deepClone(data)
 
-    const storeData = opts.singleton ? data : deepClone(data)
-    const extendObjects:StoreExtendObjects<T['state']>={
-        computedObjects:new ComputedObjects<T['state']>(),
-        watchObjects:new WatchObjects<T>(opts),
-        _replacedKey:{}
+    // 2. 创建store对象
+    const store:Partial<IStore<T>> = { 
+        options:opts,
+        _replacedKey:{}                             // 用来保存已经替换过的key
     }
-    return  model((api) => {
-        const stateCtx = api.sharex<ComputedState<T['state']>>(storeData.state as any, {
-            stopArrDep: false,
-            moduleName: opts.id,
-            onRead: (params) => {
-                installExtends<T>(params, stateCtx, extendObjects, opts);
-            }
-        });
-        // 1. 创建Actions
-        const actions = createActions<T>(storeData.actions, stateCtx, api, opts);
-        // 2. 处理useState
-        const useState = useStateWrapper<T['state']>(stateCtx);
+    store.computedObjects = new ComputedObjects<T>(store as IStore<T>),
+    store.watchObjects = new WatchObjects<T>(store as IStore<T>)
+
+    
+    
+    // 3. 创建响应式对象
+    const stateCtx = sharex<ComputedState<T['state']>>(storeDefine.state as any, {
+        stopArrDep: false,
+        moduleName: opts.id,
+        onRead: (params) => {
+            installExtends<T>(params,store, opts);
+        }
+    });
+
+    // 1. 创建Actions
+    const actions = createActions<T>(storeDefine.actions, stateCtx, opts);
+    // 2. 处理useState
+    const useState = useStateWrapper<T['state']>(stateCtx);
+
+
+        // 3. 创建计算对象的函数
+        // const createComputed = computedObjectCreator(stateCtx,extendObjects,opts)
+        // // @ts-ignore
+        // extendObjects.computedObjects.new = createComputed
 
         return {
             actions,
@@ -145,9 +164,7 @@ export function createStore<T extends StoreDefine<any>>(data:T,options?:StoreOpt
             useState,
             watch: createWatch(stateCtx,opts),
             useWatch: createUseWatch(stateCtx,opts),
-            flush:()=>flush(stateCtx.state),
             ...extendObjects
         };
-    }) as unknown as IStore<T>
 
 }

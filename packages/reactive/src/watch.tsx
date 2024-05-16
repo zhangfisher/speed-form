@@ -8,7 +8,7 @@
  * 
  */
 import { ISharedCtx, watch as heluxWatch, IOperateParams,  getSnap, flush } from 'helux';
-import { ComputedScopeRef, type ComputedScope, type StateValueDescriptor, type StateValueDescriptorParams, type StoreDefine, type StoreOptions } from "./store";
+import { ComputedScopeRef, IStore, type ComputedScope, type StateValueDescriptor, type StateValueDescriptorParams, type StoreDefine, type StoreOptions } from "./store";
 import { StoreExtendContext } from "./extends"; 
 import { getVal, getValueByPath, setVal } from "./utils"; 
 import { OBJECT_PATH_DELIMITER } from './consts';
@@ -100,24 +100,20 @@ export interface WatcherObject extends WatchOptions{
     listener:(...args:any[])=>any
 }
 
-export class WatchObjects<Store extends StoreDefine<any>> extends Map<string,WatcherObject>{
+export class WatchObjects<T extends StoreDefine<any>=  StoreDefine> extends Map<string,WatcherObject>{
     private _off?:()=>{} 
-    private _ctx?:ISharedCtx<Store["state"]>
     private _storeOptions:StoreOptions
     private _enable:boolean=true                            // 是否启用侦听器
     // key=triggerPath value=WatcherObject
     // 为了避免每次发生heluxWatch时进行遍历所有的监听函数，这里缓存起来，当对应的triggerPath触发变化时，可以从缓存中读取直接运行相应的watcher
     private cache=new Map<string,WatcherObject[]>()         
     private watcherCache?:Map <string,Dict>                 // 每个watcher的自我缓存
-    constructor(storeOptions:StoreOptions){
-        super()
-        this._storeOptions = storeOptions        
+    constructor(public store:IStore<T>){
+        super()   
+        this._storeOptions = store.options  
     }  
-    bind(ctx:ISharedCtx<Store["state"]>){
-        if(!this._ctx) {
-            this._ctx = ctx
-            this.createWacher()
-        }
+    init(){ 
+        this.createWacher() 
     }
     get enable(){
         return this._enable
@@ -143,7 +139,7 @@ export class WatchObjects<Store extends StoreDefine<any>> extends Map<string,Wat
                 // 从缓存中读取能匹配的watchers
                 const matchedWatchers:WatcherObject[] = this.getCachedWatchers(triggerPath)!
                 // 读取发生变化的值
-                const triggerValue = getVal(this._ctx!.state,triggerPath)
+                const triggerValue = getVal(this.store.state,triggerPath)
                 // 如果没有缓存，则需要直接从缓存中取值                    
                 if(matchedWatchers.length===0){    
                     // 没有缓存时，需要遍历所有的监听函数，找到匹配的监听函数
@@ -165,7 +161,7 @@ export class WatchObjects<Store extends StoreDefine<any>> extends Map<string,Wat
                 } 
                 
             })
-        },()=>[this._ctx!.state])
+        },()=>[this.store.state])
         this._off = unwatch
     }
     /**
@@ -250,16 +246,16 @@ export class WatchObjects<Store extends StoreDefine<any>> extends Map<string,Wat
         
         // 1. 构建参数
         const listenerOpts = {
-            getSelfValue : ()=> getVal(getSnap(this._ctx!.state),watchedPath),
+            getSelfValue : ()=> getVal(getSnap(this.store.state),watchedPath),
             getCache:()=>this.getWatcherCache(watchedPath),
             triggerPath,
             selfPath:watchedPath,
-            state:this._ctx!.state
+            state:this.store.state
         }                 
         // 2. 构建监听函数的作用域Scope,默认是所侦听的项的值
-        const scope = getComputedContext(this._ctx!.state,{
+        const scope = getComputedContext(this.store.state,{
             computedType:'Watch',
-            input:[()=>getVal(this._ctx!.state,triggerPath)],
+            input:[()=>getVal(this.store.state,triggerPath)],
             type:'scope',
             valuePath:watchedPath,
             funcOptions:{ 
@@ -269,7 +265,7 @@ export class WatchObjects<Store extends StoreDefine<any>> extends Map<string,Wat
         })
         const value =(options.scope==ComputedScopeRef.Depends && Array.isArray(scope)) ? scope[0] : scope
         // 3.  执行监听函数
-        const result = watchListener.call(this._ctx!.state,value,listenerOpts)             
+        const result = watchListener.call(this.store.state,value,listenerOpts)             
         // 4. 将返回值回写到状态中
         if(result!==undefined){
             // @ts-ignore

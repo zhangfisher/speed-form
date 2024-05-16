@@ -21,15 +21,15 @@ export type Actions<State extends Dict,Fields>  = {
  * @param api
  * @returns
  */
-export function createActions<Store extends StoreDefine<any>>(actions:Store['actions'],ctx:ISharedCtx<ComputedState<Store['state']>>,api:HeluxApi,options?:StoreOptions){
+export function createActions<Store extends StoreDefine<any>>(actions:Store['actions'],ctx:ISharedCtx<ComputedState<Store['state']>>,options?:StoreOptions){
     return Object.entries(actions||{}).reduce((results:any,[key,action])=>{
-        results[key] =  createAction(action as Action<any> ,ctx.setState,api)
+        results[key] =  createAction(action as Action<any> ,ctx.setState)
         return results
     },{}) as Actions<Store['state'],Store['actions']>
 }
 
 
-export function createAction(action: Action<any>,setState:any,api:HeluxApi){
+export function createAction(action: Action<any>,setState:any){
     const updateState = (updater:any)=>{
         if(typeof(updater)=='function'){               
             setState((draft:any)=>{

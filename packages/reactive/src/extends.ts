@@ -8,7 +8,7 @@
  */
 
 import { IOperateParams, ISharedCtx } from "helux";
-import type { StoreExtendObjects, StoreOptions, StoreDefine } from "./store";
+import type { StoreExtendObjects, StoreOptions, StoreDefine, IStore } from "./store";
 import { isSkipComputed } from "./utils";
 import {  installComputed } from "./computed"; 
 import { installWatch } from "./watch";
@@ -27,14 +27,14 @@ export interface StoreExtendContext<State extends Dict=Dict>{
     }
 }
 
-export function installExtends<Store extends StoreDefine<any>>(params:IOperateParams,stateCtx: ISharedCtx<Store["state"]>,extendObjects:StoreExtendObjects<Store["state"]>,storeOptions: Required<StoreOptions>) {    
+export function installExtends<T extends StoreDefine>(params:IOperateParams,store:IStore<T>,storeOptions: Required<StoreOptions>) {    
     // 拦截读取state的操作，在第一次读取时，
     // - 为计算函数创建mutate
     // - 将原始属性替换为计算属性值或异步对象
       const { fullKeyPath:valuePath, value } = params;
       const key = valuePath.join(".");
-      if ( typeof value === "function" && !extendObjects._replacedKey[key] && !isSkipComputed(value) ) {
-        extendObjects._replacedKey[key] = true;                
+      if ( typeof value === "function" && !store._replacedKey[key] && !isSkipComputed(value) ) {
+        store._replacedKey[key] = true;                
         const ctx:StoreExtendContext<ISharedCtx<Store["state"]>>= {
             stateCtx,
             extendObjects,

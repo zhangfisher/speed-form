@@ -1,12 +1,16 @@
 import { ComputedObject} from "./types"
-import { Dict } from "../types"
+import { Dict } from "../types" 
+import { computedObjectCreator } from './create';
+import type { IStore, StoreDefine } from "../store";
 
 
    /**
     * 
     */
-export class ComputedObjects<T=Dict> extends Map<string,ComputedObject<T>>{
-  
+export class ComputedObjects<T extends StoreDefine =  StoreDefine> extends Map<string,ComputedObject<T>>{
+    constructor(public store:IStore<T>){
+      super()
+    }
     /**
      * 运行指定组的计算函数
      *  
@@ -43,9 +47,12 @@ export class ComputedObjects<T=Dict> extends Map<string,ComputedObject<T>>{
     /**
      * 创建一个新计算对象
      */
-    new(){
-
+    get new():ReturnType<typeof computedObjectCreator>{
+      //@ts-ignore 
+      return null
     }   
+
+
 
   }
   
