@@ -51,8 +51,8 @@ export function createComputedMutate<T extends StoreDefine>(computedParams:IComp
         store.options.log(`Run sync computed for : ${mutateName}`);
         const { input } = params;
         // 1. 根据配置参数获取计算函数的上下文对象      
-        const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,store.options,type:"context"})
-        const scopeDraft= getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,store.options,type:"scope"})      
+        const thisDraft = getComputedRefDraft.call<IStore<T>,any[],any>(store,draft,{input,computedOptions,computedContext: computedParams,store.options,type:"context"})
+        const scopeDraft= getComputedRefDraft.call<IStore<T>,any[],any>(store,draft,{input,computedOptions,computedContext: computedParams,store.options,type:"scope"})      
         // 2. 执行getter函数
         let computedResult = computedOptions.initial;
         try {

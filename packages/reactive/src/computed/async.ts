@@ -82,7 +82,7 @@ export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[
    * @param scopeDraft 
    * @param options 
    */
-  async function executeComputedGetter<T extends StoreDefine,R>(store:IStore<T>,draft:any,getter:AsyncComputedGetter<R>,options:{computedResultPath:string[], input:any[],setState:any,computedContext: IComputeParams,computedOptions:ComputedOptions},computedTarget?:ComputedTarget<T>){
+  async function executeComputedGetter<T extends StoreDefine,R>(this:IStore<T>,draft:any,getter:AsyncComputedGetter<R>,options:{computedResultPath:string[], input:any[],setState:any,computedContext: IComputeParams,computedOptions:ComputedOptions},computedTarget?:ComputedTarget<T>){
     
     const { input, computedOptions, computedContext, computedResultPath} = options;  
 
@@ -90,8 +90,8 @@ export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[
 
     const setState  = isExternal ? computedTarget.stateCtx.setState : options.setState
 
-    const thisDraft =isExternal ? draft : getComputedRefDraft.call<IStore<T>,any[],any>(store,draft,{input, computedOptions, computedContext, type:"context"})
-    const scopeDraft=isExternal ? draft : getComputedRefDraft.call<IStore<T>,any,any>(store,draft,{input, computedOptions, computedContext, type:"scope"})  
+    const thisDraft =isExternal ? draft : getComputedRefDraft.call<IStore<T>,any[],any>(this,draft,{input, computedOptions, computedContext, type:"context"})
+    const scopeDraft=isExternal ? draft : getComputedRefDraft.call<IStore<T>,any,any>(this,draft,{input, computedOptions, computedContext, type:"scope"})  
 
     const { fullKeyPath:valuePath } = computedContext;  
     const { timeout=0,retry=[0,0] }  = computedOptions  
@@ -286,7 +286,7 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
         }
         isMutateRunning=true
         try{
-          return await executeComputedGetter<T,any>(store,draft,getter,{
+          return await executeComputedGetter.call<IStore<T>,any[],any>(store,draft,getter,{
             input,
             computedResultPath,          
             computedOptions:finalComputedOptions,
