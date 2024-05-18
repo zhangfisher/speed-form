@@ -14,7 +14,7 @@ import { IStore } from '../types/store';
  * @param computedParams
  */
 
-export function createComputedMutate<T extends StoreDefine>(computedParams:IComputeParams,store:IStore<T>,storeOptions: Required<StoreOptions<T>>,computedTo?:ComputedTarget) :ComputedObject | undefined{
+export function createComputedMutate<T extends StoreDefine>(computedParams:IComputeParams,store:IStore<T>,computedTo?:ComputedTarget) :ComputedObject<T> | undefined{
 
     // 1. 获取计算属性的描述
     const { fullKeyPath:valuePath, parent,value } = computedParams;    
@@ -25,7 +25,7 @@ export function createComputedMutate<T extends StoreDefine>(computedParams:IComp
     }
   
     // 2. 运行Hook:  当创建计算属性前时运行hook，本Hook的目的是允许重新指定computedThis或者重新包装原始计算函数
-    const { onCreateComputed } = storeOptions;
+    const { onCreateComputed } = store.options;
     if (typeof onCreateComputed == "function" && typeof getter === "function") {
       const newGetter = onCreateComputed.call(store,valuePath, getter,computedOptions);    
       if(!computedOptions.scope) computedOptions.scope = ComputedScopeRef.Current
@@ -39,20 +39,20 @@ export function createComputedMutate<T extends StoreDefine>(computedParams:IComp
     const mutateId = isExternal ? computedOptions.id as string :  getComputedId(valuePath,computedOptions.id)
     const mutateName =isExternal ? mutateId : valuePath.join(OBJECT_PATH_DELIMITER)  
 
-    storeOptions.log(`Create sync computed: ${mutateName}`);    
+    store.options.log(`Create sync computed: ${mutateName}`);    
     
     // 4. 创建mutate实例
     const mutate = store.stateCtx.mutate({
       fn: (draft, params) => {
         if(!computedOptions.enable){
-          storeOptions.log(`Sync computed <${mutateName}> is disabled`,'warn')
+          store.options.log(`Sync computed <${mutateName}> is disabled`,'warn')
           return 
         }
-        storeOptions.log(`Run sync computed for : ${mutateName}`);
+        store.options.log(`Run sync computed for : ${mutateName}`);
         const { input } = params;
         // 1. 根据配置参数获取计算函数的上下文对象      
-        const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,storeOptions,type:"context"})
-        const scopeDraft= getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,storeOptions,type:"scope"})      
+        const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,store.options,type:"context"})
+        const scopeDraft= getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,store.options,type:"scope"})      
         // 2. 执行getter函数
         let computedResult = computedOptions.initial;
         try {

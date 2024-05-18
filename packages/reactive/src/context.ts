@@ -22,7 +22,7 @@
  */
 import { IOperateParams } from "helux";
 import { OBJECT_PATH_DELIMITER } from "./consts";
-import { type ComputedScope, ComputedScopeRef, StoreOptions, StoreDefine } from "./types/store";
+import { type ComputedScope, ComputedScopeRef, StoreOptions, StoreDefine, IStore } from "./types/store";
 import { getValueByPath } from "./utils";
 import { ComputedOptions, IComputeParams, StateComputedType } from "./computed/types";
 
@@ -125,8 +125,9 @@ export function getComputedContext<T extends StoreDefine = StoreDefine>(draft: a
  * @param params 
  * @returns 
  */
-export function getComputedRefDraft<T extends StoreDefine=StoreDefine>(draft: any, params:{input:any[],type:'context' | 'scope',computedContext:IComputeParams,computedOptions: ComputedOptions, storeOptions: StoreOptions<T>}) {
-  const { input:depends, type, computedContext, computedOptions, storeOptions } = params;
+export function getComputedRefDraft<T extends StoreDefine>(this:IStore<T>,draft: any, params:{input:any[],type:'context' | 'scope',computedContext:IComputeParams,computedOptions: ComputedOptions}) {
+  const storeOptions = this.options;
+  const { input:depends, type, computedContext, computedOptions} = params;
   return getComputedContext(draft,{
     input:depends,
     type,

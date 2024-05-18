@@ -220,9 +220,9 @@ export type ComputedSyncReturns<T=any> = (...args: any) => Exclude<T,Promise<any
 
 
 // computedObjectsd成员 
-export interface ComputedObject<T=Dict>{
+export interface ComputedObject<T extends StoreDefine>{
     id:string
-    mutate:IMutateWitness<T> 
+    mutate:IMutateWitness<ComputedState<T["state"]>>
     run:(options?:RuntimeComputedOptions)=>Promise<any> | any
     options:ComputedOptions  
     group:string | undefined

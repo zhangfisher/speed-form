@@ -82,15 +82,16 @@ export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[
    * @param scopeDraft 
    * @param options 
    */
-  async function executeComputedGetter<R>(draft:any,getter:AsyncComputedGetter<R>,options:{computedResultPath:string[], input:any[],setState:any,computedContext: IComputeParams,computedOptions:Required<ComputedOptions>,storeOptions: StoreOptions},computedTarget?:ComputedTarget){
-    const { input, computedOptions, computedContext,storeOptions, computedResultPath} = options;  
+  async function executeComputedGetter<T extends StoreDefine,R>(this:IStore<T>,draft:any,getter:AsyncComputedGetter<R>,options:{computedResultPath:string[], input:any[],setState:any,computedContext: IComputeParams,computedOptions:ComputedOptions},computedTarget?:ComputedTarget<T>){
+    
+    const { input, computedOptions, computedContext, computedResultPath} = options;  
 
     const isExternal= computedTarget!==undefined
 
     const setState  = isExternal ? computedTarget.stateCtx.setState : options.setState
 
-    const thisDraft =isExternal ? draft : getComputedRefDraft(draft,{input, computedOptions, computedContext,storeOptions, type:"context"})
-    const scopeDraft=isExternal ? draft : getComputedRefDraft(draft,{input, computedOptions, computedContext,storeOptions, type:"scope"})  
+    const thisDraft =isExternal ? draft : getComputedRefDraft.call<IStore<T>,any[],any>(this,draft,{input, computedOptions, computedContext, type:"context"})
+    const scopeDraft=isExternal ? draft : getComputedRefDraft.call<IStore<T>,any,any>(this,draft,{input, computedOptions, computedContext, type:"scope"})  
 
     const { fullKeyPath:valuePath } = computedContext;  
     const { timeout=0,retry=[0,0] }  = computedOptions  
@@ -193,7 +194,7 @@ export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[
    * @param stateCtx
    * @param params
    */
-export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams:IComputeParams,store:IStore<T>,storeOptions: Required<StoreOptions<T>>,computedTo?:ComputedTarget) :ComputedObject | undefined{
+export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams:IComputeParams,store:IStore<T>,computedTo?:ComputedTarget<T>) :ComputedObject<T> | undefined{
     
     // 1. 参数检查
     const { fullKeyPath:valuePath, parent ,value } = computedParams;
@@ -207,7 +208,7 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     computedOptions.async = true; 
    
     // 3.运行Hook: 用来在创建computed前运行,允许拦截更改计算函数的依赖,上下文,以及getter等    
-    const { onCreateComputed } = storeOptions; 
+    const { onCreateComputed } = store.options; 
     if (typeof onCreateComputed == "function" && typeof getter === "function") {
       const newGetter = onCreateComputed.call(store,valuePath, getter, computedOptions);
       if(!computedOptions.scope) computedOptions.scope = ComputedScopeRef.Current
@@ -236,12 +237,12 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     // 6. 解析依赖参数 
     const deps = getDeps(depends) //(depends || []).map((deps: any) =>Array.isArray(deps) ? deps : deps.split(OBJECT_PATH_DELIMITER))
     if(deps.length==0){
-      storeOptions.log(`async computed <${valuePath.join(".")}> should specify depends`,'warn')
+      store.options.log(`async computed <${valuePath.join(".")}> should specify depends`,'warn')
     }
     const mutateId = isExternal ? computedOptions.id as string :  getComputedId(valuePath,computedOptions.id)
     const mutateName =isExternal ? mutateId : valuePath.join(OBJECT_PATH_DELIMITER)
   
-    storeOptions.log(`Create async computed: ${mutateName} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
+    store.options.log(`Create async computed: ${mutateName} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
     
     // 7. 创建mutate
     const mutate =store.stateCtx.mutate({ 
@@ -273,24 +274,23 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
       task: async ({ draft, setState, input, extraArgs }) => {
         // 如果额外参数中包含enable=true，则覆盖
         if(!computedOptions.enable && extraArgs?.enable!==true){
-          storeOptions.log(`Async computed <${mutateName}> is disabled`,'warn')
+          store.options.log(`Async computed <${mutateName}> is disabled`,'warn')
           return 
         }
-        storeOptions.log(`Run async computed for : ${mutateName}`);
+        store.options.log(`Run async computed for : ${mutateName}`);
         // 当使用run方法时可以传入参数来覆盖默认的计算函数的配置参数
         const finalComputedOptions = Object.assign({},computedOptions,extraArgs) as Required<ComputedOptions>
-        if(noReentry && isMutateRunning && storeOptions.debug) {
-          storeOptions.log(`Reentry async computed: ${mutateName}`,'warn');
+        if(noReentry && isMutateRunning && store.options.debug) {
+          store.options.log(`Reentry async computed: ${mutateName}`,'warn');
           return
         }
         isMutateRunning=true
         try{
-          return await executeComputedGetter(draft,getter,{
+          return await executeComputedGetter.call<IStore<T>,[DraftType<ComputedState<T["state"]>>,any,any,ComputedTarget],any>(store,draft,getter,{
             input,
             computedResultPath,          
             computedOptions:finalComputedOptions,
-            computedContext: computedParams,
-            storeOptions,
+            computedContext: computedParams, 
             setState
           },computedTo)
         }finally{

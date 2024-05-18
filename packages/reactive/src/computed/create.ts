@@ -7,7 +7,7 @@
 
 import { IOperateParams, ISharedCtx, sharex } from "helux"
 import { StoreDefine, StoreExtendObjects, StoreOptions } from "../types/store"
-import { Dict } from "../types"
+import { Dict, IStore } from "../types"
 import { AsyncComputedGetter,  ComputedOptions } from "../computed/types"
 import { computed } from "./computed"
 import { StoreExtendContext } from "../extends"
@@ -57,7 +57,7 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
    * 
    * 
    */
-  export function computedObjectCreator<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>,extendObjects:StoreExtendObjects<Store["state"]>,storeOptions:Required<StoreOptions>){
+  export function computedObjectCreator<T extends StoreDefine>(store:IStore<T>){
     
     return <R = any,ExtraAttrs extends Dict = {}>(getter:AsyncComputedGetter<R>,options?:ComputedObjectCreateOptions<R,ExtraAttrs>)=>{
         const opts = Object.assign({
@@ -82,18 +82,8 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
         fullKeyPath:[],
         parent:null,                
         value:computed(getter,opts.depends,options) 
-      }
-
-      const ctx:StoreExtendContext<ISharedCtx<Store["state"]>>= {
-        stateCtx,
-        extendObjects,
-        storeOptions,
-        params:computedParams as unknown as IOperateParams,
-        computedTarget:{
-            stateCtx:targetCtx
-        }
-      }
-      installComputed(ctx)
+      } 
+      installComputed(computedParams,store,storeOptions)
       return targetCtx
     }
   

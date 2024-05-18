@@ -1,7 +1,7 @@
 import { ISharedCtx } from 'helux'
 import type { ComputedDepends, ComputedOptions } from './computed'
 import { OBJECT_PATH_DELIMITER } from './consts'
-import { Dict, RequiredComputedState } from './types'
+import { Dict, IStore, RequiredComputedState, StoreDefine } from './types'
 import type { StateGetter, StateSetter } from './store'
 
 
@@ -247,9 +247,10 @@ export function isAsyncComputedDescriptor(obj:any){
  *
  * @param useState
  */
-export function useStateWrapper<State extends Dict>(stateCtx:ISharedCtx<State["state"]>){
-    return function<Value=any,SetValue=Value>(getter?:StateGetter<RequiredComputedState<State>,Value>,setter?:StateSetter<RequiredComputedState<State>,SetValue>){
-        const useState = stateCtx.useState 
+export function useStateWrapper<T extends StoreDefine = StoreDefine>(store: IStore<T>){
+
+    return function<Value=any,SetValue=Value>(getter?:StateGetter<RequiredComputedState<T['state']>,Value>,setter?:StateSetter<RequiredComputedState<T['state']>,SetValue>){
+        const useState = store.stateCtx.useState 
         if(getter==undefined){
             return useState()
         }

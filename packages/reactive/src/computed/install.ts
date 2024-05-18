@@ -11,16 +11,16 @@ import { IComputeParams } from "./types";
  */
  
 
-export function installComputed<T extends StoreDefine>(params:IComputeParams,store:IStore<T>,storeOptions: Required<StoreOptions<T>>,computedTo?:ComputedTarget) {
+export function installComputed<T extends StoreDefine>(params:IComputeParams,store:IStore<T>,storeOptions: StoreOptions<T>,computedTo?:ComputedTarget) {
 
     const descriptor = params.value
-    let computedObject:ComputedObject | undefined
+    let computedObject:ComputedObject<T> | undefined
     //@ts-ignore
     if (descriptor.__COMPUTED__=='async') {
-      computedObject = createAsyncComputedMutate<T>(params,store,computedTo,storeOptions);
+      computedObject = createAsyncComputedMutate<T>(params,store,storeOptions,computedTo);
     //@ts-ignore
     }else if (descriptor.__COMPUTED__=='sync') {
-      computedObject = createComputedMutate<T>(params,store,computedTo,storeOptions);
+      computedObject = createComputedMutate<T>(params,store,storeOptions,computedTo);
     }else if (isAsyncFunction(descriptor)) { // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次   
         params.value = () => ({
           fn: descriptor,
@@ -32,7 +32,7 @@ export function installComputed<T extends StoreDefine>(params:IComputeParams,sto
             context  :storeOptions.computedThis && storeOptions.computedThis('Computed'),  
         },
         });
-        computedObject = createAsyncComputedMutate<T>(params,store,computedTo,storeOptions);
+        computedObject = createAsyncComputedMutate<T>(params,store,storeOptions,computedTo);
     }else { // 简单的同步计算函数，没有通过computed函数创建
       params.value = () => ({
         fn: descriptor,
@@ -43,7 +43,7 @@ export function installComputed<T extends StoreDefine>(params:IComputeParams,sto
         }
       })
       // 直接声明同步计算函数,使用全局配置的计算上下文
-      computedObject = createComputedMutate<T>(params,store,computedTo,storeOptions);
+      computedObject = createComputedMutate<T>(params,store,storeOptions,computedTo);
     }
     // 当创建计算完毕后的回调
     if(computedObject && typeof(storeOptions.onCreateComputedObject)=='function'){

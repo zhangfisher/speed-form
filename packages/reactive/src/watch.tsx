@@ -308,7 +308,7 @@ export class WatchObjects<T extends StoreDefine<any>=  StoreDefine> extends Map<
 
 // let storeWatcher:WatchObjects<StoreDefine<any>> | undefined  
  
-export function installWatch<T extends StoreDefine>(params:IComputeParams,store:IStore<T>,storeOptions: Required<StoreOptions<T>>) { {
+export function installWatch<T extends StoreDefine>(params:IComputeParams,store:IStore<T>) { {
     const { stateCtx,params,storeOptions,extendObjects } =options    
     const { watchObjects } = extendObjects
     watchObjects?.bind(stateCtx)
