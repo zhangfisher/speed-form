@@ -1,7 +1,7 @@
 /**
  * 异步计算
  */
-import { markRaw, getSnap } from 'helux';
+import { markRaw, getSnap, DraftType } from 'helux';
 import type { StoreDefine, StoreOptions,  IStore } from "../types/store";
 import { ComputedScopeRef } from "../types/store";
 import { skipComputed,  joinValuePath, getError, getDeps, getDepValues,getVal, setVal, getComputedId  } from "../utils";
@@ -11,7 +11,7 @@ import { delay } from 'flex-tools/async/delay';
 import { OBJECT_PATH_DELIMITER } from '../consts';
 import { getComputedRefDraft } from '../context';
 import { AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorParams, ComputedOptions, ComputedParams, ComputedProgressbar, RuntimeComputedOptions } from './types';
-import type  { ComputedObject, ComputedTarget, IComputeParams } from './types';
+import type  { ComputedObject, ComputedState, ComputedTarget, IComputeParams } from './types';
 
 
 /** 
@@ -82,7 +82,7 @@ export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[
    * @param scopeDraft 
    * @param options 
    */
-  async function executeComputedGetter<T extends StoreDefine,R>(this:IStore<T>,draft:any,getter:AsyncComputedGetter<R>,options:{computedResultPath:string[], input:any[],setState:any,computedContext: IComputeParams,computedOptions:ComputedOptions},computedTarget?:ComputedTarget<T>){
+  async function executeComputedGetter<T extends StoreDefine,R>(store:IStore<T>,draft:any,getter:AsyncComputedGetter<R>,options:{computedResultPath:string[], input:any[],setState:any,computedContext: IComputeParams,computedOptions:ComputedOptions},computedTarget?:ComputedTarget<T>){
     
     const { input, computedOptions, computedContext, computedResultPath} = options;  
 
@@ -90,8 +90,8 @@ export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[
 
     const setState  = isExternal ? computedTarget.stateCtx.setState : options.setState
 
-    const thisDraft =isExternal ? draft : getComputedRefDraft.call<IStore<T>,any[],any>(this,draft,{input, computedOptions, computedContext, type:"context"})
-    const scopeDraft=isExternal ? draft : getComputedRefDraft.call<IStore<T>,any,any>(this,draft,{input, computedOptions, computedContext, type:"scope"})  
+    const thisDraft =isExternal ? draft : getComputedRefDraft.call<IStore<T>,any[],any>(store,draft,{input, computedOptions, computedContext, type:"context"})
+    const scopeDraft=isExternal ? draft : getComputedRefDraft.call<IStore<T>,any,any>(store,draft,{input, computedOptions, computedContext, type:"scope"})  
 
     const { fullKeyPath:valuePath } = computedContext;  
     const { timeout=0,retry=[0,0] }  = computedOptions  
@@ -286,7 +286,7 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
         }
         isMutateRunning=true
         try{
-          return await executeComputedGetter.call<IStore<T>,[DraftType<ComputedState<T["state"]>>,any,any,ComputedTarget],any>(store,draft,getter,{
+          return await executeComputedGetter<T,any>(store,draft,getter,{
             input,
             computedResultPath,          
             computedOptions:finalComputedOptions,
