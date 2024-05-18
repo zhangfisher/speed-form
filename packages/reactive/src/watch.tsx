@@ -15,6 +15,7 @@ import { OBJECT_PATH_DELIMITER } from './consts';
 import { Dict } from './types';
 import { useEffect } from 'react';
 import { getComputedContext } from './context';
+import { ComputedTarget, IComputeParams } from './computed/types';
 
 
 
@@ -307,7 +308,7 @@ export class WatchObjects<T extends StoreDefine<any>=  StoreDefine> extends Map<
 
 // let storeWatcher:WatchObjects<StoreDefine<any>> | undefined  
  
-export function installWatch<Store extends StoreDefine<any>>(options:StoreExtendContext<ISharedCtx<Store["state"]>>) {
+export function installWatch<T extends StoreDefine>(params:IComputeParams,store:IStore<T>,storeOptions: Required<StoreOptions<T>>) { {
     const { stateCtx,params,storeOptions,extendObjects } =options    
     const { watchObjects } = extendObjects
     watchObjects?.bind(stateCtx)

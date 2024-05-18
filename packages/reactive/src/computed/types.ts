@@ -2,9 +2,61 @@
  * 类型
  */
 
-import { IMutateWitness } from "helux";
-import type { ComputedScope, ComputedContext,StateValueDescriptorParams, StateValueDescriptor } from "../store";
+import { IMutateWitness, IOperateParams, ISharedCtx } from "helux";
+import type { ComputedScope, ComputedContext,StateValueDescriptorParams, StateValueDescriptor, StoreDefine } from "../types/store";
 import { Dict } from "../types"
+import { WatchDescriptor } from "../watch";
+
+
+// 指向helux的IOperateParams类型，但是我们只用到其是的部分类型
+export type IComputeParams = Pick<IOperateParams,'keyPath' | 'fullKeyPath' | 'value' | 'parent' | 'replaceValue'>;
+ 
+
+/**
+ * 返回函数的返回值类型
+ * 支持返回()=>Promise<R>中的R类型 
+ */
+export type AsyncReturnType<T extends (...args: any) => any> = T extends (...args: any) => Promise<infer R> ? R : (
+    T extends (...args: any) => infer R ? R : any)
+    
+// 用来提前计算属性函数的返回值
+// export type PickComputedResult<T> = T extends  ComputedDescriptor<infer X> ? AsyncComputedObject<X> : 
+//                                     ( T extends ComputedSyncReturns<infer X> ? X: 
+//                                         (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
+//                                             (T extends Computed<infer R> ? R : T) 
+//                                         )
+//                                     )
+
+export type PickComputedResult<T> = T extends  ComputedDescriptor<infer X> ? AsyncComputedObject<X> : 
+    ( T extends WatchDescriptor<any,infer X> ? X :
+        ( T extends ComputedSyncReturns<infer X> ? X: 
+            (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
+                (T extends Computed<infer R> ? R : T) 
+            )
+        )                              
+    )
+/**
+ 
+ 转换状态中的计算属性函数的类型
+ 将状态中的计算属性函数转换为计算属性函数的返回值类型
+ 如：{count:()=>1} => {count:number}
+ 如：{count:async ()=>1} => {count:number}
+
+*/
+export type ComputedState<T extends Record<string, any>> = {
+    [K in keyof T]: T[K] extends (...args:any) => any ? PickComputedResult<T[K]> : T[K] extends Record<string, any> ? ComputedState<T[K]> : T[K];
+};
+
+
+// 在ComputedState的基础上，排除了undefined的类型
+export type RequiredComputedState<T extends Record<string, any>> = {
+    [K in keyof T]-?: Exclude<T[K],undefined> extends (...args:any) => any ? PickComputedResult<Exclude<T[K],undefined>> : Required<T[K]>extends Record<string, any> ? ComputedState<Exclude<T[K],undefined> > : Exclude<T[K],undefined> ;
+};
+
+
+
+// 表示Store中的函数的类型， =Computed代表是一个计算属性，=Watch代表是一个观察函数
+export type StateComputedType = 'Computed' | 'Watch'
 
 
 export interface ComputedProgressbar{
@@ -150,23 +202,24 @@ export interface ComputedProgressbar{
     cancel    : ()=>void                                         // 中止正在执行的异步计算
   } & ExtAttrs
   
-   
-  export type ComputedDescriptorParams<R>  = StateValueDescriptorParams<(scope:any) => Promise<R> | R,ComputedOptions<R>>
   
-  // 计算属性的声明形式
-  export type Computed<T=any> = (...args: any) => T; // 同步计算函数
-  export type AsyncComputed<T=any> = (...args: any) => Promise<T>; // 异步计算函数
-  
-  // 使用computed函数创建的计算属性
-  // export type ComputedDescriptor<T=any> = ((...args: any) => ComputedDescriptorParams<T>) 
-  //                                         & {__COMPUTED__: 'sync' | 'async' | 'watch'};
-                                          
-  export type ComputedDescriptor<R=any> = StateValueDescriptor<(scope:any) => Promise<R> | R,ComputedOptions<R>>
-  
-  export type ComputedSyncReturns<T=any> = (...args: any) => Exclude<T,Promise<any>>;  
+export type ComputedDescriptorParams<R>  = StateValueDescriptorParams<(scope:any) => Promise<R> | R,ComputedOptions<R>>
+
+// 计算属性的声明形式
+export type Computed<T=any> = (...args: any) => T; // 同步计算函数
+export type AsyncComputed<T=any> = (...args: any) => Promise<T>; // 异步计算函数
+
+// 使用computed函数创建的计算属性
+// export type ComputedDescriptor<T=any> = ((...args: any) => ComputedDescriptorParams<T>) 
+//                                         & {__COMPUTED__: 'sync' | 'async' | 'watch'};
+                                        
+export type ComputedDescriptor<R=any> = StateValueDescriptor<(scope:any) => Promise<R> | R,ComputedOptions<R>>
 
 
-  
+export type ComputedSyncReturns<T=any> = (...args: any) => Exclude<T,Promise<any>>;  
+
+
+// computedObjectsd成员 
 export interface ComputedObject<T=Dict>{
     id:string
     mutate:IMutateWitness<T> 
@@ -176,3 +229,8 @@ export interface ComputedObject<T=Dict>{
     async:boolean
     enable:boolean
   }
+
+
+export type ComputedTarget<T extends Dict = Dict > ={
+  stateCtx: ISharedCtx<T>
+}

@@ -1,14 +1,12 @@
 /**
  * 同步计算
  */
-import { IOperateParams, ISharedCtx } from 'helux';
-import type { StoreDefine, StoreOptions } from "../store";
-import { ComputedScopeRef } from "../store"; 
+import { ComputedScopeRef, StoreDefine, StoreOptions } from "../types/store";
 import { getComputedId, getVal, setVal  } from "../utils";
 import { OBJECT_PATH_DELIMITER } from '../consts';
-import { ComputedDescriptorParams, ComputedObject, RuntimeComputedOptions } from './types';
+import { ComputedDescriptorParams, ComputedObject, ComputedTarget, IComputeParams, RuntimeComputedOptions } from './types';
 import { getComputedRefDraft } from "../context"
-import { ComputedObjects } from './computedObject';
+import { IStore } from '../types/store';
 
 /**
  * 为同步计算属性生成mutate
@@ -16,36 +14,41 @@ import { ComputedObjects } from './computedObject';
  * @param computedParams
  */
 
-export function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: ISharedCtx<Store["state"]>, computedParams: IOperateParams,computeObjects:ComputedObjects<Store["state"]>, storeOptions: Required<StoreOptions>):ComputedObject | undefined{
+export function createComputedMutate<T extends StoreDefine>(computedParams:IComputeParams,store:IStore<T>,storeOptions: Required<StoreOptions<T>>,computedTo?:ComputedTarget) :ComputedObject | undefined{
 
-    const { fullKeyPath:valuePath, parent,value } = computedParams;
-    const { onCreateComputed } = storeOptions;
-    let { fn: getter, options: computedOptions }  = value() as ComputedDescriptorParams<any>
-    
+    // 1. 获取计算属性的描述
+    const { fullKeyPath:valuePath, parent,value } = computedParams;    
+    let { fn: getter, options: computedOptions }  = value() as ComputedDescriptorParams<any>    
     // 排除掉所有非own属性,例如valueOf等
     if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
       return;
     }
   
-    // 当创建计算属性前时运行hook，本Hook的目的是允许重新指定computedThis或者重新包装原始计算函数
+    // 2. 运行Hook:  当创建计算属性前时运行hook，本Hook的目的是允许重新指定computedThis或者重新包装原始计算函数
+    const { onCreateComputed } = storeOptions;
     if (typeof onCreateComputed == "function" && typeof getter === "function") {
-      const newGetter = onCreateComputed.call( stateCtx,valuePath, getter,computedOptions);    
+      const newGetter = onCreateComputed.call(store,valuePath, getter,computedOptions);    
       if(!computedOptions.scope) computedOptions.scope = ComputedScopeRef.Current
       if(!computedOptions.context) computedOptions.context = ComputedScopeRef.Root
       if (typeof newGetter == "function") getter = newGetter;
     }
-    const strValuePath = valuePath.join(OBJECT_PATH_DELIMITER)
-    storeOptions.log(`Create sync computed: ${strValuePath}`);
+
+    // 3. 参数解析: 
+    // 当传入computedTarget时，代表计算结果要更新外部对象中
+    const isExternal= computedTo!==undefined
+    const mutateId = isExternal ? computedOptions.id as string :  getComputedId(valuePath,computedOptions.id)
+    const mutateName =isExternal ? mutateId : valuePath.join(OBJECT_PATH_DELIMITER)  
+
+    storeOptions.log(`Create sync computed: ${mutateName}`);    
     
-    const mutateId = getComputedId(valuePath,computedOptions.id)
-    
-    const mutate = stateCtx.mutate({
+    // 4. 创建mutate实例
+    const mutate = store.stateCtx.mutate({
       fn: (draft, params) => {
         if(!computedOptions.enable){
-          storeOptions.log(`Async computed <${strValuePath}> is disabled`,'warn')
+          storeOptions.log(`Sync computed <${mutateName}> is disabled`,'warn')
           return 
         }
-        storeOptions.log(`Run sync computed for : ${strValuePath}`);
+        storeOptions.log(`Run sync computed for : ${mutateName}`);
         const { input } = params;
         // 1. 根据配置参数获取计算函数的上下文对象      
         const thisDraft = getComputedRefDraft(draft,{input,computedOptions,computedContext: computedParams,storeOptions,type:"context"})
@@ -68,18 +71,23 @@ export function createComputedMutate<Store extends StoreDefine<any>>(stateCtx: I
       // 关闭死循环检测，信任开发者
       checkDeadCycle: false,
     });
-    computedParams.replaceValue(getVal(stateCtx.state, valuePath));
-    // 创建计算对象实例
-    const computeObject = {      
-      id:strValuePath,
+    // 移花接木原地替换
+    if(!isExternal) computedParams.replaceValue(getVal(store.stateCtx.state, valuePath));
+    
+    // 5. 创建计算对象实例
+    const computedObject = {      
+      id:mutateName,
       mutate,
       group:computedOptions.group,
       async:false,
       options:computedOptions,
       get enable(){return computedOptions.enable as boolean},
       set enable(val:boolean){computedOptions.enable=val},
-      run:(options?:RuntimeComputedOptions)=> stateCtx.runMutateTask({desc:mutateId,extraArgs:options})   
+      run:(options?:RuntimeComputedOptions)=>{
+        const params = {desc:mutateId,extraArgs:options}
+        return isExternal ? computedTo.stateCtx.runMutateTask(params) : store.stateCtx.runMutateTask(params)
+      }
     }
-    computeObjects!.set(strValuePath,computeObject)   
-    return  computeObject
+    store.computedObjects.set(mutateName,computedObject)   
+    return  computedObject
   }

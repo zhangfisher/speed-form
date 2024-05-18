@@ -6,9 +6,9 @@
  */
 
 import { IOperateParams, ISharedCtx, sharex } from "helux"
-import { StoreDefine, StoreExtendObjects, StoreOptions } from "../store"
+import { StoreDefine, StoreExtendObjects, StoreOptions } from "../types/store"
 import { Dict } from "../types"
-import { AsyncComputedGetter, ComputedDepends, ComputedOptions } from "./types"
+import { AsyncComputedGetter,  ComputedOptions } from "../computed/types"
 import { computed } from "./computed"
 import { StoreExtendContext } from "../extends"
 import { installComputed } from "./install" 

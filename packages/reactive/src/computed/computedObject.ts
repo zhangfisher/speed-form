@@ -1,7 +1,6 @@
 import { ComputedObject} from "./types"
-import { Dict } from "../types" 
 import { computedObjectCreator } from './create';
-import type { IStore, StoreDefine } from "../store";
+import type { IStore, StoreDefine } from "../types/store";
 
 
    /**

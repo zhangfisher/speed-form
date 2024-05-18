@@ -22,10 +22,9 @@
  */
 import { IOperateParams } from "helux";
 import { OBJECT_PATH_DELIMITER } from "./consts";
-import { type ComputedScope, ComputedScopeRef, StoreOptions } from "./store";
-import { StateComputedType } from "./types";
+import { type ComputedScope, ComputedScopeRef, StoreOptions, StoreDefine } from "./types/store";
 import { getValueByPath } from "./utils";
-import { ComputedOptions } from "./computed";
+import { ComputedOptions, IComputeParams, StateComputedType } from "./computed/types";
 
 /*
 * 计算函数的context可以在全局Store中通过computedThis参数指定
@@ -47,7 +46,7 @@ function getContextOptions(state: any,computedCtxOption?: ComputedScope,storeCtx
  return ctx == undefined ? (storeCtxOption == undefined ? ComputedScopeRef.Root: storeCtxOption) : ctx;
 }
 
-export type GetComputedContextOptions ={
+export type GetComputedContextOptions<T extends StoreDefine =StoreDefine> ={
     type:'context' | 'scope',                   // 要获取的是什么: context或scope
     computedType:StateComputedType,         // 取值， 'Computed' | 'Watch 
     input:any[],                                // 当前计算函数依赖值，或watch的侦听的值
@@ -56,7 +55,7 @@ export type GetComputedContextOptions ={
         context?:any,
         scope?:any
     }, 
-    storeOptions: StoreOptions                // 全局Store配置参数
+    storeOptions: StoreOptions<T>                // 全局Store配置参数
 }
 /**
  * 
@@ -66,7 +65,7 @@ export type GetComputedContextOptions ={
  * @param params 
  * @returns 
  */
-export function getComputedContext(draft: any,params:GetComputedContextOptions) {
+export function getComputedContext<T extends StoreDefine = StoreDefine>(draft: any,params:GetComputedContextOptions<T>) {
 
     const { input:depends, type, valuePath, funcOptions, storeOptions,computedType } = params;
   
@@ -126,7 +125,7 @@ export function getComputedContext(draft: any,params:GetComputedContextOptions) 
  * @param params 
  * @returns 
  */
-export function getComputedRefDraft(draft: any, params:{input:any[],type:'context' | 'scope',computedContext:IOperateParams,computedOptions: ComputedOptions, storeOptions: StoreOptions}) {
+export function getComputedRefDraft<T extends StoreDefine=StoreDefine>(draft: any, params:{input:any[],type:'context' | 'scope',computedContext:IComputeParams,computedOptions: ComputedOptions, storeOptions: StoreOptions<T>}) {
   const { input:depends, type, computedContext, computedOptions, storeOptions } = params;
   return getComputedContext(draft,{
     input:depends,

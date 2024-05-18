@@ -1,10 +1,10 @@
-import { HeluxApi,ISharedCtx } from "helux"
-import type { StoreOptions, StoreDefine } from "./store"
-import { ComputedState, Dict, StateUpdater } from "./types"
-import { isPromise } from "./utils"
+import type { StoreOptions, StoreDefine, IStore } from "./types/store"
+import { Dict, StateUpdater  } from "./types"
+import { isPromise } from "./utils" 
+
+
 
 export type ActionDefines<State extends Dict=Dict>  = Record<string,Action<State> | AsyncAction<State>>
-
 export type Action<State,Args extends any[]= any[]> = (...args:Args)=>StateUpdater<State>
 export type AsyncAction<State,Args extends any[]= any[]> = (...args:Args)=>Promise<StateUpdater<State>>
 export type Actions<State extends Dict,Fields>  = {
@@ -14,6 +14,7 @@ export type Actions<State extends Dict,Fields>  = {
         )
 }
 
+
 /**
  * 创建Action
  * @param actions
@@ -21,11 +22,11 @@ export type Actions<State extends Dict,Fields>  = {
  * @param api
  * @returns
  */
-export function createActions<Store extends StoreDefine<any>>(actions:Store['actions'],ctx:ISharedCtx<ComputedState<Store['state']>>,options?:StoreOptions){
+export function createActions<T extends StoreDefine>(actions:T['actions'],store:IStore<T>,options?:StoreOptions<T>){
     return Object.entries(actions||{}).reduce((results:any,[key,action])=>{
-        results[key] =  createAction(action as Action<any> ,ctx.setState)
+        results[key] =  createAction(action as Action<any> ,store.stateCtx.setState)
         return results
-    },{}) as Actions<Store['state'],Store['actions']>
+    },{}) as Actions<T['state'],T['actions']>
 }
 
 
