@@ -1,109 +1,34 @@
-/**
-    用来声明一个监听函数，当监听的值发生变化时，会触发监听函数的执行
-    并将监听的返回值回写入所声明的位置状态中
-
-
-
- * 
- * 
- */
-import { ISharedCtx, watch as heluxWatch, IOperateParams,  getSnap, flush } from 'helux';
-import { ComputedScopeRef, IStore, type ComputedScope, type StateValueDescriptor, type StateValueDescriptorParams, type StoreDefine, type StoreOptions } from "./store/store";
-import { StoreExtendContext } from "./extends"; 
-import { getVal, getValueByPath, setVal } from "./utils"; 
-import { OBJECT_PATH_DELIMITER } from './consts';
-import { Dict } from './types';
-import { useEffect } from 'react';
-import { getComputedContext } from './context';
-import { ComputedTarget, IComputeParams } from './computed/types';
-
-
-
-
-export interface WatchOptions<R=any>{ 
-    // 指定额外的过滤条件，如果返回true，才会触发listener的执行
-    // 此函数会在表单中的每一个值发生变化时执行，如果返回true，则会触发listener的执行  
-    // 由于此函数会在表单中的每一个值发生变化时均会执行，所以此函数应该尽量简单，不要有复杂的逻辑      
-    // 如果大量的表单字段均需要监听，则可能会有性能问题
-    // 一般在动态依赖时使用
-    on?:(path:string[],value:any)=>boolean,
-    context?  : ComputedScope
-    scope?  : ComputedScope               // 计算函数的第一个参数
-    initial?:R,  
-    /**
-     * 用来对表单内的watch进行分组，以便能按组进行enable或disable或其他操作
-     */  
-    group?:string
-    /**
-     * 启用或禁用watch，默认为true
-     */
-    enable?:boolean
-}
- 
-/**
- * selfPath=当前watch函数所在的位置
- * triggerPath=watch函数侦听的位置，即发生变化的源路径
- */
-export type WatchListenerOptions<Result=any> = {getSelfValue:()=>Result ,selfPath:string[] ,triggerPath:string[],getCache:()=>Dict,state:any}
-export type WatchListener<Value=any, Result= Value> = (value:Value,options:WatchListenerOptions<Result>)=>(Exclude<Result,Promise<any>> | undefined)
-export type WatchDepends = (value:any,path:string[])=>boolean
-
-
-export type WatchDescriptorParams<Value = any,Result=Value>  = StateValueDescriptorParams<WatchListener<Value,Result>,WatchOptions>
-
-
-export type WatchDescriptor<Value = any,Result=Value> = StateValueDescriptor<WatchListener<Value,Result>,WatchOptions<Result>> 
- /* 
- *  watch函数用来声明一个监听函数，当监听的值发生变化时，会触发监听函数的执行
- *  并将监听的返回值回写入所声明的位置状态中
- * 
- *  如:以下在validate属性中声明了一个监听函数，当侦听到表单中所有validate发生变化时，会触发监听函数的执行
- *  然后将监听函数的返回值回写到validate属性中
- * 
- * {
- *     validate:watch<boolean,stirng>((value:string,oldValue:boolean)=>{
- *          return value.length>0
- *    },{
- *     on:(path:string[],value:any)=>{
- *          return path[path.length-1]=='validate'
- *      }
- *    })
- * 
- * @param listener  监听函数,只能是同步函数
- * @param options 
- * @returns 
- */
-export function watch<Value = any,Result=Value>(listener:WatchListener<Value,Result>,on:WatchOptions['on'],options?:WatchOptions<Result>):WatchDescriptor<Value,Result>{
-    const opts : WatchOptions = Object.assign({
-        on,
-        enable:true,
-        scope:ComputedScopeRef.Depends          // 默认传入的是所侦听项的值
-    },options)
-    const descriptor:WatchDescriptor<Value,Result> = () => {
-        return {
-          fn: listener,
-          options: opts,
-        };
-      };    
-    descriptor.__COMPUTED__ = 'watch'
-    return descriptor        
-}
-
+import { ISharedCtx, getSnap } from "helux"
+import { ComputedScopeRef } from "../store/types"
+import { setVal } from "../utils/setVal"
+import { WatchListener, WatchOptions } from "./watch"
+import { Dict, IStore, StoreDefine } from "../types"
+import { getVal } from "../utils/getVal"
+import { OBJECT_PATH_DELIMITER } from "../consts"
+import { getComputedContext } from "../context"
 
 export interface RegisteredWatchListener{
     fn:WatchListener                // 侦听函数       
     options:WatchOptions            // 侦听函数的选项
 }
 
+
+
 export interface WatcherObject extends WatchOptions{
+    target:WatchTarget
     path:string[]
     run:(triggerPath:string[])=>void
     listener:(...args:any[])=>any
 }
 
-export class WatchObjects<T extends StoreDefine<any>=  StoreDefine> extends Map<string,WatcherObject>{
+
+export type WatchTarget<T extends Dict = Dict > ={
+    stateCtx: ISharedCtx<T>
+  }
+
+
+export class WatchObjects<T extends StoreDefine> extends Map<string,WatcherObject>{
     private _off?:()=>{} 
-    private _storeOptions:StoreOptions
     private _enable:boolean=true                            // 是否启用侦听器
     // key=triggerPath value=WatcherObject
     // 为了避免每次发生heluxWatch时进行遍历所有的监听函数，这里缓存起来，当对应的triggerPath触发变化时，可以从缓存中读取直接运行相应的watcher
@@ -111,7 +36,6 @@ export class WatchObjects<T extends StoreDefine<any>=  StoreDefine> extends Map<
     private watcherCache?:Map <string,Dict>                 // 每个watcher的自我缓存
     constructor(public store:IStore<T>){
         super()   
-        this._storeOptions = store.options  
     }  
     init(){ 
         this.createWacher() 
@@ -241,7 +165,7 @@ export class WatchObjects<T extends StoreDefine<any>=  StoreDefine> extends Map<
      */
     private executeListener(triggerPath:string[],watchedPath:string[],watchListener:Function,options:WatchOptions ){
         if(!options.enable) {
-            this._storeOptions!.log!(`watcher <${watchedPath.join(OBJECT_PATH_DELIMITER)}> is disabled`)
+            this.store.options.log!(`watcher <${watchedPath.join(OBJECT_PATH_DELIMITER)}> is disabled`)
             return 
         }
         
@@ -253,6 +177,7 @@ export class WatchObjects<T extends StoreDefine<any>=  StoreDefine> extends Map<
             selfPath:watchedPath,
             state:this.store.state
         }                 
+        
         // 2. 构建监听函数的作用域Scope,默认是所侦听的项的值
         const scope = getComputedContext(this.store.state,{
             computedType:'Watch',
@@ -262,15 +187,17 @@ export class WatchObjects<T extends StoreDefine<any>=  StoreDefine> extends Map<
             funcOptions:{ 
                 scope:options.scope
             },
-            storeOptions:this._storeOptions
+            storeOptions:this.store.options
         })
         const value =(options.scope==ComputedScopeRef.Depends && Array.isArray(scope)) ? scope[0] : scope
+
         // 3.  执行监听函数
-        const result = watchListener.call(this.store.state,value,listenerOpts)             
+        const result = watchListener.call(this.store.state,value,listenerOpts)    
+
         // 4. 将返回值回写到状态中
         if(result!==undefined){
-            // @ts-ignore
-            this._ctx.setState((draft:any)=>{
+
+            this.store.setState((draft:any)=>{
                 setVal(draft,watchedPath,result)
             })
         }    
@@ -280,11 +207,13 @@ export class WatchObjects<T extends StoreDefine<any>=  StoreDefine> extends Map<
      * @param descriptor 
      * @param params 
      */
-    add(watchPath:string[],listener:(...args:any[])=>any,options:WatchOptions){
+    add(watchPath:string[],listener:(...args:any[])=>any,options:WatchOptions,watchTo?:WatchTarget){
         const watchOptions = {
             path:watchPath,
             listener,
+            target:watchTo,
             ...options
+
         } as WatcherObject
         watchOptions.run = (triggerPath:string[])=>this.executeListener(triggerPath,watchPath,listener,watchOptions)
         this.set(this.getValueKey(watchPath),watchOptions)
@@ -303,59 +232,5 @@ export class WatchObjects<T extends StoreDefine<any>=  StoreDefine> extends Map<
                 watcher.enable = value
             }
         }
-    }
-}
-
-// let storeWatcher:WatchObjects<StoreDefine<any>> | undefined  
- 
-export function installWatch<T extends StoreDefine>(params:IComputeParams,store:IStore<T>) { {
-    const { stateCtx,params,storeOptions,extendObjects } =options    
-    const { watchObjects } = extendObjects
-    watchObjects?.bind(stateCtx)
-    storeOptions.log(`install watch for <${params.fullKeyPath.join(OBJECT_PATH_DELIMITER)}>`)
-    const watchDescriptor = params.value() as unknown as WatchDescriptorParams
-    watchObjects!.add(params.fullKeyPath,watchDescriptor.fn,watchDescriptor.options)
-    params.replaceValue(watchDescriptor.options.initial)
-    // @ts-ignore
-    stateCtx.setState((draft)=>{
-        setVal(draft,params.fullKeyPath,watchDescriptor.options.initial)
-    })    
-    
-    flush(stateCtx.state as any)
-}
-
- 
-
-
-/**
- * 创建一个侦听器，用来侦听状态变化
- * 
- * store.watch(()=>{},["Ddd"])
-
- * @param stateCtx 
- * @returns 
- */
-export function createWatch<State extends Dict>(stateCtx:ISharedCtx<State["state"]>,options?:StoreOptions){
-    return (listener:(changedPaths:string[][])=>void,deps?:(string | string[])[])=>{
-        // @ts-ignore
-        const {unwatch} = heluxWatch(({triggerReasons})=>{
-            const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
-            listener(valuePaths)            
-        },()=>{
-            return deps?.map(dep=>getValueByPath(stateCtx.state,dep))
-        })
-        return unwatch
-    }
-}
-/**
- * createWatch的hook版本
- * @param stateCtx 
- * @returns 
- */
-export function createUseWatch<State extends Dict>(stateCtx:ISharedCtx<State["state"]>,options?:StoreOptions){
-    return (listener:(changedPaths:string[][])=>void,deps?:(string | string[])[])=>{
-        useEffect(()=>{
-            return createWatch(stateCtx,options)(listener,deps)
-        },[])        
     }
 }

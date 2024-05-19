@@ -2,10 +2,11 @@ import { ISharedCtx} from "helux"
 import type { ActionDefines, Actions } from '../action';
 import { ComputedState,  StateComputedType } from '../computed/types';
 import { type ComputedObject, ComputedObjects, ComputedOptions } from '../computed';
-import { WatchObjects } from "../watch";
+import type { WatchObjects, createWatch } from "../watch";
 import { computedObjectCreator } from "../computed/create";
 import { Dict } from "../types"; 
-import { createUseState } from "./useState";
+import type { createUseState } from "./useState";
+import type  { createSetState } from "./setState";
 
 
 
@@ -93,14 +94,20 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
 
 export type IStore<T extends StoreDefine= StoreDefine> = {
     state          : ComputedState<T['state']>
-    computedObjects: ComputedObjects<T>
-    watchObjects   : WatchObjects<T>
-    useState       : ReturnType<typeof createUseState> 
-    actions        : Actions<T['state'],T['actions']> 
-    createComputed : ReturnType<typeof computedObjectCreator>
+    useState       : ReturnType<typeof createUseState>
+    setState       : ReturnType<typeof createSetState>
+    
     options        : StoreOptions<T>
     stateCtx       : ISharedCtx<ComputedState<T["state"]>>
-    
+    // 计算
+    createComputed : ReturnType<typeof computedObjectCreator>    
+    computedObjects: ComputedObjects<T>
+    // 侦测
+    watch          : ReturnType<typeof createWatch>
+    watchObjects   : WatchObjects<T>
+    // 动作
+    actions        : Actions<T['state'],T['actions']> 
+    // 
     _replacedKeys   : Dict
 
 } 

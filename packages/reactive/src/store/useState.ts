@@ -1,7 +1,7 @@
 import { ISharedCtx } from "helux"
 import { ComputedState, RequiredComputedState } from "../computed/types"
-import { StateGetter, StateSetter, StoreDefine } from "./types"
-import { Dict } from "../types/utils"
+import { StateGetter, StateSetter } from "./types"
+import { Dict } from "../types"
 
 
  

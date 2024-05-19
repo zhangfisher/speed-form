@@ -7,7 +7,7 @@ import type { IStore, StoreDefine } from "../store/types";
     * 
     */
 export class ComputedObjects<T extends StoreDefine =  StoreDefine> extends Map<string,ComputedObject<T>>{
-    private _createComputed:ReturnType<typeof computedObjectCreator>
+    private _createComputed?:ReturnType<typeof computedObjectCreator>
     constructor(public store:IStore<T>){
       super()
     }
@@ -48,15 +48,10 @@ export class ComputedObjects<T extends StoreDefine =  StoreDefine> extends Map<s
      * 创建一个新计算对象
      */
     get new():ReturnType<typeof computedObjectCreator>{
-      //@ts-ignore 
-      
       if(!this._createComputed){
         this._createComputed = computedObjectCreator(this.store)
       }
       return this._createComputed
     }   
-
-
-
   }
-  
+   

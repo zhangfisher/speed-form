@@ -1,6 +1,6 @@
 import { ComputedScopeRef } from "../store/types";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
-import type { Dict } from "../types/utils";
+import type { Dict } from "../types";
 import { AsyncComputedGetter, ComputedDepends, ComputedDescriptor, ComputedGetter, ComputedOptions } from "./types";
  
 /**
