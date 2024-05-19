@@ -1,12 +1,12 @@
 /**
  * 同步计算
  */
-import { ComputedScopeRef, StoreDefine, StoreOptions } from "../types/store";
+import { ComputedScopeRef, StoreDefine, StoreOptions } from "../store/types";
 import { getComputedId, getVal, setVal  } from "../utils";
 import { OBJECT_PATH_DELIMITER } from '../consts';
 import { ComputedDescriptorParams, ComputedObject, ComputedTarget, IComputeParams, RuntimeComputedOptions } from './types';
 import { getComputedRefDraft } from "../context"
-import { IStore } from '../types/store';
+import { IStore } from '../store/types';
 
 /**
  * 为同步计算属性生成mutate
@@ -51,8 +51,8 @@ export function createComputedMutate<T extends StoreDefine>(computedParams:IComp
         store.options.log(`Run sync computed for : ${mutateName}`);
         const { input } = params;
         // 1. 根据配置参数获取计算函数的上下文对象      
-        const thisDraft = getComputedRefDraft.call<IStore<T>,any[],any>(store,draft,{input,computedOptions,computedContext: computedParams,store.options,type:"context"})
-        const scopeDraft= getComputedRefDraft.call<IStore<T>,any[],any>(store,draft,{input,computedOptions,computedContext: computedParams,store.options,type:"scope"})      
+        const thisDraft =isExternal ? draft : getComputedRefDraft.call<IStore<T>,any[],any>(store,draft,{input,computedOptions,computedContext: computedParams,type:"context"})
+        const scopeDraft=isExternal ? draft : getComputedRefDraft.call<IStore<T>,any[],any>(store,draft,{input,computedOptions,computedContext: computedParams,type:"scope"})      
         // 2. 执行getter函数
         let computedResult = computedOptions.initial;
         try {
@@ -65,7 +65,13 @@ export function createComputedMutate<T extends StoreDefine>(computedParams:IComp
           }
         }
         // 3. 将getter的返回值替换到状态中的,完成移花接木
-        setVal(draft, valuePath, computedResult);
+        if(isExternal){
+          computedTo.stateCtx.setState(draft=>{
+            Object.assign(draft,computedResult)
+          })
+        }else{
+          setVal(draft, valuePath, computedResult);
+        }        
       },
       desc: mutateId,
       // 关闭死循环检测，信任开发者

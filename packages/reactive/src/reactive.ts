@@ -7,14 +7,14 @@
  */
 
 import { sharex } from "helux"
-import { useStateWrapper } from "./utils"
-import { Dict } from "./types"
+import { useStateWrapper } from "./store/store"
+import { Dict, StoreDefine } from "./types"
 
-export function reactive<State extends Dict=Dict>(data:State) {
-    const stateCx = sharex<State>(data)
+export function reactive<T extends Dict=Dict>(data:T) {
+    const stateCtx = sharex<T>(data)
     return {
-        ...stateCx,
-        useState:useStateWrapper<{state:State}>(stateCx)
+        ...stateCtx,
+        useState:useStateWrapper<StoreDefine<T>>(stateCtx)
     }
         
 }

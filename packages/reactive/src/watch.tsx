@@ -8,7 +8,7 @@
  * 
  */
 import { ISharedCtx, watch as heluxWatch, IOperateParams,  getSnap, flush } from 'helux';
-import { ComputedScopeRef, IStore, type ComputedScope, type StateValueDescriptor, type StateValueDescriptorParams, type StoreDefine, type StoreOptions } from "./store";
+import { ComputedScopeRef, IStore, type ComputedScope, type StateValueDescriptor, type StateValueDescriptorParams, type StoreDefine, type StoreOptions } from "./store/store";
 import { StoreExtendContext } from "./extends"; 
 import { getVal, getValueByPath, setVal } from "./utils"; 
 import { OBJECT_PATH_DELIMITER } from './consts';

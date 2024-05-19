@@ -1,4 +1,4 @@
-import type { StoreOptions, StoreDefine, IStore } from "./types/store"
+import type { StoreOptions, StoreDefine, IStore } from "./store/types"
 import { Dict, StateUpdater  } from "./types"
 import { isPromise } from "./utils" 
 

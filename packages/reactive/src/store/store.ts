@@ -4,15 +4,16 @@
  */
 
 import { sharex } from "helux"
-import type { ActionDefines, Actions } from './types/action';
-import {  createActions } from './action';
-import type { ComputedState } from "./computed/types"
-import {  ComputedScopeRef, IStore,   StoreDefine, StoreOptions } from './types';
-import { ComputedObjects } from './computed';
+import {  createActions } from '../action';
+import type { ComputedState, RequiredComputedState } from "../computed/types"
+import {  ComputedScopeRef, IStore,   StateGetter,   StateSetter,   StoreDefine, StoreOptions } from '../types';
+import { ComputedObjects } from '../computed';
 import { deepClone } from "flex-tools/object/deepClone";
-import { installExtends } from "./extends" 
-import { WatchObjects } from "./watch";
-import { log, useStateWrapper } from "./utils";
+import { installExtends } from "../extends" 
+import { WatchObjects } from "../watch";
+import { log } from "../utils";
+import { createUseState } from "./useState"
+
 
 
 export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?:Partial<StoreOptions<T>>){
@@ -53,7 +54,7 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     // 1. 创建Actions
     store.actions = createActions<T>(storeDefine.actions, store, opts);
     // 2. 包装useState
-    store.useState = useStateWrapper<T>(store);
+    store.useState = createUseState(store.stateCtx);
 
 
     // 3. 创建计算对象的函数

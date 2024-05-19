@@ -22,7 +22,7 @@
  */
 import { IOperateParams } from "helux";
 import { OBJECT_PATH_DELIMITER } from "./consts";
-import { type ComputedScope, ComputedScopeRef, StoreOptions, StoreDefine, IStore } from "./types/store";
+import { type ComputedScope, ComputedScopeRef, StoreOptions, StoreDefine, IStore } from "./store/types";
 import { getValueByPath } from "./utils";
 import { ComputedOptions, IComputeParams, StateComputedType } from "./computed/types";
 

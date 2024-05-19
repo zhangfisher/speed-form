@@ -5,12 +5,11 @@
  * 
  */
 
-import { IOperateParams, ISharedCtx, sharex } from "helux"
-import { StoreDefine, StoreExtendObjects, StoreOptions } from "../types/store"
+import {  ISharedCtx, sharex } from "helux"
+import { StoreDefine } from "../store/types"
 import { Dict, IStore } from "../types"
-import { AsyncComputedGetter,  ComputedOptions } from "../computed/types"
+import { AsyncComputedGetter,  ComputedOptions, ComputedParams, IComputeParams } from "../computed/types"
 import { computed } from "./computed"
-import { StoreExtendContext } from "../extends"
 import { installComputed } from "./install" 
 
 
@@ -64,8 +63,8 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
             id:"s"+Math.random().toString(16).substring(2),
             // 由于计算函数不是声明在状态中，没有所谓的valuePath,scope取值Self,Parent,Root等无效，因此需要手动指定
             // 否则默认指向的是stateCtx.state
-            scope:stateCtx.state,
-            context:stateCtx.state
+            scope:store.stateCtx.state,
+            context:store.stateCtx.state
         },options) as ComputedObjectCreateOptions<R,ExtraAttrs>
 
         if(!Array.isArray(opts.depends) || opts.depends.length==0){
@@ -78,12 +77,12 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
       // 模拟helux的IOperateParams，因为只用到了fullKeyPath,parent,value
       // 当computed在state中声明时可以获取所在位置的fullKeyPath,parent,而使用createComputed时就没有这些信息
       // 需要自行构建，并传递一个targetCtx,
-      const computedParams = { 
-        fullKeyPath:[],
-        parent:null,                
-        value:computed(getter,opts.depends,options) 
-      } 
-      installComputed(computedParams,store,storeOptions)
+      const computedParams = {
+        fullKeyPath: [],
+        parent: null,
+        value: computed(getter, opts.depends, options)
+      } as unknown  as IComputeParams
+      installComputed(computedParams,store)
       return targetCtx
     }
   

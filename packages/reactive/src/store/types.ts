@@ -4,8 +4,8 @@ import { ComputedState,  StateComputedType } from '../computed/types';
 import { type ComputedObject, ComputedObjects, ComputedOptions } from '../computed';
 import { WatchObjects } from "../watch";
 import { computedObjectCreator } from "../computed/create";
-import { Dict } from "./utils";
-import { useStateWrapper } from "../utils";
+import { Dict } from "../types"; 
+import { createUseState } from "./useState";
 
 
 
@@ -95,7 +95,7 @@ export type IStore<T extends StoreDefine= StoreDefine> = {
     state          : ComputedState<T['state']>
     computedObjects: ComputedObjects<T>
     watchObjects   : WatchObjects<T>
-    useState       : ReturnType<typeof useStateWrapper> 
+    useState       : ReturnType<typeof createUseState> 
     actions        : Actions<T['state'],T['actions']> 
     createComputed : ReturnType<typeof computedObjectCreator>
     options        : StoreOptions<T>
@@ -104,3 +104,7 @@ export type IStore<T extends StoreDefine= StoreDefine> = {
     _replacedKeys   : Dict
 
 } 
+
+
+
+export type StateUpdater<State=any> = (state:State)=>any

@@ -3,7 +3,7 @@
  */
 
 import { IMutateWitness, IOperateParams, ISharedCtx } from "helux";
-import type { ComputedScope, ComputedContext,StateValueDescriptorParams, StateValueDescriptor, StoreDefine } from "../types/store";
+import type { ComputedScope, ComputedContext,StateValueDescriptorParams, StateValueDescriptor, StoreDefine } from "../store/types";
 import { Dict } from "../types"
 import { WatchDescriptor } from "../watch";
 

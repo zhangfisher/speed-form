@@ -2,8 +2,8 @@
  * 异步计算
  */
 import { markRaw, getSnap, DraftType } from 'helux';
-import type { StoreDefine, StoreOptions,  IStore } from "../types/store";
-import { ComputedScopeRef } from "../types/store";
+import type { StoreDefine, StoreOptions,  IStore } from "../store/types";
+import { ComputedScopeRef } from "../store/types";
 import { skipComputed,  joinValuePath, getError, getDeps, getDepValues,getVal, setVal, getComputedId  } from "../utils";
 import { switchValue } from "flex-tools/misc/switchValue"; 
 import { Dict  } from "../types";
@@ -194,7 +194,7 @@ export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[
    * @param stateCtx
    * @param params
    */
-export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams:IComputeParams,store:IStore<T>,computedTo?:ComputedTarget<T>) :ComputedObject<T> | undefined{
+export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams:IComputeParams,store:IStore<T>,computedTo?:ComputedTarget) :ComputedObject<T> | undefined{
     
     // 1. 参数检查
     const { fullKeyPath:valuePath, parent ,value } = computedParams;
