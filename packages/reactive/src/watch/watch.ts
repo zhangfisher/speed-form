@@ -14,7 +14,15 @@ export type WatchDepends = (value:any,path:string[])=>boolean
 export type WatchDescriptorParams<Value = any,Result=Value>  = StateValueDescriptorParams<WatchListener<Value,Result>,WatchOptions>
 
 
-export type WatchDescriptor<Value = any,Result=Value> = StateValueDescriptor<WatchListener<Value,Result>,WatchOptions<Result>> 
+// export type WatchDescriptor<Value = any,Result=Value> = StateValueDescriptor<WatchListener<Value,Result>,WatchOptions<Result>> 
+
+export interface WatchDescriptor<Value = any,Result=Value> {
+  ():{
+    fn: WatchListener<Value,Result>;
+    options: WatchOptions<Result>;
+  }
+  __COMPUTED__: 'sync' | 'async' | 'watch' 
+} 
 
 
 

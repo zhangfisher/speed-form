@@ -1,16 +1,53 @@
 import { useEffect } from "react"
-import { Dict } from "../types"
+import { ComputedDepends, ComputedScopeRef, Dict, IComputeParams, IStore, StoreDefine } from "../types"
 import { createWatch } from "./createWatch"
+import { sharex } from "helux"
+import { installWatch } from "./install"
+import { WatchTarget } from "./watchObjects"
+import { WatchListener, WatchOptions } from "./watch"
 
 /**
- * createWatch的hook版本
- * @param stateCtx 
+ * createWatch的hook版本 
+ * 
+   let { dd } = store.useWatch(["a","b"],[
+        'aa','bb'
+   ])
+
+
+
+ * 
+ * 
  * @returns 
  */
-export function createUseWatch<State extends Dict>(stateCtx:ISharedCtx<State["state"]>,options?:StoreOptions){
-    return (listener:(changedPaths:string[][])=>void,deps?:(string | string[])[])=>{
-        useEffect(()=>{
-            return createWatch(stateCtx,options)(listener,deps)
+export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
+    return <Value = any,Result=Value>(on:WatchOptions['on'],listener:WatchListener<Value,Result>)=>{
+        useEffect(() => {
+            const result = {
+                stateCtx: sharex({
+                    value: 0
+                })
+            } as WatchTarget
+            const params = {
+                fullKeyPath: [],
+                keyPath: [],
+                parent: undefined,
+                value: () => ({
+                    fn: listener,
+                    options: {
+                        on,
+                        initial: 0,
+                        enable:true,
+                        scope:ComputedScopeRef.Depends         
+                    } as WatchOptions
+                })
+            } as unknown as IComputeParams
+            // 安装
+            const watchObject = installWatch(params,store,result)
+
+            return ()=>{
+                // 卸载
+                store.watchObjects.delete(watchObject)
+            }             
         },[])        
     }
 }
