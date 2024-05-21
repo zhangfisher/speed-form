@@ -6,6 +6,7 @@ import { Dict, IStore, StoreDefine } from "../types"
 import { getVal } from "../utils/getVal"
 import { OBJECT_PATH_DELIMITER } from "../consts"
 import { getComputedContext } from "../context"
+import { getRndId } from "../utils/getRndId";
 
 export interface RegisteredWatchListener{
     fn:WatchListener                // 侦听函数       
@@ -14,12 +15,13 @@ export interface RegisteredWatchListener{
 
 
 
-export interface WatchObject extends WatchOptions{
-    key:string
-    target:WatchTarget
-    path:string[]
-    run:(this:WatchObject,triggerPath:string[])=>void
-    listener:(...args:any[])=>any
+export interface WatchObject{
+    id      : string
+    watchTo : WatchTarget
+    path    : string[]
+    run     : (this:WatchObject,triggerPath:string[])=>void
+    listener: (...args:any[])=>any
+    options : WatchOptions
 }
 
 
@@ -152,10 +154,10 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
      * @param watchListener 
      * @returns 
      */
-    private isMatchWatcher(triggerPath:string[],triggerValue:any,watcher:WatchObject ){
-        if(this._enable===false || watcher.enable===false) return
-        if(typeof(watcher.on)=='function'){
-            return watcher.on(triggerPath,triggerValue)
+    private isMatchWatcher(triggerPath:string[],triggerValue:any,watchObject:WatchObject ){
+        if(this._enable===false || watchObject.options.enable===false) return
+        if(typeof(watchObject.options.on)=='function'){
+            return watchObject.options.on(triggerPath,triggerValue)
         }
     }
     /**
@@ -165,11 +167,11 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
      * @param watchListener 
      */
     private executeListener(fromPath:string[],toPath:string[],watchObject:WatchObject ){
-        if(!watchObject.enable) {
+        if(!watchObject.options.enable) {
             this.store.options.log!(`watcher <${toPath.join(OBJECT_PATH_DELIMITER)}> is disabled`)
             return 
         }
-        const watchTo = watchObject.target
+        const watchTo = watchObject.watchTo
         const watchListener = watchObject.listener
 
         // 1. 构建参数
@@ -188,12 +190,12 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
             type:'scope',
             valuePath:toPath,
             funcOptions:{ 
-                scope:watchObject.scope
+                scope:watchObject.options.scope
             },
             storeOptions:this.store.options
         })
 
-        const value =(watchObject.scope==ComputedScopeRef.Depends && Array.isArray(scope)) ? scope[0] : scope
+        const value =(watchObject.options.scope==ComputedScopeRef.Depends && Array.isArray(scope)) ? scope[0] : scope
 
         // 3.  执行监听函数
         const result = watchListener.call(this.store.state,value,listenerOpts)    
@@ -219,26 +221,19 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
      * @param watchTo               侦听结果写到处下载
      * @returns 
      */
-
-    add1(watchDescriptor:WatchDescriptor){
-        watchDescriptor.options = watchDescriptor.options || {}
-    }
-
-    add(selfPath:string[],listener:(...args:any[])=>any,options:WatchOptions & {key?:string,watchTo?:WatchTarget}){
-        const watchObject = {            
-            key:this.getValueKey(selfPath),
+    add(selfPath:string[],watchDescriptor:WatchDescriptor,watchTo?:WatchTarget){
+        const watchObject = {             
             path:selfPath,
-            listener,
-            target:watchTo,
-            ...options
+            listener:watchDescriptor.listener,
+            watchTo,
+            ...watchDescriptor.options
         } as WatchObject
-        watchObject.run = (fromPath:string[])=>this.executeListener(fromPath,selfPath,watchObject)
-        this.set(this.getValueKey(selfPath),watchObject)
+        if(!watchObject.id){
+            watchObject.id = Array.isArray(selfPath) && selfPath.length > 0 ? this.getValueKey(selfPath) : getRndId()
+        }
+        watchObject.run = (fromPath:string[])=>this.executeListener(fromPath,selfPath,watchObject)        
+        this.set(watchObject.id,watchObject)
         return watchObject
-    }
-
-    remove(keyPath:string | string[]){
-        this.delete(this.getValueKey(keyPath))
     }
     /**
      * 控制某个组的侦听器是否启用
@@ -247,8 +242,8 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
      */
     enableGroup(groupName:string,value:boolean=true){
         for(const watcher of this.values()){
-            if(watcher.group==groupName){
-                watcher.enable = value
+            if(watcher.options.group==groupName){
+                watcher.options.enable = value
             }
         }
     }

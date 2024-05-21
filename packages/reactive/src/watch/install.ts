@@ -3,7 +3,7 @@ import { OBJECT_PATH_DELIMITER } from "../consts"
 import { IStore, StoreDefine } from "../store/types"
 import { IComputeParams } from "../types"
 import { setVal } from "../utils"
-import { WatchDescriptorParams } from "./watch"
+import { WatchDescriptor } from "./watch"
 import { WatchTarget } from "./watchObjects"
 
 /**
@@ -16,12 +16,11 @@ export function installWatch<T extends StoreDefine>(params:IComputeParams,store:
     
     store.options.log(`install watch for <${params.fullKeyPath.join(OBJECT_PATH_DELIMITER)}>`)
 
-    const watchDescriptor = params.value() as unknown as WatchDescriptorParams
+    const watchDescriptor = params.value() as WatchDescriptor
     
     // 创建一个侦听对象
-    const watchObject = store.watchObjects.add(params.fullKeyPath,watchDescriptor.fn,watchDescriptor.options,watchTo)
-    const watchObject = store.watchObjects.add(watchDescriptor)
-
+    const watchObject = store.watchObjects.add(params.fullKeyPath,watchDescriptor,watchTo)    
+ 
     // 如果有初始值，那么需要设置初始值回写到原始位置，也就是使用watch声明的位置
     if(watchTo){
         watchTo.stateCtx.setState((draft)=>{

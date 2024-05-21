@@ -11,7 +11,7 @@ import { delay } from 'flex-tools/async/delay';
 import { OBJECT_PATH_DELIMITER } from '../consts';
 import { getComputedRefDraft } from '../context';
 import { AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorParams, ComputedOptions, ComputedParams, ComputedProgressbar, RuntimeComputedOptions } from './types';
-import type  { ComputedObject, ComputedState, ComputedTarget, IComputeParams } from './types';
+import type  { ComputedDescriptor, ComputedObject, ComputedState, ComputedTarget, IComputeParams } from './types';
 
 
 /** 
@@ -204,7 +204,7 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     }
 
     // 2. 获取到计算属性描述信息：  包括getter和配置。 此时value是一个函数
-    let { fn: getter, options: computedOptions }  = value() as ComputedDescriptorParams<any>
+    let { getter, options: computedOptions }  = value() as ComputedDescriptor<any>
     computedOptions.async = true; 
    
     // 3.运行Hook: 用来在创建computed前运行,允许拦截更改计算函数的依赖,上下文,以及getter等    

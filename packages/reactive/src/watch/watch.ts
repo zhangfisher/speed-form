@@ -1,4 +1,4 @@
-import { ComputedScope, ComputedScopeRef, StateValueDescriptor, StateValueDescriptorParams } from "../store/types"
+import { ComputedScope, ComputedScopeRef } from "../store/types"
 import { Dict } from "../types"
 
 /**
@@ -9,24 +9,21 @@ export type WatchListenerOptions<Result=any> = {getSelfValue:()=>Result ,selfPat
 export type WatchListener<Value=any, Result= Value> = (value:Value,options:WatchListenerOptions<Result>)=>(Exclude<Result,Promise<any>> | undefined)
 export type WatchDepends = (value:any,path:string[])=>boolean
 
-
  
-export type WatchDescriptorParams<Value = any,Result=Value>  = StateValueDescriptorParams<WatchListener<Value,Result>,WatchOptions>
-
-
-// export type WatchDescriptor<Value = any,Result=Value> = StateValueDescriptor<WatchListener<Value,Result>,WatchOptions<Result>> 
-
-export interface WatchDescriptor<Value = any,Result=Value> {
-  ():{
-    fn: WatchListener<Value,Result>;
+export type WatchDescriptor<Value = any,Result=Value> = {
+    listener: WatchListener<Value,Result>;
     options: WatchOptions<Result>;
   }
+
+export interface WatchDescriptorCreator<Value = any,Result=Value> {
+  ():WatchDescriptor<Value,Result>;
   __COMPUTED__: 'sync' | 'async' | 'watch' 
 } 
 
 
 
 export interface WatchOptions<R=any>{ 
+    id?:string                            // 
     // 指定额外的过滤条件，如果返回true，才会触发listener的执行
     // 此函数会在表单中的每一个值发生变化时执行，如果返回true，则会触发listener的执行  
     // 由于此函数会在表单中的每一个值发生变化时均会执行，所以此函数应该尽量简单，不要有复杂的逻辑      
@@ -65,18 +62,18 @@ export interface WatchOptions<R=any>{
  * @param options 
  * @returns 
  */
- export function watch<Value = any,Result=Value>(listener:WatchListener<Value,Result>,on:WatchOptions['on'],options?:WatchOptions<Result>):WatchDescriptor<Value,Result>{
+ export function watch<Value = any,Result=Value>(listener:WatchListener<Value,Result>,on:WatchOptions['on'],options?:WatchOptions<Result>):WatchDescriptorCreator<Value,Result>{
     const opts : WatchOptions = Object.assign({
         on,
         enable:true,
         scope:ComputedScopeRef.Depends          // 默认传入的是所侦听项的值
     },options)
-    const descriptor:WatchDescriptor<Value,Result> = () => {
-        return {
-          fn: listener,
-          options: opts,
-        };
-      };    
+    const descriptor =(() => {
+      return {
+        fn: listener,
+        options: opts,
+      };
+    }) as unknown as WatchDescriptorCreator<Value,Result>
     descriptor.__COMPUTED__ = 'watch'
     return descriptor        
 }

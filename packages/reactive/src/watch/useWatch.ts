@@ -22,7 +22,7 @@ import { WatchListener, WatchOptions } from "./watch"
 export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
     return <Value = any,Result=Value>(on:WatchOptions['on'],listener:WatchListener<Value,Result>)=>{
         useEffect(() => {
-            const result = {
+            const watchTo = {
                 stateCtx: sharex({
                     value: 0
                 })
@@ -32,7 +32,7 @@ export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
                 keyPath: [],
                 parent: undefined,
                 value: () => ({
-                    fn: listener,
+                    listener,
                     options: {
                         on,
                         initial: 0,
@@ -42,11 +42,9 @@ export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
                 })
             } as unknown as IComputeParams
             // 安装
-            const watchObject = installWatch(params,store,result)
-
-            return ()=>{
-                // 卸载
-                store.watchObjects.delete(watchObject)
+            const watchObject = installWatch(params,store,watchTo)
+            return ()=>{ 
+                store.watchObjects.delete(watchObject.id)
             }             
         },[])        
     }

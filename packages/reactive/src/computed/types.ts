@@ -3,7 +3,7 @@
  */
 
 import { IMutateWitness, IOperateParams, ISharedCtx } from "helux";
-import type { ComputedScope, ComputedContext,StateValueDescriptorParams, StateValueDescriptor, StoreDefine } from "../store/types";
+import type { ComputedScope, ComputedContext, StateValueDescriptor, StoreDefine } from "../store/types";
 import { Dict } from "../types"
 import { WatchDescriptor } from "../watch";
 
@@ -18,14 +18,7 @@ export type IComputeParams = Pick<IOperateParams,'keyPath' | 'fullKeyPath' | 'va
  */
 export type AsyncReturnType<T extends (...args: any) => any> = T extends (...args: any) => Promise<infer R> ? R : (
     T extends (...args: any) => infer R ? R : any)
-    
-// 用来提前计算属性函数的返回值
-// export type PickComputedResult<T> = T extends  ComputedDescriptor<infer X> ? AsyncComputedObject<X> : 
-//                                     ( T extends ComputedSyncReturns<infer X> ? X: 
-//                                         (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
-//                                             (T extends Computed<infer R> ? R : T) 
-//                                         )
-//                                     )
+ 
 
 export type PickComputedResult<T> = T extends  ComputedDescriptor<infer X> ? AsyncComputedObject<X> : 
     ( T extends WatchDescriptor<any,infer X> ? X :
@@ -213,7 +206,25 @@ export type AsyncComputed<T=any> = (...args: any) => Promise<T>; // 异步计算
 // export type ComputedDescriptor<T=any> = ((...args: any) => ComputedDescriptorParams<T>) 
 //                                         & {__COMPUTED__: 'sync' | 'async' | 'watch'};
                                         
-export type ComputedDescriptor<R=any> = StateValueDescriptor<(scope:any) => Promise<R> | R,ComputedOptions<R>>
+// export type ComputedDescriptor<R=any> = StateValueDescriptor<(scope:any) => Promise<R> | R,ComputedOptions<R>>
+
+export interface StateValueDescriptorParams<Fn extends Function,Options extends Dict = Dict> {
+  fn: Fn
+  options:Options
+} 
+
+
+
+export type ComputedDescriptor<R=any> = {
+  getter: AsyncComputedGetter<R> | ComputedGetter<R>;
+  options: ComputedOptions<R>;
+}
+
+
+export  interface ComputedDescriptorCreator<R=any>  {
+  ():ComputedDescriptor<R>
+  __COMPUTED__: 'sync' | 'async' | 'watch' 
+} 
 
 
 export type ComputedSyncReturns<T=any> = (...args: any) => Exclude<T,Promise<any>>;  

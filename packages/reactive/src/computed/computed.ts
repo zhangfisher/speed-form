@@ -1,7 +1,7 @@
 import { ComputedScopeRef } from "../store/types";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
-import type { Dict } from "../types";
-import { AsyncComputedGetter, ComputedDepends, ComputedDescriptor, ComputedGetter, ComputedOptions } from "./types";
+import type { ComputedDescriptorCreator, Dict } from "../types";
+import { AsyncComputedGetter, ComputedDepends, ComputedGetter, ComputedOptions } from "./types";
  
 /**
  * 用来封装状态的计算函数，使用计算函数的传入的是当前对象
@@ -16,7 +16,7 @@ import { AsyncComputedGetter, ComputedDepends, ComputedDescriptor, ComputedGette
  * @returns
  *
  */
-export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: AsyncComputedGetter<R>,depends?:ComputedDepends,options?: ComputedOptions<R,ExtraAttrs>): ComputedDescriptor<R & ExtraAttrs>;
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: AsyncComputedGetter<R>,depends?:ComputedDepends,options?: ComputedOptions<R,ExtraAttrs>): ComputedDescriptorCreator<R>;
 export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: ComputedGetter<R>, options?: ComputedOptions<R,ExtraAttrs>): R
 export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depends?:any, options?: ComputedOptions<R,ExtraAttrs>):any {
 	
@@ -56,20 +56,18 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
         || (arguments.length>=2 && Array.isArray(depends)) 
 
 
-
-  opts.async = isAsync;
-  
+  opts.async = isAsync;  
   opts.depends = deps; 
 
-  const descriptor = () => {
+  const descriptor:ComputedDescriptorCreator<R> = () => {
     return {
-      fn:getter,
+      getter,
       options: opts,
     };
   };
 
   // @ts-ignore
   descriptor.__COMPUTED__ = isAsync ? 'async' : 'sync';
-  return descriptor //as ComputedDescriptor<R & ExtraAttrs>;
+  return descriptor  
 }
  
