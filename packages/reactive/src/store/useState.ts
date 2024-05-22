@@ -1,7 +1,7 @@
 import { ISharedCtx } from "helux"
 import { ComputedState, RequiredComputedState } from "../computed/types"
 import { StateGetter, StateSetter } from "./types"
-import { Dict } from "../types"
+import { Dict, IStore, StoreDefine } from "../types"
 
 
  
@@ -16,13 +16,13 @@ import { Dict } from "../types"
  *
  * @param useState
  */
-export function createUseState<T extends Dict = Dict>(stateCtx: ISharedCtx<ComputedState<T>>){
+export function createUseState<T extends StoreDefine>(store:IStore<T>){
 
     return function<Value=any,SetValue=Value>(
         getter?:StateGetter<RequiredComputedState<T['state']>,Value>,
         setter?:StateSetter<RequiredComputedState<T['state']>,SetValue>
     ){
-        const useState = stateCtx.useState 
+        const useState =store.stateCtx.useState 
         if(getter==undefined){
             return useState()
         }

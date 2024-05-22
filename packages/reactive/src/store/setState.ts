@@ -1,7 +1,4 @@
-import { ISharedCtx } from "helux"
-import { ComputedState, RequiredComputedState } from "../computed/types"
-import { StateGetter, StateSetter } from "./types"
-import { Dict, IStore, StoreDefine } from "../types"
+import { IStore, StoreDefine } from "../types"
 
 
  
@@ -18,7 +15,7 @@ import { Dict, IStore, StoreDefine } from "../types"
  */
 export function createSetState<T extends StoreDefine>(store: IStore<T>){
 
-    return (updater:(draft:typeof store['state'])=>void)=>{
+    return (updater:(draft:T['state'])=>void)=>{
         // @ts-ignore
         store.stateCtx.setState((draft:any)=>{
             updater(draft as any)

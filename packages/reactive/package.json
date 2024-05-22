@@ -37,7 +37,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "flex-tools": "^1.3.70"
+    "flex-tools": "^1.3.70",
+    "mitt": "^3.0.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.1.5",

@@ -7,6 +7,7 @@ import { computedObjectCreator } from "../computed/create";
 import { Dict } from "../types"; 
 import type { createUseState } from "./useState";
 import type  { createSetState } from "./setState";
+import { Emitter } from "mitt";
 
 
 
@@ -16,21 +17,7 @@ export interface StoreDefine<State extends Dict = Dict>{
     actions?:ActionDefines<State>
 }
 
-/**
- * 用来声明computed和watch函数的返回值类型
- */
-export interface StateValueDescriptorParams<Fn extends Function,Options extends Dict = Dict> {
-    fn: Fn
-    options:Options
-} 
 
-/**
- * 声明状态中的计算函数
- */
-export interface StateValueDescriptor<Fn extends Function,Options extends Dict = Dict> {
- (...args:any):StateValueDescriptorParams<Fn,Options>
- __COMPUTED__: 'sync' | 'async' | 'watch' 
-}
 
 export enum ComputedScopeRef{
     Root    = 'root',
@@ -90,12 +77,17 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
     onCreateComputedObject(keyPath:string[],computedObject:ComputedObject<T>):void
 }
 
+
+export type StoreEvents = {
+    created: undefined;            // 响应对象创建后
+    
+};
  
 
 export type IStore<T extends StoreDefine= StoreDefine> = {
     state          : ComputedState<T['state']>
-    useState       : ReturnType<typeof createUseState>
-    setState       : ReturnType<typeof createSetState>
+    useState       : ReturnType<typeof createUseState<T>>
+    setState       : ReturnType<typeof createSetState<T>>  // (updater:(draft:T['state'])=>void)=>void
     
     options        : StoreOptions<T>
     stateCtx       : ISharedCtx<ComputedState<T["state"]>>
@@ -107,6 +99,9 @@ export type IStore<T extends StoreDefine= StoreDefine> = {
     watchObjects   : WatchObjects<T>
     // 动作
     actions        : Actions<T['state'],T['actions']> 
+    on             : Emitter<StoreEvents>['on']
+    off            : Emitter<StoreEvents>['off']
+    emit           : Emitter<StoreEvents>['emit']
     // 
     _replacedKeys   : Dict
 

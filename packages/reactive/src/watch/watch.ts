@@ -70,7 +70,7 @@ export interface WatchOptions<R=any>{
     },options)
     const descriptor =(() => {
       return {
-        fn: listener,
+        listener,
         options: opts,
       };
     }) as unknown as WatchDescriptorCreator<Value,Result>

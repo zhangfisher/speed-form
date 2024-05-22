@@ -1,19 +1,14 @@
-/**
-
- 
- */
-
 import { sharex } from "helux"
 import {  createActions } from '../action';
 import type { ComputedState } from "../computed/types"
-import {  ComputedScopeRef, IStore, StoreDefine, StoreOptions } from '../types';
+import {  ComputedScopeRef, IStore, StoreDefine, StoreEvents, StoreOptions } from '../types';
 import { ComputedObjects } from '../computed';
-import { deepClone } from "flex-tools/object/deepClone";
 import { installExtends } from "../extends" 
-import { WatchObjects, createWatch } from "../watch";
+import { WatchObjects, createWatch } from "../watch"; 
 import { log } from "../utils";
 import { createUseState } from "./useState"
 import { createSetState } from "./setState";
+import mitt,{Emitter} from "mitt";
 
 
 
@@ -29,14 +24,19 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
 
     opts.log = (...args:any[])=>{
         if(opts.debug) (log as any)(...args)
-    }
-    const storeDefine = opts.singleton ? data : deepClone(data)
+    } 
+
+    const storeEmitter:Emitter<StoreEvents> = mitt()
+    
 
     // 2. 创建store对象
 
     // @ts-ignore 
     const store:IStore<T> = { 
         options:opts,
+        on:storeEmitter.on,
+        off:storeEmitter.off,
+        emit:storeEmitter.emit,
         _replacedKeys:{}                             // 用来保存已经替换过的key
     }
 
@@ -44,21 +44,18 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     store.watchObjects = new WatchObjects<T>(store as IStore<T>)
 
     // 3. 创建响应式对象
-    store.stateCtx = sharex<ComputedState<T['state']>>(storeDefine.state as any, {
+    store.stateCtx = sharex<ComputedState<T['state']>>(data.state as any, {
         stopArrDep: false,
         moduleName: opts.id,
         onRead: (params) => {
             installExtends<T>(params,store as IStore<T>);
         }
     });
-
-    // 1. 创建Actions
-    store.actions = createActions<T>(storeDefine.actions, store, opts);
-
-    // 2. 状态
-    store.state = store.stateCtx.reactive
-    store.useState = createUseState(store.stateCtx)
+    store.state = store.stateCtx.reactive    
+    store.emit("created")
+    store.useState = createUseState<T>(store)
     store.setState = createSetState<T>(store)
+    store.actions = createActions<T>(data.actions, store, opts);
 
     
     store.watch = createWatch<T>(store)

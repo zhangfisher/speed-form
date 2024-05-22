@@ -1,5 +1,4 @@
-
-export const SKIP_COMPUTED= Symbol('SKIP_COMPUTED')
+import { SKIP_COMPUTED  } from "../consts"
 
 /**
  * 

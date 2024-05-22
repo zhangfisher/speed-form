@@ -1,4 +1,4 @@
-import { ISharedCtx, getSnap } from "helux"
+import { ISharedCtx, getSnap,watch as heluxWatch } from "helux"
 import { ComputedScopeRef } from "../store/types"
 import { setVal } from "../utils/setVal"
 import { WatchListener, WatchOptions, WatchDescriptor } from './watch';
@@ -7,6 +7,7 @@ import { getVal } from "../utils/getVal"
 import { OBJECT_PATH_DELIMITER } from "../consts"
 import { getComputedContext } from "../context"
 import { getRndId } from "../utils/getRndId";
+import { getValueByPath, joinValuePath } from "../utils";
 
 export interface RegisteredWatchListener{
     fn:WatchListener                // 侦听函数       
@@ -20,7 +21,7 @@ export interface WatchObject{
     watchTo : WatchTarget
     path    : string[]
     run     : (this:WatchObject,triggerPath:string[])=>void
-    listener: (...args:any[])=>any
+    listener: (...args:any[])=>any    
     options : WatchOptions
 }
 
@@ -39,8 +40,9 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
     private watcherCache?:Map <string,Dict>                 // 每个watcher的自我缓存
     constructor(public store:IStore<T>){
         super()   
+        store.on("created",this.onStateCreated.bind(this))
     }  
-    init(){ 
+    private onStateCreated(){ 
         this.createWacher() 
     }
     get enable(){
@@ -49,9 +51,14 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
     set enable(value:boolean){
         this._enable = value
     }     
-    
+    /**
+     * 根据路径生成唯一的key
+     * 使用连接符将Key连接起来
+     * @param valuePath 
+     * @returns 
+     */
     private getValueKey(valuePath:string | string[]){
-        return JSON.stringify(valuePath)
+        return joinValuePath([valuePath]) 
     }  
     /**
      * 创建全局侦听器,
@@ -226,7 +233,7 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
             path:selfPath,
             listener:watchDescriptor.listener,
             watchTo,
-            ...watchDescriptor.options
+            options:watchDescriptor.options
         } as WatchObject
         if(!watchObject.id){
             watchObject.id = Array.isArray(selfPath) && selfPath.length > 0 ? this.getValueKey(selfPath) : getRndId()
