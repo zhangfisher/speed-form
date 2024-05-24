@@ -5,7 +5,7 @@
 import { IMutateWitness, IOperateParams, ISharedCtx } from "helux";
 import type { ComputedScope, ComputedContext,  StoreDefine } from "../store/types";
 import { Dict } from "../types"
-import { WatchDescriptor } from "../watch";
+import { WatchDescriptor, WatchDescriptorCreator } from "../watch";
 
 
 // 指向helux的IOperateParams类型，但是我们只用到其是的部分类型
@@ -20,8 +20,8 @@ export type AsyncReturnType<T extends (...args: any) => any> = T extends (...arg
     T extends (...args: any) => infer R ? R : any)
  
 
-export type PickComputedResult<T> = T extends  ComputedDescriptor<infer X> ? AsyncComputedObject<X> : 
-    ( T extends WatchDescriptor<any,infer X> ? X :
+export type PickComputedResult<T> = T extends  ComputedDescriptorCreator<infer X> ? AsyncComputedObject<X> : 
+    ( T extends WatchDescriptorCreator<any,infer X> ? X :
         ( T extends ComputedSyncReturns<infer X> ? X: 
             (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
                 (T extends Computed<infer R> ? R : T) 

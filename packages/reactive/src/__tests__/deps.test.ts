@@ -26,9 +26,10 @@ const Account = {
 
 
 describe("依赖参数",()=>{
-    let store:IStore<typeof Account.state>
+    let store:IStore<typeof Account>
     beforeAll(()=>{
         store = createStore<typeof Account>(Account)
+        store.state.user.fullName
     })
 
     test("指定依赖作为scope",()=>{

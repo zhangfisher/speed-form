@@ -39,6 +39,7 @@ const BookShop = {
                 initial:1,
                 group:'x'
             }),
+            
         }
     }
 }
