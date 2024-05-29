@@ -4,22 +4,20 @@ import { createStore,ComputedScopeRef,computed, IStore } from "../"
 
 
 const Account = {
-    state:{
-        user:{
-            firstName:"zhang",
-            lastName:"fisher",
-            fullName: computed(async ([first,last])=>{ 
-                return first + last
-            },[
-                "./firstName",
-                "./lastName"
-            ],{
-                async:true,
-                // 默认scope指向的是current，即fullName所在的对象
-                // 此处让其指定所依赖的值
-                scope:ComputedScopeRef.Depends
-            })
-        }
+    user:{
+        firstName:"zhang",
+        lastName:"fisher",
+        fullName: computed(async ([first,last])=>{ 
+            return first + last
+        },[
+            "./firstName",
+            "./lastName"
+        ],{
+            async:true,
+            // 默认scope指向的是current，即fullName所在的对象
+            // 此处让其指定所依赖的值
+            scope:ComputedScopeRef.Depends
+        })
     }
 }
   

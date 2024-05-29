@@ -1,33 +1,30 @@
-import { test,expect, describe, beforeAll, beforeEach } from "vitest"
-import { watch,createStore,IStore, Dict, StoreDefine} from "../"
+import { test,expect, describe, beforeAll, beforeEach,vi } from "vitest"
+import { watch,createStore,IStore, Dict, StoreDefine, computed} from "../"
 import { delay } from "flex-tools/async/delay"
 import { isFunction } from "flex-tools/typecheck/isFunction"
 
-type watchParams = Parameters<typeof watch>
+type watchParams = Parameters<typeof watch<number,number>>
 
 function getBookShop(opts?: {listener?:watchParams[0],on?:watchParams[1],options?:watchParams[2]}){
     const {listener=()=>100,on,options}  =  Object.assign({},opts)
     return {
-        state:{ 
             books:{            
                 price:10,
                 count:10,
-                total:watch((value,opts)=>{  
-                    return listener(value,opts) 
+                total:watch<number,number>((value,opts)=>{  
+                    return listener(value,opts) as number
                 },(path:string[],value:any)=>{
-                    return isFunction(listener) ? on!(path,value) : path[path.length-1]=='count'
+                    return isFunction(on) ? on!(path,value) : path[path.length-1]=='count'
                 },{                
                     initial:1,
                     group:'x',
                     ...options
-                }),
+                })
             }
         }
-    }
 
 }
 const BookShop = {
-    state:{ 
         books:{            
             price:10,
             count:10,
@@ -38,10 +35,9 @@ const BookShop = {
             },{                
                 initial:1,
                 group:'x'
-            }),
+            })
             
         }
-    }
 }
  
 
@@ -76,25 +72,28 @@ describe("静态声明watch",()=>{
     })
 
     test("通过enable控制total是否侦听",async ()=>{
+        const listener = vi.fn()
         const bookShop= getBookShop({
-            listener:(value:any,opts:any)=>{
-                return value
+            listener:(value:number,opts:any)=>{
+                listener()
+                return value * 100
             }
         })
-        store = createStore<typeof bookShop>(bookShop)
-        store.state.books.total  
-
+        const store = createStore(bookShop)
+        // 注意：watch仅在第一次读取时创建，如果没有读一下，则不会创建watch对象
+        store.state.books.total   
 
         const watchObj = store.watchObjects.get('books.total')!
-        for(let i =0;i<10;i++){
-            watchObj.options.enable = i%2==0
+        for(let i = 0;i<10;i++){
+            watchObj.options.enable = i%2==0            
+            // 修改count值，导致total值变化
             store.setState(draft=>{
                 draft.books.count++ 
             }) 
         }
-
+        expect(store.state.books.total).toBe(1900)  // 1900
+        expect(listener).toHaveBeenCalledTimes(5)        
         
-        expect(store.state.books.total).toBe(100)
 
     })
 

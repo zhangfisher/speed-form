@@ -10,7 +10,7 @@ export type WatchListener<Value=any, Result= Value> = (value:Value,options:Watch
 export type WatchDepends = (value:any,path:string[])=>boolean
 
  
-export type WatchDescriptor<Value = any,Result=Value> = {
+export type WatchDescriptor<Value=any, Result=Value> = {
     listener: WatchListener<Value,Result>;
     options: WatchOptions<Result>;
   }
@@ -32,7 +32,7 @@ export interface WatchOptions<R=any>{
     on?:(path:string[],value:any)=>boolean,
     context?  : ComputedScope
     scope?  : ComputedScope               // 计算函数的第一个参数
-    initial?:R,  
+    initial?:R,                           // 初始值
     /**
      * 用来对表单内的watch进行分组，以便能按组进行enable或disable或其他操作
      */  
@@ -62,8 +62,8 @@ export interface WatchOptions<R=any>{
  * @param options 
  * @returns 
  */
- export function watch<Value = any,Result=Value>(listener:WatchListener<Value,Result>,on:WatchOptions['on'],options?:WatchOptions<Result>):WatchDescriptorCreator<Value,Result>{
-    const opts : WatchOptions = Object.assign({
+ export function watch<Value =any,Result=Value>(listener:WatchListener<Value,Result>,on:WatchOptions['on'],options?:WatchOptions<Result>):WatchDescriptorCreator<Value,Result>{
+    const opts : WatchOptions<Result> = Object.assign({
         on,
         enable:true,
         scope:ComputedScopeRef.Depends          // 默认传入的是所侦听项的值
@@ -73,7 +73,7 @@ export interface WatchOptions<R=any>{
         listener,
         options: opts,
       };
-    }) as unknown as WatchDescriptorCreator<Value,Result>
+    }) as WatchDescriptorCreator<Value,Result>
     descriptor.__COMPUTED__ = 'watch'
     return descriptor        
 }

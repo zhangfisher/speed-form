@@ -1,7 +1,7 @@
 export * from "./store/store" 
 export * from "./computed"
 export * from "./types"
-export * from "./action"
+// export * from "./action"     废弃
 export * from "./watch"
 export * from "./consts" 
 export * from "./reactive"

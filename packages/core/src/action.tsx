@@ -34,7 +34,7 @@
 import { ReactNode, useCallback, useRef, RefObject,useState} from "react";
 import React from "react";
 import type { FormOptions } from "./form";
-import { getSnap, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedOptions, ComputedParams,  Dict, RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
+import {  AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedOptions, ComputedParams,  Dict, RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
 import { getId } from "./utils";

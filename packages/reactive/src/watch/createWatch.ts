@@ -7,7 +7,7 @@
 
 import { watch as heluxWatch } from 'helux';
 import type {  IStore, StoreDefine } from "../store/types";
-import { getVal, getValueByPath } from "../utils";  
+import { getValueByPath } from "../utils";  
 
 
 

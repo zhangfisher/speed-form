@@ -3,7 +3,7 @@ import { debounce as debounceWrapper } from './utils';
 import { ComputedAttr } from "./types";   
 import type { FormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
-import { Dict,computed,getVal, setVal } from "@speedform/reactive";  
+import { Dict,getVal, setVal } from "@speedform/reactive";  
 
 
 // 默认同步字段属性

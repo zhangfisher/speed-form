@@ -75,18 +75,23 @@ export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{
 export type FormComponent<State extends Record<string, any>> = ReactFC<FormProps<State>>;
 
 export type FormSchemaBase = {
-	title?:string					    
-    help?:string					    
-    tips?:string					    
- 	visible?:boolean					
-	enable?:boolean					
-	validate?:boolean					
-	readonly?:boolean			
-	dirty?:boolean					
+	title?   	: string					    
+    help? 		: string					    
+    tips? 		: string					    
+ 	visible?	: boolean					
+	enable?  	: boolean					
+	validate?	: boolean					
+	readonly?	: boolean			
+	dirty?   	: boolean					
 }
 
 // 表单元数据
-export type FormSchema<State extends Dict=Dict> = State & Omit<FormSchemaBase,keyof State>
+export type FormSchema<State extends Dict=Dict> =   State & Omit<FormSchemaBase,keyof State> 
+
+export type FormStore<State extends Dict = Dict> = IStore<{state:FormSchema<State>}>
+
+
+
 
 // 创建表单时的参数
 export interface FormOptions{
@@ -139,7 +144,6 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
 	fields	: Fields
 	[key:string] : any
 }
-
 /**
  * 
  * 在处理表单字段的validate属性时，对其进行处理
@@ -243,27 +247,29 @@ function createDepsHook(valuePath:string[],getter:Function,options:ComputedOptio
  */
 function freezeForm(store:any){
 	return (value:boolean=true)=>{
-		(store as IStore).setEnableMutate(value)
+		(store as IStore).enableComputed(value)
 	}
 }
 
 /**
  * 声明表单
- * @param schema 
+ * @param schema    表单
  * @param options 
  * @returns 
  */
-export function createForm<State extends Dict=Dict>(schema: State,options?:FormOptions) {
+export function createForm<State extends Dict=Dict>(schema: FormSchema<State>,options?:FormOptions) {
 	const opts = assignObject({
 		getFieldName:(valuePath:string[])=>valuePath.length > 0 ? valuePath[valuePath.length-1]==='value' ? valuePath.slice(0,-1).join(".") : valuePath.join(".") : '',
 		singleton:true,
 		validAt:'once',
 	},options) as Required<FormOptions>
 
+	type StoreType = IStore<{state:FormSchema<State>}>
+
 	// 注入表单默认属性
 	setFormDefault(schema)  
 	// 创建表单Store对象实例
-	const store:IStore<StoreDefine<FormSchema<State>>> = createStore<StoreDefine<FormSchema<State>>>({state:schema as FormSchema<State>},{
+	const store = createStore({state:schema},{
 		debug:opts.debug,
 		singleton:opts.singleton,
 		// 所有计算函数的上下文均指向根
@@ -302,19 +308,18 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 			}			
 		},
 	});  
-	type StoreType = typeof store
 	type StateType = typeof store.state
-	type FieldsType = (StateType)['fields'] 
-	type ActionsType = (StateType)['actions'] 
+	type FieldsType = StateType['fields'] 
+	type ActionsType = StateType['actions'] 
 	return {
 		store,
+		getAction,
 		Form: createFormComponent.call<FormOptions,any[],FormComponent<State>>(opts,store),
 		Field: createFieldComponent.call(opts,store),	
 		Group: createFieldGroupComponent.call(opts,store),	
 		Action: createActionComponent<StoreType>(store,opts),
 		Submit: createSubmitComponent<StoreType>(store,opts),
-		Reset: createResetComponent<StoreType>(store,opts),
-		getAction,
+		Reset: createResetComponent<StoreType>(store,opts),		
 		useAction:createUseAction<StoreType>(store) as UseActionType,
     	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
 		actions:createObjectProxy(()=>store.state.actions) as ActionsType,		
@@ -323,14 +328,14 @@ export function createForm<State extends Dict=Dict>(schema: State,options?:FormO
 		// 冻结表单，即表单计算函数不再执行，当初始化表单数据后，可以调用该函数来冻结表单
 		freeze:freezeForm(store),
 		// 加载表单数据
-		load:createLoadApi(store as IStore,opts),
+		load:createLoadApi<State>(store,opts),
 		// 读取表单数据
-		getValues:createGetValuesApi(store as IStore,opts),
+		getValues:createGetValuesApi(store ,opts),
 		// 引用所有计算属性
 		computedObjects:store.computedObjects,
 		watchObjects:store.watchObjects,		
 		// 手动执行表单校验：即运行所有校验计算函数,scope:
-		validate:createValidator(store as IStore)
+		validate:createValidator(store)
 	};
 }
 

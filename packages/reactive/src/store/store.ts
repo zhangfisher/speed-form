@@ -1,5 +1,4 @@
 import { sharex } from "helux"
-import {  createActions } from '../action';
 import type { ComputedState } from "../computed/types"
 import {  ComputedScopeRef, IStore, StoreDefine, StoreEvents, StoreOptions } from '../types';
 import { ComputedObjects } from '../computed';
@@ -44,7 +43,7 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     store.watchObjects = new WatchObjects<T>(store as IStore<T>)
 
     // 3. 创建响应式对象
-    store.stateCtx = sharex<ComputedState<T['state']>>(data.state as any, {
+    store.stateCtx = sharex<ComputedState<T>>(data.state as any, {
         stopArrDep: false,
         moduleName: opts.id,
         onRead: (params) => {
@@ -55,9 +54,8 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     store.emit("created")
     store.useState = createUseState<T>(store)
     store.setState = createSetState<T>(store)
-    store.actions = createActions<T>(data.actions, store, opts);
-
-    
+    store.enableComputed = (value:boolean=true)=>store.stateCtx.setEnableMutate(value)
+    store.sync = store.stateCtx.sync
     store.watch = createWatch<T>(store)
 
     // 3. 创建计算对象的函数

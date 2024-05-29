@@ -1,5 +1,4 @@
 import { ISharedCtx} from "helux"
-import type { ActionDefines, Actions } from '../action';
 import { ComputedState,  StateComputedType } from '../computed/types';
 import { type ComputedObject, ComputedObjects, ComputedOptions } from '../computed';
 import type { WatchObjects, createWatch } from "../watch";
@@ -10,13 +9,7 @@ import type  { createSetState } from "./setState";
 import { Emitter } from "mitt";
 
 
-
-
-export interface StoreDefine<State extends Dict = Dict>{
-    state:State
-    actions?:ActionDefines<State>
-}
-
+export type StoreDefine<State extends Dict = Dict> = State
 
 
 export enum ComputedScopeRef{
@@ -85,20 +78,22 @@ export type StoreEvents = {
  
 
 export type IStore<T extends StoreDefine= StoreDefine> = {
-    state          : ComputedState<T['state']>
+    state          : ComputedState<T>
     useState       : ReturnType<typeof createUseState<T>>
-    setState       : ReturnType<typeof createSetState<T>>  // (updater:(draft:T['state'])=>void)=>void
-    
+    setState       : ReturnType<typeof createSetState<T>>  // (updater:(draft:T)=>void)=>void
+    // 启用与停止计算
+    enableComputed : (value:boolean)=>void
     options        : StoreOptions<T>
-    stateCtx       : ISharedCtx<ComputedState<T["state"]>>
+    stateCtx       : ISharedCtx<ComputedState<T>>
     // 计算
     createComputed : ReturnType<typeof computedObjectCreator>    
     computedObjects: ComputedObjects<T>
     // 侦测
     watch          : ReturnType<typeof createWatch>
     watchObjects   : WatchObjects<T>
-    // 动作
-    actions        : Actions<T['state'],T['actions']> 
+    // 用来同步表单时使用
+    sync           : ISharedCtx<ComputedState<T>>['sync'] 
+    // 简单事件触发与侦听
     on             : Emitter<StoreEvents>['on']
     off            : Emitter<StoreEvents>['off']
     emit           : Emitter<StoreEvents>['emit']

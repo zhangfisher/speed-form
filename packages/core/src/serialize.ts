@@ -9,10 +9,10 @@
  * 
  */
 
-import { getSnap, type Dict, type IStore } from "@speedform/reactive"
+import { StoreDefine, getSnap, type Dict, type IStore } from "@speedform/reactive"
 import { isFieldGroup, isFieldList, isFieldValue } from "./utils"
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject"
-import type { FormOptions } from "./form" 
+import type { FormOptions, FormStore } from "./form" 
 import { VALIDATE_COMPUTED_GROUP } from "./consts";
  
 
@@ -173,22 +173,24 @@ export function createFormData(data:Dict,options?:CreateFormDataOptions):FormDat
  * @param formOptions 
  * @returns 
  */
-export function createLoadApi<Store extends IStore>(store:Store,formOptions?:Required<FormOptions>) {    
+export function createLoadApi<State extends Dict = Dict>(store:FormStore<State>,formOptions?:Required<FormOptions>) {    
     return function load(data:Dict,options?:LoadOptions){
         const opts = Object.assign({validate:true},options)
         try{ 
             // 1. 先停止依赖收集
-            store.setEnableMutate(false)
+            store.enableComputed(false)
             // 2. 加载数据
             loadDataToForm(data,store.state.fields)
             store.setState(draft=>{
                 draft.dirty = false
                 draft.validate = null  // 未认证
             })
+
+            
         }catch(e){
             console.error(e)
         }finally{
-            store.setEnableMutate(true) 
+            store.enableComputed(true) 
             if(opts?.validate){
                 store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
             }
