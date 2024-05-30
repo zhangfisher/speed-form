@@ -53,7 +53,7 @@ describe("静态声明watch",()=>{
         expect(store.watchObjects.has(watchId)).toBeDefined()
         expect(store.watchObjects.get(watchId)?.id).toBe(watchId)
         expect(store.watchObjects.get(watchId)?.options.initial).toBe(1)
-        expect(store.watchObjects.get(watchId)?.path).toEqual(['books','total'])
+        expect(store.watchObjects.get(watchId)?.selfPath).toEqual(['books','total'])
         expect(store.watchObjects.get(watchId)?.options.group).toBe("x")
 
     })

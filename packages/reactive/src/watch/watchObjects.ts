@@ -17,12 +17,13 @@ export interface RegisteredWatchListener{
 
 
 export interface WatchObject{
-    id      : string
-    watchTo : WatchTarget
-    path    : string[]
-    run     : (this:WatchObject,fromPath:string[])=>void
-    listener: (...args:any[])=>any    
-    options : WatchOptions
+    id         : string
+    watchTo    : WatchTarget                // listener的值会回写到此
+    run        : (this:WatchObject,fromPath:string[])=>void
+    listener   : (...args:any[])=>any    
+    options    : WatchOptions
+    selfPath   : string[]                   // 侦听函数所在的路径，如果是在useWatch中声明的或者动态创建的则为[]
+    matchedPath: string[]                   // 记录匹配的路径，["user/fullname"]
 }
 
 
@@ -54,7 +55,7 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
     delete(key: string): boolean {
         const watcher = this.get(key)
         if(watcher){
-            const key = this.getValueKey(watcher.path)
+            const key = this.getValueKey(watcher.selfPath)
             if(this.cache.has(key)){
                 this.cache.delete(key)
             }
@@ -79,8 +80,8 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
         // @ts-ignore
         const {unwatch} = heluxWatch(({triggerReasons})=>{
             if(!this._enable) return 
-            const triggerPaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
-            triggerPaths.forEach((fromPath)=>{  
+            const fromPaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
+            fromPaths.forEach((fromPath)=>{  
                 // 从缓存中读取能匹配的watchers
                 const matchedWatchers:WatchObject[] = this.getCachedWatchers(fromPath)!
                 // 读取发生变化的值
@@ -91,7 +92,7 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
                     for(const watcher of this.values()){
                         if(this.isMatchWatcher(fromPath,triggerValue,watcher)){                            
                             // 添加到缓存中
-                            this.addWatcherToCache(fromPath,watcher.path,watcher)
+                            this.addWatcherToCache(fromPath,watcher.selfPath,watcher)
                             matchedWatchers.push(watcher)
                         }
                     } 
@@ -101,7 +102,7 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
                     try{
                         watcher.run.call(watcher,fromPath)
                     }catch(e:any){
-                        console.warn("Error while run watchLisenter("+fromPath.join(OBJECT_PATH_DELIMITER)+"->"+watcher.path.join(OBJECT_PATH_DELIMITER)+")",e.stack)
+                        console.warn("Error while run watchLisenter("+fromPath.join(OBJECT_PATH_DELIMITER)+"->"+watcher.selfPath.join(OBJECT_PATH_DELIMITER)+")",e.stack)
                     }
                 } 
                 
@@ -240,7 +241,7 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
      */
     add(selfPath:string[],watchDescriptor:WatchDescriptor,watchTo?:WatchTarget){
         const watchObject = {             
-            path:selfPath,
+            selfPath:selfPath,
             listener:watchDescriptor.listener,
             watchTo,
             options:watchDescriptor.options
