@@ -46,13 +46,13 @@ export type ValidateOptions<T=any> = {
  */
 export function validate<T=any>(options?:ValidateOptions){
     const { entry  } = Object.assign({},options)
-    return watch<boolean,boolean>((value,{ triggerPath,selfPath,getCache})=>{        
+    return watch<boolean,boolean>((value,{ fromPath,selfPath,getCache})=>{        
         // 只侦听entry下的所有字段
-        if(!isIncludePath(entry ? entry : selfPath,triggerPath)) return   
+        if(!isIncludePath(entry ? entry : selfPath,fromPath)) return   
         const selfCache = getCache()  // 得到的是一个Dict用来保存所有字段的validate属性值
         // validate属性是一个boolean
         if(typeof(value)=='boolean'){
-            const srcKey = triggerPath.join(OBJECT_PATH_DELIMITER)
+            const srcKey = fromPath.join(OBJECT_PATH_DELIMITER)
             if(value){
                 delete selfCache[srcKey]
             }else{

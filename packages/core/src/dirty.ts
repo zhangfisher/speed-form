@@ -23,8 +23,8 @@ function isFieldValue(path:string[]){
  * 
  */
 export function dirty(entryPath?:string[]){
-    return watch<any,boolean>((value,{ getSelfValue,triggerPath,selfPath })=>{
-        if(!isIncludePath(entryPath ? entryPath : selfPath,triggerPath)) return       
+    return watch<any,boolean>((value,{ getSelfValue,fromPath,selfPath })=>{
+        if(!isIncludePath(entryPath ? entryPath : selfPath,fromPath)) return       
         const selfValue = getSelfValue()
         if(!selfValue) return true
     },(path)=>isFieldValue(path),{

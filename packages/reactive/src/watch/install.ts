@@ -3,7 +3,7 @@ import { OBJECT_PATH_DELIMITER } from "../consts"
 import { IStore, StoreDefine } from "../store/types"
 import { IComputeParams } from "../types"
 import { setVal } from "../utils"
-import { WatchDescriptor } from "./watch"
+import { WatchDescriptor } from "./types"
 import { WatchTarget } from "./watchObjects"
 
 /**
@@ -14,7 +14,7 @@ import { WatchTarget } from "./watchObjects"
  */ 
 export function installWatch<T extends StoreDefine>(params:IComputeParams,store:IStore<T>,watchTo?:WatchTarget) {
     
-    store.options.log(`install watch for <${params.fullKeyPath.join(OBJECT_PATH_DELIMITER)}>`)
+    store.options.log(`install watch for <${params.fullKeyPath.length==0 ? "Dynamic" : params.fullKeyPath.join(OBJECT_PATH_DELIMITER)}>`)
 
     const watchDescriptor = params.value() as WatchDescriptor
     

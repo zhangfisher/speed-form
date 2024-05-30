@@ -1,17 +1,17 @@
 import { useEffect } from "react"
-import { ComputedDepends, ComputedScopeRef, Dict, IComputeParams, IStore, StoreDefine } from "../types"
-import { createWatch } from "./createWatch"
+import { ComputedScopeRef, IComputeParams, IStore, StoreDefine } from "../types"
 import { sharex } from "helux"
 import { installWatch } from "./install"
 import { WatchTarget } from "./watchObjects"
-import { WatchListener, WatchOptions } from "./watch"
+import { WatchFilter, WatchListener, WatchOptions } from "./types"
+import { createWatchFilter } from "./utils"
 
 /**
  * createWatch的hook版本 
  * 
-   let { dd } = store.useWatch(["a","b"],[
-        'aa','bb'
-   ])
+   let { dd } = store.useWatch(()=>{
+
+   },[])
 
 
 
@@ -20,7 +20,7 @@ import { WatchListener, WatchOptions } from "./watch"
  * @returns 
  */
 export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
-    return <Value = any,Result=Value>(on:WatchOptions['on'],listener:WatchListener<Value,Result>)=>{
+    return <Value = any,Result=Value>(listener:WatchListener<Value,Result>,on:WatchFilter,options?:WatchOptions<Result>)=>{
         useEffect(() => {
             const watchTo = {
                 stateCtx: sharex({
@@ -33,12 +33,12 @@ export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
                 parent: undefined,
                 value: () => ({
                     listener,
-                    options: {
-                        on,
+                    options: Object.assign({
+                        on:createWatchFilter(on),
                         initial: 0,
                         enable:true,
                         scope:ComputedScopeRef.Depends         
-                    } as WatchOptions
+                    },options) as WatchOptions
                 })
             } as unknown as IComputeParams
             // 安装
@@ -46,6 +46,6 @@ export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
             return ()=>{ 
                 store.watchObjects.delete(watchObject.id)
             }             
-        },[])        
+        },typeof(on) =='function' ? [on] : (typeof(on)=='string' ? [on] : on))        
     }
 }

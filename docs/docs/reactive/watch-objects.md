@@ -17,7 +17,7 @@ demo:
 ```ts | pure
 export interface WatchObject extends WatchOptions>{ 
     path:string[]
-    run:(triggerPath:string[])=>void
+    run:(fromPath:string[])=>void
     listener:(...args:any[])=>any
 }
 ```

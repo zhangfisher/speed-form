@@ -1,7 +1,6 @@
-import { ISharedCtx } from "helux"
-import { ComputedState, RequiredComputedState } from "../computed/types"
+import {  RequiredComputedState } from "../computed/types"
 import { StateGetter, StateSetter } from "./types"
-import { Dict, IStore, StoreDefine } from "../types"
+import { IStore, StoreDefine } from "../types"
 
 
  
@@ -19,15 +18,15 @@ import { Dict, IStore, StoreDefine } from "../types"
 export function createUseState<T extends StoreDefine>(store:IStore<T>){
 
     return function<Value=any,SetValue=Value>(
-        getter?:StateGetter<RequiredComputedState<T['state']>,Value>,
-        setter?:StateSetter<RequiredComputedState<T['state']>,SetValue>
+        getter?:StateGetter<RequiredComputedState<T>,Value>,
+        setter?:StateSetter<RequiredComputedState<T>,SetValue>
     ){
         const useState =store.stateCtx.useState 
         if(getter==undefined){
             return useState()
         }
         const [ state,setState ] = useState()
-        const value = getter(state as RequiredComputedState<T['state']>)
+        const value = getter(state as RequiredComputedState<T>)
         // @ts-ignore
         let setValue = setState
         if( typeof(setter)=='function' ){

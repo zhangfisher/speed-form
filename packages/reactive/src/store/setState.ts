@@ -15,7 +15,7 @@ import { IStore, StoreDefine } from "../types"
  */
 export function createSetState<T extends StoreDefine>(store: IStore<T>){
 
-    return (updater:(draft:T['state'])=>void)=>{
+    return (updater:(draft:T)=>void)=>{
         // @ts-ignore
         store.stateCtx.setState((draft:any)=>{
             updater(draft as any)

@@ -24,13 +24,13 @@ demo:
 ```tsx | pure
 export function validate<T=any>(options?:ValidateOptions){
     const { entry  } = Object.assign({},options)
-    return watch<boolean,boolean>((value,{ triggerPath,selfPath,getCache})=>{        
+    return watch<boolean,boolean>((value,{ fromPath,selfPath,getCache})=>{        
         // 只侦听entry下的所有字段
-        if(!isIncludePath(entry ? entry : selfPath,triggerPath)) return   
+        if(!isIncludePath(entry ? entry : selfPath,fromPath)) return   
         const selfCache = getCache()  // 得到的是一个Dict用来保存所有字段的validate属性值
         // validate属性是一个boolean
         if(typeof(value)=='boolean'){
-            const srcKey = triggerPath.join(OBJECT_PATH_DELIMITER)
+            const srcKey = fromPath.join(OBJECT_PATH_DELIMITER)
             if(value){
                 delete selfCache[srcKey]
             }else{
@@ -52,7 +52,7 @@ export function validate<T=any>(options?:ValidateOptions){
 - `(path)=>isValidateField(path)`用来判断发生变化的路径是否包含的`validate`字段，如果是否则会执行`watch`监听函数。
 - 在`watch`监听函数内，
     -  `value`：变化的值
-    - `triggerPath`：指的是哪里发生变化的路径
+    - `fromPath`：指的是哪里发生变化的路径
     - `getCache`：用来获取当前`watch`的`cache`对象，用来保存校验值。
     - 在`cache`里面我们保存从校验范围内所有`value=false`，如果`Object.keys(selfCache).length==0`就代表在该校验范围内所有字段均有效。
 

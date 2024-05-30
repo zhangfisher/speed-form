@@ -146,7 +146,7 @@ export default ()=>{
 type WatchListenerOptions<Result=any> = {
   getSelfValue:()=>Result ,     // 返回当前watch所在位置的当前值
   selfPath:string[] ,           // 返回当前watch所在位置的路径
-  triggerPath:string[],         // 返回发生变化的值所在的路径
+  fromPath:string[],         // 返回发生变化的值所在的路径
   getCache:()=>Dict             // 返回当前watch所在位置的缓存对象
 }
 ```
@@ -155,7 +155,7 @@ type WatchListenerOptions<Result=any> = {
 - 侦听函数的第一个入参是`value`，指的是发生变化的新值。显然，如果`watch`函数的依赖范围很广，则`value`类型也可能是不固定的。
 - `getSelfValue`参数用来读取当前`watch`所在位置的当前值。
 - `selfPath`参数用来读取当前`watch`所在位置的路径。
-- `triggerPath`参数用来读取发生变化的值所在的路径。
+- `fromPath`参数用来读取发生变化的值所在的路径。
 - `getCache`参数用来读取当前`watch`所在位置的缓存对象，供保存一些临时值。
 
 ### 缓存对象
@@ -267,19 +267,25 @@ const store = createStore({state:user})
 export default ()=>{
   const [state]=store.useState()
   const [watchKey,setWatchKey] = useState('')
+  const [watchPath,setWatchPath]=useState("user/firstName")
+  const [watchValue,setWatchValue]=useState("")
 
-  store.useWatch((valuePaths:string[])=>{
-      setWatchKey(valuePaths.map(p=>p.join("/")).join(","))
-    },[
-      "user/firstName",
-      "user/lastName"
-  ]) 
+  store.useWatch((value,{fromPath})=>{
+      setWatchKey(fromPath.join("/"))
+      setWatchValue(value)
+      return value
+  },watchPath) 
+
+
 
   return  (<div>
-      <div>watch: {watchKey}</div>
+      <div>watch for: {watchPath}</div>
+      <div>Watch value:{watchValue}</div>
       <div>firstName=<input value={state.user.firstName} onChange={store.sync(to=>to.user.firstName)}/></div>
       <div>lastName=<input value={state.user.lastName} onChange={store.sync(to=>to.user.lastName)}/></div>
       <div>fullName={state.user.fullName.result}</div> 
+      <button onClick={()=>setWatchPath("user/firstName")}>watch firstName</button>
+      <button onClick={()=>setWatchPath("user/lastName")}>watch lastName</button>      
     </div>)
 }
 

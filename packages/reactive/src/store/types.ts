@@ -1,7 +1,7 @@
 import { ISharedCtx} from "helux"
 import { ComputedState,  StateComputedType } from '../computed/types';
 import { type ComputedObject, ComputedObjects, ComputedOptions } from '../computed';
-import type { WatchObjects, createWatch } from "../watch";
+import type { WatchObjects, createUseWatch, createWatch } from "../watch";
 import { computedObjectCreator } from "../computed/create";
 import { Dict } from "../types"; 
 import type { createUseState } from "./useState";
@@ -89,7 +89,8 @@ export type IStore<T extends StoreDefine= StoreDefine> = {
     createComputed : ReturnType<typeof computedObjectCreator>    
     computedObjects: ComputedObjects<T>
     // 侦测
-    watch          : ReturnType<typeof createWatch>
+    watch          : ReturnType<typeof createWatch<T>>
+    useWatch       : ReturnType<typeof createUseWatch<T>>
     watchObjects   : WatchObjects<T>
     // 用来同步表单时使用
     sync           : ISharedCtx<ComputedState<T>>['sync'] 

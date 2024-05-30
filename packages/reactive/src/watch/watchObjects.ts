@@ -1,13 +1,13 @@
 import { ISharedCtx, getSnap,watch as heluxWatch } from "helux"
 import { ComputedScopeRef } from "../store/types"
 import { setVal } from "../utils/setVal"
-import { WatchListener, WatchOptions, WatchDescriptor } from './watch';
+import { WatchListener, WatchOptions, WatchDescriptor } from './types';
 import { Dict, IStore, StoreDefine } from "../types"
 import { getVal } from "../utils/getVal"
 import { OBJECT_PATH_DELIMITER } from "../consts"
 import { getComputedContext } from "../context"
 import { getRndId } from "../utils/getRndId";
-import { getValueByPath, joinValuePath } from "../utils";
+import { joinValuePath } from "../utils";
 
 export interface RegisteredWatchListener{
     fn:WatchListener                // 侦听函数       
@@ -20,7 +20,7 @@ export interface WatchObject{
     id      : string
     watchTo : WatchTarget
     path    : string[]
-    run     : (this:WatchObject,triggerPath:string[])=>void
+    run     : (this:WatchObject,fromPath:string[])=>void
     listener: (...args:any[])=>any    
     options : WatchOptions
 }
@@ -34,7 +34,7 @@ export type WatchTarget<T extends Dict = Dict > ={
 export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>{
     private _off?:()=>{} 
     private _enable:boolean=true                            // 是否启用侦听器
-    // key=triggerPath value=WatcherObject
+    // key=fromPath value=WatcherObject
     // 为了避免每次发生heluxWatch时进行遍历所有的监听函数，这里缓存起来，当对应的triggerPath触发变化时，可以从缓存中读取直接运行相应的watcher
     private cache=new Map<string,WatchObject[]>()         
     private watcherCache?:Map <string,Dict>                 // 每个watcher的自我缓存
@@ -51,6 +51,16 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
     set enable(value:boolean){
         this._enable = value
     }     
+    delete(key: string): boolean {
+        const watcher = this.get(key)
+        if(watcher){
+            const key = this.getValueKey(watcher.path)
+            if(this.cache.has(key)){
+                this.cache.delete(key)
+            }
+        }
+        return super.delete(key)
+    }
     /**
      * 根据路径生成唯一的key
      * 使用连接符将Key连接起来
@@ -70,18 +80,18 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
         const {unwatch} = heluxWatch(({triggerReasons})=>{
             if(!this._enable) return 
             const triggerPaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
-            triggerPaths.forEach((triggerPath)=>{  
+            triggerPaths.forEach((fromPath)=>{  
                 // 从缓存中读取能匹配的watchers
-                const matchedWatchers:WatchObject[] = this.getCachedWatchers(triggerPath)!
+                const matchedWatchers:WatchObject[] = this.getCachedWatchers(fromPath)!
                 // 读取发生变化的值
-                const triggerValue = getVal(this.store.state,triggerPath)
+                const triggerValue = getVal(this.store.state,fromPath)
                 // 如果没有缓存，则需要直接从缓存中取值                    
                 if(matchedWatchers.length===0){    
                     // 没有缓存时，需要遍历所有的监听函数，找到匹配的监听函数
                     for(const watcher of this.values()){
-                        if(this.isMatchWatcher(triggerPath,triggerValue,watcher)){                            
+                        if(this.isMatchWatcher(fromPath,triggerValue,watcher)){                            
                             // 添加到缓存中
-                            this.addWatcherToCache(triggerPath,watcher.path,watcher)
+                            this.addWatcherToCache(fromPath,watcher.path,watcher)
                             matchedWatchers.push(watcher)
                         }
                     } 
@@ -89,9 +99,9 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
                 // 执行所有的监听函数
                 for(const watcher of matchedWatchers){
                     try{
-                        watcher.run.call(watcher,triggerPath)
+                        watcher.run.call(watcher,fromPath)
                     }catch(e:any){
-                        console.warn("Error while run watchLisenter("+triggerPath.join(OBJECT_PATH_DELIMITER)+"->"+watcher.path.join(OBJECT_PATH_DELIMITER)+")",e.stack)
+                        console.warn("Error while run watchLisenter("+fromPath.join(OBJECT_PATH_DELIMITER)+"->"+watcher.path.join(OBJECT_PATH_DELIMITER)+")",e.stack)
                     }
                 } 
                 
@@ -114,8 +124,8 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
      * @param srcPath 
      * @returns 
      */
-    private getCachedWatchers(triggerPath:string[]){
-        const key = this.getValueKey(triggerPath)
+    private getCachedWatchers(fromPath:string[]){
+        const key = this.getValueKey(fromPath)
         if(this.cache.has(key)){
             return this.cache.get(key)
         }else{
@@ -125,13 +135,13 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
     /**
      * 缓存侦听函数
      * 当匹配到过滤条件时，进行缓存以便下次当匹配的路径变化时可以直接执行侦听函数,而不是遍历所有的侦听过滤函数
-     * @param triggerPath 
+     * @param fromPath 
      * @param destPath 
      * @param listener 
      * @param listenerOpts 
      */
-    private addWatcherToCache(triggerPath:string[],watchPath:string[],watcher:WatchObject){
-        const key = this.getValueKey(triggerPath)
+    private addWatcherToCache(fromPath:string[],watchPath:string[],watcher:WatchObject){
+        const key = this.getValueKey(fromPath)
         if(!this.cache.has(key)){
             this.cache.set(key,[])
         }
@@ -161,10 +171,10 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
      * @param watchListener 
      * @returns 
      */
-    private isMatchWatcher(triggerPath:string[],triggerValue:any,watchObject:WatchObject ){
+    private isMatchWatcher(fromPath:string[],triggerValue:any,watchObject:WatchObject ){
         if(this._enable===false || watchObject.options.enable===false) return
         if(typeof(watchObject.options.on)=='function'){
-            return watchObject.options.on(triggerPath,triggerValue)
+            return watchObject.options.on(fromPath,triggerValue)
         }
     }
     /**
@@ -185,7 +195,7 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
         const listenerOpts = {
             getSelfValue : ()=> getVal(getSnap(this.store.state),toPath),
             getCache:()=>this.getWatcherCache(toPath),
-            triggerPath: fromPath,
+            fromPath: fromPath,
             selfPath: toPath,
             state:this.store.state
         }                 

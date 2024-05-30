@@ -8,6 +8,7 @@ import { log } from "../utils";
 import { createUseState } from "./useState"
 import { createSetState } from "./setState";
 import mitt,{Emitter} from "mitt";
+import { createUseWatch } from '../watch/useWatch';
 
 
 
@@ -57,6 +58,7 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     store.enableComputed = (value:boolean=true)=>store.stateCtx.setEnableMutate(value)
     store.sync = store.stateCtx.sync
     store.watch = createWatch<T>(store)
+    store.useWatch = createUseWatch<T>(store)
 
     // 3. 创建计算对象的函数
     // const createComputed = computedObjectCreator(stateCtx,extendObjects,opts)
