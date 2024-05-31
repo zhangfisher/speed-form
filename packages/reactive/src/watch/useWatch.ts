@@ -3,9 +3,7 @@ import { ComputedScopeRef, IComputeParams, IStore, StoreDefine } from "../types"
 import { sharex } from "helux"
 import { installWatch } from "./install"
 import { WatchTarget } from "./watchObjects"
-import { WatchFilter, WatchListener, WatchOptions } from "./types"
-import { createWatchFilter } from "./utils"
-
+import { WatchFilter, WatchListener, WatchOptions } from "./types" 
 /**
  * createWatch的hook版本 
  * 
@@ -24,21 +22,22 @@ export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
         useEffect(() => {
             const watchTo = {
                 stateCtx: sharex({
-                    value: 0
+                    value: 0                        // 值
                 })
             } as WatchTarget
             const params = {
-                fullKeyPath: [],
+                fullKeyPath: ['value'],
                 keyPath: [],
                 parent: undefined,
                 value: () => ({
                     listener,
                     options: Object.assign({
-                        on:createWatchFilter(on),
+                        on,
                         initial: 0,
                         enable:true,
                         scope:ComputedScopeRef.Depends         
-                    },options) as WatchOptions
+                    },options) as WatchOptions,
+                    context: watchTo
                 })
             } as unknown as IComputeParams
             // 安装

@@ -1,13 +1,13 @@
 import { ISharedCtx, getSnap,watch as heluxWatch } from "helux"
 import { ComputedScopeRef } from "../store/types"
 import { setVal } from "../utils/setVal"
-import { WatchListener, WatchOptions, WatchDescriptor } from './types';
-import { Dict, IStore, StoreDefine } from "../types"
+import { WatchListener, WatchOptions, WatchDescriptor, WatchFilter } from './types';
+import { Dict, IState, IStore, StoreDefine } from "../types"
 import { getVal } from "../utils/getVal"
 import { OBJECT_PATH_DELIMITER } from "../consts"
 import { getComputedContext } from "../context"
 import { getRndId } from "../utils/getRndId";
-import { joinValuePath } from "../utils";
+import { joinValuePath } from "../utils"; 
 
 export interface RegisteredWatchListener{
     fn:WatchListener                // 侦听函数       
@@ -18,12 +18,13 @@ export interface RegisteredWatchListener{
 
 export interface WatchObject{
     id         : string
-    watchTo    : WatchTarget                // listener的值会回写到此
+    state      : IState             // listener的值会回写到此,调用state.setState((draft)=>setValue(draft,selfPath,value))
+    watchTo    : WatchTarget                
     run        : (this:WatchObject,fromPath:string[])=>void
     listener   : (...args:any[])=>any    
-    options    : WatchOptions
+    options    : Omit<WatchOptions,'on'> & {on: WatchFilter }
     selfPath   : string[]                   // 侦听函数所在的路径，如果是在useWatch中声明的或者动态创建的则为[]
-    matchedPath: string[]                   // 记录匹配的路径，["user/fullname"]
+    matchedPath: string[]                   // 记录匹配的路径，["user/fullname"]    
 }
 
 
@@ -78,7 +79,7 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
      */
     private createWacher(){
         // @ts-ignore
-        const {unwatch} = heluxWatch(({triggerReasons})=>{
+        const { unwatch } = heluxWatch(({triggerReasons})=>{
             if(!this._enable) return 
             const fromPaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
             fromPaths.forEach((fromPath)=>{  
@@ -109,7 +110,7 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
             })
         },()=>[this.store.state])
         this._off = unwatch
-    }
+    } 
     /**
      * 重置侦听器
      */
@@ -225,7 +226,7 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
                     draft.value=result
                 })
             }else{
-                this.store.setState( (draft:any)=>{
+                this.store.setState((draft:any)=>{
                     setVal(draft,toPath,result)
                 })
             }            
@@ -233,7 +234,7 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
     }
     /**
      * 添加一个侦听器对象  
-     * @param selfPath              侦听函数所在的路径,用来接收侦听函数的返回值
+     * @param selfPath              侦听函数所在的路径,用来接收侦听函数的返回值，当使用useWatch时
      * @param listener              侦听函数 
      * @param options               参数
      * @param watchTo               侦听结果写到处下载
@@ -242,14 +243,20 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
     add(selfPath:string[],watchDescriptor:WatchDescriptor,watchTo?:WatchTarget){
         const watchObject = {             
             selfPath:selfPath,
-            listener:watchDescriptor.listener,
+            listener:watchDescriptor.listener,            
+            options:watchDescriptor.options,
             watchTo,
-            options:watchDescriptor.options
         } as WatchObject
+
+        if(typeof(watchObject.options.on)!=='function') throw new Error("watch options.on must be a function")
+        
+        // 如果没有id则生成一个id
         if(!watchObject.id){
             watchObject.id = Array.isArray(selfPath) && selfPath.length > 0 ? this.getValueKey(selfPath) : getRndId()
         }
-        watchObject.run = (fromPath:string[])=>this.executeListener(fromPath,selfPath,watchObject)        
+
+        watchObject.run = (fromPath:string[])=>this.executeListener(fromPath,selfPath,watchObject)      
+          
         this.set(watchObject.id,watchObject)
         return watchObject
     }

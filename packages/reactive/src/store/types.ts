@@ -76,6 +76,9 @@ export type StoreEvents = {
     
 };
  
+export type IState = {
+    setState:(draft:any)=>void
+}
 
 export type IStore<T extends StoreDefine= StoreDefine> = {
     state          : ComputedState<T>

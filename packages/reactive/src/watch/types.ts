@@ -1,7 +1,7 @@
 import { ComputedScope, Dict } from "../types"
 
 
-export type WatchFilter = string | (string |  string[]) [] | ( (path:string[],value:any)=>boolean)
+export type WatchFilter = (path:string[],value:any)=>boolean
 
 
 /**
@@ -14,8 +14,9 @@ export type WatchDepends = (value:any,path:string[])=>boolean
 
  
 export type WatchDescriptor<Value=any, Result=Value> = {
-    listener: WatchListener<Value,Result>;
-    options: WatchOptions<Result>;
+    listener : WatchListener<Value,Result>;
+    options  : WatchOptions<Result>;
+    context? : any                    // 指               
   }
 
 export interface WatchDescriptorCreator<Value = any,Result=Value> {
@@ -26,13 +27,8 @@ export interface WatchDescriptorCreator<Value = any,Result=Value> {
 
 
 export interface WatchOptions<R=any>{ 
-    id?:string                            
-    // 指定额外的过滤条件，如果返回true，才会触发listener的执行
-    // 此函数会在表单中的每一个值发生变化时执行，如果返回true，则会触发listener的执行  
-    // 由于此函数会在表单中的每一个值发生变化时均会执行，所以此函数应该尽量简单，不要有复杂的逻辑      
-    // 如果大量的表单字段均需要监听，则可能会有性能问题
-    // 一般在动态依赖时使用
-    on?: (path:string[],value:any)=>boolean,
+    id?:string         
+    on         : WatchFilter
     context?  : ComputedScope
     scope?  : ComputedScope               // 计算函数的第一个参数
     initial?:R,                           // 初始值
@@ -45,3 +41,11 @@ export interface WatchOptions<R=any>{
      */
     enable?:boolean
 }
+
+                   
+    // // 指定额外的过滤条件，如果返回true，才会触发listener的执行
+    // // 此函数会在表单中的每一个值发生变化时执行，如果返回true，则会触发listener的执行  
+    // // 由于此函数会在表单中的每一个值发生变化时均会执行，所以此函数应该尽量简单，不要有复杂的逻辑      
+    // // 如果大量的表单字段均需要监听，则可能会有性能问题
+    // // 一般在动态依赖时使用
+    // on?: WatchFilter,
