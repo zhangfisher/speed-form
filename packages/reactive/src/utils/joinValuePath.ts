@@ -4,8 +4,8 @@
  * @param paths 
  * @returns 
  */
-export function joinValuePath(paths:(string | string[])[]):string{
-    return paths.map((p)=>{
+export function joinValuePath(paths?:(string | string[])[]):string{
+    return (paths||[]).map((p)=>{
         return Array.isArray(p) ? p.join(".") : p
     }).join('_')
 }

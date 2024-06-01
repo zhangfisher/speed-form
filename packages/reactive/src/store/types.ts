@@ -75,9 +75,11 @@ export type StoreEvents = {
     created: undefined;            // 响应对象创建后
     
 };
+
+
  
-export type IState = {
-    setState:(draft:any)=>void
+export type IState<T=any> = {
+    setState:(draft:T)=>void
 }
 
 export type IStore<T extends StoreDefine= StoreDefine> = {

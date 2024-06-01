@@ -46,21 +46,21 @@ export type ValidateOptions<T=any> = {
  */
 export function validate<T=any>(options?:ValidateOptions){
     const { entry  } = Object.assign({},options)
-    return watch<boolean,boolean>((value,{ fromPath,selfPath,getCache})=>{        
+    return watch<boolean,boolean>((value,path, watchObject)=>{        
         // 只侦听entry下的所有字段
-        if(!isIncludePath(entry ? entry : selfPath,fromPath)) return   
-        const selfCache = getCache()  // 得到的是一个Dict用来保存所有字段的validate属性值
+        if(!isIncludePath(entry ? entry : watchObject.selfPath,path)) return   
+        const selfCache = watchObject.cache // 得到的是一个Dict用来保存所有字段的validate属性值
         // validate属性是一个boolean
         if(typeof(value)=='boolean'){
-            const srcKey = fromPath.join(OBJECT_PATH_DELIMITER)
+            const srcKey = path.join(OBJECT_PATH_DELIMITER)
             if(value){
-                delete selfCache[srcKey]
+                delete watchObject.cache[srcKey]
             }else{
-                selfCache[srcKey] = value
+                watchObject.cache[srcKey] = value
             }
         }
         // 由于cache里面只记录validate=false的值，所以如果cache不为空则代表有字段的validate=false
-        return Object.keys(selfCache).length==0
+        return Object.keys(watchObject.cache).length==0
     },(path)=>isValidateField(path),{
         initial:true
     })

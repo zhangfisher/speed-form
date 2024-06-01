@@ -2,8 +2,7 @@ import { useEffect } from "react"
 import { ComputedScopeRef, IComputeParams, IStore, StoreDefine } from "../types"
 import { sharex } from "helux"
 import { installWatch } from "./install"
-import { WatchTarget } from "./watchObjects"
-import { WatchDescriptor, WatchDepends, WatchDependParams, WatchListener, WatchOptions } from "./types" 
+import { WatchDescriptor,  WatchDependParams, WatchListener, WatchOptions } from "./types" 
 import { normalizedWatchFilter } from "./utils"
 /**
  * createWatch的hook版本 
@@ -20,13 +19,7 @@ import { normalizedWatchFilter } from "./utils"
  */
 export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
     return <Value = any,Result=Value>(listener:WatchListener<Value,Result>,depends:WatchDependParams<Value>,options?:WatchOptions<Result>)=>{
-        useEffect(() => {
-            const watchTo = {
-                stateCtx: sharex({
-                    value: 0                        // 值
-                })
-            } as WatchTarget
-            
+        useEffect(() => { 
             const params = {
                 fullKeyPath: ['value'],
                 keyPath: [],
@@ -36,9 +29,11 @@ export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
                         listener,
                         options: Object.assign({
                             depends,
-                            initial: 0,
-                            enable:true,
-                            scope:ComputedScopeRef.Depends         
+                            context : sharex({value: 0 }),
+                            selfPath: ['value'],
+                            initial : 0,
+                            enable  : true,
+                            scope   : ComputedScopeRef.Depends         
                         },options)
                     } as WatchDescriptor
                     // 规范depends参数形式
@@ -47,7 +42,7 @@ export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
                 }
             } as unknown as IComputeParams
             // 安装
-            const watchObject = installWatch(params,store,watchTo)
+            const watchObject = installWatch(params,store)
             return ()=>{ 
                 store.watchObjects.delete(watchObject.id)
             }             
