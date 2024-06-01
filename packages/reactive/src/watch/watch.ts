@@ -1,5 +1,4 @@
-import { ComputedScope, ComputedScopeRef } from "../store/types"
-import { Dict } from "../types"
+import {  ComputedScopeRef } from "../store/types"
 import { WatchDependParams, WatchDescriptorCreator, WatchListener, WatchOptions } from "./types";
 import { normalizedWatchFilter } from "./utils";
 
@@ -14,7 +13,7 @@ import { normalizedWatchFilter } from "./utils";
  *     validate:watch<boolean,stirng>((value:string,oldValue:boolean)=>{
  *          return value.length>0
  *    },{
- *     on:(path:string[],value:any)=>{
+ *     depends:(path:string[],value:any)=>{
  *          return path[path.length-1]=='validate'
  *      }
  *    })

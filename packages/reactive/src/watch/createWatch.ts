@@ -21,13 +21,13 @@ import { getValueByPath } from "../utils";
     * @returns 
     */
 export function createWatch<T extends StoreDefine>(store:IStore<T>){
-    return (listener:(changedPaths:string[][])=>void,deps?:(string | string[])[])=>{
+    return (listener:(changedPaths:string[][])=>void,depends?:(string | string[])[])=>{
         // @ts-ignore
         const { unwatch } = heluxWatch(({triggerReasons})=>{
             const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
             listener(valuePaths)            
         },()=>{
-            return deps?.map(dep=>getValueByPath(store.stateCtx.state,dep))
+            return depends?.map(dep=>getValueByPath(store.stateCtx.state,dep))
         })
         return unwatch
     }

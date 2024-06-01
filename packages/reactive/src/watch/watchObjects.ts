@@ -83,7 +83,12 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
             if(!this._enable) return 
             const fromPaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
             fromPaths.forEach((fromPath)=>{  
-                // 从缓存中读取能匹配的watchers
+
+                for(let watchObj of this.values()){
+                    this.executeListener(fromPath,watchObj)
+                }
+
+                // 从缓存中读取能匹配的watchers                
                 const matchedWatchers:WatchObject[] = this.getCachedWatchers(fromPath)!
                 // 读取发生变化的值
                 const triggerValue = getVal(this.store.state,fromPath)
@@ -179,13 +184,61 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject>
             return watchObject.options.on(fromPath,triggerValue)
         }
     }
+    private executeListener(fromPath:string[],watchObject:WatchObject ){        
+        if(!watchObject.options.enable) {
+            this.store.options.log!(`watcher <${watchObject.selfPath.join(OBJECT_PATH_DELIMITER)}> is disabled`)
+            return 
+        }
+        const selfPath = watchObject.selfPath
+        const watchTo = watchObject.watchTo
+        const watchListener = watchObject.listener
+
+        // 1. 构建参数
+        const listenerOpts = {
+            getSelfValue : ()=> getVal(getSnap(this.store.state),selfPath),
+            getCache:()=>this.getWatcherCache(selfPath),
+            fromPath: fromPath,
+            selfPath: selfPath,
+            state:this.store.state
+        }                 
+        
+        // 2. 构建监听函数的作用域Scope,默认是所侦听的项的值
+        const scope = getComputedContext(this.store.state,{
+            computedType: 'Watch',
+            input       : [()=>getVal(this.store.state,fromPath)],
+            type        : 'scope',
+            valuePath   : selfPath,
+            funcOptions : { 
+                scope:watchObject.options.scope
+            },
+            storeOptions:this.store.options
+        })
+
+        const value =(watchObject.options.scope==ComputedScopeRef.Depends && Array.isArray(scope)) ? scope[0] : scope
+
+        // 3.  执行监听函数
+        const result = watchListener.call(this.store.state,value,listenerOpts)    
+
+        // 4. 将返回值回写到状态中
+        if(result!==undefined){
+             if(watchTo){
+                watchTo.stateCtx.setState(draft=>{
+                    draft.value=result
+                })
+            }else{
+                this.store.setState((draft:any)=>{
+                    setVal(draft,selfPath,result)
+                })
+            }            
+        }    
+    }
     /**
      * 当srcPath指向的值变化时,运行watchListener函数,其返回值更新到destPath指向的值中
      * @param toPath       指的是watch函数所在的位置
      * @param fromPath    指的是watch函数侦听的位置,即发生变化的源路径
      * @param watchListener 
      */
-    private executeListener(fromPath:string[],toPath:string[],watchObject:WatchObject ){
+    private executeListener2(fromPath:string[],toPath:string[],watchObject:WatchObject ){
         if(!watchObject.options.enable) {
             this.store.options.log!(`watcher <${toPath.join(OBJECT_PATH_DELIMITER)}> is disabled`)
             return 
