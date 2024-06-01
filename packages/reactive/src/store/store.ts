@@ -57,10 +57,15 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     store.setState = createSetState<T>(store)
     store.enableComputed = (value:boolean=true)=>store.stateCtx.setEnableMutate(value)
     store.sync = store.stateCtx.sync
+    // 侦听
     store.watch = createWatch<T>(store)
-
     store.useWatch = createUseWatch<T>(store)
     store.watch = createWatch<T>(store)
+
+    // 创建计算对象的函数
+    // store.computed = createComputed<>(store)
+    // store.useComputed = createComputed<>(store)
+
     // 3. 创建计算对象的函数
     // const createComputed = computedObjectCreator(stateCtx,extendObjects,opts)
     // // @ts-ignore

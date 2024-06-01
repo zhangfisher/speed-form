@@ -1,8 +1,8 @@
 /**
  * 异步计算
  */
-import { markRaw, getSnap, DraftType } from 'helux';
-import type { StoreDefine, StoreOptions,  IStore } from "../store/types";
+import { markRaw, getSnap,  } from 'helux';
+import type { StoreDefine,   IStore } from "../store/types";
 import { ComputedScopeRef } from "../store/types";
 import { skipComputed,  joinValuePath, getError, getDeps, getDepValues,getVal, setVal, getComputedId  } from "../utils";
 import { switchValue } from "flex-tools/misc/switchValue"; 
@@ -10,8 +10,8 @@ import { Dict  } from "../types";
 import { delay } from 'flex-tools/async/delay'; 
 import { OBJECT_PATH_DELIMITER } from '../consts';
 import { getComputedRefDraft } from '../context';
-import { AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorParams, ComputedOptions, ComputedParams, ComputedProgressbar, RuntimeComputedOptions } from './types';
-import type  { ComputedDescriptor, ComputedObject, ComputedState, ComputedTarget, IComputeParams } from './types';
+import { AsyncComputedGetter, AsyncComputedObject,  ComputedOptions, ComputedParams, ComputedProgressbar, RuntimeComputedOptions } from './types';
+import type  { ComputedDescriptor, ComputedObject,  ComputedTarget, IComputeParams } from './types';
 
 
 /** 
@@ -305,11 +305,11 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     if(!isExternal) computedParams.replaceValue(getVal(store.stateCtx.state, valuePath));
     // 创建计算对象实例
     const computedObject = {
-      id:mutateName,
+      id     : mutateName,
       mutate,
-      group:computedOptions.group,
-      async:true,
-      options:computedOptions,
+      group  : computedOptions.group,
+      async  : true,
+      options: computedOptions,
       get enable(){ return computedOptions.enable as boolean },
       set enable(value:boolean){ computedOptions.enable = value },
       run:(options?:RuntimeComputedOptions)=> {

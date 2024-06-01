@@ -7,7 +7,7 @@
  * 
  */
 
-import type { StoreOptions, StoreDefine, IStore } from "./store/types";
+import type { StoreDefine, IStore } from "./store/types";
 import { isSkipComputed } from "./utils";
 import {  IComputeParams, installComputed } from "./computed"; 
 import { installWatch } from "./watch"; 

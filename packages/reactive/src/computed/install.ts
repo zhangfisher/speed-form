@@ -1,5 +1,5 @@
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
-import { IStore, StoreDefine, StoreOptions } from "../store/types";
+import { IStore, StoreDefine } from "../store/types";
 import { ComputedObject, ComputedTarget } from "./types";
 import { createAsyncComputedMutate } from "./async";
 import { createComputedMutate } from "./sync";
@@ -33,7 +33,7 @@ export function installComputed<T extends StoreDefine>(params:IComputeParams,sto
         },
         });
         computedObject = createAsyncComputedMutate<T>(params,store,computedTo);
-    }else { // 简单的同步计算函数，没有通过computed函数创建
+    }else {       // 简单的同步计算函数，没有通过computed函数创建
       params.value = () => ({
         fn: descriptor,
         options: {
