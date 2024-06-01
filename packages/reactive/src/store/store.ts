@@ -44,7 +44,7 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     store.watchObjects = new WatchObjects<T>(store as IStore<T>)
 
     // 3. 创建响应式对象
-    store.stateCtx = sharex<ComputedState<T>>(data.state as any, {
+    store.stateCtx = sharex<ComputedState<T>>(data as any, {
         stopArrDep: false,
         moduleName: opts.id,
         onRead: (params) => {
@@ -58,8 +58,9 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     store.enableComputed = (value:boolean=true)=>store.stateCtx.setEnableMutate(value)
     store.sync = store.stateCtx.sync
     store.watch = createWatch<T>(store)
-    store.useWatch = createUseWatch<T>(store)
 
+    store.useWatch = createUseWatch<T>(store)
+    store.watch = createWatch<T>(store)
     // 3. 创建计算对象的函数
     // const createComputed = computedObjectCreator(stateCtx,extendObjects,opts)
     // // @ts-ignore

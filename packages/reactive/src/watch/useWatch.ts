@@ -28,16 +28,14 @@ export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
                     const descr = {
                         listener,
                         options: Object.assign({
-                            depends,
+                            depends: normalizedWatchFilter(depends),
                             context : sharex({value: 0 }),
                             selfPath: ['value'],
                             initial : 0,
                             enable  : true,
                             scope   : ComputedScopeRef.Depends         
                         },options)
-                    } as WatchDescriptor
-                    // 规范depends参数形式
-                    descr.options.depends = normalizedWatchFilter(descr.options.depends)
+                    } as WatchDescriptor 
                     return descr
                 }
             } as unknown as IComputeParams

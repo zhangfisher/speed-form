@@ -17,15 +17,17 @@ export function installWatch<T extends StoreDefine>(params:IComputeParams,store:
 
     const watchDescriptor = params.value() as WatchDescriptor
     
+    watchDescriptor.options.selfPath = params.fullKeyPath
+
     // 创建一个侦听对象
     const watchObject = store.watchObjects.add(watchDescriptor)    
     const watchCtx = watchDescriptor.options.context  
     // 如果有初始值，那么需要设置初始值回写到原始位置，也就是使用watch声明的位置
     if(watchCtx){
         watchCtx.setState((draft:any)=>{
-            draft.value=watchDescriptor.options.initial
+            draft.value= watchDescriptor.options.initial
         })
-    }else{        
+    }else{                
         params.replaceValue(watchDescriptor.options.initial)    
         // @ts-ignore
         store.stateCtx.setState((draft)=>{

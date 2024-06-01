@@ -1,5 +1,5 @@
-import { ComputedScope, Dict, IState } from "../types"
-import type { WatchObject } from "./watchObjects"
+import { Dict, IState } from "../types"
+import type { WatchObject } from "./watchObject"
 
 
 export type WatchDepends<T=any> = (path:string[],value:T)=>boolean
@@ -29,7 +29,6 @@ export interface WatchOptions<R=any>{
     id?      : string                        // watch的id
     selfPath?: string[],                     // 指的是watch()包装的所在的路径，如果使用useWatch则为[]
     depends? : WatchDepends                  // 依赖
-    scope?   : ComputedScope                 // 声明listener第一个参数的内容
     context? : IState,                       // 当执行listener的结果回写到此状态中，即调用state.setState方法来将listener的结果回写到此状态中
     initial? : R,                            // 初始值
     group?   : string                        // 用来对表单内的watch进行分组，以便能按组进行enable或disable或其他操作

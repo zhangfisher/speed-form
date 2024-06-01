@@ -1,15 +1,12 @@
 /**
-    用来声明一个监听函数，当监听的值发生变化时，会触发监听函数的执行
-    并将监听的返回值回写入所声明的位置状态中
-* 
- * 
+    声明一个监听函数 
+ * store.watch(()=>{},["Ddd"])
+
  */
 
 import { watch as heluxWatch } from 'helux';
 import type {  IStore, StoreDefine } from "../store/types";
 import { getValueByPath } from "../utils";  
-
-
 
 
 /**

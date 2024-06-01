@@ -238,7 +238,7 @@ export default ()=>{
     </div>)
 }
 
-```
+``` 
 ## 组件内侦听
 
 在组件内侦听可以使用`store.useWatch`函数，用来侦听`store`对象的变化,当组件销毁自动取消订阅。
@@ -270,11 +270,11 @@ export default ()=>{
   const [watchPath,setWatchPath]=useState("user/firstName")
   const [watchValue,setWatchValue]=useState("")
 
-  store.useWatch((value,{fromPath})=>{
-      setWatchKey(fromPath.join("/"))
+  store.useWatch((value,path)=>{
+      setWatchKey(path.join("/"))
       setWatchValue(value)
       return value
-  },watchPath) 
+  },watchPath,{id:"use1"}) 
 
 
 

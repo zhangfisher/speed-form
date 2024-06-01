@@ -97,6 +97,7 @@ export type IStore<T extends StoreDefine= StoreDefine> = {
     watch          : ReturnType<typeof createWatch<T>>
     useWatch       : ReturnType<typeof createUseWatch<T>>
     watchObjects   : WatchObjects<T>
+    
     // 用来同步表单时使用
     sync           : ISharedCtx<ComputedState<T>>['sync'] 
     // 简单事件触发与侦听

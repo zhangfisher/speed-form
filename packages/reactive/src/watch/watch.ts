@@ -1,4 +1,3 @@
-import {  ComputedScopeRef } from "../store/types"
 import { WatchDependParams, WatchDescriptorCreator, WatchListener, WatchOptions } from "./types";
 import { normalizedWatchFilter } from "./utils";
 
@@ -24,11 +23,9 @@ import { normalizedWatchFilter } from "./utils";
  */
  export function watch<Value =any,Result=Value>(listener:WatchListener<Value,Result>,depends:WatchDependParams<Value>,options?:WatchOptions<Result>):WatchDescriptorCreator<Value,Result>{
     const opts : WatchOptions<Result> = Object.assign({
-        depends,
-        enable:true,
-        scope:ComputedScopeRef.Depends          // 默认传入的是所侦听项的值
-    },options)
-    opts.depends = normalizedWatchFilter(opts.depends)
+        depends:normalizedWatchFilter(depends),
+        enable:true
+    },options) 
     const descriptor =(() => {
       return {
         listener,
