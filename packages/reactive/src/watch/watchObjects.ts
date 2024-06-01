@@ -1,7 +1,7 @@
 import { ISharedCtx, getSnap,watch as heluxWatch } from "helux"
 import { ComputedScopeRef } from "../store/types"
 import { setVal } from "../utils/setVal"
-import { WatchListener, WatchOptions, WatchDescriptor, WatchFilter } from './types';
+import { WatchListener, WatchOptions, WatchDescriptor, WatchDepends } from './types';
 import { Dict, IState, IStore, StoreDefine } from "../types"
 import { getVal } from "../utils/getVal"
 import { OBJECT_PATH_DELIMITER } from "../consts"
@@ -22,7 +22,7 @@ export interface WatchObject{
     watchTo    : WatchTarget                
     run        : (this:WatchObject,fromPath:string[])=>void
     listener   : (...args:any[])=>any    
-    options    : Omit<WatchOptions,'on'> & {on: WatchFilter }
+    options    : Omit<WatchOptions,'on'> & {on: WatchDepends }
     selfPath   : string[]                   // 侦听函数所在的路径，如果是在useWatch中声明的或者动态创建的则为[]
     matchedPath: string[]                   // 记录匹配的路径，["user/fullname"]    
 }

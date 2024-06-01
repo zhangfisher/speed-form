@@ -1,5 +1,6 @@
 import { OBJECT_PATH_DELIMITER } from "../consts";
-import { WatchFilter,WatchOptions } from "./types";
+import { joinValuePath } from "../utils";
+import { WatchDepends,WatchDependParams,WatchOptions } from "./types";
 
 
 
@@ -12,21 +13,27 @@ import { WatchFilter,WatchOptions } from "./types";
  *   如果是string，则使用OBJECT_PATH_DELIMITER分割成数组
  *   最后形式是string[][]
  * 
- * 
+ * 本函数用来将on参数标准化为一个函数(path:string[])=>boolean
  * 
  * 
  * @param on 
  * @returns 
  */
-// export function normalizedWatchFilter(on:WatchOptions['on']): WatchFilter{
-//     if(typeof on === 'function'){
-//         return on
-//     }else if(typeof(on)==='string'){
-//         return [on.split(OBJECT_PATH_DELIMITER)]
-//     }else if(Array.isArray(on)){
-//         return on.map(item=>typeof(item)=='string' ? item.split(OBJECT_PATH_DELIMITER) : item )
-//     }else{
-//         return []
-//     }
-// }
+export function normalizedWatchFilter(on:WatchDependParams): WatchDepends{
+    if(typeof on === 'function'){
+        return on
+    }else if(typeof(on)==='string'){
+        return (path:string[])=>joinValuePath(path)== joinValuePath(on.split(OBJECT_PATH_DELIMITER))
+    }else if(Array.isArray(on)){
+        return (path:string[])=>{
+            return on.map(item=>
+                typeof(item)=='string' ? 
+                    item.split(OBJECT_PATH_DELIMITER) 
+                    : (Array.isArray(item) ? item : [String(item)])
+                ).some(item=>joinValuePath(path)==joinValuePath(item))
+        }
+    }else{
+        return ()=>false
+    }
+}
  

@@ -1,6 +1,7 @@
 import { ComputedScope, ComputedScopeRef } from "../store/types"
 import { Dict } from "../types"
-import { WatchDescriptorCreator, WatchListener, WatchOptions } from "./types";
+import { WatchDependParams, WatchDescriptorCreator, WatchListener, WatchOptions } from "./types";
+import { normalizedWatchFilter } from "./utils";
 
  /* 
  *  watch函数用来声明一个监听函数，当监听的值发生变化时，会触发监听函数的执行
@@ -22,12 +23,13 @@ import { WatchDescriptorCreator, WatchListener, WatchOptions } from "./types";
  * @param options 
  * @returns 
  */
- export function watch<Value =any,Result=Value>(listener:WatchListener<Value,Result>,on:WatchOptions['on'],options?:WatchOptions<Result>):WatchDescriptorCreator<Value,Result>{
+ export function watch<Value =any,Result=Value>(listener:WatchListener<Value,Result>,depends:WatchDependParams<Value>,options?:WatchOptions<Result>):WatchDescriptorCreator<Value,Result>{
     const opts : WatchOptions<Result> = Object.assign({
-        on,
+        depends,
         enable:true,
         scope:ComputedScopeRef.Depends          // 默认传入的是所侦听项的值
     },options)
+    opts.depends = normalizedWatchFilter(opts.depends)
     const descriptor =(() => {
       return {
         listener,
