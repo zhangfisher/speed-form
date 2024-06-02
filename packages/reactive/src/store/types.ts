@@ -7,6 +7,8 @@ import { Dict } from "../types";
 import type { createUseState } from "./useState";
 import type  { createSetState } from "./setState";
 import { Emitter } from "mitt";
+import { IReactive } from "../reactive";
+import { IReactiveable } from "../reactives";
 
 
 export type StoreDefine<State extends Dict = Dict> = State
@@ -89,7 +91,9 @@ export type IStore<T extends StoreDefine= StoreDefine> = {
     // 启用与停止计算
     enableComputed : (value:boolean)=>void
     options        : StoreOptions<T>
+    reactiveable   : IReactiveable<ComputedState<T>>
     stateCtx       : ISharedCtx<ComputedState<T>>
+    reactive       : IReactive<T>
     // 计算
     createComputed : ReturnType<typeof computedObjectCreator>    
     computedObjects: ComputedObjects<T>
@@ -97,7 +101,7 @@ export type IStore<T extends StoreDefine= StoreDefine> = {
     watch          : ReturnType<typeof createWatch<T>>
     useWatch       : ReturnType<typeof createUseWatch<T>>
     watchObjects   : WatchObjects<T>
-    
+
     // 用来同步表单时使用
     sync           : ISharedCtx<ComputedState<T>>['sync'] 
     // 简单事件触发与侦听

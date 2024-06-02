@@ -9,17 +9,20 @@ import { createUseState } from "./useState"
 import { createSetState } from "./setState";
 import mitt,{Emitter} from "mitt";
 import { createUseWatch } from '../watch/useWatch';
+import { getRndId } from "../utils/getRndId";
+import { HeluxReactiveable } from "../reactives/helux";
 
 
 
 export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?:Partial<StoreOptions<T>>){
     // 1.初始化配置参数
     const opts = Object.assign({
-        id:Math.random().toString(16).substring(2),
-        debug:true,
-        computedThis:()=>ComputedScopeRef.Root,
-        computedScope:()=>ComputedScopeRef.Current,
-        singleton:true
+        id           : getRndId(),
+        debug        : true,
+        computedThis : ()=>ComputedScopeRef.Root,
+        computedScope: ()=>ComputedScopeRef.Current,
+        singleton    : true,
+        reactiveable : true,
     },options) as StoreOptions<T>
 
     opts.log = (...args:any[])=>{
@@ -33,17 +36,20 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
 
     // @ts-ignore 
     const store:IStore<T> = { 
-        options:opts,
-        on:storeEmitter.on,
-        off:storeEmitter.off,
-        emit:storeEmitter.emit,
+        options: opts,
+        on     : storeEmitter.on,
+        off    : storeEmitter.off,
+        emit   : storeEmitter.emit,
         _replacedKeys:{}                             // 用来保存已经替换过的key
     }
 
     store.computedObjects = new ComputedObjects<T>(store as IStore<T>),
     store.watchObjects = new WatchObjects<T>(store as IStore<T>)
 
-    // 3. 创建响应式对象
+    // 3. 创建响应式对象， 此处使用helux
+    store.reactiveable = new HeluxReactiveable(data)
+
+
     store.stateCtx = sharex<ComputedState<T>>(data as any, {
         stopArrDep: false,
         moduleName: opts.id,

@@ -3,7 +3,7 @@
  */
 
 import { IMutateWitness, IOperateParams, ISharedCtx } from "helux";
-import type { ComputedScope, ComputedContext,  StoreDefine } from "../store/types";
+import type { ComputedScope, ComputedContext,  StoreDefine, IState } from "../store/types";
 import { Dict } from "../types"
 import { WatchDescriptor, WatchDescriptorCreator } from "../watch";
 
@@ -85,10 +85,10 @@ export interface ComputedProgressbar{
   
   export interface ComputedOptions<Value=any,Extras extends Dict={}> {
     // 计算函数的唯一标识，如果未指定，则自动生成一个唯一标识
-    id?:string | ((path:string[])=>string)                         
-    context?: ComputedContext             // 计算函数的this
-    scope?  : ComputedScope               // 计算函数的第一个参数
-    initial?: Value
+    id?      : string                          
+    context? : ComputedContext             // 计算函数的this
+    scope?   : ComputedScope               // 计算函数的第一个参数
+    initial? : Value
     // 异步计算,默认情况下，通过typeof(fn)=="async function"来判断是否是异步计算函数
     // 但是在返回Promise或者Babel转码等情况下，判断可能失效时，需要手动指定async=true
     async?:boolean
@@ -174,6 +174,23 @@ export interface ComputedProgressbar{
      * 额外合并到计算结果AsyncComputedObject中的属性
      */
     extras?:Extras
+    /**
+     * 计算函数computed所在的路径
+     * 
+     * 一般不需要额外指定，当使用computed函数声明式时会自动指定
+     * 
+     */
+    selfPath?: string[]                    
+    /**
+     * 默认情况下，计算结果会写入到当前store中computed所在的位置,即selfPath
+     * 如果指定此属性，则会将计算结果写入attach指定的位置selfPath
+     */
+    attach?: IState 
+    /**
+    * 是否将计算结果写入到store或attach所在的位置，即selfPath所在位置
+    * 
+    */
+    rewrite?:boolean
   };
   
   export type ComputedDepends =Array<string | Array<string>> 
