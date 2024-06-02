@@ -83,6 +83,9 @@ export class HeluxReactiveable<T extends ComputedState<Dict> =ComputedState<Dict
     }
     runComputed(id:string,options?:RuntimeComputedOptions):void{
         const params = {desc:id,extraArgs:options}
-        this._stateCtx.runMutateTask(params)
+        this._stateCtx.runMutateTask(params) 
+    }    
+    onRead(params: { valuePath: string[]; value: any; parent: string[]; replaceValue: (newValue: any) => void; }): void {
+        throw new Error("Method not implemented.");
     }
 }
