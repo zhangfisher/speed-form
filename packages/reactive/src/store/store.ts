@@ -47,7 +47,11 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     store.watchObjects = new WatchObjects<T>(store as IStore<T>)
 
     // 3. 创建响应式对象， 此处使用helux
-    store.reactiveable = new HeluxReactiveable(data)
+    store.reactiveable = new HeluxReactiveable<T>(data,{
+        onRead: (params) => {
+            installExtends<T>(params,store as IStore<T>);
+        }
+    })
 
 
     store.stateCtx = sharex<ComputedState<T>>(data as any, {

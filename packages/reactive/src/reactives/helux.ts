@@ -1,17 +1,23 @@
 import { ISharedCtx, sharex } from "helux"
-import { CreateComputedOptions, IReactiveable } from "./types";
-import { ComputedDepends, ComputedOptions, ComputedState, Dict, RequiredComputedState, RuntimeComputedOptions, StateGetter, StateSetter, StoreDefine } from "../types";
-import { setVal } from "../utils";
+import { CreateComputedOptions, Reactiveable, IReactiveableOptions } from "./types";
+import { ComputedState, Dict, RequiredComputedState, RuntimeComputedOptions, StateGetter, StateSetter } from "../types";
+import { getRndId } from "../utils/getRndId";
 
 
-export class HeluxReactiveable<T extends ComputedState<Dict> =ComputedState<Dict>> implements IReactiveable<T>{
+export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
     private _stateCtx:ISharedCtx<T>
-    constructor(state:any){ 
-        this._stateCtx = sharex<T>(state)
+    constructor(state:T,options:IReactiveableOptions){ 
+        super(state,options)
+        this._stateCtx = sharex<T>(state as any,{
+            stopArrDep: false,
+            moduleName:options.id ?? getRndId(),
+            onRead:(params)=>{
+                options.onRead(params as any)
+           }
+        }) 
     }
-
     get state(){
-        return this._stateCtx.state
+        return this._stateCtx.state as ComputedState<T>
     }
     /**
      * const [ state ] = useState()
@@ -57,7 +63,7 @@ export class HeluxReactiveable<T extends ComputedState<Dict> =ComputedState<Dict
      * @param depents 
      * @param options 
      */
-    createComputed(params: CreateComputedOptions<T>): string { 
+    createComputed(params: CreateComputedOptions<ComputedState<T>>): string { 
         const {initial,onComputed,depends,options} = params
         this._stateCtx.mutate({            
             deps: (state: any) =>{
@@ -85,7 +91,4 @@ export class HeluxReactiveable<T extends ComputedState<Dict> =ComputedState<Dict
         const params = {desc:id,extraArgs:options}
         this._stateCtx.runMutateTask(params) 
     }    
-    onRead(params: { valuePath: string[]; value: any; parent: string[]; replaceValue: (newValue: any) => void; }): void {
-        throw new Error("Method not implemented.");
-    }
 }
