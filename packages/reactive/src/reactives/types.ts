@@ -10,14 +10,14 @@ import { ComputedDepends, ComputedOptions, ComputedState, Dict, RequiredComputed
  
 
 export type CreateComputedOptions<T extends ComputedState<Dict> =ComputedState<Dict>>= {
-    depends?:ComputedDepends        // 依赖的计算属性
+    depends:(state:T)=>any[]        // 依赖的计算属性
     initial(state:T,params:any):void                  // 首次计算时执行
     getter():void                   // 计算函数
     // 当依赖变化时执行
     onComputed(params:{
-        draft:T,
-        setState:(state:T)=>void,
-        input:any,
+        draft:T,                        // 草稿对象
+        setState:(state:T)=>void,       // 更新状态
+        input:any,                      // 输入参数，即依赖变化后的值[]
         options?: ComputedOptions
     }):void                  // 当依赖变化时执行
     options:ComputedOptions         // 计算属性的选项
@@ -77,3 +77,4 @@ export class Reactiveable<T extends Dict = Dict>{
 
 }
 
+ 

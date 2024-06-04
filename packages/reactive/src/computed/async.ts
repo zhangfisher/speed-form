@@ -12,6 +12,7 @@ import { OBJECT_PATH_DELIMITER } from '../consts';
 import { getComputedRefDraft } from '../context';
 import { AsyncComputedGetter, AsyncComputedObject,  ComputedOptions, ComputedParams, ComputedProgressbar, RuntimeComputedOptions } from './types';
 import type  { ComputedDescriptor, ComputedObject,  ComputedTarget, IComputeParams } from './types';
+import { IReactiveReadHookParams } from '../reactives/types';
 
 
 /** 
@@ -194,10 +195,10 @@ export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[
    * @param stateCtx
    * @param params
    */
-export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams:IComputeParams,store:IStore<T>,computedTo?:ComputedTarget) :ComputedObject<T> | undefined{
+export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams:IReactiveReadHookParams,store:IStore<T>,computedTo?:ComputedTarget) :ComputedObject<T> | undefined{
     
     // 1. 参数检查
-    const { fullKeyPath:valuePath, parent ,value } = computedParams;
+    const { path:valuePath, parent ,value } = computedParams;
     // 排除掉所有非own属性,例如valueOf等
     if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
       return;
@@ -245,6 +246,56 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     store.options.log(`Create async computed: ${mutateName} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
     
     // 7. 创建mutate
+
+    const mutateObject = store.reactiveable.createComputed({
+      // 指定依赖
+      depends:(draft)=>getDepValues(deps,draft, valuePath),
+      // 初始化计算函数
+      initial:(draft)=>{
+        if(isExternal){
+          // @ts-ignore
+          computedTo.stateCtx.setState((draft)=>{
+            Object.assign(draft,createAsyncComputedObject(computedTo.stateCtx,mutateId,{result: initial}))
+          })
+        }else{
+          if(toComputedResult=='self'){ // 原地替换
+            setVal(draft, valuePath, createAsyncComputedObject(store.stateCtx, mutateId,{result: initial}))
+          }else{  // 更新到其他地方
+            setAsyncComputedObject(store.stateCtx,draft,computedResultPath, mutateId,{result: initial})
+            // 删除原始的计算属性
+            const p = getVal(draft,valuePath.slice(0,valuePath.length-1))
+            delete p[valuePath[valuePath.length-1]]
+          }
+        }          
+      },
+      onComputed:async ({draft,setState,input,options})=>{
+        if(!computedOptions.enable && input?.enable!==true){
+          store.options.log(`Async computed <${mutateName}> is disabled`,'warn')
+          return 
+        }
+        store.options.log(`Run async computed for : ${mutateName}`);
+        const finalComputedOptions = Object.assign({},computedOptions,input) as Required<ComputedOptions>
+        if(noReentry && isMutateRunning && store.options.debug) {
+          store.options.log(`Reentry async computed: ${mutateName}`,'warn');
+          return
+        }
+        isMutateRunning=true
+        try{
+          return await executeComputedGetter.call<IStore<T>,any[],any>(store,draft,getter,{
+            input,
+            computedResultPath,          
+            computedOptions:finalComputedOptions,
+            computedContext: computedParams, 
+            setState
+          },computedTo)
+        }finally{
+          isMutateRunning=false
+        }
+      },
+      getter:()=>{},
+      options:computedOptions
+    })  
+
     const mutate =store.stateCtx.mutate({ 
       // 依赖是相于对根对象的
       deps: (state: any) =>{

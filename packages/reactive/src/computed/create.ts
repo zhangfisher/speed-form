@@ -11,6 +11,8 @@ import { Dict, IStore } from "../types"
 import { AsyncComputedGetter,  ComputedOptions, ComputedParams, IComputeParams } from "../computed/types"
 import { computed } from "./computed"
 import { installComputed } from "./install" 
+import { getRndId } from "../utils/getRndId"
+import { IReactiveReadHookParams } from "../reactives/types"
 
 
 
@@ -60,10 +62,8 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
     
     return <R = any,ExtraAttrs extends Dict = {}>(getter:AsyncComputedGetter<R>,options?:ComputedObjectCreateOptions<R,ExtraAttrs>)=>{
         const opts = Object.assign({
-            id:"s"+Math.random().toString(16).substring(2),
-            // 由于计算函数不是声明在状态中，没有所谓的valuePath,scope取值Self,Parent,Root等无效，因此需要手动指定
-            // 否则默认指向的是stateCtx.state
-            scope:store.stateCtx.state,
+            id:getRndId(),
+            scope:store.stateCtx.state,            
             context:store.stateCtx.state
         },options) as ComputedObjectCreateOptions<R,ExtraAttrs>
 
@@ -78,10 +78,10 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
       // 当computed在state中声明时可以获取所在位置的fullKeyPath,parent,而使用createComputed时就没有这些信息
       // 需要自行构建，并传递一个targetCtx,
       const computedParams = {
-        fullKeyPath: [],
+        path: [],
         parent: null,
         value: computed(getter, opts.depends, options)
-      } as unknown  as IComputeParams
+      } as unknown  as IReactiveReadHookParams
       installComputed(computedParams,store)
       return targetCtx
     }

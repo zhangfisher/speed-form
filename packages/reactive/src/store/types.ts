@@ -8,7 +8,7 @@ import type { createUseState } from "./useState";
 import type  { createSetState } from "./setState";
 import { Emitter } from "mitt";
 import { IReactive } from "../reactive";
-import { IReactiveable } from "../reactives";
+import { Reactiveable } from "../reactives";
 
 
 export type StoreDefine<State extends Dict = Dict> = State
@@ -70,6 +70,10 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
      * 当计算对象创建时调用
      */
     onCreateComputedObject(keyPath:string[],computedObject:ComputedObject<T>):void
+    /**
+     * 提供一个响应式核心
+     */
+    reactiveable?:Reactiveable
 }
 
 
@@ -91,7 +95,7 @@ export type IStore<T extends StoreDefine= StoreDefine> = {
     // 启用与停止计算
     enableComputed : (value:boolean)=>void
     options        : StoreOptions<T>
-    reactiveable   : IReactiveable<ComputedState<T>>
+    reactiveable   : Reactiveable<T>
     stateCtx       : ISharedCtx<ComputedState<T>>
     reactive       : IReactive<T>
     // 计算

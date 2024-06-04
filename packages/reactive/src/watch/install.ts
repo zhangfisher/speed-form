@@ -4,6 +4,7 @@ import { IStore, StoreDefine } from "../store/types"
 import { IComputeParams } from "../types"
 import { setVal } from "../utils"
 import { WatchDescriptor } from "./types" 
+import { IReactiveReadHookParams } from "../reactives/types"
 
 /**
  * 安装一个watch函数
@@ -11,13 +12,13 @@ import { WatchDescriptor } from "./types"
  * @param store 
  * @param watchTo 
  */ 
-export function installWatch<T extends StoreDefine>(params:IComputeParams,store:IStore<T>) {
+export function installWatch<T extends StoreDefine>(params:IReactiveReadHookParams,store:IStore<T>) {
     
-    store.options.log(`install watch for <${params.fullKeyPath.length==0 ? "Dynamic" : params.fullKeyPath.join(OBJECT_PATH_DELIMITER)}>`)
+    store.options.log(`install watch for <${params.path.length==0 ? "Dynamic" : params.path.join(OBJECT_PATH_DELIMITER)}>`)
 
     const watchDescriptor = params.value() as WatchDescriptor
     
-    watchDescriptor.options.selfPath = params.fullKeyPath
+    watchDescriptor.options.selfPath = params.path
 
     // 创建一个侦听对象
     const watchObject = store.watchObjects.add(watchDescriptor)    
@@ -31,7 +32,7 @@ export function installWatch<T extends StoreDefine>(params:IComputeParams,store:
         params.replaceValue(watchDescriptor.options.initial)    
         // @ts-ignore
         store.stateCtx.setState((draft)=>{
-            setVal(draft,params.fullKeyPath,watchDescriptor.options.initial)
+            setVal(draft,params.path,watchDescriptor.options.initial)
         })        
         flush(store.stateCtx.state as any)        
     }

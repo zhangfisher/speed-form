@@ -2,8 +2,8 @@ import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 import { IStore, StoreDefine } from "../store/types";
 import { ComputedObject, ComputedTarget } from "./types";
 import { createAsyncComputedMutate } from "./async";
-import { createComputedMutate } from "./sync";
-import { IComputeParams } from "./types";
+import { createComputedMutate } from "./sync"; 
+import { IReactiveReadHookParams } from "../reactives/types";
 
 /**
  * 安装计算函数
@@ -11,7 +11,7 @@ import { IComputeParams } from "./types";
  */
  
 
-export function installComputed<T extends StoreDefine>(params:IComputeParams,store:IStore<T>,computedTo?:ComputedTarget) {
+export function installComputed<T extends StoreDefine>(params:IReactiveReadHookParams,store:IStore<T>,computedTo?:ComputedTarget) {
 
     const descriptor = params.value
     let computedObject:ComputedObject<T> | undefined
@@ -48,7 +48,7 @@ export function installComputed<T extends StoreDefine>(params:IComputeParams,sto
     // 当创建计算完毕后的回调
     if(computedObject && typeof(store.options.onCreateComputedObject)=='function'){
       try{
-        store.options.onCreateComputedObject(params.fullKeyPath,computedObject)
+        store.options.onCreateComputedObject(params.path,computedObject)
       }catch(e:any){
         store.options.log(e.stack,'error')
       }     

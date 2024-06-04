@@ -11,6 +11,7 @@ import mitt,{Emitter} from "mitt";
 import { createUseWatch } from '../watch/useWatch';
 import { getRndId } from "../utils/getRndId";
 import { HeluxReactiveable } from "../reactives/helux";
+import { Reactiveable } from "../reactives/types";
 
 
 
@@ -22,7 +23,7 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
         computedThis : ()=>ComputedScopeRef.Root,
         computedScope: ()=>ComputedScopeRef.Current,
         singleton    : true,
-        reactiveable : true,
+        
     },options) as StoreOptions<T>
 
     opts.log = (...args:any[])=>{
@@ -48,17 +49,18 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
 
     // 3. 创建响应式对象， 此处使用helux
     store.reactiveable = new HeluxReactiveable<T>(data,{
+        id:opts.id,
         onRead: (params) => {
             installExtends<T>(params,store as IStore<T>);
         }
-    })
+    }) as Reactiveable<ComputedState<T>>
 
 
     store.stateCtx = sharex<ComputedState<T>>(data as any, {
         stopArrDep: false,
         moduleName: opts.id,
         onRead: (params) => {
-            installExtends<T>(params,store as IStore<T>);
+            installExtends<T>(params as any,store as IStore<T>);
         }
     });
     store.state = store.stateCtx.reactive    

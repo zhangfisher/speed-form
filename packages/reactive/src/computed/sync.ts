@@ -1,12 +1,13 @@
 /**
  * 同步计算
  */
-import { ComputedScopeRef, StoreDefine, StoreOptions } from "../store/types";
+import { ComputedScopeRef, StoreDefine } from "../store/types";
 import { getComputedId, getVal, setVal  } from "../utils";
 import { OBJECT_PATH_DELIMITER } from '../consts';
-import { ComputedDescriptorParams, ComputedObject, ComputedTarget, IComputeParams, RuntimeComputedOptions } from './types';
+import { ComputedDescriptorParams, ComputedObject, ComputedTarget, RuntimeComputedOptions } from './types';
 import { getComputedRefDraft } from "../context"
 import { IStore } from '../store/types';
+import { IReactiveReadHookParams } from "../reactives/types";
 
 /**
  * 为同步计算属性生成mutate
@@ -14,10 +15,10 @@ import { IStore } from '../store/types';
  * @param computedParams
  */
 
-export function createComputedMutate<T extends StoreDefine>(computedParams:IComputeParams,store:IStore<T>,computedTo?:ComputedTarget) :ComputedObject<T> | undefined{
+export function createComputedMutate<T extends StoreDefine>(computedParams:IReactiveReadHookParams,store:IStore<T>,computedTo?:ComputedTarget) :ComputedObject<T> | undefined{
 
     // 1. 获取计算属性的描述
-    const { fullKeyPath:valuePath, parent,value } = computedParams;    
+    const {path:valuePath, parent,value } = computedParams;    
     let { fn: getter, options: computedOptions }  = value() as ComputedDescriptorParams<any>    
     // 排除掉所有非own属性,例如valueOf等
     if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {

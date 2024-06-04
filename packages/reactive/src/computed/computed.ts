@@ -25,13 +25,12 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
   // 解析参数：同时支持同步和异步计算函数两种方式声明
   let deps:ComputedDepends = []
   const opts : ComputedOptions<R,ExtraAttrs> = {
-    async: false,
-    enable:true,
-    timeout:0,
-    depends: [],    
-    toComputedResult:ComputedScopeRef.Self,
-    // scope:ComputedScopeRef.Current,
-    immediate:true,
+    async           : false,
+    enable          : true,
+    timeout         : 0,
+    depends         : [],    
+    toComputedResult: ComputedScopeRef.Self,
+    immediate       : true,
   }
 
   if(arguments.length==1){

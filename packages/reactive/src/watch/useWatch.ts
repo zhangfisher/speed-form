@@ -4,6 +4,7 @@ import { sharex } from "helux"
 import { installWatch } from "./install"
 import { WatchDescriptor,  WatchDependParams, WatchListener, WatchOptions } from "./types" 
 import { normalizedWatchFilter } from "./utils"
+import { IReactiveReadHookParams } from "../reactives/types"
 /**
  * createWatch的hook版本 
  * 
@@ -21,8 +22,7 @@ export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
     return <Value = any,Result=Value>(listener:WatchListener<Value,Result>,depends:WatchDependParams<Value>,options?:WatchOptions<Result>)=>{
         useEffect(() => { 
             const params = {
-                fullKeyPath: ['value'],
-                keyPath: [],
+                path: ['value'], 
                 parent: undefined,
                 value: () => {
                     const descr = {
@@ -38,7 +38,7 @@ export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
                     } as WatchDescriptor 
                     return descr
                 }
-            } as unknown as IComputeParams
+            } as unknown as IReactiveReadHookParams
             // 安装
             const watchObject = installWatch(params,store)
             return ()=>{ 

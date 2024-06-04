@@ -66,17 +66,18 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
     createComputed(params: CreateComputedOptions<ComputedState<T>>): string { 
         const {initial,onComputed,depends,options} = params
         this._stateCtx.mutate({            
+            // 收集依赖
             deps: (state: any) =>{
-              return depends
+              return depends(state)
             },
+            // 初始化计算属性
             fn: (draft, params) => {
               if (params.isFirstCall) {   
-                // @ts-ignore
                 initial(draft, params)  
               }
             },
             //  此函数在依赖变化时执行，用来异步计算
-            // extraArgs是在调用run方法时传入的额外参数，可用来覆盖计算参数
+            // extraArgs是在调用run方法时传入的额外计算参数，可用来覆盖计算参数
             task: async ({ draft, setState, input, extraArgs }) => {
                 // @ts-ignore
                 return onComputed({draft,setState,input,options:Object.assign({},extraArgs)})              
