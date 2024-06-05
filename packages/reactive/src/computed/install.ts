@@ -1,9 +1,10 @@
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 import { IStore, StoreDefine } from "../store/types";
-import { ComputedObject, ComputedTarget } from "./types";
+import { ComputedTarget } from "./types";
 import { createAsyncComputedMutate } from "./async";
 import { createComputedMutate } from "./sync"; 
 import { IReactiveReadHookParams } from "../reactives/types";
+import { ComputedObject } from "./computedObject";
 
 /**
  * 安装计算函数

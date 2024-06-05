@@ -3,7 +3,7 @@
  */
 
 import { IMutateWitness, IOperateParams, ISharedCtx } from "helux";
-import type { ComputedScope, ComputedContext,  StoreDefine, IState } from "../store/types";
+import type { ComputedScope, ComputedContext,  StoreDefine, ITargetState } from "../store/types";
 import { Dict } from "../types"
 import { WatchDescriptor, WatchDescriptorCreator } from "../watch";
 
@@ -185,7 +185,7 @@ export interface ComputedProgressbar{
      * 默认情况下，计算结果会写入到当前store中computed所在的位置,即selfPath
      * 如果指定此属性，则会将计算结果写入attach指定的位置selfPath
      */
-    attach?: IState 
+    selfState?: ITargetState
     /**
     * 是否将计算结果写入到store或attach所在的位置，即selfPath所在位置
     * 
@@ -245,18 +245,6 @@ export  interface ComputedDescriptorCreator<R=any>  {
 
 
 export type ComputedSyncReturns<T=any> = (...args: any) => Exclude<T,Promise<any>>;  
-
-
-// computedObjectsd成员 
-export interface ComputedObject<T extends StoreDefine>{
-    id:string
-    mutate:IMutateWitness<ComputedState<T>>
-    run:(options?:RuntimeComputedOptions)=>Promise<any> | any
-    options:ComputedOptions  
-    group:string | undefined
-    async:boolean
-    enable:boolean
-  }
 
 
 export type ComputedTarget<T extends Dict = Dict > ={

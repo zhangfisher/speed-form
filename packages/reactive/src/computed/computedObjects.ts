@@ -1,4 +1,4 @@
-import { ComputedObject} from "./types"
+import { ComputedObject} from "./computedObject"
 import { computedObjectCreator } from './create';
 import type { IStore, StoreDefine } from "../store/types";
 
@@ -21,7 +21,7 @@ export class ComputedObjects<T extends StoreDefine =  StoreDefine> extends Map<s
      * @param param3 
      */
     async runGroup(group:string){       
-        return Promise.all([...this.values()].filter(v=>v.group==group).map(v=> v.async ? v.mutate.runTask() : v.mutate.run()))   
+        return Promise.all([...this.values()].filter(computedObject=>computedObject.group==group).map(computedObject=> computedObject.async ? computedObject.run() : computedObject.run()))   
     }
     /**
      * 启用或禁用计算
@@ -41,7 +41,7 @@ export class ComputedObjects<T extends StoreDefine =  StoreDefine> extends Map<s
      * @returns 
      */
     delete(id: string){
-      this.get(id)?.mutate.cancel()   // 取消订阅
+      //this.get(id)?.mutate.cancel()   // 取消订阅
       return super.delete(id)
     }
     /**

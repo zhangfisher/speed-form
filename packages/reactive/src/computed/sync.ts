@@ -4,10 +4,11 @@
 import { ComputedScopeRef, StoreDefine } from "../store/types";
 import { getComputedId, getVal, setVal  } from "../utils";
 import { OBJECT_PATH_DELIMITER } from '../consts';
-import { ComputedDescriptorParams, ComputedObject, ComputedTarget, RuntimeComputedOptions } from './types';
+import { ComputedDescriptorParams, ComputedTarget, RuntimeComputedOptions } from './types';
 import { getComputedRefDraft } from "../context"
 import { IStore } from '../store/types';
 import { IReactiveReadHookParams } from "../reactives/types";
+import { ComputedObject } from "./computedObject";
 
 /**
  * 为同步计算属性生成mutate

@@ -83,12 +83,12 @@ export type StoreEvents = {
 };
 
 
- 
-export type IState<T=any> = {
-    setState:(draft:T)=>void
+// 用于在在创建动态计算时，提供一个简单的state对象供将计算结果回写到state上 
+export type ITargetState<T extends Dict = Dict> = {
+    setState:(draft:ComputedState<T>)=>void
 }
 
-export type IStore<T extends StoreDefine= StoreDefine> = {
+export type IStore<T extends Dict = Dict> = {
     state          : ComputedState<T>
     useState       : ReturnType<typeof createUseState<T>>
     setState       : ReturnType<typeof createSetState<T>>  // (updater:(draft:T)=>void)=>void
