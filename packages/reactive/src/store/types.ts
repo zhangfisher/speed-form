@@ -1,6 +1,6 @@
 import { ISharedCtx} from "helux"
 import { ComputedState,  StateComputedType } from '../computed/types';
-import { type ComputedObject, ComputedObjects, ComputedOptions } from '../computed';
+import { type ComputedObjects, ComputedOptions } from '../computed';
 import type { WatchObjects, createUseWatch, createWatch } from "../watch";
 import { computedObjectCreator } from "../computed/create";
 import { Dict } from "../types"; 
@@ -9,6 +9,7 @@ import type  { createSetState } from "./setState";
 import { Emitter } from "mitt";
 import { IReactive } from "../reactive";
 import { Reactiveable } from "../reactives";
+import { ComputedObject } from "../computed/computedObject";
 
 
 export type StoreDefine<State extends Dict = Dict> = State

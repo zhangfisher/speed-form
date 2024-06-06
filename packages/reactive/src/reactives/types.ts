@@ -6,18 +6,28 @@
  * @returns 
  */
 
-import { ComputedDepends, ComputedOptions, ComputedState, Dict, RequiredComputedState, RuntimeComputedOptions, StateGetter, StateSetter } from "../types"
+import { ComputedOptions, ComputedState, Dict, RequiredComputedState, RuntimeComputedOptions, StateGetter, StateSetter } from "../types"
  
 
-export type CreateComputedOptions<T extends ComputedState<Dict> =ComputedState<Dict>>= {
+export type CreateAsyncComputedOptions<T extends ComputedState<Dict> =ComputedState<Dict>>= {
     depends:(state:T)=>any[]        // 依赖的计算属性
     initial(state:T,params:any):void                  // 首次计算时执行 
     onComputed(params:{
         draft:T,                        // 草稿对象
         setState:(state:T)=>void,       // 更新状态
-        input:any[],                      // 输入参数，即依赖变化后的值[]
+        values:any[],                    // 所依赖的值
         options?: ComputedOptions
     }):void                  // 当依赖变化时执行
+    options:ComputedOptions
+}
+
+export type CreateComputedOptions<T extends ComputedState<Dict> =ComputedState<Dict>>= {
+    onComputed(params:{
+        draft:T,                        // 草稿对象
+        setState:(state:T)=>void,       // 更新状态
+        values:any[],                    // 输入参数，即依赖变化后的值[] 
+    }):void                             // 当依赖变化时执行
+    options:ComputedOptions
 }
 
 export type IReactiveReadHookParams ={ path: string[], value: any, parent:any; replaceValue: (newValue: any) => void; }
@@ -60,6 +70,9 @@ export class Reactiveable<T extends Dict = Dict>{
     /**
      * 创建计算属性
      */
+    createAsyncComputed(params:CreateAsyncComputedOptions<ComputedState<T>>):string{
+        throw new Error("Method not implemented.")
+    }
     createComputed(params:CreateComputedOptions<ComputedState<T>>):string{
         throw new Error("Method not implemented.")
     }

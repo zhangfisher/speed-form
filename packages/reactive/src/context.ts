@@ -25,7 +25,7 @@ import { OBJECT_PATH_DELIMITER } from "./consts";
 import { type ComputedScope, ComputedScopeRef, StoreOptions, StoreDefine, IStore } from "./store/types";
 import { getValueByPath } from "./utils";
 import { ComputedOptions, IComputeParams, StateComputedType } from "./computed/types";
-import { ComputedRunContext } from "./computed/async";
+import { AsyncComputedRunContext } from "./computed/async";
 
 /*
 * 计算函数的context可以在全局Store中通过computedThis参数指定
@@ -40,19 +40,19 @@ import { ComputedRunContext } from "./computed/async";
 * @param storeCtxOption
 */
 function getContextOptions(state: any,computedCtxOption?: ComputedScope,storeCtxOption?: ComputedScope) {
- let ctx = computedCtxOption == undefined ? storeCtxOption : computedCtxOption;
- if (typeof ctx == "function") {
-   try { ctx = ctx.call(state, state) } catch { }
- }
- return ctx == undefined ? (storeCtxOption == undefined ? ComputedScopeRef.Root: storeCtxOption) : ctx;
+  let ctx = computedCtxOption == undefined ? storeCtxOption : computedCtxOption;
+  if (typeof ctx == "function") {
+    try { ctx = ctx.call(state, state) } catch { }
+  }
+  return ctx == undefined ? (storeCtxOption == undefined ? ComputedScopeRef.Root: storeCtxOption) : ctx;
 }
 
 export type GetComputedContextOptions<T extends StoreDefine =StoreDefine> ={
     type:'context' | 'scope',                   // 要获取的是什么: context或scope
-    computedType:StateComputedType,         // 取值， 'Computed' | 'Watch 
-    input:any[],                                // 当前计算函数依赖值，或watch的侦听的值
+    computedType:StateComputedType,             // 取值， 'Computed' | 'Watch 
+    values:any[],                             // 当前计算函数依赖值，或watch的侦听的值
     valuePath:string[],
-    funcOptions: {                             // computed或者watch的配置参数
+    funcOptions: {                              // computed或者watch的配置参数
         context?:any,
         scope?:any
     }, 
@@ -68,7 +68,7 @@ export type GetComputedContextOptions<T extends StoreDefine =StoreDefine> ={
  */
 export function getComputedContext<T extends StoreDefine = StoreDefine>(draft: any,params:GetComputedContextOptions<T>) {
 
-    const { input:depends, type, valuePath, funcOptions, storeOptions,computedType } = params;
+    const { values:depends, type, valuePath, funcOptions, storeOptions,computedType } = params;
   
     let rootDraft = draft;
   
@@ -126,7 +126,7 @@ export function getComputedContext<T extends StoreDefine = StoreDefine>(draft: a
  * @param params 
  * @returns 
  */
-export function getComputedRefDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:ComputedRunContext,computedOptions: ComputedOptions,type:'context' | 'scope') {    
+export function getComputedRefDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:AsyncComputedRunContext,computedOptions: ComputedOptions,type:'context' | 'scope') {    
   const { valuePath,dependValues } = computedRunContext
   return getComputedContext(draft,{
     input:dependValues,
@@ -139,9 +139,9 @@ export function getComputedRefDraft<T extends StoreDefine>(store:IStore<T>,draft
 }
  
 
-export function getComputedScopeDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:ComputedRunContext,computedOptions: ComputedOptions) {    
+export function getComputedScopeDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:AsyncComputedRunContext,computedOptions: ComputedOptions) {    
   return getComputedRefDraft(store,draft,computedRunContext,computedOptions,'scope')
 }
-export function getComputedContextDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:ComputedRunContext,computedOptions: ComputedOptions) {    
+export function getComputedContextDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:AsyncComputedRunContext,computedOptions: ComputedOptions) {    
   return getComputedRefDraft(store,draft,computedRunContext,computedOptions,'context')
 }

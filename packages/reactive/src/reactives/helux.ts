@@ -1,5 +1,5 @@
 import { ISharedCtx, sharex } from "helux"
-import { CreateComputedOptions, Reactiveable, IReactiveableOptions } from "./types";
+import { CreateAsyncComputedOptions, Reactiveable, IReactiveableOptions, CreateComputedOptions } from "./types";
 import { ComputedState, Dict, RequiredComputedState, RuntimeComputedOptions, StateGetter, StateSetter } from "../types";
 import { getRndId } from "../utils/getRndId";
 
@@ -36,7 +36,7 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
      * @param setter 
      * @returns 
      */
-    useState<Value=ComputedState<T>,SetValue=Value>(
+    useState<Value=T,SetValue=Value>(
         getter?:StateGetter<RequiredComputedState<T>,Value>,
         setter?:StateSetter<RequiredComputedState<T>,SetValue>
     ):[Value,(value:SetValue)=>void]{ 
@@ -63,31 +63,49 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
      * @param depents 
      * @param options 
      */
-    createComputed(params: CreateComputedOptions<ComputedState<T>>): string { 
+    createAsyncComputed(params: CreateAsyncComputedOptions<ComputedState<T>>): string { 
         const {initial,onComputed,depends,options} = params
         this._stateCtx.mutate({            
             // 收集依赖
             deps: (state: any) =>{
-              return depends(state)
+              return typeof(depends)=='function' ? depends(state) : null
             },
             // 初始化计算属性
             fn: (draft, params) => {
               if (params.isFirstCall) {   
-                initial(draft, params)  
+                if(typeof(initial)=='function') initial(draft, params)  
               }
             },
             //  此函数在依赖变化时执行，用来异步计算
             // extraArgs是在调用run方法时传入的额外计算参数，可用来覆盖计算参数
-            task: async ({ draft, setState, input, extraArgs }) => {
-                // @ts-ignore
-                return onComputed({draft,setState,input,options:Object.assign({},extraArgs)})              
+            task: async ({ draft, setState, input, extraArgs }) => {                
+                if(typeof(initial)=='function'){// @ts-ignore
+                    return onComputed({draft,setState,values:input,options:Object.assign({},extraArgs)})              
+                }                
             },
             immediate     : options.immediate,
             desc          : options.id,
             checkDeadCycle: false,
-        });
+        });        
+        
         return options.id as string
     }
+    createComputed(params:CreateComputedOptions<ComputedState<T>>):string{
+        const {onComputed,options} = params        
+        this._stateCtx.mutate({   
+            fn:(draft,params)=>{
+                if(typeof(onComputed)==='function'){// @ts-ignore
+                    onComputed({draft,setState,values:input})
+                }
+            },
+            desc: options.id,
+        // 关闭死循环检测，信任开发者
+        checkDeadCycle: false,
+        })
+        return options.id as string
+    }
+
+
     runComputed(id:string,options?:RuntimeComputedOptions):void{
         const params = {desc:id,extraArgs:options}
         this._stateCtx.runMutateTask(params) 

@@ -53,7 +53,7 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
         onRead: (params) => {
             installExtends<T>(params,store as IStore<T>);
         }
-    }) as Reactiveable<ComputedState<T>>
+    }) as Reactiveable<T>
 
 
     store.stateCtx = sharex<ComputedState<T>>(data as any, {

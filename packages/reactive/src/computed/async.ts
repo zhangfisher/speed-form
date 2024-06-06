@@ -1,20 +1,38 @@
 /**
+ * 
  * 异步计算
+ * 
+ * 
+ * 
+ * 
+ * 
  */
 import { markRaw, getSnap,  } from 'helux';
 import type { StoreDefine,   IStore } from "../store/types";
-import { ComputedScopeRef } from "../store/types";
 import { skipComputed,  joinValuePath, getError, getDeps, getDepValues,getVal, setVal, getComputedId  } from "../utils";
 import { switchValue } from "flex-tools/misc/switchValue"; 
 import { Dict  } from "../types";
 import { delay } from 'flex-tools/async/delay'; 
 import { OBJECT_PATH_DELIMITER } from '../consts';
 import { getComputedContextDraft, getComputedScopeDraft } from '../context';
-import { AsyncComputedGetter, AsyncComputedObject,  ComputedOptions, ComputedParams, ComputedProgressbar, RuntimeComputedOptions } from './types';
-import type  { ComputedDescriptor,  ComputedTarget } from './types';
+import { AsyncComputedGetter, AsyncComputedObject,  ComputedOptions, ComputedParams, ComputedProgressbar } from './types';
+import type  { ComputedDescriptor } from './types';
 import { IReactiveReadHookParams } from '../reactives/types';
 import { ComputedObject } from './computedObject';
+import { executeStoreHooks } from './utils';
 
+
+// 
+export type AsyncComputedRunContext = {
+  id             : string
+  name           : string
+  valuePath      : string[],
+  isMutateRunning: boolean  
+  deps           : (string | string[])[]            // 所依赖的项的路径
+  resultPath     : string[]  
+  getter         : AsyncComputedGetter<any>,
+  values        : any[]                             // 依赖值，即发生变化的项的值
+}
 
 /** 
  * 创建异步计算属性的数据结构
@@ -83,7 +101,7 @@ export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[
    * @param scopeDraft 
    * @param options 
    */
-async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
+async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRunContext:AsyncComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
    
     const { valuePath,getter,resultPath } = computedRunContext;  
     const { timeout=0,retry=[0,0],selfState }  = computedOptions  
@@ -186,22 +204,12 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
   }
 
   
-export type ComputedRunContext = {
-  id             : string
-  name           : string
-  valuePath      : string[],
-  isMutateRunning: boolean  
-  deps           : (string | string[])[]
-  resultPath     : string[]  
-  getter         : AsyncComputedGetter<any>,
-  dependValues   : any[]
-}
 
-function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
+function createComputed<T extends StoreDefine>(computedRunContext:AsyncComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
   const { valuePath, id:mutateId,deps,name:mutateName,resultPath,isMutateRunning,getter } = computedRunContext
   const { toComputedResult,selfState,initial,noReentry } = computedOptions
 
-  store.reactiveable.createComputed({
+  store.reactiveable.createAsyncComputed({
     // 指定依赖
     depends:(draft)=>getDepValues(deps,draft, valuePath),
     // 初始化计算函数
@@ -222,30 +230,28 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
         }
       }          
     },
-    onComputed:async ({draft,setState,input,options})=>{
+    onComputed:async ({draft,values,options})=>{
       if(!computedOptions.enable && options?.enable!==true){
         store.options.log(`Async computed <${mutateName}> is disabled`,'warn')
         return 
       }
       store.options.log(`Run async computed for : ${mutateName}`);
+
       const finalComputedOptions = Object.assign({},computedOptions,options) as Required<ComputedOptions>
       if(noReentry && isMutateRunning && store.options.debug) {
         store.options.log(`Reentry async computed: ${mutateName}`,'warn');
         return
       }
       computedRunContext.isMutateRunning=true
+      computedRunContext.values = values        // 即所依赖项的值
       try{
         return await executeComputedGetter(draft,computedRunContext,finalComputedOptions,store)
       }finally{
         computedRunContext.isMutateRunning=false
       }
-    }
+    },
+    options:computedOptions
   })  
-
-  if(!isExternal) computedParams.replaceValue(getVal(store.stateCtx.state, valuePath));
-
-
-
 }
 
 
@@ -277,31 +283,14 @@ function getComputedTargetPath(computedParams:IReactiveReadHookParams,computedOp
 
 }
 
- 
-
-/**
- * 执行Store中声明的钩子
- * @param valuePath 
- * @param getter 
- * @param store 
- * @param computedOptions 
- */
-function executeStoreHooks<T extends StoreDefine>(valuePath:string[],getter:any,store:IStore<T>,computedOptions:ComputedOptions){
-  const { onCreateComputed } = store.options;     
-  if (typeof onCreateComputed == "function" && typeof getter === "function") {
-    const newGetter = onCreateComputed.call(store,valuePath, getter, computedOptions);
-    if(!computedOptions.scope) computedOptions.scope = ComputedScopeRef.Current
-    if(!computedOptions.context) computedOptions.context = ComputedScopeRef.Root
-    if (typeof newGetter == "function") getter = newGetter 
-  }
-}
+  
 
 /**
  * 为异步计算属性生成mutate
  * @param stateCtx
  * @param params
  */
-export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams:IReactiveReadHookParams,store:IStore<T>,computedTo?:ComputedTarget) :ComputedObject<T> | undefined{
+export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams:IReactiveReadHookParams,store:IStore<T>) :ComputedObject<T> | undefined{
     
     // 1. 参数检查
     const { path:valuePath, parent ,value } = computedParams;
@@ -336,17 +325,17 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     store.options.log(`Create async computed: ${mutateName} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
     
     // 7. 创建mutate
-    const computedRunContext:ComputedRunContext = {
+    const computedRunContext:AsyncComputedRunContext = {
       id             : computedOptions.id || getComputedId(valuePath,computedOptions.id),
       name           : selfState ? mutateId : valuePath.join(OBJECT_PATH_DELIMITER),
       resultPath     : computedResultPath,
       isMutateRunning: false,
-      dependValues   : [],
+      values         : [],
       valuePath,      
       deps,
       getter
     }    
-    createComputed(computedRunContext,computedOptions,store) 
+    createComputed(computedRunContext,computedOptions,store)     
     // 移花接木原地替换
     if(!selfState) computedParams.replaceValue(getVal(store.state, valuePath));
 
