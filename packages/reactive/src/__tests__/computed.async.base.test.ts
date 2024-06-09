@@ -2,7 +2,7 @@ import { test,expect, describe, beforeAll } from "vitest"
 import { createStore,ComputedScopeRef,computed, IStore, Dict } from ".."
 import { delay } from  "flex-tools/async/delay"
 
-describe("简单异步计算",()=>{
+describe("异步计算",()=>{
 
     test("异步计算原地替换创建AsyncComputed数据结构",async ()=>{
         return new Promise<void>((resolve)=>{
@@ -28,7 +28,7 @@ describe("简单异步计算",()=>{
         })                
     })  
 
-    test("异步计算初始化时不执行",async ()=>{
+    test("异步计算初始化时不执行,提供初始始值",async ()=>{
         return new Promise<void>(async (resolve)=>{
             const store = createStore({
                 price:2,
@@ -36,10 +36,12 @@ describe("简单异步计算",()=>{
                 total:computed(async (scope:any)=>{
                     return scope.price * scope.count
                 },['price','count'],{
-                    immediate:false // 不马上执行，需要等等依赖变化多端时再执行
+                    immediate:false, // 不马上执行，需要等等依赖变化多端时再执行
+                    initial:100
                 })
             })
             expect(store.state.total.loading).toBe(false)            
+            expect(store.state.total.result).toBe(100)            
             await delay(10)
             resolve()
         })                
@@ -52,41 +54,48 @@ describe("简单异步计算",()=>{
                 count:3,
                 total:computed<number>(async (scope:any)=>{
                     return scope.price * scope.count 
-                },['price','count'],{
-                    immediate:false // 不马上执行，需要等等依赖变化多端时再执行
-                })
-            })      
+                },['price','count'])
+            })   
+            store.state.total  // 由于读取时才会创建计算属性，所以需要读取一次，如果缺少这一步，计算属性不会创建
             store.setState(draft=>draft.count++)
             store.setState(draft=>draft.price++) 
             // 当计算函数执行完成后的回调
-            store.on("computed",({path})=>{
+            store.on("computed",()=>{
                 results.push(store.state.total.result)
-                
-            resolve()
+                // 为什么会有三个结果？
+                // 第一次创建计算属性时，会执行一次，当更新count和price时，由于依赖会再次执行2次。   
+                if(results.length===3){
+                    expect(results).toEqual([12,12,12])
+                    resolve()
+                }
             })
         })            
     })  
-
-
-
-    test("默认this指向state",()=>{
+    test("通过多种方式指定异步依赖参数",async ()=>{
         return new Promise<void>((resolve)=>{
+            const results:number[] = []
             const store = createStore({
-                order:{                
-                    price:2,
-                    count:3,
-                    total:computed(function(this:any){ 
-                        expect(this.order.price).toBe(2)
-                        expect(this.order.count).toBe(3)
-                        resolve()
-                    })
-                }
-            })
-            store.state.order.total // 读取操作时创建计算属性
-        })        
-    }) 
+                root:{
+                    parent:{
+                        price:2,
+                        count:3,
+                        total:computed<number>(async (scope:any)=>{
+                            return scope.price * scope.count 
+                        },['root.parent.price']),    // 使用字符串路径数组指定依赖
+                        total2:computed<number>(async (scope:any)=>{
+                            return scope.price * scope.count 
+                        },[['root','parent','price']]),   // 使用字符串数组指定依赖
+                        total3:computed<number>(async (scope:any)=>{
+                            return scope.price * scope.count 
+                        },["./price"])   // total3所在对象的相对路径
+                    }
+                },                
+            })   
 
-    
+
+        })
+    })
+
 
 })
  

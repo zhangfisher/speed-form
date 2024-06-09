@@ -15,7 +15,7 @@ import { Dict  } from "../types";
 import { delay } from 'flex-tools/async/delay'; 
 import { OBJECT_PATH_DELIMITER } from '../consts';
 import { getComputedScopeDraft } from '../context';
-import { AsyncComputedGetter, AsyncComputedObject,  ComputedOptions, ComputedParams, ComputedProgressbar } from './types';
+import {  AsyncComputedObject,  ComputedOptions, ComputedParams, ComputedProgressbar } from './types';
 import type  { ComputedDescriptor, ComputedRunContext } from './types';
 import { IReactiveReadHookParams } from '../reactives/types';
 import { ComputedObject } from './computedObject';

@@ -25,7 +25,7 @@ x =  [ 'a', 'b', 'c', 'd', 'e', 'x' ]
  * @param relPath 
  * @returns 
  */
-export function getRelValuePath(curPath:string[],relPath:'self' | 'root' | 'parent' | 'current' | string[] | string ):string[]{
+export function getRelValuePath(curPath:string[],relPath:'self' | 'root' | 'parent' | 'current' | string[] | string,isRelPath?:boolean):string[]{
     if(!Array.isArray(curPath)) throw new Error('curPath must be an array')
     if(relPath  === 'self'){
         return curPath
@@ -40,12 +40,12 @@ export function getRelValuePath(curPath:string[],relPath:'self' | 'root' | 'pare
         if(relPath.startsWith('./')){
             return [...curPath.slice(0,-1),...relPath.slice(2).split(OBJECT_PATH_DELIMITER)]
         }else if(relPath.startsWith('../')){ // 父路径
-            return getRelValuePath(curPath.slice(0,-1),relPath.slice(3))
-        }else if(relPath.startsWith(OBJECT_PATH_DELIMITER)){     // 绝对路径
+            return getRelValuePath(curPath.slice(0,-1),relPath.slice(3),true)
+        }else if(relPath.startsWith("/")){     // 绝对路径             
             relPath = relPath.replace(/^(\/)*/,"") 
             return [...relPath.split(OBJECT_PATH_DELIMITER)]
         }else{
-            return [...curPath.slice(0,-1),...relPath.split(OBJECT_PATH_DELIMITER)]
+            return isRelPath ?  [...curPath.slice(0,-1),...relPath.split(OBJECT_PATH_DELIMITER)] : [...relPath.split(OBJECT_PATH_DELIMITER)]
         }
     }else if(Array.isArray(relPath)){
         return relPath
