@@ -32,12 +32,4 @@ export default defineConfig([
         noExternal:['helux','flex-tools']
     }
 ])
-
-
-        // esbuildPlugins:[
-        //     // @ts-ignore
-        //     copy({
-        //         source:['package.json','README.md','LICENSE'],
-        //         target:"dist/"
-        //     })
-        // ] 
+ 

@@ -23,7 +23,7 @@
 import { IOperateParams } from "helux";
 import { OBJECT_PATH_DELIMITER } from "./consts";
 import { type ComputedScope, ComputedScopeRef, StoreOptions, StoreDefine, IStore } from "./store/types";
-import { getValueByPath } from "./utils";
+import { getRelValuePath, getValueByPath } from "./utils";
 import { ComputedOptions, ComputedRunContext, StateComputedType } from "./computed/types";
 
 /*
@@ -47,7 +47,7 @@ function getContextOptions(state: any,computedCtxOption?: ComputedScope,storeCtx
 }
 
 export type GetComputedContextOptions<T extends StoreDefine =StoreDefine> ={
-    type:'context' | 'scope',                   // 要获取的是什么: context或scope
+    // type:'context' | 'scope',                   // 要获取的是什么: context或scope
     computedType:StateComputedType,             // 取值， 'Computed' | 'Watch 
     dependValues:any[],                         // 当前计算函数依赖值，或watch的侦听的值
     valuePath:string[],
@@ -67,13 +67,13 @@ export type GetComputedContextOptions<T extends StoreDefine =StoreDefine> ={
  */
 export function getComputedContext<T extends StoreDefine = StoreDefine>(draft: any,params:GetComputedContextOptions<T>) {
 
-    const { dependValues, type, valuePath, funcOptions, storeOptions,computedType } = params;
+    const { dependValues,  valuePath, funcOptions, storeOptions,computedType } = params;
   
     let rootDraft = draft;
   
     // 1. 执行hook：可以在hook函数中修改计算函数的根上下文以及相关配置参数
     if (typeof storeOptions.onComputedContext == "function") {
-      const newDraft = storeOptions.onComputedContext.call(draft,draft,{computedType,contextType:type,valuePath});
+      const newDraft = storeOptions.onComputedContext.call(draft,draft,{computedType,valuePath});
       if (newDraft !== undefined) {
         rootDraft = newDraft;
       }
@@ -81,10 +81,7 @@ export function getComputedContext<T extends StoreDefine = StoreDefine>(draft: a
     const parentPath = valuePath.length>=1 ? valuePath.slice(0, valuePath.length - 1) : [];
 
    // 2. 读取计算函数的上下文配置参数
-   const contexRef = getContextOptions(draft, 
-        type=='context' ? funcOptions.context : funcOptions.scope,
-        type=='context' ? (storeOptions.computedThis && storeOptions.computedThis(computedType)) : (storeOptions.computedScope && storeOptions.computedScope(computedType))
-   )
+   const contexRef = getContextOptions(draft,funcOptions.scope, (storeOptions.scope && storeOptions.scope(computedType)))
   
     // 3. 根据配置参数获取计算函数的上下文对象
     try { 
@@ -97,7 +94,7 @@ export function getComputedContext<T extends StoreDefine = StoreDefine>(draft: a
       }else if (contexRef === ComputedScopeRef.Depends) {      // 异步计算的依赖值      
         return Array.isArray(dependValues) ? dependValues.map(dep=>typeof(dep)=='function' ? dep() : dep) : [];
       }else if (typeof contexRef == "string") {               // 当前对象的指定键      
-        return getValueByPath(draft, [...parentPath, ...contexRef.split(OBJECT_PATH_DELIMITER)]);
+        return  getValueByPath(draft, getRelValuePath(valuePath,contexRef))
       }else if (Array.isArray(contexRef)) {                   // 从根对象开始的完整路径
         if(contexRef.length>0 && contexRef[0].startsWith("@")){
           const finalKeys = getValueByPath(draft, [...contexRef[0].substring(1).split(OBJECT_PATH_DELIMITER),...contexRef.slice(1)]);
@@ -125,22 +122,14 @@ export function getComputedContext<T extends StoreDefine = StoreDefine>(draft: a
  * @param params 
  * @returns 
  */
-export function getComputedRefDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:ComputedRunContext,computedOptions: ComputedOptions,type:'context' | 'scope') {    
+export function getComputedScopeDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:ComputedRunContext,computedOptions: ComputedOptions) {    
   const { valuePath,dependValues:values } = computedRunContext
   return getComputedContext(draft,{
     dependValues: values,
-    type,
     valuePath,
     funcOptions:computedOptions,
     storeOptions:store.options,
     computedType:'Computed'
   })
 }
- 
-
-export function getComputedScopeDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:ComputedRunContext,computedOptions: ComputedOptions) {    
-  return getComputedRefDraft(store,draft,computedRunContext,computedOptions,'scope')
-}
-export function getComputedContextDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:ComputedRunContext,computedOptions: ComputedOptions) {    
-  return getComputedRefDraft(store,draft,computedRunContext,computedOptions,'context')
-}
+  

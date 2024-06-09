@@ -4,7 +4,7 @@
 import { StoreDefine } from "../store/types";
 import { getComputedId, getVal, setVal  } from "../utils"; 
 import { ComputedDescriptorParams, ComputedGetter, ComputedOptions,  ComputedRunContext,  RuntimeComputedOptions } from './types';
-import { getComputedContextDraft, getComputedScopeDraft } from '../context';
+import { getComputedScopeDraft } from '../context';
 import { IStore } from '../store/types';
 import { IReactiveReadHookParams } from "../reactives/types";
 import { ComputedObject } from "./computedObject";
@@ -29,7 +29,7 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
         computedRunContext.dependValues = values
  
         // 1. 根据配置参数获取计算函数的上下文对象      
-        const thisDraft = selfState ? draft : getComputedContextDraft(store,draft,computedRunContext, computedOptions)
+        const thisDraft = selfState ? selfState :  draft
         const scopeDraft = selfState ? draft : getComputedScopeDraft(store,draft,computedRunContext, computedOptions)  
          
         // 2. 执行getter函数

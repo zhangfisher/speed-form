@@ -21,37 +21,34 @@ x =  [ 'a', 'b', 'c', 'd', 'e', 'x' ]
 ../../../../../../x =  [ 'x' ]
  * 
  * 
- * @param path 
+ * @param curPath 
  * @param relPath 
  * @returns 
  */
-export function getRelValuePath(path:string[],relPath:'self' | 'root' | 'parent' | 'current' | string[] | string ):string[]{
-    if(!Array.isArray(path)) throw new Error('path must be an array')
+export function getRelValuePath(curPath:string[],relPath:'self' | 'root' | 'parent' | 'current' | string[] | string ):string[]{
+    if(!Array.isArray(curPath)) throw new Error('curPath must be an array')
     if(relPath  === 'self'){
-        return path
+        return curPath
     }else if(relPath === 'root'){
         return []
     }else if(relPath === 'parent'){
-        return path.slice(0,-2)
+        return curPath.slice(0,-2)
     }else if(relPath === 'current'){
-        return path.slice(0,-1)
+        return curPath.slice(0,-1)
     }else if(typeof(relPath) === 'string'){        
         // 字符串支持相对路径语法，如"../" 或 "./" 或 "xxx"
         if(relPath.startsWith('./')){
-            return [...path.slice(0,-1),...relPath.slice(2).split(OBJECT_PATH_DELIMITER)]
+            return [...curPath.slice(0,-1),...relPath.slice(2).split(OBJECT_PATH_DELIMITER)]
         }else if(relPath.startsWith('../')){ // 父路径
-            return getRelValuePath(path.slice(0,-1),relPath.slice(3))
+            return getRelValuePath(curPath.slice(0,-1),relPath.slice(3))
+        }else if(relPath.startsWith(OBJECT_PATH_DELIMITER)){     // 绝对路径
+            relPath = relPath.replace(/^(\/)*/,"") 
+            return [...relPath.split(OBJECT_PATH_DELIMITER)]
         }else{
-            // 如果路径中包含"."，则自动转换为"/"并给出警告
-            // 使用/路径分割符的原因是，可以使用./或../等相对路径语法
-            if(relPath.includes(".")){
-                console.warn('[@speedform/reactive] The dependency path uses "/" as the separator, and will automatically convert')
-                relPath=relPath.replaceAll(".","/")
-            }
-            return [...path.slice(0,-1),...relPath.split(OBJECT_PATH_DELIMITER)]
+            return [...curPath.slice(0,-1),...relPath.split(OBJECT_PATH_DELIMITER)]
         }
     }else if(Array.isArray(relPath)){
         return relPath
     }
-    return path    
+    return curPath    
 }

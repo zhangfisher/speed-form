@@ -14,7 +14,7 @@ import { switchValue } from "flex-tools/misc/switchValue";
 import { Dict  } from "../types";
 import { delay } from 'flex-tools/async/delay'; 
 import { OBJECT_PATH_DELIMITER } from '../consts';
-import { getComputedContextDraft, getComputedScopeDraft } from '../context';
+import { getComputedScopeDraft } from '../context';
 import { AsyncComputedGetter, AsyncComputedObject,  ComputedOptions, ComputedParams, ComputedProgressbar } from './types';
 import type  { ComputedDescriptor, ComputedRunContext } from './types';
 import { IReactiveReadHookParams } from '../reactives/types';
@@ -26,13 +26,13 @@ import { executeStoreHooks } from './utils';
  * 创建异步计算属性的数据结构
  * 
 */
-export function createAsyncComputedObject<T extends StoreDefine>(store:IStore<T>,mutateId:string,valueObj:Partial<AsyncComputedObject>){
+export function createAsyncComputedObject<T extends Dict=Dict>(store:IStore<T>,mutateId:string,valueObj:Partial<AsyncComputedObject>){
     return Object.assign({
-      // value   : undefined,  
       loading : false,
       timeout : 0,
       retry   : 0,          // 重试次数，3表示最多重试3次
       error   : null,
+      result  : undefined,
       progress: 0,
       run     : markRaw(skipComputed((args:Dict) => {
                   return store.reactiveable.runComputed(mutateId,Object.assign({},args));
@@ -43,8 +43,9 @@ export function createAsyncComputedObject<T extends StoreDefine>(store:IStore<T>
     },valueObj)
   }
   
-export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[],mutateDesc:string,valueObj:Partial<AsyncComputedObject>){
-    const asyncObj = createAsyncComputedObject(stateCtx,mutateDesc,valueObj)
+
+export function setAsyncComputedObject<T extends Dict=Dict>(store:IStore<T>,draft:any,resultPath:string[],mutateId:string,valueObj:Partial<AsyncComputedObject>){
+    const asyncObj = createAsyncComputedObject(store,mutateId,valueObj)
     const reusltValue = getVal(draft,resultPath)
     Object.assign(reusltValue,asyncObj,valueObj)
 }
@@ -95,7 +96,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
     const { timeout=0,retry=[0,0],selfState }  = computedOptions  
     const setState  = selfState ? selfState.setState : store.setState
     // 
-    const thisDraft = selfState ? draft : getComputedContextDraft(store,draft,computedRunContext, computedOptions)
+    const thisDraft = selfState ? selfState: draft
     const scopeDraft = selfState ? draft : getComputedScopeDraft(store,draft,computedRunContext, computedOptions)  
 
      
@@ -211,7 +212,7 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
         if(toComputedResult=='self'){ // 原地替换
           setVal(draft, valuePath, createAsyncComputedObject(store, mutateId,{result: initial}))
         }else{  // 更新到其他地方
-          setAsyncComputedObject(store.stateCtx,draft,resultPath, mutateId,{result: initial})
+          setAsyncComputedObject(store,draft,resultPath, mutateId,{result: initial})
           // 删除原始的计算属性
           const p = getVal(draft,valuePath.slice(0,valuePath.length-1))
           delete p[valuePath[valuePath.length-1]]
@@ -233,7 +234,9 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
       computedRunContext.isMutateRunning=true
       computedRunContext.dependValues = values        // 即所依赖项的值
       try{
-        return await executeComputedGetter(draft,computedRunContext,finalComputedOptions,store)
+        const r= await executeComputedGetter(draft,computedRunContext,finalComputedOptions,store)
+        store.emit("computed",{path:valuePath,id:mutateId})
+        return r
       }finally{
         computedRunContext.isMutateRunning=false
       }

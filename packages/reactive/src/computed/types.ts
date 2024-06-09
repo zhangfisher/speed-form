@@ -2,10 +2,10 @@
  * 类型
  */
 
-import { IMutateWitness, IOperateParams, ISharedCtx } from "helux";
-import type { ComputedScope, ComputedContext,  StoreDefine, ITargetState } from "../store/types";
+import {  IOperateParams, ISharedCtx } from "helux";
+import type { ComputedScope,   ITargetState } from "../store/types";
 import { Dict } from "../types"
-import { WatchDescriptor, WatchDescriptorCreator } from "../watch";
+import { WatchDescriptorCreator } from "../watch";
 
 
 // 指向helux的IOperateParams类型，但是我们只用到其是的部分类型
@@ -86,7 +86,6 @@ export interface ComputedProgressbar{
   export interface ComputedOptions<Value=any,Extras extends Dict={}> {
     // 计算函数的唯一标识，如果未指定，则自动生成一个唯一标识
     id?      : string                          
-    context? : ComputedContext             // 计算函数的this
     scope?   : ComputedScope               // 计算函数的第一个参数
     initial? : Value
     // 异步计算,默认情况下，通过typeof(fn)=="async function"来判断是否是异步计算函数
@@ -198,8 +197,7 @@ export interface ComputedProgressbar{
   export type AsyncComputedGetter<R,Scope=any> = (scopeDraft:Scope,options:Required<ComputedParams>) => Promise<R>
   
   // 当调用run方法时，用来传参覆盖原始的计算参数
-  export type RuntimeComputedOptions = Pick<ComputedOptions, 
-    'context' |'scope' | 'abortSignal' | 'noReentry' | 'retry' | 'onError' | 'timeout' | 'extras'>
+  export type RuntimeComputedOptions = Pick<ComputedOptions,'scope' | 'abortSignal' | 'noReentry' | 'retry' | 'onError' | 'timeout' | 'extras'>
   
   export type AsyncComputedObject<Result= any,ExtAttrs extends Dict = {}> ={
     loading? : boolean;

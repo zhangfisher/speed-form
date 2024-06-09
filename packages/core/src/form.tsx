@@ -275,7 +275,7 @@ export function createForm<State extends Dict=Dict>(schema: FormSchema<State>,op
 		// 所有计算函数的上下文均指向根
 		computedThis: ()=>ComputedScopeRef.Root,
 		// 计算函数作用域默认指向fields
-		computedScope: ()=>[FIELDS_STATE_KEY],
+		scope: ()=>[FIELDS_STATE_KEY],
 		// 创建计算函数时的钩子函数，可以在创建前做一些不可描述的处理
 		onCreateComputed(valuePath,getter,options) {		 
 			// 1. 只对validator进行处理,目的是使validate函数依赖于当前字段的值value，将使得validate函数的第一个参数总是当前字段的值

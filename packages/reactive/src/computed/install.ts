@@ -25,23 +25,21 @@ export function installComputed<T extends StoreDefine>(params:IReactiveReadHookP
       computedObject = createComputedMutate<T>(params,store);
     }else if (isAsyncFunction(descriptor)) { // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次   
         params.value = () => ({
-          fn: descriptor,
+          getter: descriptor,
           options: {
             depends  : [],                    // 未指定依赖
             initial  : undefined,             // 也没有初始化值
             immediate: true,                  // 立即执行
             enable   : true,
-            context  :store.options.computedThis && store.options.computedThis('Computed'),  
         },
         });
         computedObject = createAsyncComputedMutate<T>(params,store);
     }else {       // 简单的同步计算函数，没有通过computed函数创建
       params.value = () => ({
-        fn: descriptor,
+        getter: descriptor,
         options: {
           initial  : undefined, 
           enable   : true,
-          context  : store.options.computedThis && store.options.computedThis('Computed'), 
         }
       })
       // 直接声明同步计算函数,使用全局配置的计算上下文

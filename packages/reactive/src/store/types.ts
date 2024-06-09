@@ -15,21 +15,22 @@ import { ComputedObject } from "../computed/computedObject";
 export type StoreDefine<State extends Dict = Dict> = State
 
 
+
 export enum ComputedScopeRef{
     Root    = 'root',
     Current = 'current',
     Parent  = 'parent',  
     Depends = 'depends',                // 指向依赖数组
     Self    = 'self'                    // 指向自身，默认值
-}
+} 
+ 
 
-export type NonDependsScopeRef = Exclude<ComputedScopeRef, ComputedScopeRef.Depends>;
+ 
 
 // 指定Store中计算函数的上下文,如果是字符串代表是当前对象的指定键，如果是string[]，则代表是当前Store对象的完整路径
 // 当ComputedContext是一个字符串并且以@开头时，有个特殊含义，即是一个路径指向：
 // 如：{fields:{ user:"address",address:"user" }}，如果scope=@user，代表的当前scope对象指向的user属性的值所指向的对象，在这里实质传入的是address
 export type ComputedScope  =  ComputedScopeRef | string | string[] | ((state:any)=>string | string[] | ComputedScopeRef)
-export type ComputedContext  = NonDependsScopeRef | string | string[] | ((state:any)=>string | string[] | NonDependsScopeRef)
 
 export type StateGetter<State,Value=any> = (state:State)=>Value
 export type StateSetter<State,Value=any> = (state:State,value:Value)=>void
@@ -42,8 +43,8 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
     debug:boolean
     // 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象
     // 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
-    computedThis:(computedType:StateComputedType)=>ComputedContext
-    computedScope:(computedType:StateComputedType)=> ComputedScope 
+    // computedThis:(computedType:StateComputedType)=>ComputedContext
+    scope:(computedType:StateComputedType)=> ComputedScope 
     // 是否是单例模式，如果是单例模式，那么所有的计算属性都是共享的，否则每个实例都有自己的计算属性
     // =false时会对传入的data进行深度克隆，这样就可以创建多个互相不干扰的实例
     singleton:boolean    
@@ -61,10 +62,10 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
     onCreateComputed:(this:IStore<T>,keyPath:string[],getter:Function,options:ComputedOptions)=> void | (()=>any)
     
     /**
-     * 在传递给计算函数的context和scope时调用
-     * 可以返回一个新的context和scope来代替默认的
+     * 在传递给计算函数的scope时调用
+     * 可以返回一个新的scope来代替默认的
      */
-    onComputedContext(draft:any,options:{computedType:StateComputedType, contextType:'context' | 'scope',valuePath:string[]}):any
+    onComputedContext(draft:any,options:{computedType:StateComputedType, valuePath:string[]}):any
     // 输出日志信息
     log:(message:any,level?:'log' | 'error' | 'warn')=>void
     /**
@@ -79,8 +80,8 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
 
 
 export type StoreEvents = {
-    created: undefined;            // 响应对象创建后
-    
+    created: undefined;             // 响应对象创建后    
+    computed:{path:string[],id:string}             // 当计算函数执行成功后
 };
 
 
@@ -97,7 +98,6 @@ export type IStore<T extends Dict = Dict> = {
     enableComputed : (value:boolean)=>void
     options        : StoreOptions<T>
     reactiveable   : Reactiveable<T>
-    stateCtx       : ISharedCtx<ComputedState<T>>
     reactive       : IReactive<T>
     // 计算
     createComputed : ReturnType<typeof computedObjectCreator>    
