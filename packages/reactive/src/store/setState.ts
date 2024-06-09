@@ -17,7 +17,7 @@ export function createSetState<T extends StoreDefine>(store: IStore<T>){
 
     return (updater:(draft:T)=>void)=>{
         // @ts-ignore
-        store.stateCtx.setState((draft:any)=>{
+        store.reactiveable.setState((draft:any)=>{
             updater(draft as any)
         })
     }

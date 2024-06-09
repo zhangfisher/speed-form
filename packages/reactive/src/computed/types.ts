@@ -226,7 +226,7 @@ export type AsyncComputed<T=any> = (...args: any) => Promise<T>; // 异步计算
 // export type ComputedDescriptor<R=any> = StateValueDescriptor<(scope:any) => Promise<R> | R,ComputedOptions<R>>
 
 export interface StateValueDescriptorParams<Fn extends Function,Options extends Dict = Dict> {
-  fn: Fn
+  getter: Fn
   options:Options
 } 
 
@@ -252,3 +252,14 @@ export type ComputedTarget<T extends Dict = Dict > ={
 }
  
 
+// 执行计算函数时的上下文
+export type ComputedRunContext = {
+  id             : string
+  name           : string
+  valuePath      : string[],
+  isMutateRunning: boolean  
+  deps           : (string | string[])[]
+  resultPath     : string[]  
+  getter         : ComputedGetter<any> | AsyncComputedGetter<any>,
+  dependValues   : any[]
+}

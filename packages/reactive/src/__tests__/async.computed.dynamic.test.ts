@@ -53,7 +53,7 @@ describe("动态创建计算属性",()=>{
             })
             
             store.setState(state=>{
-                state.user.firstName = "zhang100"                
+                //state.user.firstName = "zhang100"                
             })
 
         })

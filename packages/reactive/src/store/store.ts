@@ -56,19 +56,19 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     }) as Reactiveable<T>
 
 
-    store.stateCtx = sharex<ComputedState<T>>(data as any, {
-        stopArrDep: false,
-        moduleName: opts.id,
-        onRead: (params) => {
-            installExtends<T>(params as any,store as IStore<T>);
-        }
-    });
-    store.state = store.stateCtx.reactive    
+    // store.stateCtx = sharex<ComputedState<T>>(data as any, {
+    //     stopArrDep: false,
+    //     moduleName: opts.id,
+    //     onRead: (params) => {
+    //         installExtends<T>(params as any,store as IStore<T>);
+    //     }
+    // });
+    store.state = store.reactiveable.state    
     store.emit("created")
     store.useState = createUseState<T>(store)
     store.setState = createSetState<T>(store)
     store.enableComputed = (value:boolean=true)=>store.stateCtx.setEnableMutate(value)
-    store.sync = store.stateCtx.sync
+    // store.sync = store.stateCtx.sync
     // 侦听
     store.watch = createWatch<T>(store)
     store.useWatch = createUseWatch<T>(store)

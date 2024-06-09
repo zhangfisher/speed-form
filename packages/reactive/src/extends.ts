@@ -8,7 +8,7 @@
  */
 
 import type { StoreDefine, IStore } from "./store/types";
-import { isSkipComputed } from "./utils";
+import { isSkipComputed, joinValuePath } from "./utils";
 import {  IComputeParams, installComputed } from "./computed"; 
 import { installWatch } from "./watch"; 
 import { IReactiveReadHookParams } from "./reactives/types";
@@ -36,7 +36,7 @@ export function installExtends<T extends StoreDefine>(computedParams:IReactiveRe
   // - 为计算函数创建mutate
   // - 将原始属性替换为计算属性值或异步对象
     const { path, value } = computedParams;
-    const key = path.join(".");
+    const key = joinValuePath(path);
     if ( typeof value === "function" && !store._replacedKeys[key] && !isSkipComputed(value) ) {
       store._replacedKeys[key] = true;    
       if(value.__COMPUTED__=='watch'){

@@ -12,12 +12,17 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
             stopArrDep: false,
             moduleName:options.id ?? getRndId(),
             onRead:(params)=>{
-                options.onRead(params as any)
+                options.onRead({
+                    path:params.fullKeyPath,
+                    value:params.value,
+                    parent:params.parent,
+                    replaceValue:params.replaceValue
+                })
            }
         }) 
     }
     get state(){
-        return this._stateCtx.state as ComputedState<T>
+        return this._stateCtx.reactive as ComputedState<T>
     }
     /**
      * const [ state ] = useState()
@@ -93,9 +98,9 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
     createComputed(params:CreateComputedOptions<ComputedState<T>>):string{
         const {onComputed,options} = params        
         this._stateCtx.mutate({   
-            fn:(draft,params)=>{
+            fn:(draft,{input})=>{
                 if(typeof(onComputed)==='function'){// @ts-ignore
-                    onComputed({draft,setState,values:input})
+                    onComputed({draft,values:input})
                 }
             },
             desc: options.id,

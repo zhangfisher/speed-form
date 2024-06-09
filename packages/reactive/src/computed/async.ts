@@ -16,24 +16,12 @@ import { delay } from 'flex-tools/async/delay';
 import { OBJECT_PATH_DELIMITER } from '../consts';
 import { getComputedContextDraft, getComputedScopeDraft } from '../context';
 import { AsyncComputedGetter, AsyncComputedObject,  ComputedOptions, ComputedParams, ComputedProgressbar } from './types';
-import type  { ComputedDescriptor } from './types';
+import type  { ComputedDescriptor, ComputedRunContext } from './types';
 import { IReactiveReadHookParams } from '../reactives/types';
 import { ComputedObject } from './computedObject';
 import { executeStoreHooks } from './utils';
 
-
-// 
-export type AsyncComputedRunContext = {
-  id             : string
-  name           : string
-  valuePath      : string[],
-  isMutateRunning: boolean  
-  deps           : (string | string[])[]            // 所依赖的项的路径
-  resultPath     : string[]  
-  getter         : AsyncComputedGetter<any>,
-  values        : any[]                             // 依赖值，即发生变化的项的值
-}
-
+ 
 /** 
  * 创建异步计算属性的数据结构
  * 
@@ -101,7 +89,7 @@ export function setAsyncComputedObject(stateCtx:any,draft:any,resultPath:string[
    * @param scopeDraft 
    * @param options 
    */
-async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRunContext:AsyncComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
+async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
    
     const { valuePath,getter,resultPath } = computedRunContext;  
     const { timeout=0,retry=[0,0],selfState }  = computedOptions  
@@ -205,7 +193,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
 
   
 
-function createComputed<T extends StoreDefine>(computedRunContext:AsyncComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
+function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
   const { valuePath, id:mutateId,deps,name:mutateName,resultPath,isMutateRunning,getter } = computedRunContext
   const { toComputedResult,selfState,initial,noReentry } = computedOptions
 
@@ -243,7 +231,7 @@ function createComputed<T extends StoreDefine>(computedRunContext:AsyncComputedR
         return
       }
       computedRunContext.isMutateRunning=true
-      computedRunContext.values = values        // 即所依赖项的值
+      computedRunContext.dependValues = values        // 即所依赖项的值
       try{
         return await executeComputedGetter(draft,computedRunContext,finalComputedOptions,store)
       }finally{
@@ -325,12 +313,12 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     store.options.log(`Create async computed: ${mutateName} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
     
     // 7. 创建mutate
-    const computedRunContext:AsyncComputedRunContext = {
+    const computedRunContext:ComputedRunContext = {
       id             : computedOptions.id || getComputedId(valuePath,computedOptions.id),
       name           : selfState ? mutateId : valuePath.join(OBJECT_PATH_DELIMITER),
       resultPath     : computedResultPath,
       isMutateRunning: false,
-      values         : [],
+      dependValues   : [],
       valuePath,      
       deps,
       getter
