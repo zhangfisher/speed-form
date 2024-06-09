@@ -82,6 +82,8 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
 export type StoreEvents = {
     created: undefined;             // 响应对象创建后    
     computed:{path:string[],id:string}             // 当计算函数执行成功后
+    'computed:done':{path:string[],id:string}             // 当计算函数执行成功后
+    'computed:error':{path:string[],id:string}             // 当计算函数执行出错时
 };
 
 
