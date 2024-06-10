@@ -2,6 +2,7 @@ import { ComputedScopeRef } from "../store/types";
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 import type { ComputedDescriptorCreator, Dict } from "../types";
 import { AsyncComputedGetter, ComputedDepends, ComputedGetter, ComputedOptions } from "./types";
+import { normalizeDeps } from "../utils/normalizeDeps";
  
 /**
  * 用来封装状态的计算函数，使用计算函数的传入的是当前对象
@@ -56,7 +57,7 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
 
 
   opts.async = isAsync;  
-  opts.depends = deps; 
+  opts.depends = normalizeDeps(deps) ; 
 
   const descriptor:ComputedDescriptorCreator<R> = () => {
     return {

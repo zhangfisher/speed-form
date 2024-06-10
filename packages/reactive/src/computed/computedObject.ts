@@ -14,6 +14,7 @@ export class ComputedObject<T extends Dict = Dict> {
     get group(){return this.options.group}
     set enable(value:boolean){ this.options.enable = value }
     get async(){return this.options.async}
+    get depends(){return this.options.depends}
     run(options?:RuntimeComputedOptions) {
         return this.store.options.reactiveable?.runComputed(this.id,options)
     }

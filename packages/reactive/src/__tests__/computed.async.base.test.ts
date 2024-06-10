@@ -85,59 +85,23 @@ describe("异步依赖管理:通过多种方式指定异步依赖参数", () => 
                         current: {
                             price: 2,
                             count: 3,
-                            total1: computed<number>(async (scope: any) => {
+                            total: computed<number>(async (scope: any) => {
                                 return scope.price * scope.count
                             }, ['root.parent.current.price'],        // 使用字符串路径数组指定依赖
                                 { immediate: false }                      // 不马上执行，需要等等依赖变化多端时再执行
-                            ),
-                            // total2:computed<number>(async (scope:any)=>{
-                            //     return scope.price * scope.count 
-                            // },[['root','parent','current','price']]),   // 使用字符串数组指定依赖
-                            // total3:computed<number>(async (scope:any)=>{
-                            //     return scope.price * scope.count 
-                            // },["./price"]),   // total3所在对象的相对路径
-                            // total4:computed<number>(async (scope:any)=>{
-                            //     return scope.price * scope.count 
-                            // },["../current.price"]),   // ..代表父对象parent
-                            // total5:computed<number>(async (scope:any)=>{
-                            //     return scope.price * scope.count 
-                            // },["/root.parent.current.price"])    
+                            )
                         }
                     }
                 },
             })
-            //以上total1-total5虽然depens参数方式不同，但是都是指向同一个price
-            // 计算属性的scope默认指向current
-            store.state.root.parent.current.total1
-            // store.state.root.parent.current.total2
-            // store.state.root.parent.current.total3
-            // store.state.root.parent.current.total4
-            // store.state.root.parent.current.total5
+            store.state.root.parent.current.total
             // 以上读取操作会创建计算属性，并导致计算属性执行一次
             store.on("computed", ({ path }) => {
-                paths.push(path.join("."))
-                if (paths.length === 5) {
-                    expect(paths).toEqual([
-                        "root.parent.current.total1",
-                        // "root.parent.current.total2",
-                        // "root.parent.current.total3",
-                        // "root.parent.current.total4",
-                        // "root.parent.current.total5"
-                    ])
-                    expect(store.state.root.parent.current.total1.result).toBe(9)
-                    // expect(store.state.root.parent.current.total2.result).toBe(9)
-                    // expect(store.state.root.parent.current.total3.result).toBe(9)
-                    // expect(store.state.root.parent.current.total4.result).toBe(9)
-                    // expect(store.state.root.parent.current.total5.result).toBe(9)
-                    resolve()
-                }
+                expect(path).toEqual(["root", "parent", "current", "total"])
+                expect(store.state.root.parent.current.total.result).toBe(9)
+                resolve()
             })
-            // 更新price会导致total1-total5重新计算
             store.setState(draft => draft.root.parent.current.price++)
-
-
-
-
         })
     })
     test("使用字符串数组路径指定依赖", async () => {
@@ -152,31 +116,19 @@ describe("异步依赖管理:通过多种方式指定异步依赖参数", () => 
                             total: computed<number>(async (scope: any) => {
                                 return scope.price * scope.count
                             }, [['root', 'parent', 'current', 'price']],
-                                { immediate: false }              // 不马上执行，需要等等依赖变化多端时再执行
-                            ),   // 使用字符串数组指定依赖 
+                                { immediate: false }        
+                            )
                         }
                     }
                 },
             })
-            // 计算属性的scope默认指向current
             store.state.root.parent.current.total
-            // 以上读取操作会创建计算属性，并导致计算属性执行一次
             store.on("computed", ({ path }) => {
-                paths.push(path.join("."))
-                if (paths.length === 5) {
-                    expect(paths).toEqual([
-                        "root.parent.current.total1",
-                    ])
-                    expect(store.state.root.parent.current.total.result).toBe(9)
-                    resolve()
-                }
+                expect(path).toEqual(["root", "parent", "current", "total"])
+                expect(store.state.root.parent.current.total.result).toBe(9)
+                resolve()
             })
-            // 更新price会导致total1-total5重新计算
             store.setState(draft => draft.root.parent.current.price++)
-
-
-
-
         })
     })
     test("使用相对当前对象的字符串路径指定依赖", async () => {
@@ -188,40 +140,20 @@ describe("异步依赖管理:通过多种方式指定异步依赖参数", () => 
                         current: {
                             price: 2,
                             count: 3,
-                            total1: computed<number>(async (scope: any) => {
+                            total: computed<number>(async (scope: any) => {
                                 return scope.price * scope.count
                             }, ["./price"],        // 使用字符串路径数组指定依赖
-                                { immediate: false }                      // 不马上执行，需要等等依赖变化多端时再执行
+                                { immediate: false }           
                             )
                         }
                     }
                 },
             })
-            //以上total1-total5虽然depens参数方式不同，但是都是指向同一个price
-            // 计算属性的scope默认指向current
-            store.state.root.parent.current.total1
-            // store.state.root.parent.current.total2
-            // store.state.root.parent.current.total3
-            // store.state.root.parent.current.total4
-            // store.state.root.parent.current.total5
-            // 以上读取操作会创建计算属性，并导致计算属性执行一次
+            store.state.root.parent.current.total
             store.on("computed", ({ path }) => {
-                paths.push(path.join("."))
-                if (paths.length === 5) {
-                    expect(paths).toEqual([
-                        "root.parent.current.total1",
-                        // "root.parent.current.total2",
-                        // "root.parent.current.total3",
-                        // "root.parent.current.total4",
-                        // "root.parent.current.total5"
-                    ])
-                    expect(store.state.root.parent.current.total1.result).toBe(9)
-                    // expect(store.state.root.parent.current.total2.result).toBe(9)
-                    // expect(store.state.root.parent.current.total3.result).toBe(9)
-                    // expect(store.state.root.parent.current.total4.result).toBe(9)
-                    // expect(store.state.root.parent.current.total5.result).toBe(9)
-                    resolve()
-                }
+                expect(path).toEqual(["root", "parent", "current", "total"])
+                expect(store.state.root.parent.current.total.result).toBe(9)
+                resolve() 
             })
             // 更新price会导致total1-total5重新计算
             store.setState(draft => draft.root.parent.current.price++)
@@ -241,59 +173,22 @@ describe("异步依赖管理:通过多种方式指定异步依赖参数", () => 
                         current: {
                             price: 2,
                             count: 3,
-                            total1: computed<number>(async (scope: any) => {
+                            total: computed<number>(async (scope: any) => {
                                 return scope.price * scope.count
                             }, ['../current.price'],        // 使用字符串路径数组指定依赖
                                 { immediate: false }                      // 不马上执行，需要等等依赖变化多端时再执行
-                            ),
-                            // total2:computed<number>(async (scope:any)=>{
-                            //     return scope.price * scope.count 
-                            // },[['root','parent','current','price']]),   // 使用字符串数组指定依赖
-                            // total3:computed<number>(async (scope:any)=>{
-                            //     return scope.price * scope.count 
-                            // },["./price"]),   // total3所在对象的相对路径
-                            // total4:computed<number>(async (scope:any)=>{
-                            //     return scope.price * scope.count 
-                            // },["../current.price"]),   // ..代表父对象parent
-                            // total5:computed<number>(async (scope:any)=>{
-                            //     return scope.price * scope.count 
-                            // },["/root.parent.current.price"])    
+                            )
                         }
                     }
                 },
             })
-            //以上total1-total5虽然depens参数方式不同，但是都是指向同一个price
-            // 计算属性的scope默认指向current
-            store.state.root.parent.current.total1
-            // store.state.root.parent.current.total2
-            // store.state.root.parent.current.total3
-            // store.state.root.parent.current.total4
-            // store.state.root.parent.current.total5
-            // 以上读取操作会创建计算属性，并导致计算属性执行一次
+            store.state.root.parent.current.total
             store.on("computed", ({ path }) => {
-                paths.push(path.join("."))
-                if (paths.length === 5) {
-                    expect(paths).toEqual([
-                        "root.parent.current.total1",
-                        // "root.parent.current.total2",
-                        // "root.parent.current.total3",
-                        // "root.parent.current.total4",
-                        // "root.parent.current.total5"
-                    ])
-                    expect(store.state.root.parent.current.total1.result).toBe(9)
-                    // expect(store.state.root.parent.current.total2.result).toBe(9)
-                    // expect(store.state.root.parent.current.total3.result).toBe(9)
-                    // expect(store.state.root.parent.current.total4.result).toBe(9)
-                    // expect(store.state.root.parent.current.total5.result).toBe(9)
-                    resolve()
-                }
+                expect(path).toEqual(["root", "parent", "current", "total"])
+                expect(store.state.root.parent.current.total.result).toBe(9)
+                resolve()
             })
-            // 更新price会导致total1-total5重新计算
             store.setState(draft => draft.root.parent.current.price++)
-
-
-
-
         })
     })
 
@@ -315,34 +210,35 @@ describe("异步依赖管理:通过多种方式指定异步依赖参数", () => 
                     }
                 },
             })
-            //以上total1-total5虽然depens参数方式不同，但是都是指向同一个price
-            // 计算属性的scope默认指向current
             store.state.root.parent.current.total 
             // 以上读取操作会创建计算属性，并导致计算属性执行一次
             store.on("computed", ({ path }) => {
-                paths.push(path.join("."))
-                if (paths.length === 5) {
-                    expect(paths).toEqual([
-                        "root.parent.current.total1",
-                        // "root.parent.current.total2",
-                        // "root.parent.current.total3",
-                        // "root.parent.current.total4",
-                        // "root.parent.current.total5"
-                    ])
-                    expect(store.state.root.parent.current.total1.result).toBe(9)
-                    // expect(store.state.root.parent.current.total2.result).toBe(9)
-                    // expect(store.state.root.parent.current.total3.result).toBe(9)
-                    // expect(store.state.root.parent.current.total4.result).toBe(9)
-                    // expect(store.state.root.parent.current.total5.result).toBe(9)
-                    resolve()
-                }
+                expect(path).toEqual(["root", "parent", "current", "total"])
+                expect(store.state.root.parent.current.total.result).toBe(9)
+                resolve()
             })
-            // 更新price会导致total1-total5重新计算
             store.setState(draft => draft.root.parent.current.price++)
-
-
-
-
         })
     })
+})
+
+
+describe("管理异步计算对象", () => {
+    test("创建异步传Computed计算对象", async () => {
+        return new Promise<void>((resolve) => {
+            const store = createStore({
+                price: 2,
+                count: 3,
+                total: computed(async (scope: any) => {             
+                    return scope.price * scope.count
+                },["price","count"],{id:"obj"})
+            })
+            store.state.total 
+            expect(store.computedObjects.has("obj")).toBe(true)
+            
+            resolve()
+        })
+    })
+
+
 })

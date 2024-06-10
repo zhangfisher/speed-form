@@ -9,7 +9,7 @@
  */
 import { markRaw, getSnap,  } from 'helux';
 import type { StoreDefine,   IStore } from "../store/types";
-import { skipComputed,  joinValuePath, getError, getDeps, getDepValues,getVal, setVal, getComputedId  } from "../utils";
+import { skipComputed,  joinValuePath, getError, normalizeDeps, getDepValues,getVal, setVal, getComputedId  } from "../utils";
 import { switchValue } from "flex-tools/misc/switchValue"; 
 import { Dict  } from "../types";
 import { delay } from 'flex-tools/async/delay'; 
@@ -305,15 +305,14 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     const computedResultPath:string[] = getComputedTargetPath(computedParams,computedOptions)
   
     // 6. 解析依赖参数 
-    const deps = getDeps(depends) //(depends || []).map((deps: any) =>Array.isArray(deps) ? deps : deps.split(OBJECT_PATH_DELIMITER))
-    if(deps.length==0){
+    if(depends.length==0){
       store.options.log(`async computed <${valuePath.join(".")}> should specify depends`,'warn')
     }
     // 计算对象的id和name，name用于显示
     const mutateId = computedOptions.id || getComputedId(valuePath,computedOptions.id)
     const mutateName =selfState ? mutateId : valuePath.join(OBJECT_PATH_DELIMITER)
   
-    store.options.log(`Create async computed: ${mutateName} (depends=${deps.length==0 ? 'None' : joinValuePath(deps)})`);
+    store.options.log(`Create async computed: ${mutateName} (depends=${depends.length==0 ? 'None' : joinValuePath(depends)})`);
     
     // 7. 创建mutate
     const computedRunContext:ComputedRunContext = {
@@ -323,7 +322,7 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
       isMutateRunning: false,
       dependValues   : [],
       valuePath,      
-      deps,
+      deps:depends,
       getter
     }    
     createComputed(computedRunContext,computedOptions,store)     
