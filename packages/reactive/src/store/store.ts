@@ -2,7 +2,7 @@ import {  ComputedScopeRef, IStore, StoreDefine, StoreEvents, StoreOptions } fro
 import { ComputedObjects } from '../computed';
 import { installExtends } from "../extends" 
 import { WatchObjects, createWatch } from "../watch"; 
-import { log } from "../utils";
+import { forEachObject, log } from "../utils";
 import { createUseState } from "./useState"
 import { createSetState } from "./setState";
 import mitt,{Emitter} from "mitt";
@@ -18,9 +18,9 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     const opts = Object.assign({
         id           : getRndId(),
         debug        : true,
-        scope: ()=>ComputedScopeRef.Current,
         singleton    : true,
-        
+        onceComputed : false,
+        scope        : ()=>ComputedScopeRef.Current,
     },options) as StoreOptions<T>
 
     opts.log = (...args:any[])=>{
@@ -72,6 +72,9 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     // // @ts-ignore
     // extendObjects.computedObjects.new = createComputed
 
+    if(opts.onceComputed){
+        forEachObject(store.state)
+    }
     return store
 
 }

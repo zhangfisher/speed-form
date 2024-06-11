@@ -234,8 +234,7 @@ describe("管理异步计算对象", () => {
                 },["price","count"],{id:"obj"})
             })
             store.state.total 
-            expect(store.computedObjects.has("obj")).toBe(true)
-            
+            expect(store.computedObjects.has("obj")).toBe(true)            
             resolve()
         })
     })

@@ -119,7 +119,7 @@ export  function createComputedMutate<T extends StoreDefine>(computedParams:IRea
     //     return isExternal ? computedTo.stateCtx.runMutateTask(params) : store.stateCtx.runMutateTask(params)
     //   }
     // }
-    const computedObject = new ComputedObject<T>(store,selfState,computedOptions) 
+    const computedObject = new ComputedObject<T>(store,selfState,valuePath,computedOptions) 
 
     store.computedObjects.set(mutateName,computedObject)   
     return  computedObject

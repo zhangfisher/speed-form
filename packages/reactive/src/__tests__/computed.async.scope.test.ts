@@ -83,9 +83,10 @@ describe("异步计算函数的Scope指向",()=>{
                         }
                     }
                 },{
-                    scope:()=>ComputedScopeRef.Depends
+                    scope:()=>ComputedScopeRef.Depends,
+                    onceComputed:true
                 })            
-            store.state.root.parent.order.total // 读取操作时创建计算属性
+            // store.state.root.parent.order.total // 读取操作时创建计算属性
         }) 
     })
     test("异步计算Scope指向字符串指定的绝对路径",()=>{
@@ -205,10 +206,11 @@ describe("异步计算函数的Scope指向",()=>{
                         }
                     }
                 },{
-                    scope:()=>["root","parent","order","count"]
-                })            
-            store.state.root.parent.order.total // 读取操作时创建计算属性
+                    scope:()=>["root","parent","order","count"],
+                    onceComputed:true
+                })             
         }) 
     })
 
+    
 })

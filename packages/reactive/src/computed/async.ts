@@ -171,6 +171,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
         if(retryCount>0){
           Object.assign(afterUpdated,{retry:retryCount- i })        
         }
+        store.emit("computed:error",{path:valuePath,id:computedRunContext.id})
       } finally {      
         clearTimeout(timerId)
         clearInterval(countdownId)
@@ -235,7 +236,7 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
       computedRunContext.dependValues = values        // 即所依赖项的值
       try{
         const r= await executeComputedGetter(draft,computedRunContext,finalComputedOptions,store)
-        store.emit("computed",{path:valuePath,id:mutateId})
+        store.emit("computed:done",{path:valuePath,id:mutateId})
         return r
       }finally{
         computedRunContext.isMutateRunning=false
@@ -330,8 +331,9 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     if(!selfState) computedParams.replaceValue(getVal(store.state, valuePath));
 
     // 8. 创建计算对象实例
-    const computedObject = new ComputedObject<T>(store,selfState,computedOptions) 
+    const computedObject = new ComputedObject<T>(store,selfState,valuePath,computedOptions) 
     store.computedObjects.set(mutateId,computedObject)  
+    store.emit("computed:new",{id:mutateId})
     return  computedObject
   }
   

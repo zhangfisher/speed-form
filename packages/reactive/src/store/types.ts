@@ -76,13 +76,18 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
      * 提供一个响应式核心
      */
     reactiveable?:Reactiveable
+    /**
+     * 默认计算函数仅在第一次读取时执行
+     * onceComputed=tru 时，遍历对象，从而导致计算属性被立刻创建
+     */
+    onceComputed:boolean
 }
 
 
 export type StoreEvents = {
     created: undefined;             // 响应对象创建后    
-    computed:{path:string[],id:string}             // 当计算函数执行成功后
-    'computed:done':{path:string[],id:string}             // 当计算函数执行成功后
+    'computed:new':{id:string}                              // 当计算对象创建时
+    'computed:done':{path:string[],id:string}               // 当计算函数执行成功后
     'computed:error':{path:string[],id:string}             // 当计算函数执行出错时
 };
 

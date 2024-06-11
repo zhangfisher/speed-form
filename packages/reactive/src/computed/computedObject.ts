@@ -5,7 +5,7 @@ import { ComputedOptions, RuntimeComputedOptions } from "./types"
  
 export class ComputedObject<T extends Dict = Dict> {
     options:Required<ComputedOptions>
-    constructor(public store:IStore<T>,public selfState:ITargetState<T> | undefined,options:ComputedOptions){
+    constructor(public store:IStore<T>,public selfState:ITargetState<T> | undefined,public path:string[],options:ComputedOptions){
         this.options  = Object.assign({
         },options) as Required<ComputedOptions>
     }
@@ -14,7 +14,7 @@ export class ComputedObject<T extends Dict = Dict> {
     get group(){return this.options.group}
     set enable(value:boolean){ this.options.enable = value }
     get async(){return this.options.async}
-    get depends(){return this.options.depends}
+    get depends(){return this.options.depends} 
     run(options?:RuntimeComputedOptions) {
         return this.store.options.reactiveable?.runComputed(this.id,options)
     }
