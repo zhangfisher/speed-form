@@ -16,11 +16,12 @@ import { Reactiveable } from "../reactives/types";
 export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?:Partial<StoreOptions<T>>){
     // 1.初始化配置参数
     const opts = Object.assign({
-        id           : getRndId(),
-        debug        : true,
-        singleton    : true,
-        onceComputed : false,
-        scope        : ()=>ComputedScopeRef.Current,
+        id            : getRndId(),
+        debug         : true,
+        singleton     : true,
+        onceComputed  : false,
+        enableComputed: true,
+        scope         : ()=>ComputedScopeRef.Current,
     },options) as StoreOptions<T>
 
     opts.log = (...args:any[])=>{
@@ -56,7 +57,7 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     store.emit("created")
     store.useState = createUseState<T>(store)
     store.setState = createSetState<T>(store)
-    // store.enableComputed = (value:boolean=true)=>store.reactiveable.setEnableMutate(value)
+    store.enableComputed = (value:boolean=true)=>store.options.enableComputed = value
     // store.sync = store.stateCtx.sync
     // 侦听
     store.watch = createWatch<T>(store)

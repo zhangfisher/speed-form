@@ -47,7 +47,22 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
     scope:(computedType:StateComputedType)=> ComputedScope 
     // 是否是单例模式，如果是单例模式，那么所有的计算属性都是共享的，否则每个实例都有自己的计算属性
     // =false时会对传入的data进行深度克隆，这样就可以创建多个互相不干扰的实例
-    singleton:boolean    
+    singleton:boolean   
+     /**
+     * 提供一个响应式核心
+     */
+     reactiveable?:Reactiveable
+     /**
+      * 默认计算函数仅在第一次读取时执行
+      * onceComputed=tru 时，遍历对象，从而导致计算属性被立刻创建
+      */
+     onceComputed:boolean 
+     /**
+      * 默认启用计算属性
+      * enableComputed=false时，会创建计算属性，但不会执行计算函数
+      * 可以通过enableComputed方法启用
+      */
+     enableComputed:boolean
     /**
      * 当创建计算属性前调用
      * 
@@ -72,15 +87,7 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
      * 当计算对象创建时调用
      */
     onCreateComputedObject(keyPath:string[],computedObject:ComputedObject<T>):void
-    /**
-     * 提供一个响应式核心
-     */
-    reactiveable?:Reactiveable
-    /**
-     * 默认计算函数仅在第一次读取时执行
-     * onceComputed=tru 时，遍历对象，从而导致计算属性被立刻创建
-     */
-    onceComputed:boolean
+   
 }
 
 

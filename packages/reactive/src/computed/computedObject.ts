@@ -16,7 +16,7 @@ export class ComputedObject<T extends Dict = Dict> {
     get async(){return this.options.async}
     get depends(){return this.options.depends} 
     run(options?:RuntimeComputedOptions) {
-        return this.store.options.reactiveable?.runComputed(this.id,options)
+        return this.store.reactiveable?.runComputed(this.id,options)
     }
     cancel(){
         

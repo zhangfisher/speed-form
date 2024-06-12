@@ -221,7 +221,7 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
       }          
     },
     onComputed:async ({draft,values,options})=>{
-      if(!computedOptions.enable && options?.enable!==true){
+      if(!store.options.enableComputed || (!computedOptions.enable && options?.enable!==true)){
         store.options.log(`Async computed <${mutateName}> is disabled`,'warn')
         return 
       }
