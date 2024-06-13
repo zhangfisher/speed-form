@@ -136,11 +136,40 @@ describe("异步计算",()=>{
             store.computedObjects.get("x")!.run({
                 extras:1
            })
-           
-
-        })
+        })        
     })
 
+
+    test("",()=>{
+        let count:number =0 
+        let results:number[] = []
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                price:2,
+                count:3,
+                total1:computed(async (scope)=>{
+                    count++
+                    return scope.price * scope.count
+                },['price','count']),
+                total2:1
+            },{    
+                onceComputed:true               // 遍历对象，从而导致计算属性被读取而立刻创建
+            }) 
+            store.on("computed:done",({path})=>{
+                results.push(store.state.total2 )
+                if(results.length===3){
+                    expect(count).toBe(3)         
+                    // 为什么是10,10,10，而不是6,8,10?
+                    // 创建计算属性时，会立即执行一次计算函数，所以第一次是2*3=6，然后setState(count=4)时，会再次执行计算函数，所以是2*4=8
+                    // 最后一次是2*5=10? 但是结果是10,10,10?
+                    // 因为setState是同步操作，而计算函数是异步的，所以在执行setState后，计算函数并没有立即执行，而是在下一个事件循环中执行
+                    expect(results).toEqual([10,10,10]) 
+                    resolve()        
+                }                
+            })   
+            //store.setState((draft)=>draft.count = 4) 
+        })
+    })  
 
 
 })

@@ -8,7 +8,7 @@ import { getComputedScopeDraft } from '../context';
 import { IStore } from '../store/types';
 import { IReactiveReadHookParams } from "../reactives/types";
 import { ComputedObject } from "./computedObject";
-import { executeStoreHooks, getComputedTargetPath, getMutateId } from "./utils";
+import { executeStoreHooks,  getMutateId } from "./utils";
 import { OBJECT_PATH_DELIMITER } from "../consts";
 
 
@@ -81,7 +81,7 @@ export  function createComputedMutate<T extends StoreDefine>(computedParams:IRea
     //  运行hook会修改计算配置，所以在hook运行后再读取配置
     executeStoreHooks(valuePath,getter,store,computedOptions)
     const {  selfState } = computedOptions
-    const computedResultPath:string[] = getComputedTargetPath(computedParams,computedOptions)
+    const computedResultPath:string[] = selfState ? ['value'] : valuePath
 
     // 3. 参数解析:  
 

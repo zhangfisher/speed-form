@@ -18,7 +18,6 @@ export function executeStoreHooks<T extends Dict>(valuePath:string[],getter:any,
     if (typeof onCreateComputed == "function" && typeof getter === "function") {
       const newGetter = onCreateComputed.call(store,valuePath, getter, computedOptions);
       if(!computedOptions.scope) computedOptions.scope = ComputedScopeRef.Current
-      if(!computedOptions.context) computedOptions.context = ComputedScopeRef.Root
       if (typeof newGetter == "function") getter = newGetter 
     }
 }
@@ -31,30 +30,32 @@ export function getMutateId(valuePath:string[],computedOptions:ComputedOptions){
 }
 
 
-/**
- * 
- * 返回计算属性的目标路径
- * 
- * 即计算结果要写到目标state中的哪一个位置
- * 
- * 计算目标
- * 
- * @param computedParams 
- * @param computedOptions 
- * @returns 
- */
-export function getComputedTargetPath(computedParams:IReactiveReadHookParams,computedOptions:ComputedOptions){
-  const { path:valuePath } = computedParams;
-  const {selfState,toComputedResult='self' } = computedOptions
+// /**
+//  * 
+//  * 返回计算属性的目标路径
+//  * 
+//  * 即计算结果要写到目标state中的哪一个位置
+//  * 
+//  * 计算目标
+//  * 
+//  * @param computedParams 
+//  * @param computedOptions 
+//  * @returns 
+//  */
+// export function getComputedTargetPath(computedParams:IReactiveReadHookParams,computedOptions:ComputedOptions){
+//   const { path:valuePath } = computedParams;
+//   const {selfState,toComputedResult='self' } = computedOptions
   
-  // 如果指定了selfState,即计算结果要写到外部状态中
-  return selfState ? [valuePath ] : switchValue(toComputedResult,{
-    self   : valuePath,
-    root   : [],
-    parent : valuePath.slice(0,valuePath.length-2),
-    current: valuePath.slice(0,valuePath.length-1),
-    Array  : toComputedResult,    // 指定一个数组，表示完整路径
-    String : [...valuePath.slice(0,valuePath.length-1),String(toComputedResult).split(OBJECT_PATH_DELIMITER)],
-  },{defaultValue:valuePath})    
+//   // 如果指定了selfState,即计算结果要写到外部状态中
+//   return selfState ? [valuePath ] : switchValue(toComputedResult,{
+//     self   : valuePath,
+//     root   : [],
+//     parent : valuePath.slice(0,valuePath.length-2),
+//     current: valuePath.slice(0,valuePath.length-1),
+//     Array  : toComputedResult,    // 指定一个数组，表示完整路径
+//     String : [...valuePath.slice(0,valuePath.length-1),String(toComputedResult).split(OBJECT_PATH_DELIMITER)],
+//   },{defaultValue:valuePath})    
 
-}
+// }
+
+

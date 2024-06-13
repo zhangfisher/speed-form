@@ -65,15 +65,15 @@ export type GetComputedContextOptions<T extends StoreDefine =StoreDefine> ={
  * @param params 
  * @returns 
  */
-export function getComputedContext<T extends StoreDefine = StoreDefine>(draft: any,params:GetComputedContextOptions<T>) {
+export function getComputedScope<T extends StoreDefine = StoreDefine>(draft: any,params:GetComputedContextOptions<T>) {
 
     const { dependValues,  valuePath, funcOptions, storeOptions,computedType } = params;
   
     let rootDraft = draft;
   
     // 1. 执行hook：可以在hook函数中修改计算函数的根上下文以及相关配置参数
-    if (typeof storeOptions.onComputedContext == "function") {
-      const newDraft = storeOptions.onComputedContext.call(draft,draft,{computedType,valuePath});
+    if (typeof storeOptions.onComputedDraft == "function") {
+      const newDraft = storeOptions.onComputedDraft.call(draft,draft,{computedType,valuePath});
       if (newDraft !== undefined) {
         rootDraft = newDraft;
       }
@@ -124,7 +124,7 @@ export function getComputedContext<T extends StoreDefine = StoreDefine>(draft: a
  */
 export function getComputedScopeDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:ComputedRunContext,computedOptions: ComputedOptions) {    
   const { valuePath,dependValues:values } = computedRunContext
-  return getComputedContext(draft,{
+  return getComputedScope(draft,{
     dependValues: values,
     valuePath,
     funcOptions:computedOptions,

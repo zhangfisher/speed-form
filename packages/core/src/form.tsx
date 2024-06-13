@@ -260,7 +260,6 @@ function freezeForm(store:any){
 export function createForm<State extends Dict=Dict>(schema: FormSchema<State>,options?:FormOptions) {
 	const opts = assignObject({
 		getFieldName:(valuePath:string[])=>valuePath.length > 0 ? valuePath[valuePath.length-1]==='value' ? valuePath.slice(0,-1).join(".") : valuePath.join(".") : '',
-		singleton:true,
 		validAt:'once',
 	},options) as Required<FormOptions>
 
@@ -271,9 +270,6 @@ export function createForm<State extends Dict=Dict>(schema: FormSchema<State>,op
 	// 创建表单Store对象实例
 	const store = createStore({state:schema},{
 		debug:opts.debug,
-		singleton:opts.singleton,
-		// 所有计算函数的上下文均指向根
-		computedThis: ()=>ComputedScopeRef.Root,
 		// 计算函数作用域默认指向fields
 		scope: ()=>[FIELDS_STATE_KEY],
 		// 创建计算函数时的钩子函数，可以在创建前做一些不可描述的处理
@@ -285,11 +281,11 @@ export function createForm<State extends Dict=Dict>(schema: FormSchema<State>,op
 			// 3. 将表单actions的execute的onComputedResult指向其current
 			createActionHook(valuePath,getter,options)
 		},
-		onComputedContext(draft,{computedType,contextType: type,valuePath}){
+		onComputedDraft(draft,{computedType,valuePath}){
 			// 针对计属性
 			// 修改fields下的所有计算函数的作用域根，使之总是指向fields开头
 			// 这样可以保证在计算函数中,当scope->Root时，总是指向fields，否则就需要state.fields.xxx.xxx
-			if(computedType==='Computed' && type=='scope' && valuePath.length >0 && valuePath[0]==FIELDS_STATE_KEY){
+			if(computedType==='Computed' && valuePath.length >0 && valuePath[0]==FIELDS_STATE_KEY){
 				return draft.fields
 			}
 		},

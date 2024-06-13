@@ -9,8 +9,7 @@
  */
 import { markRaw, getSnap,  } from 'helux';
 import type { StoreDefine,   IStore } from "../store/types";
-import { skipComputed,  joinValuePath, getError, normalizeDeps, getDepValues,getVal, setVal, getComputedId  } from "../utils";
-import { switchValue } from "flex-tools/misc/switchValue"; 
+import { skipComputed,  joinValuePath, getError, getDepValues,getVal, setVal, getComputedId  } from "../utils";
 import { Dict  } from "../types";
 import { delay } from 'flex-tools/async/delay'; 
 import { OBJECT_PATH_DELIMITER } from '../consts';
@@ -78,9 +77,9 @@ export function setAsyncComputedObject<T extends Dict=Dict>(store:IStore<T>,draf
   
   function updateAsyncComputedState(setState:any,resultPath:string[],values:Partial<AsyncComputedObject>){
     setState((draft:any) => {      
-      Object.entries(values).forEach(([key,value])=>{
-        setVal(draft, [...resultPath,key], value);  
-      })
+        Object.entries(values).forEach(([key,value])=>{
+          setVal(draft, [...resultPath,key], value);  
+        })    
     });
   }
   
@@ -197,7 +196,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
 
 function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
   const { valuePath, id:mutateId,deps,name:mutateName,resultPath,isMutateRunning,getter } = computedRunContext
-  const { toComputedResult,selfState,initial,noReentry } = computedOptions
+  const { selfState,initial,noReentry } = computedOptions
 
   store.reactiveable.createAsyncComputed({
     // 指定依赖
@@ -210,14 +209,7 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
           Object.assign(draft,createAsyncComputedObject(store,mutateId,{result: initial}))
         })
       }else{
-        if(toComputedResult=='self'){ // 原地替换
-          setVal(draft, valuePath, createAsyncComputedObject(store, mutateId,{result: initial}))
-        }else{  // 更新到其他地方
-          setAsyncComputedObject(store,draft,resultPath, mutateId,{result: initial})
-          // 删除原始的计算属性
-          const p = getVal(draft,valuePath.slice(0,valuePath.length-1))
-          delete p[valuePath[valuePath.length-1]]
-        }
+        setVal(draft, valuePath, createAsyncComputedObject(store, mutateId,{result: initial}))
       }          
     },
     onComputed:async ({draft,values,options})=>{
@@ -248,36 +240,6 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
 
 
 /**
- * 
- * 返回计算属性的目标路径
- * 
- * 即计算结果要写到目标state中的哪一个位置
- * 
- * 计算目标
- * 
- * @param computedParams 
- * @param computedOptions 
- * @returns 
- */
-function getComputedTargetPath(computedParams:IReactiveReadHookParams,computedOptions:ComputedOptions){
-  const { path:valuePath } = computedParams;
-  const {selfState,toComputedResult='self' } = computedOptions
-  
-  // 如果指定了selfState,即计算结果要写到外部状态中
-  return selfState ? [valuePath ] : switchValue(toComputedResult,{
-    self   : valuePath,
-    root   : [],
-    parent : valuePath.slice(0,valuePath.length-2),
-    current: valuePath.slice(0,valuePath.length-1),
-    Array  : toComputedResult,    // 指定一个数组，表示完整路径
-    String : [...valuePath.slice(0,valuePath.length-1),String(toComputedResult).split(OBJECT_PATH_DELIMITER)],
-  },{defaultValue:valuePath})    
-
-}
-
-  
-
-/**
  * 为异步计算属性生成mutate
  * @param stateCtx
  * @param params
@@ -303,7 +265,7 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     const { depends =[], selfState } = computedOptions
 
     // 5. 解析计算目标路径：  即计算函数的返回值到更新到哪里
-    const computedResultPath:string[] = getComputedTargetPath(computedParams,computedOptions)
+    const computedResultPath:string[] = selfState ? ['value'] : valuePath
   
     // 6. 解析依赖参数 
     if(depends.length==0){
@@ -333,7 +295,18 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     // 8. 创建计算对象实例
     const computedObject = new ComputedObject<T>(store,selfState,valuePath,computedOptions) 
     store.computedObjects.set(mutateId,computedObject)  
-    store.emit("computed:new",{id:mutateId})
     return  computedObject
-  }
-  
+}
+
+export function asyncComputedObject<T extends Dict =Dict>(initial:AsyncComputedObject){
+  return Object.assign({
+    loading : false,
+    timeout : 0,
+    retry   : 0,          // 重试次数，3表示最多重试3次
+    error   : null,
+    result  : undefined,
+    progress: 0,
+    run     : markRaw(skipComputed((args:Dict) => {})),
+    cancel  : markRaw(skipComputed(() => {}))
+  },initial) as AsyncComputedObject<T>
+}

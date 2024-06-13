@@ -45,9 +45,6 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
     // 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
     // computedThis:(computedType:StateComputedType)=>ComputedContext
     scope:(computedType:StateComputedType)=> ComputedScope 
-    // 是否是单例模式，如果是单例模式，那么所有的计算属性都是共享的，否则每个实例都有自己的计算属性
-    // =false时会对传入的data进行深度克隆，这样就可以创建多个互相不干扰的实例
-    singleton:boolean   
      /**
      * 提供一个响应式核心
      */
@@ -78,24 +75,23 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
     
     /**
      * 在传递给计算函数的scope时调用
-     * 可以返回一个新的scope来代替默认的
+     * 默认draft指向的是当前根对象，可以在此返回一个新的draft指向
+     * 
+     * 比如,return  draft.fields，代表计算函数的draft指向state.fields
+     * 
      */
-    onComputedContext(draft:any,options:{computedType:StateComputedType, valuePath:string[]}):any
+    onComputedDraft(draft:any,options:{computedType:StateComputedType, valuePath:string[]}):any
     // 输出日志信息
-    log:(message:any,level?:'log' | 'error' | 'warn')=>void
-    /**
-     * 当计算对象创建时调用
-     */
-    onCreateComputedObject(keyPath:string[],computedObject:ComputedObject<T>):void
+    log:(message:any,level?:'log' | 'error' | 'warn')=>void 
    
 }
 
 
 export type StoreEvents = {
-    created: undefined;             // 响应对象创建后    
-    'computed:new':{id:string}                              // 当计算对象创建时
+    created: undefined;                                     // 响应对象创建后    
+    'computed:created':ComputedObject                       // 当计算对象创建时
     'computed:done':{path:string[],id:string}               // 当计算函数执行成功后
-    'computed:error':{path:string[],id:string}             // 当计算函数执行出错时
+    'computed:error':{path:string[],id:string}              // 当计算函数执行出错时
 };
 
 

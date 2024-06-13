@@ -130,19 +130,6 @@ export interface ComputedProgressbar{
      */
     onError?:(e:Error)=>void              
     /**
-     * 指定计算结果更新到哪里
-     * 
-     * self: 默认，原地替换，异步计算属性会将计算函数转换成一AsyncComputedObject对象，此对象包含value,loading,error等属性
-     * root: 更新到根对象中
-     * parent: 更新到父对象中
-     * current: 更新到当前对象中
-     * none: 不更新到任何对象中
-     * {String} 当前对象的指定键
-     * {Array} 从根对象开始的完整路径
-     * 
-     */
-    toComputedResult?: 'self' | 'root' | 'parent' | 'current' | 'none' | string[] | string 
-    /**
      * 为该计算函数指定一个分组名
      * 
      * 此属性用来将计算函数分组，比如一个store中具有相同group的计算函数

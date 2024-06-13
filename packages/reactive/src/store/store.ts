@@ -18,7 +18,6 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     const opts = Object.assign({
         id            : getRndId(),
         debug         : true,
-        singleton     : true,
         onceComputed  : false,
         enableComputed: true,
         scope         : ()=>ComputedScopeRef.Current,

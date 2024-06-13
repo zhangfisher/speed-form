@@ -30,7 +30,6 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
     enable          : true,
     timeout         : 0,
     depends         : [],    
-    toComputedResult: ComputedScopeRef.Self,
     immediate       : true,
   }
 

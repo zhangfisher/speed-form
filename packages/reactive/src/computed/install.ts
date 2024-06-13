@@ -12,10 +12,8 @@ import { ComputedObject } from "./computedObject";
  */
  
 
-export function installComputed<T extends StoreDefine>(params:IReactiveReadHookParams,store:IStore<T>,computedTo?:ComputedTarget) {
-
+export function installComputed<T extends StoreDefine>(params:IReactiveReadHookParams,store:IStore<T>) {
     const descriptor = params.value
-
     let computedObject:ComputedObject<T> | undefined
     //@ts-ignore
     if (descriptor.__COMPUTED__=='async') {
@@ -46,11 +44,7 @@ export function installComputed<T extends StoreDefine>(params:IReactiveReadHookP
       computedObject = createComputedMutate<T>(params,store);
     }
     // 当创建计算完毕后的回调
-    if(computedObject && typeof(store.options.onCreateComputedObject)=='function'){
-      try{
-        store.options.onCreateComputedObject(params.path,computedObject)
-      }catch(e:any){
-        store.options.log(e.stack,'error')
-      }     
-    }  
+    if(computedObject){
+      store.emit("computed:created",computedObject as any)
+    }
   }
