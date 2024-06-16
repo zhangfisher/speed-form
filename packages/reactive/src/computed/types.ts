@@ -6,6 +6,7 @@ import {  IOperateParams, ISharedCtx } from "helux";
 import type { ComputedScope,   ITargetState } from "../store/types";
 import { Dict } from "../types"
 import { WatchDescriptorCreator } from "../watch";
+import { Reactiveable } from "../reactives/types";
 
 
 // 指向helux的IOperateParams类型，但是我们只用到其是的部分类型
@@ -160,23 +161,22 @@ export interface ComputedProgressbar{
      * 额外合并到计算结果AsyncComputedObject中的属性
      */
     extras?:Extras
+
     /**
      * 计算函数computed所在的路径
      * 
-     * 一般不需要额外指定，当使用computed函数声明式时会自动指定
+     * 一般不需要额外指定，当使用computed函数声明式时会自动指定 
      * 
+     * 此参数仅在动态创建计算属性时使用
      */
     selfPath?: string[]                    
     /**
      * 默认情况下，计算结果会写入到当前store中computed所在的位置,即selfPath
-     * 如果指定此属性，则会将计算结果写入attach指定的位置selfPath
+     * 如果指定此属性，则会将计算结果写入selfReactiveable指定的位置selfPath
+     * 此参数仅在动态创建计算属性时使用
+     * 
      */
-    selfState?: ITargetState
-    /**
-    * 是否将计算结果写入到store或attach所在的位置，即selfPath所在位置
-    * 
-    */
-    rewrite?:boolean
+    selfReactiveable?: Reactiveable
   };
   
   export type ComputedDepends =Array<string | Array<string>> 
@@ -239,12 +239,15 @@ export type ComputedTarget<T extends Dict = Dict > ={
 
 // 执行计算函数时的上下文
 export type ComputedRunContext = {
-  id             : string
-  name           : string
-  valuePath      : string[],
-  isMutateRunning: boolean  
-  deps           : (string | string[])[]
-  resultPath     : string[]  
-  getter         : ComputedGetter<any> | AsyncComputedGetter<any>,
-  dependValues   : any[]
+  id               : string
+  desc             : string
+  valuePath        : string[],
+  isComputedRunning: boolean  
+  deps             : (string | string[])[]
+  resultPath       : string[]  
+  getter           : ComputedGetter<any> | AsyncComputedGetter<any>,
+  dependValues     : any[]
 }
+
+
+export type ComputedType = "Computed" | "Watch"

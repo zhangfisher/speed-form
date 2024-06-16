@@ -1,8 +1,8 @@
 import { switchValue } from "flex-tools/misc/switchValue";
 import { OBJECT_PATH_DELIMITER } from "../consts";
 import { IReactiveReadHookParams } from "../reactives/types";
-import { ComputedOptions, ComputedScopeRef, Dict, IStore } from "../types";
-import { getComputedId } from "../utils";
+import { AsyncComputedObject, ComputedOptions, ComputedScopeRef, Dict, IStore } from "../types";
+import { getComputedId, skipComputed } from "../utils";
 
  
 
@@ -21,41 +21,25 @@ export function executeStoreHooks<T extends Dict>(valuePath:string[],getter:any,
       if (typeof newGetter == "function") getter = newGetter 
     }
 }
-
-
-export function getMutateId(valuePath:string[],computedOptions:ComputedOptions){
-      const mutateId = computedOptions.id || getComputedId(valuePath,computedOptions.id)
-      const mutateName =computedOptions.selfState ? mutateId : valuePath.join(OBJECT_PATH_DELIMITER)
-    return [ mutateId, mutateName ]
+ 
+ 
+/** 
+ * 创建异步计算属性的数据结构
+ * 
+*/
+export function createAsyncComputedObject<T extends Dict=Dict>(store:IStore<T>,computedId:string,valueObj:Partial<AsyncComputedObject>){
+  return Object.assign({
+    loading : false,
+    timeout : 0,
+    retry   : 0,          // 重试次数，3表示最多重试3次
+    error   : null,
+    result  : undefined,
+    progress: 0,
+    run     : store.reactiveable.markRaw(skipComputed((args:Dict) => {
+                return store.reactiveable.runComputed(computedId,Object.assign({},args));
+              })),
+    cancel  : store.reactiveable.markRaw(skipComputed(() => {
+      console.log("cancel")       // 此命令会取消异步计算，仅在执行时有效。     
+    }))
+  },valueObj)
 }
-
-
-// /**
-//  * 
-//  * 返回计算属性的目标路径
-//  * 
-//  * 即计算结果要写到目标state中的哪一个位置
-//  * 
-//  * 计算目标
-//  * 
-//  * @param computedParams 
-//  * @param computedOptions 
-//  * @returns 
-//  */
-// export function getComputedTargetPath(computedParams:IReactiveReadHookParams,computedOptions:ComputedOptions){
-//   const { path:valuePath } = computedParams;
-//   const {selfState,toComputedResult='self' } = computedOptions
-  
-//   // 如果指定了selfState,即计算结果要写到外部状态中
-//   return selfState ? [valuePath ] : switchValue(toComputedResult,{
-//     self   : valuePath,
-//     root   : [],
-//     parent : valuePath.slice(0,valuePath.length-2),
-//     current: valuePath.slice(0,valuePath.length-1),
-//     Array  : toComputedResult,    // 指定一个数组，表示完整路径
-//     String : [...valuePath.slice(0,valuePath.length-1),String(toComputedResult).split(OBJECT_PATH_DELIMITER)],
-//   },{defaultValue:valuePath})    
-
-// }
-
-

@@ -32,9 +32,7 @@ import { IReactiveReadHookParams } from "./reactives/types";
 
 
 export function installExtends<T extends StoreDefine>(computedParams:IReactiveReadHookParams,store:IStore<T>) {    
-  // 拦截读取state的操作，在第一次读取时，
-  // - 为计算函数创建mutate
-  // - 将原始属性替换为计算属性值或异步对象
+  // 拦截读取state的操作，在第一次读取时， 
     const { path, value } = computedParams;
     const key = joinValuePath(path);
     if ( typeof value === "function" && !store._replacedKeys[key] && !isSkipComputed(value) ) {

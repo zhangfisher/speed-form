@@ -1,5 +1,6 @@
 import { test,expect, describe, beforeAll } from "vitest"
-import { createStore,ComputedScopeRef,computed, IStore} from ".."
+import { createStore,ComputedScopeRef,computed, IStore, StoreEvents} from ".."
+import { ComputedObject } from "../computed/computedObject"
 
  
 
@@ -88,6 +89,73 @@ describe("Store",()=>{
             })         
         })
     })
-    
+    test("Store对象触发属性计算相关事件",()=>{
+        const doned:StoreEvents['computed:done'][]=[]
+        const created:StoreEvents['computed:created'][]=[]
+        const errors:StoreEvents['computed:error'][]=[]
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                    price:2,
+                    count:3,
+                    total1:computed(function (){
+                        return 1
+                    },{id:"a"}),
+                    total2:computed(function (scope){                        
+                        throw new Error()
+                    },{id:"b"}),                
+                    total3:computed(async ()=>{
+                        return 1
+                    },['price','count'],{id:"c"}),
+                    total4:computed(async (scope)=>{                        
+                        throw new Error()
+                    },['price','count'],{id:"d"})                
+            } )       
+            store.on("computed:created",(obj)=>{created.push(obj)})
+            store.on("computed:done",(args)=>{doned.push(args)})
+            store.on("computed:error",(args)=>{errors.push(args)})
+
+            store.state.total1
+            store.state.total2
+            store.state.total3
+            store.state.total4
+            store.setState(draft=>{
+                draft.count++
+            })
+            setTimeout(()=>{
+                expect(created.length).toBe(4)
+                expect(doned.length).toBe(3)  // total3 2次,total1 1次 
+                expect(errors.length).toBe(3)
+                const ids= ["a","b","c","d"]
+                ids.forEach((id,i)=>{
+                    expect(created[i]).toBeInstanceOf(ComputedObject)
+                    expect(created[i].id).toBe(id)
+                    expect(created[i]).toBe(store.computedObjects.get(id))
+                    expect(created[i].path).toEqual([`total${i+1}`])
+                })
+                //  total1 1 次， total3 2次 异步计算会在初始化时先执行一次，然后在依赖数据变更时再次执行
+                const doneIds = [["a",1],["c",3],["c",3]]  
+                doneIds.forEach(([id,i],index)=>{
+                    expect(doned[index].id).toBe(id)
+                    expect(doned[index].path).toEqual([`total${i}`])
+                })
+
+                const errIds = [["b",2],["d",4],["d",4]]  
+                errIds.forEach(([id,i],index)=>{
+                    expect(errors[index].id).toBe(id)
+                    expect(errors[index].path).toEqual([`total${i}`])
+                    expect(errors[index].error).toBeInstanceOf(Error)
+                })
+
+
+                
+                resolve()
+            })
+            
+
+        })
+        
+
+    })
+
 
 })

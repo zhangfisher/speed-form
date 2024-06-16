@@ -4,49 +4,46 @@
 import { StoreDefine } from "../store/types";
 import { getComputedId, getVal, setVal  } from "../utils"; 
 import { ComputedDescriptorParams, ComputedGetter, ComputedOptions,  ComputedRunContext,  RuntimeComputedOptions } from './types';
-import { getComputedScopeDraft } from '../context';
+import { getComputedScope } from '../context';
 import { IStore } from '../store/types';
 import { IReactiveReadHookParams } from "../reactives/types";
 import { ComputedObject } from "./computedObject";
-import { executeStoreHooks,  getMutateId } from "./utils";
+import { executeStoreHooks } from "./utils";
 import { OBJECT_PATH_DELIMITER } from "../consts";
 
 
 
 
 function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
-  const { valuePath, id:mutateId,name:mutateName,resultPath,getter } = computedRunContext
-  const { selfState } = computedOptions
+  const { valuePath, id:computedId,desc:computedDesc,resultPath,getter } = computedRunContext
+  const { selfReactiveable } = computedOptions
 
     store.reactiveable.createComputed({
       onComputed:({draft,values})=>{
         if(!computedOptions.enable){
-          store.options.log(`Sync computed <${mutateName}> is disabled`,'warn')
+          store.options.log(`Sync computed <${computedDesc}> is disabled`,'warn')
           return 
         }
-        store.options.log(`Run sync computed for : ${mutateName}`); 
+        store.options.log(`Run sync computed for : ${computedDesc}`); 
 
         computedRunContext.dependValues = values
  
         // 1. 根据配置参数获取计算函数的上下文对象      
-        const thisDraft = selfState ? selfState :  draft
-        const scopeDraft = selfState ? draft : getComputedScopeDraft(store,draft,computedRunContext, computedOptions)  
+        const thisDraft = draft 
+        const scopeDraft = getComputedScope(store,computedOptions,{draft,dependValues:values,valuePath,computedType:"Computed"} )  
          
         // 2. 执行getter函数
         let computedResult = computedOptions.initial;
         try {
           computedResult = (getter as ComputedGetter<any>).call(thisDraft,scopeDraft);
+          store.emit("computed:done",{ path:valuePath,id: computedId})
         } catch (e: any) {// 如果执行计算函数出错,则调用        
-          if (typeof computedOptions.onError === "function") {
-            try {
-              computedOptions.onError?.call(thisDraft, e);
-            } catch { }
-          }
+          store.emit("computed:error", { path:valuePath,id: computedId, error: e });
         }
         // 3. 将getter的返回值替换到状态中的,完成移花接木
-        if(selfState){
+        if(selfReactiveable){
           // @ts-ignore
-          selfState.setState((draft:any)=>{ 
+          selfReactiveable.setState((draft:any)=>{ 
             setVal(draft, resultPath, computedResult);
           })
         }else{
@@ -80,20 +77,23 @@ export  function createComputedMutate<T extends StoreDefine>(computedParams:IRea
     // 3.运行Hook: 用来在创建computed前运行,允许拦截更改计算函数的依赖,上下文,以及getter等    
     //  运行hook会修改计算配置，所以在hook运行后再读取配置
     executeStoreHooks(valuePath,getter,store,computedOptions)
-    const {  selfState } = computedOptions
-    const computedResultPath:string[] = selfState ? ['value'] : valuePath
+    const {  selfReactiveable } = computedOptions
+    const computedResultPath:string[] = computedOptions.selfPath || valuePath 
 
     // 3. 参数解析:  
 
-    const [mutateId,mutateName] = getMutateId(valuePath,computedOptions)
+    // 计算对象的id和name，name用于打印日志时提供更多信息
+    const computedId = getComputedId(valuePath,computedOptions)
+    const computedDesc = `${computedId}_${valuePath.join(OBJECT_PATH_DELIMITER)}`
+  
 
-    store.options.log(`Create sync computed: ${mutateName}`);    
+    store.options.log(`Create sync computed: ${computedDesc}`);    
     
     const computedRunContext:ComputedRunContext = {
-      id             : computedOptions.id || getComputedId(valuePath,computedOptions.id),
-      name           : selfState ? mutateId : valuePath.join(OBJECT_PATH_DELIMITER),
+      id             : computedId,
+      desc           : computedDesc,
       resultPath     : computedResultPath,
-      isMutateRunning: false,
+      isComputedRunning: false,
       dependValues   : [],
       valuePath,      
       deps           : [],
@@ -103,24 +103,10 @@ export  function createComputedMutate<T extends StoreDefine>(computedParams:IRea
     createComputed(computedRunContext,computedOptions,store)     
 
     // 移花接木原地替换
-    if(!selfState) computedParams.replaceValue(getVal(store.state, valuePath));
+    if(!selfReactiveable) computedParams.replaceValue(getVal(store.state, valuePath));
     
     // 5. 创建计算对象实例
-    // const computedObject = {      
-    //   id:mutateName,
-    //   mutate,
-    //   group:computedOptions.group,
-    //   async:false,
-    //   options:computedOptions,
-    //   get enable(){return computedOptions.enable as boolean},
-    //   set enable(val:boolean){computedOptions.enable=val},
-    //   run:(options?:RuntimeComputedOptions)=>{
-    //     const params = {desc:mutateId,extraArgs:options}
-    //     return isExternal ? computedTo.stateCtx.runMutateTask(params) : store.stateCtx.runMutateTask(params)
-    //   }
-    // }
-    const computedObject = new ComputedObject<T>(store,selfState,valuePath,computedOptions) 
-
-    store.computedObjects.set(mutateName,computedObject)   
+    const computedObject = new ComputedObject<T>(store,selfReactiveable,valuePath,computedOptions) 
+    store.computedObjects.set(computedId,computedObject)   
     return  computedObject
   }

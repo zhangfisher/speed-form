@@ -13,38 +13,17 @@ import { skipComputed,  joinValuePath, getError, getDepValues,getVal, setVal, ge
 import { Dict  } from "../types";
 import { delay } from 'flex-tools/async/delay'; 
 import { OBJECT_PATH_DELIMITER } from '../consts';
-import { getComputedScopeDraft } from '../context';
+import { getComputedScope } from '../context';
 import {  AsyncComputedObject,  ComputedOptions, ComputedParams, ComputedProgressbar } from './types';
 import type  { ComputedDescriptor, ComputedRunContext } from './types';
 import { IReactiveReadHookParams } from '../reactives/types';
 import { ComputedObject } from './computedObject';
-import { executeStoreHooks } from './utils';
+import { createAsyncComputedObject, executeStoreHooks } from './utils';
 
- 
-/** 
- * 创建异步计算属性的数据结构
- * 
-*/
-export function createAsyncComputedObject<T extends Dict=Dict>(store:IStore<T>,mutateId:string,valueObj:Partial<AsyncComputedObject>){
-    return Object.assign({
-      loading : false,
-      timeout : 0,
-      retry   : 0,          // 重试次数，3表示最多重试3次
-      error   : null,
-      result  : undefined,
-      progress: 0,
-      run     : markRaw(skipComputed((args:Dict) => {
-                  return store.reactiveable.runComputed(mutateId,Object.assign({},args));
-                })),
-      cancel  : markRaw(skipComputed(() => {
-        console.log("cancel")       // 此命令会取消异步计算，仅在执行时有效。     
-      }))
-    },valueObj)
-  }
-  
 
-export function setAsyncComputedObject<T extends Dict=Dict>(store:IStore<T>,draft:any,resultPath:string[],mutateId:string,valueObj:Partial<AsyncComputedObject>){
-    const asyncObj = createAsyncComputedObject(store,mutateId,valueObj)
+
+export function setAsyncComputedObject<T extends Dict=Dict>(store:IStore<T>,draft:any,resultPath:string[],computedId:string,valueObj:Partial<AsyncComputedObject>){
+    const asyncObj = createAsyncComputedObject(store,computedId,valueObj)
     const reusltValue = getVal(draft,resultPath)
     Object.assign(reusltValue,asyncObj,valueObj)
 }
@@ -91,13 +70,12 @@ export function setAsyncComputedObject<T extends Dict=Dict>(store:IStore<T>,draf
    */
 async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
    
-    const { valuePath,getter,resultPath } = computedRunContext;  
-    const { timeout=0,retry=[0,0],selfState }  = computedOptions  
-    const setState  = selfState ? selfState.setState : store.setState
+    const { id,valuePath,getter,resultPath,dependValues } = computedRunContext;  
+    const { timeout=0,retry=[0,0],selfReactiveable }  = computedOptions  
+    const setState  = selfReactiveable ? selfReactiveable.setState : store.setState
     // 
-    const thisDraft = selfState ? selfState: draft
-    const scopeDraft = selfState ? draft : getComputedScopeDraft(store,draft,computedRunContext, computedOptions)  
-
+    const thisDraft = draft
+    const scopeDraft = getComputedScope(store,computedOptions,{draft,dependValues,valuePath,computedType:"Computed"} )  
      
     const [retryCount,retryInterval] = Array.isArray(retry) ? retry : [Number(retry),0]
   
@@ -120,13 +98,12 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
     abortController.signal.addEventListener('abort',()=>{
       hasAbort=true
     })
-  
+    let hasError=false
+
     for(let i=0;i<retryCount+1;i++){
-        
-      let timerId:any,countdownId:any,hasError=false,isTimeout=false,isRetry=i>0    
-    
-      const afterUpdated={} // 保存执行完成后需要更新的内容，以便在最后一次执行后更新状态
-  
+      hasError=false
+      let timerId:any,countdownId:any,isTimeout=false    
+      const afterUpdated={} // 保存执行完成后需要更新的内容，以便在最后一次执行后更新状态  
       try {      
         // 处理超时参数和倒计时
         let [timeoutValue=0,countdown=0] = Array.isArray(timeout) ? timeout : [timeout,0]
@@ -157,12 +134,9 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
         const computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
         if(!isTimeout){
           Object.assign(afterUpdated,{result:computedResult,error:null,timeout:0})
-        }    
+        }            
       }catch (e:any) {
-        hasError = true
-        if (typeof computedOptions.onError == "function") {
-          try { computedOptions.onError.call(thisDraft, e)} catch { }
-        }
+        hasError = e
         if(!isTimeout){        
           Object.assign(afterUpdated,{error:getError(e).message,timeout:0})        
         }
@@ -170,7 +144,6 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
         if(retryCount>0){
           Object.assign(afterUpdated,{retry:retryCount- i })        
         }
-        store.emit("computed:error",{path:valuePath,id:computedRunContext.id})
       } finally {      
         clearTimeout(timerId)
         clearInterval(countdownId)
@@ -179,8 +152,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
         if((!hasError && !isTimeout)){
           Object.assign(afterUpdated,{error:null})
         }
-        updateAsyncComputedState(setState,resultPath,afterUpdated)
-  
+        updateAsyncComputedState(setState,resultPath,afterUpdated)  
       } 
       // 重试延迟
       if(hasError){
@@ -190,48 +162,53 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
         }
       }
     }
-  }
+    // 计算完成后触发事件
+    if(hasError){      
+      store.emit("computed:error",{path:valuePath,id,error:hasError})
+    }else{
+      store.emit("computed:done",{path:valuePath,id})
+    }    
+}
 
   
 
 function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
-  const { valuePath, id:mutateId,deps,name:mutateName,resultPath,isMutateRunning,getter } = computedRunContext
-  const { selfState,initial,noReentry } = computedOptions
+  const { valuePath, id:computedId,deps,desc:computedDesc,isComputedRunning: isMutateRunning } = computedRunContext
+  const { selfReactiveable: selfReactiveable,initial,noReentry } = computedOptions
 
   store.reactiveable.createAsyncComputed({
     // 指定依赖
     depends:(draft)=>getDepValues(deps,draft, valuePath),
     // 初始化计算函数
     initial:(draft)=>{
-      if(selfState){
+      if(selfReactiveable){
         // @ts-ignore
-        selfState.setState((draft)=>{
-          Object.assign(draft,createAsyncComputedObject(store,mutateId,{result: initial}))
+        selfReactiveable.setState((draft)=>{
+          Object.assign(draft,createAsyncComputedObject(store,computedId,{result: initial}))
         })
       }else{
-        setVal(draft, valuePath, createAsyncComputedObject(store, mutateId,{result: initial}))
+        setVal(draft, valuePath, createAsyncComputedObject(store, computedId,{result: initial}))
       }          
     },
     onComputed:async ({draft,values,options})=>{
       if(!store.options.enableComputed || (!computedOptions.enable && options?.enable!==true)){
-        store.options.log(`Async computed <${mutateName}> is disabled`,'warn')
+        store.options.log(`Async computed <${computedDesc}> is disabled`,'warn')
         return 
       }
-      store.options.log(`Run async computed for : ${mutateName}`);
+      store.options.log(`Run async computed for : ${computedDesc}`);
 
       const finalComputedOptions = Object.assign({},computedOptions,options) as Required<ComputedOptions>
       if(noReentry && isMutateRunning && store.options.debug) {
-        store.options.log(`Reentry async computed: ${mutateName}`,'warn');
+        store.options.log(`Reentry async computed: ${computedDesc}`,'warn');
         return
       }
-      computedRunContext.isMutateRunning=true
+      computedRunContext.isComputedRunning=true
       computedRunContext.dependValues = values        // 即所依赖项的值
       try{
         const r= await executeComputedGetter(draft,computedRunContext,finalComputedOptions,store)
-        store.emit("computed:done",{path:valuePath,id:mutateId})
         return r
       }finally{
-        computedRunContext.isMutateRunning=false
+        computedRunContext.isComputedRunning=false
       }
     },
     options:computedOptions
@@ -256,45 +233,46 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     // 2. 获取到计算属性描述信息：  包括getter和配置。 此时value是一个函数
     let { getter, options: computedOptions }  = value() as ComputedDescriptor<any>
     computedOptions.async = true; 
-   
+
     // 3.运行Hook: 用来在创建computed前运行,允许拦截更改计算函数的依赖,上下文,以及getter等    
     //  运行hook会修改计算配置，所以在hook运行后再读取配置
     executeStoreHooks(valuePath,getter,store,computedOptions)
 
     // 4. 读取解构计算参数：   由于hook可能会修改计算配置，所以在hook运行后再读取配置
-    const { depends =[], selfState } = computedOptions
+    const { depends =[], selfReactiveable } = computedOptions
 
-    // 5. 解析计算目标路径：  即计算函数的返回值到更新到哪里
-    const computedResultPath:string[] = selfState ? ['value'] : valuePath
+    // 5. 解析计算目标路径：  即计算函数的返回值到更新到哪里,如果指定了selfPath
+    const computedResultPath:string[] =computedOptions.selfPath || valuePath
   
     // 6. 解析依赖参数 
     if(depends.length==0){
       store.options.log(`async computed <${valuePath.join(".")}> should specify depends`,'warn')
     }
-    // 计算对象的id和name，name用于显示
-    const mutateId = computedOptions.id || getComputedId(valuePath,computedOptions.id)
-    const mutateName =selfState ? mutateId : valuePath.join(OBJECT_PATH_DELIMITER)
+    // 计算对象的id和name，name用于打印日志时提供更多信息
+    const computedId = getComputedId(valuePath,computedOptions)
+    const computedDesc = `${computedId}_${valuePath.join(OBJECT_PATH_DELIMITER)}`
   
-    store.options.log(`Create async computed: ${mutateName} (depends=${depends.length==0 ? 'None' : joinValuePath(depends)})`);
+    store.options.log(`Create async computed: ${computedDesc} (depends=${depends.length==0 ? 'None' : joinValuePath(depends)})`);
     
     // 7. 创建mutate
     const computedRunContext:ComputedRunContext = {
-      id             : computedOptions.id || getComputedId(valuePath,computedOptions.id),
-      name           : selfState ? mutateId : valuePath.join(OBJECT_PATH_DELIMITER),
-      resultPath     : computedResultPath,
-      isMutateRunning: false,
-      dependValues   : [],
+      id               : computedId,
+      desc             : computedDesc,
+      resultPath       : computedResultPath,
+      isComputedRunning: false,
+      dependValues     : [],
       valuePath,      
-      deps:depends,
+      deps             : depends,
       getter
     }    
-    createComputed(computedRunContext,computedOptions,store)     
+    createComputed(computedRunContext,computedOptions,store)  
+
     // 移花接木原地替换
-    if(!selfState) computedParams.replaceValue(getVal(store.state, valuePath));
+    if(!selfReactiveable) computedParams.replaceValue(getVal(store.state, valuePath));
 
     // 8. 创建计算对象实例
-    const computedObject = new ComputedObject<T>(store,selfState,valuePath,computedOptions) 
-    store.computedObjects.set(mutateId,computedObject)  
+    const computedObject = new ComputedObject<T>(store,selfReactiveable,valuePath,computedOptions) 
+    store.computedObjects.set(computedId,computedObject)  
     return  computedObject
 }
 

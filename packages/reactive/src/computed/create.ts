@@ -5,22 +5,22 @@
  * 
  */
 
-import {  ISharedCtx, sharex } from "helux"
 import { StoreDefine } from "../store/types"
-import { Dict, IStore } from "../types"
+import { ComputedDepends, ComputedGetter, Dict, IStore } from "../types"
 import { AsyncComputedGetter,  ComputedOptions, ComputedParams, IComputeParams } from "../computed/types"
 import { computed } from "./computed"
 import { installComputed } from "./install" 
 import { getRndId } from "../utils/getRndId"
 import { IReactiveReadHookParams } from "../reactives/types"
+import { HeluxReactiveable } from "../reactives/helux"
+import { isAsyncFunction } from 'flex-tools/typecheck/isAsyncFunction'; 
+import { createAsyncComputedObject } from "./utils"
 
 
 
 export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = ComputedOptions<R,ExtraAttrs> & {
      id:string              // 必须指定一个id
-     depends: string[]      // 依赖的字段
-     scope?:string[]
-     context?:string[]
+     depends: string[]      // 依赖的字段 
 }
   
   /**
@@ -37,14 +37,12 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
    * 
    * 实现不需要在状态上声明就可以创建计算属性
    * 
-   * const computedObject = store.computedObject.new(async (scope:any,options)=>{
+   * const computedObject = store.computedObject.create(async (scope:any,options)=>{
    * 
    * },{
    *    id:"指定一个有意义的名称"   
    *    depends:["依赖的字段"]   必须指定依赖字段，当所依赖的字段变化时执行计算函数
-   *    scope:<>
-   *    context:<>
-   *  
+   *    ...其他参数
    * })
    * 
    * computedObject.run()  // 运行计算函数
@@ -58,32 +56,46 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
    * 
    * 
    */
-  export function computedObjectCreator<T extends StoreDefine>(store:IStore<T>){
-    
-    return <R = any,ExtraAttrs extends Dict = {}>(getter:AsyncComputedGetter<R>,options?:ComputedObjectCreateOptions<R,ExtraAttrs>)=>{
+  export function computedObjectCreator<T extends StoreDefine>(store:IStore<T>){    
+    return <R = any,ExtraAttrs extends Dict = {}>(getter:ComputedGetter<R> | AsyncComputedGetter<R>,depends:ComputedDepends,options?:ComputedObjectCreateOptions<R,ExtraAttrs>)=>{
+        
         const opts = Object.assign({
             id:getRndId(),
-            scope:store.stateCtx.state,            
-            context:store.stateCtx.state
-        },options) as ComputedObjectCreateOptions<R,ExtraAttrs>
+            selfPath:['value'],
+            depends    
+        },options) as Required<ComputedOptions<R,ExtraAttrs>>
 
         if(!Array.isArray(opts.depends) || opts.depends.length==0){
-            throw new Error("options.depends must be an array and not empty")
+            throw new Error("depends must be an array and not empty")
         }
-      
-      // 异步对象信息回写到此
-      const targetCtx = sharex({}) as ISharedCtx 
-      
-      // 模拟helux的IOperateParams，因为只用到了fullKeyPath,parent,value
-      // 当computed在state中声明时可以获取所在位置的fullKeyPath,parent,而使用createComputed时就没有这些信息
-      // 需要自行构建，并传递一个targetCtx,
-      const computedParams = {
-        path: [],
-        parent: null,
-        value: computed(getter, opts.depends, options)
-      } as unknown  as IReactiveReadHookParams
-      installComputed(computedParams,store)
-      return targetCtx
+
+        const isAsync = opts.async===true ||  isAsyncFunction(getter)
+
+        // 创建Reactiveable实例
+        opts.selfReactiveable = new HeluxReactiveable<Dict>({
+          value: isAsync ? createAsyncComputedObject(store,opts.id,{}) : opts.initial
+        })
+
+
+      let computedParams:IReactiveReadHookParams
+      if(opts.async){
+        computedParams = {
+          path: [],
+          parent: null,
+          value: computed(getter as AsyncComputedGetter<R>, opts.depends, opts)
+        } as unknown  as IReactiveReadHookParams
+      }else{
+        computedParams = {
+          path: [],
+          parent: null,
+          value: computed(getter as ComputedGetter<R>,opts)
+        } as unknown  as IReactiveReadHookParams
+      } 
+      const computedObject = installComputed(computedParams,store)
+      return {
+        value: opts.selfReactiveable.state.value,
+        computedObject
+      }
     }
   
   }

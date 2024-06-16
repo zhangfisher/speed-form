@@ -47,4 +47,5 @@ export function installComputed<T extends StoreDefine>(params:IReactiveReadHookP
     if(computedObject){
       store.emit("computed:created",computedObject as any)
     }
+    return computedObject
   }

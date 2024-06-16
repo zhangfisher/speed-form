@@ -47,7 +47,7 @@ export class ComputedObjects<T extends StoreDefine =  StoreDefine> extends Map<s
     /**
      * 创建一个新计算对象
      */
-    get new():ReturnType<typeof computedObjectCreator>{
+    get create():ReturnType<typeof computedObjectCreator>{
       if(!this._createComputed){
         this._createComputed = computedObjectCreator(this.store)
       }

@@ -10,6 +10,7 @@ import { createUseWatch } from '../watch/useWatch';
 import { getRndId } from "../utils/getRndId";
 import { HeluxReactiveable } from "../reactives/helux";
 import { Reactiveable } from "../reactives/types";
+import { computedObjectCreator } from '../computed/create';
 
 
 
@@ -68,7 +69,7 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     // store.useComputed = createComputed<>(store)
 
     // 3. 创建计算对象的函数
-    // const createComputed = computedObjectCreator(stateCtx,extendObjects,opts)
+    store.createComputed = computedObjectCreator<T>(store)
     // // @ts-ignore
     // extendObjects.computedObjects.new = createComputed
 

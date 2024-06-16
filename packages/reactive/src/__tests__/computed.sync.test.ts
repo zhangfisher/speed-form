@@ -3,7 +3,7 @@ import { createStore,ComputedScopeRef,computed, IStore } from ".."
 
  
 
-describe("基本同步计算",()=>{
+describe("基本同步计算属性",()=>{
 
     test("默认同步计算",async ()=>{
         const store = createStore({
@@ -12,6 +12,18 @@ describe("基本同步计算",()=>{
             total:computed((scope)=>{
                 return scope.price * scope.count
             })
+        })
+        store.setState((draft)=>draft.count = 4)
+        expect(store.state.total).toBe(8)
+    })  
+    
+    test("不使用computed函数的同步计算",async ()=>{
+        const store = createStore({
+            price:2,
+            count:3,
+            total:(scope:any)=>{
+                return scope.price * scope.count
+            }
         })
         store.setState((draft)=>draft.count = 4)
         expect(store.state.total).toBe(8)

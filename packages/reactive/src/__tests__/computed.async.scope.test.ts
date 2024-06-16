@@ -75,10 +75,12 @@ describe("异步计算函数的Scope指向",()=>{
                                 // 当指定Depends时，同步计算通过执行计算函数不收集依赖的，所以第一次执行时，scope是空的
                                 // 所以ComputedScopeRef.Depends在同步计算下是无效的
                                 total:computed<number>(async (scope)=>{  
-                                    expect(scope.length).toBe(0)
+                                    expect(scope.length).toBe(2)
+                                    expect(scope[0]).toBe(3)
+                                    expect(scope[1]).toBe(2)
                                     resolve()
                                     return 0
-                                }) 
+                                },["root.parent.order.count","root.parent.order.price"]) 
                             }
                         }
                     }
@@ -86,7 +88,7 @@ describe("异步计算函数的Scope指向",()=>{
                     scope:()=>ComputedScopeRef.Depends,
                     onceComputed:true
                 })            
-            // store.state.root.parent.order.total // 读取操作时创建计算属性
+            store.state.root.parent.order.total // 读取操作时创建计算属性
         }) 
     })
     test("异步计算Scope指向字符串指定的绝对路径",()=>{

@@ -1,18 +1,19 @@
-import { ISharedCtx, sharex } from "helux"
+import { ISharedCtx, sharex,markRaw } from "helux"
 import { CreateAsyncComputedOptions, Reactiveable, IReactiveableOptions, CreateComputedOptions } from "./types";
 import { ComputedState, Dict, RequiredComputedState, RuntimeComputedOptions, StateGetter, StateSetter } from "../types";
 import { getRndId } from "../utils/getRndId";
 
+ 
 
 export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
     private _stateCtx:ISharedCtx<T>
-    constructor(state:T,options:IReactiveableOptions){ 
+    constructor(state:T,options?:IReactiveableOptions){ 
         super(state,options)
         this._stateCtx = sharex<T>(state as any,{
             stopArrDep: false,
-            moduleName:options.id ?? getRndId(),
+            moduleName:options?.id ?? getRndId(),
             onRead:(params)=>{
-                options.onRead({
+                options?.onRead && options.onRead({
                     path:params.fullKeyPath,
                     value:params.value,
                     parent:params.parent,
@@ -115,4 +116,7 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
         const params = {desc:id,extraArgs:options}
         this._stateCtx.runMutateTask(params) 
     }    
+    markRaw<V=any>(value:V):V{
+        return markRaw(value)
+    }
 }

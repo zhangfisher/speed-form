@@ -44,37 +44,37 @@ export type IReactiveableOptions = {
      * }
      *    
      */
-    onRead(params: IReactiveReadHookParams):void
+    onRead?(params: IReactiveReadHookParams):void
 } 
 
 export class Reactiveable<T extends Dict = Dict>{
-    constructor(state:T,options:IReactiveableOptions){
+    constructor(state:T,options?:IReactiveableOptions){
 
     }     
     get state():ComputedState<T>{
-        throw new Error("Method not implemented.")
+        throw new Error("state not implemented.")
     }
     useState<Value=T,SetValue=Value>(
         getter?:StateGetter<RequiredComputedState<T>,Value>,
         setter?:StateSetter<RequiredComputedState<T>,SetValue>
     ):[Value,(value:SetValue)=>void]        {
-        throw new Error("Method not implemented.")
+        throw new Error("useState not implemented.")
     }
     /**
      * 
      * @param fn 
      */
     setState(fn:(draft:ComputedState<T>)=>void):void{
-        throw new Error("Method not implemented.")
+        throw new Error("setState not implemented.")
     }        
     /**
      * 创建计算属性
      */
     createAsyncComputed(params:CreateAsyncComputedOptions<ComputedState<T>>):string{
-        throw new Error("Method not implemented.")
+        throw new Error("createAsyncComputed not implemented.")
     }
     createComputed(params:CreateComputedOptions<ComputedState<T>>):string{
-        throw new Error("Method not implemented.")
+        throw new Error("createComputed not implemented.")
     }
     /**
      * 手动运行计算函数
@@ -82,7 +82,11 @@ export class Reactiveable<T extends Dict = Dict>{
      * @param options 
      */
     runComputed(id:string,options?:RuntimeComputedOptions):void{
-        throw new Error("Method not implemented.")
+        throw new Error("runComputed not implemented.")
+    }
+
+    markRaw<V=any>(value:V):V{
+        throw new Error("makeRaw not implemented.")
     }
 
 }

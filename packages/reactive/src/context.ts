@@ -24,7 +24,7 @@ import { IOperateParams } from "helux";
 import { OBJECT_PATH_DELIMITER } from "./consts";
 import { type ComputedScope, ComputedScopeRef, StoreOptions, StoreDefine, IStore } from "./store/types";
 import { getRelValuePath, getValueByPath } from "./utils";
-import { ComputedOptions, ComputedRunContext, StateComputedType } from "./computed/types";
+import { ComputedOptions, ComputedRunContext, ComputedType, StateComputedType } from "./computed/types";
 
 /*
 * 计算函数的context可以在全局Store中通过computedThis参数指定
@@ -65,15 +65,15 @@ export type GetComputedContextOptions<T extends StoreDefine =StoreDefine> ={
  * @param params 
  * @returns 
  */
-export function getComputedScope<T extends StoreDefine = StoreDefine>(draft: any,params:GetComputedContextOptions<T>) {
+export function getComputedScope<T extends StoreDefine = StoreDefine>(store:IStore<T>,computedOptions: ComputedOptions,ctx:{draft: any,dependValues:any[],valuePath:string[],computedType:ComputedType}) {
 
-    const { dependValues,  valuePath, funcOptions, storeOptions,computedType } = params;
+    const { draft,dependValues,  valuePath, computedType } = ctx;
   
     let rootDraft = draft;
   
     // 1. 执行hook：可以在hook函数中修改计算函数的根上下文以及相关配置参数
-    if (typeof storeOptions.onComputedDraft == "function") {
-      const newDraft = storeOptions.onComputedDraft.call(draft,draft,{computedType,valuePath});
+    if (typeof store.options.onComputedDraft == "function") {
+      const newDraft = store.options.onComputedDraft.call(draft,draft,{computedType,valuePath});
       if (newDraft !== undefined) {
         rootDraft = newDraft;
       }
@@ -81,7 +81,7 @@ export function getComputedScope<T extends StoreDefine = StoreDefine>(draft: any
     const parentPath = valuePath.length>=1 ? valuePath.slice(0, valuePath.length - 1) : [];
 
    // 2. 读取计算函数的上下文配置参数
-   const contexRef = getContextOptions(draft,funcOptions.scope, (storeOptions.scope && storeOptions.scope(computedType)))
+   const contexRef = getContextOptions(draft,computedOptions.scope, (store.options.scope && store.options.scope(computedType)))
   
     // 3. 根据配置参数获取计算函数的上下文对象
     try { 
@@ -112,24 +112,3 @@ export function getComputedScope<T extends StoreDefine = StoreDefine>(draft: any
           return draft;
     }
   }
-
-  /**
-
- * 
- * 根据当前计算函数的信息和配置参数获取计算函数的上下文或作用域
- * 
- * @param draft 
- * @param params 
- * @returns 
- */
-export function getComputedScopeDraft<T extends StoreDefine>(store:IStore<T>,draft: any,computedRunContext:ComputedRunContext,computedOptions: ComputedOptions) {    
-  const { valuePath,dependValues:values } = computedRunContext
-  return getComputedScope(draft,{
-    dependValues: values,
-    valuePath,
-    funcOptions:computedOptions,
-    storeOptions:store.options,
-    computedType:'Computed'
-  })
-}
-  
