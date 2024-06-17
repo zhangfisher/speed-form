@@ -1,6 +1,6 @@
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
 import { IStore, StoreDefine } from "../store/types";
-import { ComputedTarget } from "./types";
+import { AsyncComputedObject, ComputedTarget } from "./types";
 import { createAsyncComputedMutate } from "./async";
 import { createComputedMutate } from "./sync"; 
 import { IReactiveReadHookParams } from "../reactives/types";
@@ -12,12 +12,12 @@ import { ComputedObject } from "./computedObject";
  */
  
 
-export function installComputed<T extends StoreDefine>(params:IReactiveReadHookParams,store:IStore<T>) {
+export function installComputed<T extends StoreDefine,R=any>(params:IReactiveReadHookParams,store:IStore<T>):ComputedObject<T,R> | ComputedObject<T,AsyncComputedObject<R>> {
     const descriptor = params.value
-    let computedObject:ComputedObject<T> | undefined
+    let computedObject:ComputedObject<T,R >  | ComputedObject<T,AsyncComputedObject<R>>  
     //@ts-ignore
     if (descriptor.__COMPUTED__=='async') {
-      computedObject = createAsyncComputedMutate<T>(params,store);
+      computedObject = createAsyncComputedMutate<T,R>(params,store);
     //@ts-ignore
     }else if (descriptor.__COMPUTED__=='sync') {
       computedObject = createComputedMutate<T>(params,store);
@@ -31,7 +31,7 @@ export function installComputed<T extends StoreDefine>(params:IReactiveReadHookP
             enable   : true,
         },
         });
-        computedObject = createAsyncComputedMutate<T>(params,store);
+        computedObject = createAsyncComputedMutate<T,R>(params,store);
     }else {       // 简单的同步计算函数，没有通过computed函数创建
       params.value = () => ({
         getter: descriptor,
@@ -41,7 +41,7 @@ export function installComputed<T extends StoreDefine>(params:IReactiveReadHookP
         }
       })
       // 直接声明同步计算函数,使用全局配置的计算上下文
-      computedObject = createComputedMutate<T>(params,store);
+      computedObject = createComputedMutate<T,R>(params,store);
     }
     // 当创建计算完毕后的回调
     if(computedObject){

@@ -60,8 +60,7 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
     return <R = any,ExtraAttrs extends Dict = {}>(getter:ComputedGetter<R> | AsyncComputedGetter<R>,depends:ComputedDepends,options?:ComputedObjectCreateOptions<R,ExtraAttrs>)=>{
         
         const opts = Object.assign({
-            id:getRndId(),
-            selfPath:['value'],
+            id:getRndId(), 
             depends    
         },options) as Required<ComputedOptions<R,ExtraAttrs>>
 
@@ -80,22 +79,19 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
       let computedParams:IReactiveReadHookParams
       if(opts.async){
         computedParams = {
-          path: [],
+          path: ['value'],
           parent: null,
           value: computed(getter as AsyncComputedGetter<R>, opts.depends, opts)
         } as unknown  as IReactiveReadHookParams
       }else{
         computedParams = {
-          path: [],
+          path: ['value'],
           parent: null,
           value: computed(getter as ComputedGetter<R>,opts)
         } as unknown  as IReactiveReadHookParams
       } 
-      const computedObject = installComputed(computedParams,store)
-      return {
-        value: opts.selfReactiveable.state.value,
-        computedObject
-      }
+      const computedObject = installComputed<T,R>(computedParams,store)      
+      return  computedObject
     }
   
   }

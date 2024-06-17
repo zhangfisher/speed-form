@@ -160,16 +160,7 @@ export interface ComputedProgressbar{
     /**
      * 额外合并到计算结果AsyncComputedObject中的属性
      */
-    extras?:Extras
-
-    /**
-     * 计算函数computed所在的路径
-     * 
-     * 一般不需要额外指定，当使用computed函数声明式时会自动指定 
-     * 
-     * 此参数仅在动态创建计算属性时使用
-     */
-    selfPath?: string[]                    
+    extras?:Extras                  
     /**
      * 默认情况下，计算结果会写入到当前store中computed所在的位置,即selfPath
      * 如果指定此属性，则会将计算结果写入selfReactiveable指定的位置selfPath

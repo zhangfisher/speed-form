@@ -221,14 +221,14 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
  * @param stateCtx
  * @param params
  */
-export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams:IReactiveReadHookParams,store:IStore<T>) :ComputedObject<T> | undefined{
+export  function createAsyncComputedMutate<T extends StoreDefine,R=any>(computedParams:IReactiveReadHookParams,store:IStore<T>) :ComputedObject<T,AsyncComputedObject<R>> {
     
     // 1. 参数检查
     const { path:valuePath, parent ,value } = computedParams;
-    // 排除掉所有非own属性,例如valueOf等
-    if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
-      return;
-    }
+    // // 排除掉所有非own属性,例如valueOf等
+    // if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
+    //   return;
+    // }
 
     // 2. 获取到计算属性描述信息：  包括getter和配置。 此时value是一个函数
     let { getter, options: computedOptions }  = value() as ComputedDescriptor<any>
@@ -242,7 +242,7 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     const { depends =[], selfReactiveable } = computedOptions
 
     // 5. 解析计算目标路径：  即计算函数的返回值到更新到哪里,如果指定了selfPath
-    const computedResultPath:string[] =computedOptions.selfPath || valuePath
+    const computedResultPath:string[] =  valuePath
   
     // 6. 解析依赖参数 
     if(depends.length==0){
@@ -271,7 +271,7 @@ export  function createAsyncComputedMutate<T extends StoreDefine>(computedParams
     if(!selfReactiveable) computedParams.replaceValue(getVal(store.state, valuePath));
 
     // 8. 创建计算对象实例
-    const computedObject = new ComputedObject<T>(store,selfReactiveable,valuePath,computedOptions) 
+    const computedObject = new ComputedObject<T,AsyncComputedObject<R>>(store,selfReactiveable,valuePath,computedOptions) 
     store.computedObjects.set(computedId,computedObject)  
     return  computedObject
 }

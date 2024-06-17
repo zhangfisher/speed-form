@@ -61,13 +61,13 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
  * @param computedParams
  */
 
-export  function createComputedMutate<T extends StoreDefine>(computedParams:IReactiveReadHookParams,store:IStore<T>) :ComputedObject<T> | undefined{
+export  function createComputedMutate<T extends StoreDefine,R=any>(computedParams:IReactiveReadHookParams,store:IStore<T>) :ComputedObject<T> {
     
   // 1. 获取计算属性的描述
   const {path:valuePath, parent,value } = computedParams;       
-  if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
-    return;         // 排除掉所有非own属性,例如valueOf等
-  }
+  // if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
+  //   return;         // 排除掉所有非own属性,例如valueOf等
+  // }
   // 2. 获取到计算属性描述信息：  包括getter和配置。 此时value是一个函数
 
   let { getter, options: computedOptions }  = value() as ComputedDescriptorParams<any>    
@@ -78,7 +78,7 @@ export  function createComputedMutate<T extends StoreDefine>(computedParams:IRea
     //  运行hook会修改计算配置，所以在hook运行后再读取配置
     executeStoreHooks(valuePath,getter,store,computedOptions)
     const {  selfReactiveable } = computedOptions
-    const computedResultPath:string[] = computedOptions.selfPath || valuePath 
+    const computedResultPath:string[] =  valuePath 
 
     // 3. 参数解析:  
 
@@ -106,7 +106,7 @@ export  function createComputedMutate<T extends StoreDefine>(computedParams:IRea
     if(!selfReactiveable) computedParams.replaceValue(getVal(store.state, valuePath));
     
     // 5. 创建计算对象实例
-    const computedObject = new ComputedObject<T>(store,selfReactiveable,valuePath,computedOptions) 
+    const computedObject = new ComputedObject<T,R>(store,selfReactiveable,valuePath,computedOptions) 
     store.computedObjects.set(computedId,computedObject)   
     return  computedObject
   }
