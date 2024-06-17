@@ -1,6 +1,7 @@
 import { test,expect, describe, beforeAll } from "vitest"
 import { createStore,ComputedScopeRef,computed, IStore } from ".."
 import { ComputedObject } from "../computed/computedObject"
+import { flush } from "helux"
 
  
 
@@ -32,6 +33,64 @@ describe("异步计算",()=>{
             store.setState((draft)=>draft.count = 5)
         })
     })  
+    test("从异步对象实例读取计算值",()=>{
+        // 同样的用例，差别在于读取方式：
+        // store.state.total.result
+        // store.computedObjects.get("x").value.result
+
+
+        let count:number =0 
+        let results:number[] = []
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                price:2,
+                count:3,
+                total:computed(async (scope)=>{
+                    count++
+                    return scope.price * scope.count
+                },['price','count'],{id:"x"})
+            },{    
+                onceComputed:true               // 遍历对象，从而导致计算属性被读取而立刻创建
+            }) 
+            const cobj = store.computedObjects.get("x")!
+            store.on("computed:done",()=>{     
+                results.push(cobj.value.result)
+                if(results.length===3){
+                    expect(count).toBe(3)         
+                    expect(results).toEqual([6,6,6]) // ?
+                    resolve()        
+                }                
+            })   
+            store.setState((draft)=>draft.count = 4)
+            store.setState((draft)=>draft.count = 5)
+        })
+    })  
+
+
+    test("异步计算生成异步计算数据对象",()=>{
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                price:2,
+                count:3,
+                total:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'])
+            } ) 
+            store.on("computed:created",(obj)=>{
+                expect("result" in store.state.total).toBe(true)
+                expect("error" in store.state.total).toBe(true)
+                expect("loading" in store.state.total).toBe(true)
+                expect("retry" in store.state.total).toBe(true)
+                expect("run" in store.state.total).toBe(true)
+                expect("cancel" in store.state.total).toBe(true)
+                expect("progress" in store.state.total).toBe(true)
+                expect("timeout" in store.state.total).toBe(true)
+                resolve()        
+            })   
+            store.state.total
+        })
+    })  
+
     test("创建计算对象实例",()=>{
         return new Promise<void>((resolve)=>{
             let count:number =0 

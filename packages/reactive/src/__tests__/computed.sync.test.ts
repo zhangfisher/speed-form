@@ -44,7 +44,18 @@ describe("基本同步计算属性",()=>{
             store.state.order.total // 读取操作时创建计算属性
         })        
     }) 
-
+    test("通过计算对象实例读取同步计算值",async ()=>{
+        const store = createStore({
+            price:2,
+            count:3,
+            total:computed<number>((scope)=>{
+                return scope.price * scope.count
+            },{id:"a"})
+        })
+        store.setState((draft)=>draft.count = 4)
+        expect(store.state.total).toBe(8)
+        expect(store.computedObjects.get("a")?.value).toBe(8)
+    }) 
     
 
 })
