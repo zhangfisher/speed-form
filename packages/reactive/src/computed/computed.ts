@@ -4,6 +4,9 @@ import type { ComputedDescriptorCreator, Dict } from "../types";
 import { AsyncComputedGetter, ComputedDepends, ComputedGetter, ComputedOptions } from "./types";
 import { normalizeDeps } from "../utils/normalizeDeps";
  
+
+
+
 /**
  * 用来封装状态的计算函数，使用计算函数的传入的是当前对象
  *

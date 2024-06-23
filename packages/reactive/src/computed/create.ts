@@ -16,6 +16,7 @@ import { HeluxReactiveable } from "../reactives/helux"
 import { isAsyncFunction } from 'flex-tools/typecheck/isAsyncFunction'; 
 import { createAsyncComputedObject } from "./utils"
 import { ComputedObject } from "./computedObject"
+import { isPlainObject } from 'flex-tools/typecheck/isPlainObject';
 
 
 
@@ -58,36 +59,22 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
    * 
    * 
    */
-  export function computedObjectCreator<T extends StoreDefine>(store:IStore<T>){    
-     function creatorComputedObject<R = any>(getter:ComputedGetter<R>,options?:ComputedObjectCreateOptions<R>):ComputedObject<T,R>
-     function creatorComputedObject<R = any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?:ComputedObjectCreateOptions<R>):ComputedObject<T,R>
-     function creatorComputedObject<R = any>(getter:any,depends:any,options?:any){ 
+export function computedObjectCreator<T extends StoreDefine>(store:IStore<T>){    
+    function creatorComputedObject<R = any>(getter:ComputedGetter<R>,options?:ComputedObjectCreateOptions<R>):ComputedObject<T,R>
+    function creatorComputedObject<R = any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?:ComputedObjectCreateOptions<R>):ComputedObject<T,R>
+    function creatorComputedObject<R = any>(getter:any,depends:any,options?:any){ 
 
-        if(arguments.length==1){
-
-        }else if(arguments.length==2){
-          
-        }else{
-          
-        }
-      
-        const opts = Object.assign({
-            id:getRndId(), 
-            depends    
-        },options) as Required<ComputedOptions<R>>
-
-        if(!Array.isArray(opts.depends) || opts.depends.length==0){
-            throw new Error("depends must be an array and not empty")
-        }
-
-        const isAsync = opts.async===true ||  isAsyncFunction(getter)
+      let opts =Object.assign({
+          id:getRndId(), 
+      },isPlainObject(arguments[1]) ? arguments[1] : arguments[2]) as Required<ComputedOptions<R>>
+      opts.depends = Array.isArray(arguments[1]) ? arguments[1] : []
+      const isAsync = opts.async===true ||  isAsyncFunction(getter) 
 
         // 创建Reactiveable实例
-        opts.selfReactiveable = new HeluxReactiveable<Dict>({
-          value: isAsync ? createAsyncComputedObject(store,opts.id,{}) : opts.initial
-        })
-
-
+      opts.selfReactiveable = new HeluxReactiveable<Dict>({
+         value: isAsync ? createAsyncComputedObject(store,opts.id,{}) : opts.initial
+      }) 
+      
       let computedParams:IReactiveReadHookParams
       if(opts.async){
         computedParams = {
@@ -108,4 +95,4 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
 
     return creatorComputedObject
   
-  }
+}
