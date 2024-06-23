@@ -15,12 +15,14 @@ import { IReactiveReadHookParams } from "../reactives/types"
 import { HeluxReactiveable } from "../reactives/helux"
 import { isAsyncFunction } from 'flex-tools/typecheck/isAsyncFunction'; 
 import { createAsyncComputedObject } from "./utils"
+import { ComputedObject } from "./computedObject"
 
 
 
 export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = ComputedOptions<R,ExtraAttrs> & {
      id:string              // 必须指定一个id
      depends: string[]      // 依赖的字段 
+
 }
   
   /**
@@ -57,12 +59,22 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
    * 
    */
   export function computedObjectCreator<T extends StoreDefine>(store:IStore<T>){    
-    return <R = any,ExtraAttrs extends Dict = {}>(getter:ComputedGetter<R> | AsyncComputedGetter<R>,depends:ComputedDepends,options?:ComputedObjectCreateOptions<R,ExtraAttrs>)=>{
-        
+     function creatorComputedObject<R = any>(getter:ComputedGetter<R>,options?:ComputedObjectCreateOptions<R>):ComputedObject<T,R>
+     function creatorComputedObject<R = any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?:ComputedObjectCreateOptions<R>):ComputedObject<T,R>
+     function creatorComputedObject<R = any>(getter:any,depends:any,options?:any){ 
+
+        if(arguments.length==1){
+
+        }else if(arguments.length==2){
+          
+        }else{
+          
+        }
+      
         const opts = Object.assign({
             id:getRndId(), 
             depends    
-        },options) as Required<ComputedOptions<R,ExtraAttrs>>
+        },options) as Required<ComputedOptions<R>>
 
         if(!Array.isArray(opts.depends) || opts.depends.length==0){
             throw new Error("depends must be an array and not empty")
@@ -93,5 +105,7 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
       const computedObject = installComputed<T,R>(computedParams,store)      
       return  computedObject
     }
+
+    return creatorComputedObject
   
   }

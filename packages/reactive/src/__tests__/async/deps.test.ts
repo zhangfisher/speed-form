@@ -1,6 +1,6 @@
 
 import { test,expect, describe, beforeAll } from "vitest"
-import { createStore,ComputedScopeRef,computed, IStore } from ".."
+import { createStore,ComputedScopeRef,computed, IStore } from "../.."
 
  
   

@@ -36,9 +36,9 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
         let computedResult = computedOptions.initial;
         try {
           computedResult = (getter as ComputedGetter<any>).call(thisDraft,scopeDraft);
-          store.emit("computed:done",{ path:valuePath,id: computedId})
+          setTimeout(()=>store.emit("computed:done",{ path:valuePath,id: computedId}))
         } catch (e: any) {// 如果执行计算函数出错,则调用        
-          store.emit("computed:error", { path:valuePath,id: computedId, error: e });
+          setTimeout(()=>store.emit("computed:error", { path:valuePath,id: computedId, error: e }))
         }
         // 3. 将getter的返回值替换到状态中的,完成移花接木
         if(selfReactiveable){

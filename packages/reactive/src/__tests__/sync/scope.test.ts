@@ -1,5 +1,5 @@
 import { test,expect, describe, beforeAll } from "vitest"
-import { createStore,ComputedScopeRef,computed } from ".."
+import { createStore,ComputedScopeRef,computed } from "../.."
  
 describe("计算函数的Scope指向",()=>{
 

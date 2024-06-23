@@ -164,9 +164,9 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
     }
     // 计算完成后触发事件
     if(hasError){      
-      store.emit("computed:error",{path:valuePath,id,error:hasError})
+      setTimeout(()=>store.emit("computed:error",{path:valuePath,id,error:hasError}))
     }else{
-      store.emit("computed:done",{path:valuePath,id})
+      setTimeout(()=>store.emit("computed:done",{path:valuePath,id}))
     }    
 }
 

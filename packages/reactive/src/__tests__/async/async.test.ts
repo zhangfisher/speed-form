@@ -1,6 +1,6 @@
 import { test,expect, describe, beforeAll } from "vitest"
-import { createStore,ComputedScopeRef,computed, IStore } from ".."
-import { ComputedObject } from "../computed/computedObject"
+import { createStore,ComputedScopeRef,computed, IStore } from "../.."
+import { ComputedObject } from "../../computed/computedObject"
 import { flush } from "helux"
 
  
@@ -25,7 +25,9 @@ describe("异步计算",()=>{
                 results.push(store.state.total.result)
                 if(results.length===3){
                     expect(count).toBe(3)         
-                    expect(results).toEqual([6,8,10]) 
+                    // 为什么是10，10，10?
+                    // 因为setState是同步操作，而computed:done是异步事件，在下一个事件循环中执行触发
+                    expect(results).toEqual([10,10,10]) 
                     resolve()        
                 }                
             })   
@@ -34,11 +36,6 @@ describe("异步计算",()=>{
         })
     })  
     test("从异步对象实例读取计算值",()=>{
-        // 同样的用例，差别在于读取方式：
-        // store.state.total.result
-        // store.computedObjects.get("x").value.result
-
-
         let count:number =0 
         let results:number[] = []
         return new Promise<void>((resolve)=>{
@@ -57,7 +54,7 @@ describe("异步计算",()=>{
                 results.push(cobj.value.result)
                 if(results.length===3){
                     expect(count).toBe(3)         
-                    expect(results).toEqual([6,6,6]) // ?
+                    expect(results).toEqual([10,10,10]) // ?
                     resolve()        
                 }                
             })   
