@@ -178,7 +178,9 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
 
   store.reactiveable.createAsyncComputed({
     // 指定依赖
-    depends:(draft)=>getDepValues(deps,draft, valuePath),
+    depends:(draft)=>{
+      return getDepValues(deps,draft, valuePath)
+    },
     // 初始化计算函数
     initial:(draft)=>{
       if(selfReactiveable){

@@ -139,7 +139,7 @@ describe("动态创建异步计算属性",()=>{
             },["price","count"],{id:"x",save:true,initial:6})            
         }) 
     })
-    test("动态异步计算属性依赖变化时自动更新",()=>{
+    test("动态异步计算属性初始化时自动执行一次",()=>{
         return new Promise<void>(resolve=>{
             const store = createStore({
                 price:2,
@@ -147,15 +147,35 @@ describe("动态创建异步计算属性",()=>{
             })
             store.on("computed:done",()=>{       
                 expect(obj.value.result).toBe(6)  
-                // resolve()
-                // expect(obj.value.result).toBe(8)    
-                // resolve()
+                resolve()
             })
             const obj = store.createComputed(async (scope:any)=>{
                 return scope.price * scope.count
             },["price","count"]) 
-            store.setState((draft)=>draft.count = 4)
+            // store.setState((draft)=>draft.count = 4)
         }) 
     })
 
+    test("动态异步计算属性依赖变化时执行次",()=>{
+        let results:number[]= []
+        return new Promise<void>(resolve=>{
+            const store = createStore({
+                price:2,
+                count:3
+            })
+            store.on("computed:done",()=>{     
+                results.push(obj.value.result)  
+                if(results.length==2){                    
+                    resolve()
+                }
+            })
+            const obj = store.createComputed(async (scope:any)=>{
+                return scope.price * scope.count
+            },["price","count"]) 
+            store.on("computed:created",()=>{
+                store.setState((draft)=>draft.count = 4)
+            })
+            
+        }) 
+    })
 })
