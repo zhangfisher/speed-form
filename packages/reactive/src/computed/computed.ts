@@ -34,6 +34,7 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
     timeout         : 0,
     depends         : [],    
     immediate       : true,
+    save            : true
   }
 
   if(arguments.length==1){

@@ -6,7 +6,7 @@
  */
 
 import { StoreDefine } from "../store/types"
-import { ComputedDepends, ComputedGetter, Dict, IStore } from "../types"
+import { AsyncComputedObject, ComputedDepends, ComputedGetter, Dict, IStore } from "../types"
 import { AsyncComputedGetter,  ComputedOptions, ComputedParams, IComputeParams } from "../computed/types"
 import { computed } from "./computed"
 import { installComputed } from "./install" 
@@ -21,9 +21,8 @@ import { isPlainObject } from 'flex-tools/typecheck/isPlainObject';
 
 
 export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = ComputedOptions<R,ExtraAttrs> & {
-     id:string              // 必须指定一个id
-     depends: string[]      // 依赖的字段 
-
+     id?:string              // 必须指定一个id
+     depends?: string[]      // 依赖的字段 
 }
   
   /**
@@ -59,13 +58,14 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
    * 
    * 
    */
-export function computedObjectCreator<T extends StoreDefine>(store:IStore<T>){    
+export function computedObjectCreator<T extends StoreDefine = StoreDefine>(store:IStore<T>){    
     function creatorComputedObject<R = any>(getter:ComputedGetter<R>,options?:ComputedObjectCreateOptions<R>):ComputedObject<T,R>
-    function creatorComputedObject<R = any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?:ComputedObjectCreateOptions<R>):ComputedObject<T,R>
+    function creatorComputedObject<R = any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?:ComputedObjectCreateOptions<R>):ComputedObject<T,AsyncComputedObject<R>>
     function creatorComputedObject<R = any>(getter:any,depends:any,options?:any){ 
 
       let opts =Object.assign({
           id:getRndId(), 
+          save:false
       },isPlainObject(arguments[1]) ? arguments[1] : arguments[2]) as Required<ComputedOptions<R>>
       opts.depends = Array.isArray(arguments[1]) ? arguments[1] : []
       const isAsync = opts.async===true ||  isAsyncFunction(getter) 
@@ -74,7 +74,7 @@ export function computedObjectCreator<T extends StoreDefine>(store:IStore<T>){
       opts.selfReactiveable = new HeluxReactiveable<Dict>({
          value: isAsync ? createAsyncComputedObject(store,opts.id,{}) : opts.initial
       }) 
-      
+
       let computedParams:IReactiveReadHookParams
       if(opts.async){
         computedParams = {

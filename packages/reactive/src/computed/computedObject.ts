@@ -1,6 +1,5 @@
 import { Reactiveable } from "../reactives/types"
-import {  IStore, Dict } from "../types"
-import { getComputedId } from "../utils/getComputedId"
+import {  IStore, Dict } from "../types" 
 import { getVal } from "../utils/getVal"
 import { ComputedOptions, RuntimeComputedOptions } from "./types"
 

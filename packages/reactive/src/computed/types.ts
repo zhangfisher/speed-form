@@ -168,6 +168,15 @@ export interface ComputedProgressbar{
      * 
      */
     selfReactiveable?: Reactiveable
+    /**
+     * 
+     * 当创建计算属性的computedObject是否保存到store.computedObjects中
+     * 
+     * 当在hook中使用时就不需要保存到store.computedObjects中
+     * 
+     */
+    save?:boolean
+
   };
   
   export type ComputedDepends =Array<string | Array<string>> 

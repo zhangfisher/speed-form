@@ -107,6 +107,6 @@ export  function createComputedMutate<T extends StoreDefine,R=any>(computedParam
     
     // 5. 创建计算对象实例
     const computedObject = new ComputedObject<T,R>(store,selfReactiveable,valuePath,computedOptions) 
-    store.computedObjects.set(computedId,computedObject)   
+    if(computedOptions.save) store.computedObjects.set(computedId,computedObject)
     return  computedObject
   }

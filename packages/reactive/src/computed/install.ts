@@ -45,7 +45,9 @@ export function installComputed<T extends StoreDefine,R=any>(params:IReactiveRea
     }
     // 当创建计算完毕后的回调
     if(computedObject){
-      store.emit("computed:created",computedObject as any)
+      setTimeout(()=>{
+        store.emit("computed:created",computedObject as any)
+      })
     }
     return computedObject
   }

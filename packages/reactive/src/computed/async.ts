@@ -72,7 +72,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
    
     const { id,valuePath,getter,resultPath,dependValues } = computedRunContext;  
     const { timeout=0,retry=[0,0],selfReactiveable }  = computedOptions  
-    const setState  = selfReactiveable ? selfReactiveable.setState : store.setState
+    const setState  = selfReactiveable ? selfReactiveable.setState.bind(selfReactiveable) : store.setState
     // 
     const thisDraft = draft
     const scopeDraft = getComputedScope(store,computedOptions,{draft,dependValues,valuePath,computedType:"Computed"} )  
@@ -184,7 +184,7 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
       if(selfReactiveable){
         // @ts-ignore
         selfReactiveable.setState((draft)=>{
-          Object.assign(draft,createAsyncComputedObject(store,computedId,{result: initial}))
+          setVal(draft, valuePath, createAsyncComputedObject(store, computedId,{result: initial}))
         })
       }else{
         setVal(draft, valuePath, createAsyncComputedObject(store, computedId,{result: initial}))
@@ -272,7 +272,7 @@ export  function createAsyncComputedMutate<T extends StoreDefine,R=any>(computed
 
     // 8. 创建计算对象实例
     const computedObject = new ComputedObject<T,AsyncComputedObject<R>>(store,selfReactiveable,valuePath,computedOptions) 
-    store.computedObjects.set(computedId,computedObject)  
+    if(computedOptions.save) store.computedObjects.set(computedId,computedObject)
     return  computedObject
 }
 
