@@ -99,6 +99,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
       hasAbort=true
     })
     let hasError=false
+    let computedResult:any
 
     for(let i=0;i<retryCount+1;i++){
       hasError=false
@@ -131,7 +132,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
           }
         }      
         // 执行计算函数
-        const computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
+        computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
         if(!isTimeout){
           Object.assign(afterUpdated,{result:computedResult,error:null,timeout:0})
         }            
@@ -164,9 +165,9 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
     }
     // 计算完成后触发事件
     if(hasError){      
-      setTimeout(()=>store.emit("computed:error",{path:valuePath,id,error:hasError}))
+       store.emit("computed:error",{path:valuePath,id,error:hasError})
     }else{
-      setTimeout(()=>store.emit("computed:done",{path:valuePath,id}))
+      store.emit("computed:done",{path:valuePath,id,value:computedResult})
     }    
 }
 

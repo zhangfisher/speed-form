@@ -6,7 +6,7 @@ import { createStore,ComputedScopeRef,computed, IStore } from "../.."
   
 
 
-describe("异步计算的依赖参数配置",()=>{        
+describe("异步依赖参数的各种配置形式",()=>{        
 
     test("使用路径字符串参数依赖",()=>{
         const results:string[]=[]

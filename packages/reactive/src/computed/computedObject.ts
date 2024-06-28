@@ -18,10 +18,10 @@ export class ComputedObject<T extends Dict = Dict,R=any> {
     get async(){return this.options.async}
     get depends(){return this.options.depends}   
     get value(){
-        if(this._value===undefined){
-            this._value = getVal(this.selfReactiveable ? this.selfReactiveable?.state : this.store.state,this.path)
-        }        
-        return this._value as R
+        //if(this._value===undefined){
+            return    this._value = getVal(this.selfReactiveable ? this.selfReactiveable?.state : this.store.state,this.path)
+        //}        
+        //return this._value as R
     }      
     run(options?:RuntimeComputedOptions) {
         return this.store.reactiveable?.runComputed(this.id,options)

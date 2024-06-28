@@ -1,11 +1,10 @@
 import { test,expect, describe, beforeAll } from "vitest"
 import { createStore,ComputedScopeRef,computed, IStore } from "../.."
 import { ComputedObject } from "../../computed/computedObject"
-import { flush } from "helux"
 
  
 
-describe("异步计算",()=>{
+describe("基于字段移花接木的异步计算",()=>{
 
     test("默认异步计算",()=>{
         let count:number =0 
@@ -25,9 +24,7 @@ describe("异步计算",()=>{
                 results.push(store.state.total.result)
                 if(results.length===3){
                     expect(count).toBe(3)         
-                    // 为什么是10，10，10?
-                    // 因为setState是同步操作，而computed:done是异步事件，在下一个事件循环中执行触发
-                    expect(results).toEqual([10,10,10]) 
+                    expect(results).toEqual([6,8,10]) 
                     resolve()        
                 }                
             })   
@@ -47,14 +44,14 @@ describe("异步计算",()=>{
                     return scope.price * scope.count
                 },['price','count'],{id:"x"})
             },{    
-                onceComputed:true               // 遍历对象，从而导致计算属性被读取而立刻创建
+                onceComputed:true             
             }) 
             const cobj = store.computedObjects.get("x")!
             store.on("computed:done",()=>{     
                 results.push(cobj.value.result)
                 if(results.length===3){
                     expect(count).toBe(3)         
-                    expect(results).toEqual([10,10,10]) // ?
+                    expect(results).toEqual([6,8,10]) // ?
                     resolve()        
                 }                
             })   
@@ -190,7 +187,7 @@ describe("异步计算",()=>{
            })
         })        
     })
-    test("异步计算属性的计算执行次数，初始化时一次",()=>{
+    test("异步计算属性的计算执行次数，初始化时执行一次",()=>{
         let count = 0
         return new Promise<void>((resolve)=>{
             const store = createStore({
@@ -210,8 +207,8 @@ describe("异步计算",()=>{
                 setTimeout(()=>{
                     expect(count).toBe(2)
                     resolve()
-                })
-            })
+                },10)
+            },10)
         })        
     })
 

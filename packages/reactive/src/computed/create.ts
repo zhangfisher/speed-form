@@ -68,7 +68,7 @@ export function computedObjectCreator<T extends StoreDefine = StoreDefine>(store
           save:false
       },isPlainObject(arguments[1]) ? arguments[1] : arguments[2]) as Required<ComputedOptions<R>>
       opts.depends = Array.isArray(arguments[1]) ? arguments[1] : []
-      const isAsync = opts.async===true ||  isAsyncFunction(getter) 
+      const isAsync = opts.async===true ||  isAsyncFunction(getter)  || Array.isArray(arguments[1])
 
         // 创建Reactiveable实例
       opts.selfReactiveable = new HeluxReactiveable<Dict>({
@@ -76,7 +76,7 @@ export function computedObjectCreator<T extends StoreDefine = StoreDefine>(store
       }) 
 
       let computedParams:IReactiveReadHookParams
-      if(opts.async){
+      if(isAsync){
         computedParams = {
           path: ['value'],
           parent: null,
