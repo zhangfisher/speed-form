@@ -26,6 +26,7 @@ export type CreateComputedOptions<T extends ComputedState<Dict> =ComputedState<D
         draft:T,                        // 草稿对象
         setState:(state:T)=>void,       // 更新状态
         values:any[],                    // 输入参数，即依赖变化后的值[] 
+        options:ComputedOptions
     }):void                             // 当依赖变化时执行
     options:ComputedOptions
 }

@@ -57,5 +57,51 @@ describe("基本同步计算属性",()=>{
         expect(store.computedObjects.get("a")?.value).toBe(8)
     }) 
     
+    test("手动执行同步计算属性的计算函数",()=>{
+        return new Promise<void>((resolve)=>{
+            const results:any[]=[]
+            const store = createStore({
+                price:2,
+                count:3,
+                total:computed((scope)=>{
+                    results.push(scope)
+                    if(results.length===2){
+                        resolve()
+                    }
+                    return scope.price * scope.count
+                },{id:'x',immediate:false}),         
+            },{onceComputed:true})                                    
+            store.on("computed:created",async ()=>{
+                await store.computedObjects.get("x")!.run()
+                expect(store.state.total).toBe(6)
+                resolve()
+            })
+        })
+    })
+    test("手动传参覆盖默认的计算属性参数，然后运行",()=>{
+        return new Promise<void>((resolve)=>{
+            const results:any[]=[]
+            // 同步计算在创建时会先执行一次用于自动收集依赖，此时的scope是默认指向的
+            // 然后第二次是手动执行,此时的scope是通过run传入的。
+            const store = createStore({
+                price:2,
+                count:3,
+                total:computed((scope)=>{
+                    results.push(scope)
+                    if(results.length===2){
+                        expect(results[1]).toBe(2)                        
+                        resolve()
+                    }else{
+                        scope.price * scope.count
+                    }
+                },{id:'x',immediate:false}),         
+            },{onceComputed:true})                                    
+            store.on("computed:created",()=>{
+                setTimeout(()=>{
+                    store.computedObjects.get("x")!.run({scope:"price"})
+                })
+            })
+        })
+    })
 
 })

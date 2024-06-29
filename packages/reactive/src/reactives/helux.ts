@@ -103,6 +103,11 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
                 if(typeof(onComputed)==='function'){// @ts-ignore
                     onComputed({draft,values:input})
                 }
+            },          
+            task: async ({ draft, input, extraArgs }) => {                
+                if(typeof(onComputed)==='function'){// @ts-ignore
+                    onComputed({draft,values:input,options:extraArgs})
+                }   
             },
             desc: options.id,
         // 关闭死循环检测，信任开发者
@@ -112,9 +117,9 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
     }
 
 
-    runComputed(id:string,options?:RuntimeComputedOptions):void{
+    runComputed(id:string,options?:RuntimeComputedOptions){
         const params = {desc:id,extraArgs:options}
-        this._stateCtx.runMutateTask(params) 
+        return this._stateCtx.runMutateTask(params) 
     }    
     markRaw<V=any>(value:V):V{
         return markRaw(value)

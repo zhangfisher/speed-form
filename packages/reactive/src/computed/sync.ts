@@ -19,26 +19,29 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
   const { selfReactiveable } = computedOptions
 
     store.reactiveable.createComputed({
-      onComputed:({draft,values})=>{
-        if(!computedOptions.enable){
+      onComputed:({draft,values,options})=>{
+        if(!store.options.enableComputed || (!computedOptions.enable && options?.enable!==true)){
           store.options.log(`Sync computed <${computedDesc}> is disabled`,'warn')
           return 
         }
+
+
         store.options.log(`Run sync computed for : ${computedDesc}`); 
 
         computedRunContext.dependValues = values
- 
+        const finalComputedOptions = Object.assign({},computedOptions,options) as Required<ComputedOptions>
+
         // 1. 根据配置参数获取计算函数的上下文对象      
         const thisDraft = draft 
-        const scopeDraft = getComputedScope(store,computedOptions,{draft,dependValues:values,valuePath,computedType:"Computed"} )  
-         
+        const scopeDraft = getComputedScope(store,finalComputedOptions,{draft,dependValues:values,valuePath,computedType:"Computed"} )  
+
         // 2. 执行getter函数
         let computedResult = computedOptions.initial;
         try {
           computedResult = (getter as ComputedGetter<any>).call(thisDraft,scopeDraft);
-          setTimeout(()=>store.emit("computed:done",{ path:valuePath,id: computedId}))
+          store.emit("computed:done",{ path:valuePath,id: computedId,value:computedResult})
         } catch (e: any) {// 如果执行计算函数出错,则调用        
-          setTimeout(()=>store.emit("computed:error", { path:valuePath,id: computedId, error: e }))
+          store.emit("computed:error", { path:valuePath,id: computedId, error: e })
         }
         // 3. 将getter的返回值替换到状态中的,完成移花接木
         if(selfReactiveable){

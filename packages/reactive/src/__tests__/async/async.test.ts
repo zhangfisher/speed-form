@@ -1,4 +1,4 @@
-import { test,expect, describe, beforeAll } from "vitest"
+import { test,expect, describe, beforeAll, vi } from "vitest"
 import { createStore,ComputedScopeRef,computed, IStore } from "../.."
 import { ComputedObject } from "../../computed/computedObject"
 
@@ -212,5 +212,41 @@ describe("基于字段移花接木的异步计算",()=>{
         })        
     })
 
+    test("手动执行异步计算属性的计算函数",()=>{
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                price:2,
+                count:3,
+                total:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{id:'x',immediate:false}),         
+            },{onceComputed:true})                                    
+            store.on("computed:created",async ()=>{
+                await store.computedObjects.get("x")!.run()
+                expect(store.state.total.result).toBe(6)
+                resolve()
+            })
+        })
+    })
+    test("手动传参覆盖默认的异步计算属性参数，然后运行",()=>{
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                price:2,
+                count:3,
+                total:computed(async (price)=>{
+                    expect(price).toBe(2)
+                    return price * 100
+                },['price','count'],{id:'x',immediate:false}),         
+            },{onceComputed:true})                                    
+            store.on("computed:created",async ()=>{
+                await store.computedObjects.get("x")!.run({scope:"price"})
+                expect(store.state.total.result).toBe(200)
+                // 运行时修改的scope仅在本次运行中有效，不会影响到下次运行
+                // 默认的scope没有配置是undefined,指向的是当前对象,
+                expect(store.computedObjects.get("x")!.options.scope).toBe(undefined)
+                resolve()
+            })
+        })
+    })
 
 })
