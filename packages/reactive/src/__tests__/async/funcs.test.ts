@@ -126,6 +126,27 @@ describe("异步计算控制功能",()=>{
             store.state.total
         })
     })
+    test("当执行计算函数重试5次过程中读取retry值",()=>{
+        let count = 0
+        let times:number[] = []
+        let retryValues:(number|undefined)[] = []
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                price:2,
+                count:3,
+                total:computed(async (_,{})=>{ 
+                    throw new Error("error")
+                },['price','count'],{id:'x',retry:[5,100]})
+            },{onceComputed:true})  
+            store.watch((valuePath)=>{
+                retryValues.push(store.state.total.retry)
+                if(retryValues.length===5){
+                    expect(retryValues).toEqual([5,4,3,2,1,0])
+                    resolve()
+                }
+            },['total'])  
+        })        
+    },0)
 
 
 

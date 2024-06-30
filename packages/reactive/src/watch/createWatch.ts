@@ -24,7 +24,7 @@ export function createWatch<T extends StoreDefine>(store:IStore<T>){
             const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
             listener(valuePaths)            
         },()=>{
-            return depends?.map(dep=>getValueByPath(store.stateCtx.state,dep))
+            return depends?.map(dep=>getValueByPath(store.state,dep))
         })
         return unwatch
     }
