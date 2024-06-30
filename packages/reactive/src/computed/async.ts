@@ -174,7 +174,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
   
 
 function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
-  const { valuePath, id:computedId,deps,desc:computedDesc,isComputedRunning: isMutateRunning } = computedRunContext
+  const { valuePath, id:computedId,deps,desc:computedDesc } = computedRunContext
   const { selfReactiveable: selfReactiveable,initial,noReentry } = computedOptions
 
   store.reactiveable.createAsyncComputed({
@@ -201,8 +201,11 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
       store.options.log(`Run async computed for : ${computedDesc}`);
 
       const finalComputedOptions = Object.assign({},computedOptions,options) as Required<ComputedOptions>
-      if(noReentry && isMutateRunning && store.options.debug) {
-        store.options.log(`Reentry async computed: ${computedDesc}`,'warn');
+      if(noReentry && computedRunContext.isComputedRunning) {
+        if( store.options.debug){
+          store.options.log(`Reentry async computed: ${computedDesc}`,'warn');
+        }        
+        store.emit("computed:cancel",{path:valuePath,id:computedId,reason:"reentry"});
         return
       }
       computedRunContext.isComputedRunning=true
