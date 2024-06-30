@@ -111,7 +111,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
         updateAsyncComputedState(setState,resultPath,{loading:true,error:null,retry:i>0 ? retryCount- i : 0,timeout:countdown > 1 ? countdown :timeoutValue,progress:0})
         // 如果有中止信号，则取消计算 
         if(hasAbort){
-          throw new Error('Aborted')
+          throw new Error("Abort")
         } 
         // 超时处理
         if(timeoutValue>0){        
@@ -133,11 +133,12 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
         }      
         // 执行计算函数
         computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
+        if(hasAbort) throw new Error("Abort") 
         if(!isTimeout){
           Object.assign(afterUpdated,{result:computedResult,error:null,timeout:0})
         }            
       }catch (e:any) {
-        hasError = e
+        hasError = true
         if(!isTimeout){        
           Object.assign(afterUpdated,{error:getError(e).message,timeout:0})        
         }
@@ -164,7 +165,9 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
       }
     }
     // 计算完成后触发事件
-    if(hasError){      
+    if(hasAbort){
+      store.emit("computed:cancel",{path:valuePath,id,reason:'abort'})
+    }else if(hasError){      
        store.emit("computed:error",{path:valuePath,id,error:hasError})
     }else{
       store.emit("computed:done",{path:valuePath,id,value:computedResult})
