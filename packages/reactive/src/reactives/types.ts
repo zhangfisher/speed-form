@@ -89,6 +89,15 @@ export class Reactiveable<T extends Dict = Dict>{
     markRaw<V=any>(value:V):V{
         throw new Error("makeRaw not implemented.")
     }
+    /**
+     * 创建一个watch
+     * @param listener 
+     * @param depends 
+     * @returns 返回取消监听的方法
+     */
+    createWatch(listener:(changedPaths:string[][])=>void,depends?:(string | string[])[]):()=>void{
+        throw new Error("createWatch not implemented.")
+    }
 
 }
 

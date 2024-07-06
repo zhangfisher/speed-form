@@ -4,9 +4,7 @@
 
  */
 
-import { watch as heluxWatch } from 'helux';
 import type {  IStore, StoreDefine } from "../store/types";
-import { getValueByPath } from "../utils";  
 
 
 /**
@@ -19,14 +17,7 @@ import { getValueByPath } from "../utils";
     */
 export function createWatch<T extends StoreDefine>(store:IStore<T>){
     return (listener:(changedPaths:string[][])=>void,depends?:(string | string[])[])=>{
-        // @ts-ignore
-        const { unwatch } = heluxWatch(({triggerReasons})=>{
-            const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
-            listener(valuePaths)            
-        },()=>{
-            return depends?.map(dep=>getValueByPath(store.state,dep))
-        })
-        return unwatch
+        return store.reactiveable.createWatch(listener,depends)
     }
 }
 

@@ -1,7 +1,8 @@
-import { ISharedCtx, sharex,markRaw } from "helux"
+import { ISharedCtx, sharex,markRaw,watch } from "helux"
 import { CreateAsyncComputedOptions, Reactiveable, IReactiveableOptions, CreateComputedOptions } from "./types";
 import { ComputedState, Dict, RequiredComputedState, RuntimeComputedOptions, StateGetter, StateSetter } from "../types";
 import { getRndId } from "../utils/getRndId";
+import { getValueByPath } from "../utils/getValueByPath";
 
  
 
@@ -123,5 +124,16 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
     }    
     markRaw<V=any>(value:V):V{
         return markRaw(value)
+    }
+    createWatch(listener: (changedPaths: string[][]) => void, depends?: (string | string[])[] | undefined) {
+         // @ts-ignore
+        const { unwatch } = watch(({triggerReasons})=>{
+            const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
+            listener(valuePaths)            
+        },()=>{
+            return depends?.map(dep=>getValueByPath( this._stateCtx.state,dep))
+        })
+        return unwatch
+
     }
 }
