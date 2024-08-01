@@ -99,11 +99,13 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
       hasAbort=true
     })
     let hasError=false
+    let hasTimeout=false
     let computedResult:any
 
     for(let i=0;i<retryCount+1;i++){
       hasError=false
-      let timerId:any,countdownId:any,isTimeout=false    
+      hasTimeout=false
+      let timerId:any,countdownId:any
       const afterUpdated={} // 保存执行完成后需要更新的内容，以便在最后一次执行后更新状态  
       try {      
         // 处理超时参数和倒计时
@@ -116,7 +118,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
         // 超时处理
         if(timeoutValue>0){        
           timerId = setTimeout(()=>{                    
-            isTimeout=true
+            hasTimeout=true
             if(typeof(timeoutCallback)=='function') timeoutCallback()
             if(!hasError){  
               clearInterval(countdownId)   
@@ -134,12 +136,12 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
         // 执行计算函数
         computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
         if(hasAbort) throw new Error("Abort") 
-        if(!isTimeout){
+        if(!hasTimeout){
           Object.assign(afterUpdated,{result:computedResult,error:null,timeout:0})
         }            
       }catch (e:any) {
         hasError = true
-        if(!isTimeout){        
+        if(!hasTimeout){        
           Object.assign(afterUpdated,{error:getError(e).message,timeout:0})        
         }
         /// 启用重试
@@ -151,7 +153,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
         clearInterval(countdownId)
         // 重试时不更新loading状态
         if(!hasError || (i==retryCount))  Object.assign(afterUpdated,{loading:false})
-        if((!hasError && !isTimeout)){
+        if((!hasError && !hasTimeout)){
           Object.assign(afterUpdated,{error:null})
         }
         updateAsyncComputedState(setState,resultPath,afterUpdated)  
@@ -165,8 +167,8 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
       }
     }
     // 计算完成后触发事件
-    if(hasAbort){
-      store.emit("computed:cancel",{path:valuePath,id,reason:'abort'})
+    if(hasAbort || hasTimeout){
+      store.emit("computed:cancel",{path:valuePath,id,reason:hasTimeout ? 'timeout' : 'abort'})
     }else if(hasError){      
        store.emit("computed:error",{path:valuePath,id,error:hasError})
     }else{

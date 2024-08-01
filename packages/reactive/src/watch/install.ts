@@ -1,7 +1,5 @@
-import { flush } from "helux"
 import { OBJECT_PATH_DELIMITER } from "../consts"
 import { IStore, StoreDefine } from "../store/types"
-import { IComputeParams } from "../types"
 import { setVal } from "../utils"
 import { WatchDescriptor } from "./types" 
 import { IReactiveReadHookParams } from "../reactives/types"
@@ -33,8 +31,7 @@ export function installWatch<T extends StoreDefine>(params:IReactiveReadHookPara
         // @ts-ignore
         store.stateCtx.setState((draft)=>{
             setVal(draft,params.path,watchDescriptor.options.initial)
-        })        
-        flush(store.stateCtx.state as any)        
+        })              
     }
     return watchObject
 }

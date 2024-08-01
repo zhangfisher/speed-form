@@ -2,6 +2,11 @@
  * 
  * 测试计算属性的getter的第二个参数的各项功能
  * 
+ * - 不可重入
+ * - 中止信号
+ * - 重试
+ * 
+ * 
  */
 
 
@@ -11,7 +16,8 @@ import { delay } from "flex-tools/async/delay"
 
 
 
-describe("异步计算控制功能",()=>{
+describe("异步计算高级控制功能",()=>{
+ 
     // 注意：重入时仅会被忽略而不是产生错误
     test("控制计算函数的执行的不允许重入执行",()=>{
         let cancelCount:number =0 
@@ -135,12 +141,19 @@ describe("异步计算控制功能",()=>{
                 price:2,
                 count:3,
                 total:computed(async (_,{})=>{ 
+                    count++
                     throw new Error("error")
                 },['price','count'],{id:'x',retry:[5,100]})
             },{onceComputed:true})  
+            store.on("computed:error",()=>{
+                expect(store.state.total.retry).toBe(0)                
+            })
             store.watch((valuePath)=>{
-                retryValues.push(store.state.total.retry)
-                if(retryValues.length===5){
+                if(valuePath.some(path=>path[0]==='total' && path[1]==='retry')){
+                    retryValues.push(store.state.total.retry)
+                }
+                // 第一次运行出错，再重试5次，因此retry值为5,4,3,2,1,0
+                if(retryValues.length===6){
                     expect(retryValues).toEqual([5,4,3,2,1,0])
                     resolve()
                 }
@@ -148,6 +161,37 @@ describe("异步计算控制功能",()=>{
         })        
     },0)
 
+    test("当执行超时的默认行为",()=>{
+        // 执行时loading=true,然后超时后自动设置loading=false,error=TIMEOUT
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                price:2,
+                count:3,
+                total:computed(async (scope,{})=>{ 
+                    await delay(500)
+                    return scope.price * scope.count
+                },['price','count'],{id:'x',timeout:100})
+            })  
 
+            store.on("computed:cancel",({reason})=>{
+                expect(reason).toBe("timeout")
+                resolve()
+            })
+            store.state.total
+        })
+    })
+    test("当执行超时触发错误并导致重试",()=>{
+        // 执行时loading=true,然后超时后自动设置loading=false,error=TIMEOUT
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                price:2,
+                count:3,
+                total:computed(async (scope,{})=>{ 
+                    await delay(500)
+                    return scope.price * scope.count
+                },['price','count'],{id:'x',timeout:100})
+            })  
+        })
+    })
 
 })
