@@ -21,7 +21,7 @@ export function createUseState<T extends StoreDefine>(store:IStore<T>){
         getter?:StateGetter<RequiredComputedState<T>,Value>,
         setter?:StateSetter<RequiredComputedState<T>,SetValue>
     ){
-        const useState =store.stateCtx.useState 
+        const useState =store.reactiveable.useState 
         if(getter==undefined){
             return useState()
         }

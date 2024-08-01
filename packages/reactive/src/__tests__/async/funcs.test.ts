@@ -175,23 +175,45 @@ describe("异步计算高级控制功能",()=>{
 
             store.on("computed:cancel",({reason})=>{
                 expect(reason).toBe("timeout")
+                expect(store.state.total.loading).toBe(false)
+                expect(store.state.total.error).toBe("TIMEOUT")
                 resolve()
             })
             store.state.total
         })
     })
-    test("当执行超时触发错误并导致重试",()=>{
+    test("当执行超时并启用倒计时",()=>{
         // 执行时loading=true,然后超时后自动设置loading=false,error=TIMEOUT
+        const timeouts = []
         return new Promise<void>((resolve)=>{
             const store = createStore({
                 price:2,
                 count:3,
                 total:computed(async (scope,{})=>{ 
-                    await delay(500)
+                    await delay(9000)
                     return scope.price * scope.count
-                },['price','count'],{id:'x',timeout:100})
+                },['price','count'],{id:'x',timeout:[5*1000,5]})                
             })  
+            store.watch((valuePaths)=>{
+                if(valuePaths.some(path=>path[0]==='total' && path[1]==='timeout')){
+                    timeouts.push(store.state.total.timeout)
+                }                    
+                if(store.state.total.timeout===0){
+                    expect(store.state.total.loading).toBe(false)
+                    expect(store.state.total.error).toBe("TIMEOUT")
+                    resolve()
+                }
+                resolve()
+            },['total',['total','timeout']])
+            store.on("computed:cancel",({reason})=>{
+                expect(reason).toBe("timeout")
+                expect(store.state.total.loading).toBe(false)
+                expect(store.state.total.timeout).toBe(0)
+                expect(store.state.total.error).toBe("TIMEOUT")
+            })
+            
+            store.state.total
         })
-    })
+    },500000)
 
 })
