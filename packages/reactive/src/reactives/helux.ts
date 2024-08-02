@@ -24,7 +24,7 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
         }) 
     }
     get state(){
-        return this._stateCtx.reactive as ComputedState<T>
+        return this._stateCtx.state as ComputedState<T>
     }
     /**
      * const [ state ] = useState()

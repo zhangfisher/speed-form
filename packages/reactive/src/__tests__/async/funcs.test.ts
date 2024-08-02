@@ -10,7 +10,7 @@
  */
 
 
-import { test,expect, describe, beforeAll, vi } from "vitest"
+import { test,expect, describe, beforeAll, vi, beforeEach, afterEach } from "vitest"
 import { createStore,ComputedScopeRef,computed, IStore } from "../.."
 import { delay } from "flex-tools/async/delay"
 
@@ -161,6 +161,17 @@ describe("异步计算高级控制功能",()=>{
         })        
     },0)
 
+
+})
+
+
+describe("异步计算属性的超时功能",()=>{
+    // beforeEach(() => {
+    //     vi.useFakeTimers()
+    //   })
+    // afterEach(() => {
+    //     vi.restoreAllMocks()
+    // })
     test("当执行超时的默认行为",()=>{
         // 执行时loading=true,然后超时后自动设置loading=false,error=TIMEOUT
         return new Promise<void>((resolve)=>{
@@ -184,36 +195,37 @@ describe("异步计算高级控制功能",()=>{
     })
     test("当执行超时并启用倒计时",()=>{
         // 执行时loading=true,然后超时后自动设置loading=false,error=TIMEOUT
-        const timeouts = []
+        const timeouts:any[] = []
         return new Promise<void>((resolve)=>{
             const store = createStore({
                 price:2,
                 count:3,
                 total:computed(async (scope,{})=>{ 
-                    await delay(9000)
+                    await delay(10000)
                     return scope.price * scope.count
                 },['price','count'],{id:'x',timeout:[5*1000,5]})                
-            })  
+            },{onceComputed:true})              
             store.watch((valuePaths)=>{
-                if(valuePaths.some(path=>path[0]==='total' && path[1]==='timeout')){
+                //if(valuePaths.some(path=>path[0]==='total' && path[1]==='timeout')){
                     timeouts.push(store.state.total.timeout)
-                }                    
-                if(store.state.total.timeout===0){
-                    expect(store.state.total.loading).toBe(false)
-                    expect(store.state.total.error).toBe("TIMEOUT")
-                    resolve()
-                }
-                resolve()
-            },['total',['total','timeout']])
+                    console.log("timeouts=",timeouts)
+
+                //}                    
+                // if(store.state.total.timeout===0){
+                //     expect(store.state.total.loading).toBe(false)
+                //     expect(store.state.total.error).toBe("TIMEOUT")
+                //     resolve()
+                // }
+                // resolve()
+            },['total.timeout'])
             store.on("computed:cancel",({reason})=>{
                 expect(reason).toBe("timeout")
                 expect(store.state.total.loading).toBe(false)
                 expect(store.state.total.timeout).toBe(0)
                 expect(store.state.total.error).toBe("TIMEOUT")
-            })
-            
-            store.state.total
+                // resolve()
+            })          
         })
     },500000)
-
 })
+

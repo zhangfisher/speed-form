@@ -120,16 +120,19 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
           timerId = setTimeout(()=>{                    
             hasTimeout=true
             if(typeof(timeoutCallback)=='function') timeoutCallback()
+              console.log("hasTimeout=",hasTimeout)
+
             if(!hasError){  
               clearInterval(countdownId)   
               updateAsyncComputedState(setState,resultPath,{loading:false,error:"TIMEOUT",timeout:0})            
             }                    
           },timeoutValue)        
           // 启用设置倒计时:  比如timeout= 6*1000, countdown= 6
-          if(countdown>1){
+          if(countdown>0){
             countdownId = setInterval(()=>{
               updateAsyncComputedState(setState,resultPath,{timeout:countdown--})    
               if(countdown===0) clearInterval(countdownId)                    
+                console.log("countdown=",countdown)
             },timeoutValue/countdown)
           }
         }      
