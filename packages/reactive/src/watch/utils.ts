@@ -1,6 +1,6 @@
 import { OBJECT_PATH_DELIMITER } from "../consts";
 import { joinValuePath } from "../utils";
-import { WatchDepends,WatchDependParams,WatchOptions } from "./types";
+import { WatchDepends,WatchDependParams } from "./types";
 
 
 

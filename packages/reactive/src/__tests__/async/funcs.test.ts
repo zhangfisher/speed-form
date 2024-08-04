@@ -196,7 +196,7 @@ describe("异步计算属性的超时功能",()=>{
     test("当执行超时并启用倒计时",()=>{
         // 执行时loading=true,然后超时后自动设置loading=false,error=TIMEOUT
         const timeouts:any[] = []
-        return new Promise<void>((resolve)=>{
+        return new Promise<void>(async (resolve)=>{
             const store = createStore({
                 price:2,
                 count:3,
@@ -204,16 +204,17 @@ describe("异步计算属性的超时功能",()=>{
                     await delay(10000)
                     return scope.price * scope.count
                 },['price','count'],{id:'x',timeout:[5*1000,5]})                
-            },{onceComputed:true})              
+            },{onceComputed:true})    
+            // timeouts
             store.watch((valuePaths)=>{
                 //if(valuePaths.some(path=>path[0]==='total' && path[1]==='timeout')){
                     timeouts.push(store.state.total.timeout)
-                    console.log("timeouts=",timeouts)
+                    console.log("countdown=",timeouts)
 
                 //}                    
                 // if(store.state.total.timeout===0){
                 //     expect(store.state.total.loading).toBe(false)
-                //     expect(store.state.total.error).toBe("TIMEOUT")
+                //     expect(store.state.total.error).toBe("TIMEOUT")                
                 //     resolve()
                 // }
                 // resolve()
