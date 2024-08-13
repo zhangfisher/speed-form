@@ -93,7 +93,7 @@ describe("异步计算高级控制功能",()=>{
             const store = createStore({
                 price:2,
                 count:3,
-                total:computed(async (scope,{})=>{ 
+                total:computed(async (scope)=>{ 
                     count++
                     if(count===6){ // 第一次执行失败，然后重试5次，共执行6次
                         resolve()
@@ -113,7 +113,7 @@ describe("异步计算高级控制功能",()=>{
             const store = createStore({
                 price:2,
                 count:3,
-                total:computed(async (scope,{})=>{ 
+                total:computed(async (scope)=>{ 
                     times.push(Date.now())
                     count++
                     if(count===6){
@@ -140,11 +140,11 @@ describe("异步计算高级控制功能",()=>{
             const store = createStore({
                 price:2,
                 count:3,
-                total:computed(async (_,{})=>{ 
+                total:computed(async ()=>{ 
                     count++
                     throw new Error("error")
                 },['price','count'],{id:'x',retry:[5,100]})
-            },{onceComputed:true})  
+            },{immediate:true})  
             store.on("computed:error",()=>{
                 expect(store.state.total.retry).toBe(0)                
             })
@@ -178,7 +178,7 @@ describe("异步计算属性的超时功能",()=>{
             const store = createStore({
                 price:2,
                 count:3,
-                total:computed(async (scope,{})=>{ 
+                total:computed(async (scope)=>{ 
                     await delay(500)
                     return scope.price * scope.count
                 },['price','count'],{id:'x',timeout:100})
@@ -194,30 +194,36 @@ describe("异步计算属性的超时功能",()=>{
         })
     })
     test("当执行超时并启用倒计时",()=>{
+        vi.useFakeTimers()
         // 执行时loading=true,然后超时后自动设置loading=false,error=TIMEOUT
+        // 本例中配置timeout=[5*1000,5]，代表timeout值会从5递减到0
         const timeouts:any[] = []
-        return new Promise<void>(async (resolve)=>{
+        return new Promise<void>((resolve)=>{
             const store = createStore({
                 price:2,
                 count:3,
-                total:computed(async (scope,{})=>{ 
+                total:computed(async (scope)=>{ 
                     await delay(10000)
                     return scope.price * scope.count
                 },['price','count'],{id:'x',timeout:[5*1000,5]})                
-            },{onceComputed:true})    
+            },{immediate:true})    
             // timeouts
             store.watch((valuePaths)=>{
-                //if(valuePaths.some(path=>path[0]==='total' && path[1]==='timeout')){
+                if(valuePaths.some(path=>path[0]==='total' && path[1]==='timeout')){
                     timeouts.push(store.state.total.timeout)
-                    console.log("countdown=",timeouts)
-
-                //}                    
-                // if(store.state.total.timeout===0){
-                //     expect(store.state.total.loading).toBe(false)
-                //     expect(store.state.total.error).toBe("TIMEOUT")                
-                //     resolve()
-                // }
-                // resolve()
+                    // console.log("countdown=",timeouts)
+                }                    
+                if(store.state.total.timeout===0){
+                    // 为什么不是[5,4,3,2,1,0]??
+                    // 当创建store时指定onceComputed=true时，会马上创建ComputedObject
+                    // 此时会执行一次将timeout赋值为5,这时候watch还没有开始，所以不会记录到timeouts中
+                    expect(timeouts).toEqual([4,3,2,1,0])
+                    expect(store.state.total.loading).toBe(false)
+                    expect(store.state.total.error).toBe("TIMEOUT")                
+                    resolve()
+                    vi.restoreAllMocks()
+                }
+                resolve()
             },['total.timeout'])
             store.on("computed:cancel",({reason})=>{
                 expect(reason).toBe("timeout")
@@ -225,7 +231,10 @@ describe("异步计算属性的超时功能",()=>{
                 expect(store.state.total.timeout).toBe(0)
                 expect(store.state.total.error).toBe("TIMEOUT")
                 // resolve()
-            })          
+            })    
+            vi.runAllTimers()  
+            
+            
         })
     },500000)
 })

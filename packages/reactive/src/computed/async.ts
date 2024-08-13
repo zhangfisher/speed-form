@@ -180,7 +180,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
 
 function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
   const { valuePath, id:computedId,deps,desc:computedDesc } = computedRunContext
-  const { selfReactiveable: selfReactiveable,initial,noReentry } = computedOptions
+  const { selfReactiveable,initial,noReentry } = computedOptions
 
   store.reactiveable.createAsyncComputed({
     // 指定依赖
@@ -261,6 +261,7 @@ export  function createAsyncComputedMutate<T extends StoreDefine,R=any>(computed
     }
     // 计算对象的id和name，name用于打印日志时提供更多信息
     const computedId = getComputedId(valuePath,computedOptions)
+    computedOptions.id = computedId
     const computedDesc = `${computedId}_${valuePath.join(OBJECT_PATH_DELIMITER)}`
   
     store.options.log(`Create async computed: ${computedDesc} (depends=${depends.length==0 ? 'None' : joinValuePath(depends)})`);

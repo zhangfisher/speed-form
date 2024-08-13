@@ -1,16 +1,16 @@
-import {  ComputedScopeRef, IStore, StoreDefine, StoreEvents, StoreOptions } from '../types';
+import {  ComputedScopeRef, IStore, StoreDefine, StoreOptions } from '../types';
 import { ComputedObjects } from '../computed';
 import { installExtends } from "../extends" 
 import { WatchObjects, createWatch } from "../watch"; 
 import { forEachObject, log } from "../utils";
 import { createUseState } from "./useState"
 import { createSetState } from "./setState";
-import mitt,{Emitter} from "mitt";
 import { createUseWatch } from '../watch/useWatch';
 import { getRndId } from "../utils/getRndId";
 import { HeluxReactiveable } from "../reactives/helux";
 import { Reactiveable } from "../reactives/types";
 import { computedObjectCreator } from '../computed/create';
+import { setEventEmitter } from '../events';
 
 
 
@@ -19,7 +19,7 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     const opts = Object.assign({
         id            : getRndId(),
         debug         : true,
-        onceComputed  : false,
+        immediate  : false,
         enableComputed: true,
         scope         : ()=>ComputedScopeRef.Current,
     },options) as StoreOptions<T>
@@ -27,20 +27,15 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     opts.log = (...args:any[])=>{
         if(opts.debug) (log as any)(...args)
     } 
-
-    const storeEmitter:Emitter<StoreEvents> = mitt()
-    
-
     // 2. 创建store对象
 
     // @ts-ignore 
     const store:IStore<T> = { 
-        options: opts,
-        on     : storeEmitter.on,
-        off    : storeEmitter.off,
-        emit   : storeEmitter.emit,
+        options: opts, 
         _replacedKeys:{}                             // 用来保存已经替换过的key
     }
+
+    setEventEmitter(store)
 
     store.computedObjects = new ComputedObjects<T>(store as IStore<T>),
     store.watchObjects = new WatchObjects<T>(store as IStore<T>)
@@ -73,7 +68,7 @@ export function createStore<T extends StoreDefine = StoreDefine>(data:T,options?
     // // @ts-ignore
     // extendObjects.computedObjects.new = createComputed
 
-    if(opts.onceComputed){
+    if(opts.immediate){
         forEachObject(store.state)
     }
     return store

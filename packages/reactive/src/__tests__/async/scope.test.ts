@@ -86,7 +86,7 @@ describe("异步计算函数的Scope指向",()=>{
                     }
                 },{
                     scope:()=>ComputedScopeRef.Depends,
-                    onceComputed:true
+                    immediate:true
                 })            
             store.state.root.parent.order.total // 读取操作时创建计算属性
         }) 
@@ -209,7 +209,7 @@ describe("异步计算函数的Scope指向",()=>{
                     }
                 },{
                     scope:()=>["root","parent","order","count"],
-                    onceComputed:true
+                    immediate:true
                 })             
         }) 
     })

@@ -18,7 +18,7 @@ describe("基于字段移花接木的异步计算",()=>{
                     return scope.price * scope.count
                 },['price','count'])
             },{    
-                onceComputed:true               // 遍历对象，从而导致计算属性被读取而立刻创建
+                immediate:true               // 遍历对象，从而导致计算属性被读取而立刻创建
             }) 
             store.on("computed:done",()=>{
                 results.push(store.state.total.result)
@@ -44,7 +44,7 @@ describe("基于字段移花接木的异步计算",()=>{
                     return scope.price * scope.count
                 },['price','count'],{id:"x"})
             },{    
-                onceComputed:true             
+                immediate:true             
             }) 
             const cobj = store.computedObjects.get("x")!
             store.on("computed:done",()=>{     
@@ -122,7 +122,7 @@ describe("基于字段移花接木的异步计算",()=>{
                     return scope.price * scope.count
                 },['price','count'],{id:'x'})
             },{
-                onceComputed:true,
+                immediate:true,
                 enableComputed:false
             })
             store.setState((draft)=>draft.count = 4)
@@ -150,7 +150,7 @@ describe("基于字段移花接木的异步计算",()=>{
                     return scope.price * scope.count
                 },['price','count'],{id:'y'})
             },{                                
-                onceComputed:true
+                immediate:true
             })            
             store.on("computed:done",({path})=>{ 
                 count++
@@ -174,7 +174,7 @@ describe("基于字段移花接木的异步计算",()=>{
                     return scope.price * scope.count
                 },['price','count'],{id:'x'}),         
             },{                                
-                onceComputed:true
+                immediate:true
             })                        
             store.on("computed:done",()=>{
                 count++
@@ -220,7 +220,7 @@ describe("基于字段移花接木的异步计算",()=>{
                 total:computed(async (scope)=>{
                     return scope.price * scope.count
                 },['price','count'],{id:'x',immediate:false}),         
-            },{onceComputed:true})                                    
+            },{immediate:true})                                    
             store.on("computed:created",async ()=>{
                 await store.computedObjects.get("x")!.run()
                 expect(store.state.total.result).toBe(6)
@@ -237,7 +237,7 @@ describe("基于字段移花接木的异步计算",()=>{
                     expect(price).toBe(2)
                     return price * 100
                 },['price','count'],{id:'x',immediate:false}),         
-            },{onceComputed:true})                                    
+            },{immediate:true})                                    
             store.on("computed:created",async ()=>{
                 await store.computedObjects.get("x")!.run({scope:"price"})
                 expect(store.state.total.result).toBe(200)
@@ -248,5 +248,56 @@ describe("基于字段移花接木的异步计算",()=>{
             })
         })
     })
+
+})
+
+
+describe("执行分组计算",()=>{   
+
+    test("异步计算分组",()=>{
+        let results:string[] = []
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                price:2,
+                count:3,
+                total1:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{group:'a'}),                
+                total2:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{group:'a'}),                
+                total3:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{group:'b'}),                
+                total4:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{group:'b'}),                
+                total5:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{group:'c'}),                
+                total6:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{group:'c'})
+            },{    
+                immediate:true               // 遍历对象，从而导致计算属性被读取而立刻创建
+            }) 
+            store.on("computed:done",(computedObj)=>{
+                results.push(computedObj.path.join(","))                
+                if(results.length===6){
+                    expect(results).toStrictEqual(["total1","total2","total3","total4","total5","total6"]) 
+                    //resolve()        
+                }
+            })    
+            // store.on("computed:created",(computedObj)=>{
+            //     store.computedObjects.runGroup(computedObj.id)
+
+            // })
+
+            // 手动控制运行分组a
+            store.computedObjects.runGroup("a")
+            store.computedObjects.runGroup("b")
+            store.computedObjects.runGroup("c")
+        })
+    })  
 
 })

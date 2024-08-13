@@ -10,6 +10,7 @@ import { Emitter } from "mitt";
 import { IReactive } from "../reactive";
 import { Reactiveable } from "../reactives";
 import { ComputedObject } from "../computed/computedObject";
+import { StoreEvents } from "../events/types";
 
 
 export type StoreDefine<State extends Dict = Dict> = State
@@ -39,11 +40,17 @@ export type StateSetter<State,Value=any> = (state:State,value:Value)=>void
 
 export interface StoreOptions<T extends StoreDefine= StoreDefine>{
     id:string
-    // 是否开启调试模式，开启后会打印出一些的信息
+    /**
+     * 是否开启调试模式，开启后会打印出一些的信息
+     */
     debug:boolean
-    // 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象
-    // 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
-    // computedThis:(computedType:StateComputedType)=>ComputedContext
+    /**
+     * 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象
+     * 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
+     * computedThis:(computedType:StateComputedType)=>ComputedContext
+     * @param computedType 
+     * @returns 
+     */
     scope:(computedType:StateComputedType)=> ComputedScope 
      /**
      * 提供一个响应式核心
@@ -51,9 +58,9 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
      reactiveable?:Reactiveable
      /**
       * 默认计算函数仅在第一次读取时执行
-      * onceComputed=tru 时，遍历对象，从而导致计算属性被立刻创建
+      * 如果immediate=true时，则在创建对象时马上创建计算对象
       */
-     onceComputed:boolean 
+     immediate:boolean 
      /**
       * 默认启用计算属性
       * enableComputed=false时，会创建计算属性，但不会执行计算函数
@@ -87,13 +94,7 @@ export interface StoreOptions<T extends StoreDefine= StoreDefine>{
 }
 
 
-export type StoreEvents = {
-    created             : undefined;                                    // 响应对象创建后    
-    'computed:created'  : ComputedObject                                // 当计算对象创建时
-    'computed:done'     : {path:string[],id:string,value:any}           // 当计算函数执行成功后
-    'computed:error'    : {path:string[],id:string,error:any}           // 当计算函数执行出错时
-    'computed:cancel'  : {path:string[],id:string,reason:'timeout' | 'abort' | 'reentry' | 'error'}       // 当计算函数被取消时
-};
+
 
 
 // 用于在在创建动态计算时，提供一个简单的state对象供将计算结果回写到state上 
@@ -123,10 +124,11 @@ export type IStore<T extends Dict = Dict> = {
     // 简单事件触发与侦听
     on             : Emitter<StoreEvents>['on']
     off            : Emitter<StoreEvents>['off']
+    once           : <T extends keyof StoreEvents>(type: T,handler: (payload:StoreEvents[T]) => void)=>void
     emit           : Emitter<StoreEvents>['emit']
-    // 
-    _replacedKeys   : Dict
-
+    _emitter       : Emitter<StoreEvents>
+    // 保存已经替换过的key
+    _replacedKeys   : Dict 
 } 
 
 

@@ -4,36 +4,38 @@
 
  */
 
+import { ComputedObject } from "../computed/computedObject";
 import type {  IStore, StoreDefine } from "../store/types"; 
 import { getVal, normalizeDeps } from "../utils";
 
 
 /**
- * 创建一个侦听器，用来侦听状态变化
  * 
- * store.watch(()=>{},["Ddd"])
-
-    * @param stateCtx 
-    * @returns 
-    */
+ * 
+ *  
+ *  @description  创建一个侦听器，用来侦听状态变化
+ *  
+ *  创建侦听时存在一个问题，当store中的成员是一个计算函数，并且该计算函数还没有被computed处理成computedObject时，
+ *  侦听器是无法侦听到该计算函数的变化的，因为watch只能侦听到store中的常规数值类型的变化
+ * 
+ *  因此，watch必须保证侦听的数据是已经被computed处理成computedObject的数据再调用
+ *  
+ * 
+ * 
+ * @param store
+ * @returns 侦听器会返回一个取消侦听的函数
+ */
 export function createWatch<T extends StoreDefine>(store:IStore<T>){
-    return (listener:(changedPaths:string[][])=>void,depends?:(string | string[])[],options?:{lazy:boolean})=>{
-        const { lazy } = Object.assign({lazy:false},options)
-        if(lazy){
-            const deps = normalizeDeps(depends)
-            // 检查依赖的项是否是计算函数
-            const computeds = deps.map(dep=>{
-                if(Array.isArray(dep)){
-                    if(typeof(getVal(store.state,dep))==='function'){
-                        return dep
-                    }
-                }                
-            }).filter(dep=>dep)
+    return (listener:(changedPaths:string[][])=>void,depends?:(string | string[])[])=>{
+        depends = normalizeDeps(depends)       
+        if(depends.length===0){
+            return store.reactiveable.createWatch(listener)
+        }else{
+            if(depends.some(dep=>typeof(dep)==='string' && dep.startsWith(".") )){
+                throw new Error("watch depends can not start with '.'")
+            }
         }
-        // 如果依赖的项是计算函数，则说明还没有被computed处理成computedObject
-        // 需要等待computed:created事件，才可以进行侦听
-
-        return store.reactiveable.createWatch(listener,depends)
+        return store.reactiveable.createWatch(listener,depends)   
     }
 }
 

@@ -25,7 +25,7 @@ describe("Store",()=>{
                     return scope.price * scope.count
                 },{id:"x"})
             },{
-                onceComputed:true,
+                immediate:true,
                 onCreateComputed:(valuePath, getter, computedOptions)=>{ 
                     expect(this).toBe
                     expect(valuePath).toEqual(["total"])
@@ -54,7 +54,7 @@ describe("Store",()=>{
                 }
                 
             },{
-                onceComputed:true,
+                immediate:true,
                 onComputedDraft:(draft,{computedType,valuePath})=>{
                     expect(valuePath).toEqual(["fields","total"])
                     expect(computedType).toBe("Computed")
@@ -80,7 +80,7 @@ describe("Store",()=>{
                 }
                 
             },{
-                onceComputed:true,
+                immediate:true,
                 onComputedDraft:(draft,{computedType,valuePath})=>{
                     expect(valuePath).toEqual(["fields","total"])
                     expect(computedType).toBe("Computed")

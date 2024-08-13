@@ -70,7 +70,7 @@ describe("基本同步计算属性",()=>{
                     }
                     return scope.price * scope.count
                 },{id:'x',immediate:false}),         
-            },{onceComputed:true})                                    
+            },{immediate:true})                                    
             store.on("computed:created",async ()=>{
                 await store.computedObjects.get("x")!.run()
                 expect(store.state.total).toBe(6)
@@ -95,7 +95,7 @@ describe("基本同步计算属性",()=>{
                         scope.price * scope.count
                     }
                 },{id:'x',immediate:false}),         
-            },{onceComputed:true})                                    
+            },{immediate:true})                                    
             store.on("computed:created",()=>{
                 setTimeout(()=>{
                     store.computedObjects.get("x")!.run({scope:"price"})
