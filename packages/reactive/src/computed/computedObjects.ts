@@ -1,6 +1,7 @@
 import { ComputedObject} from "./computedObject"
 import { computedObjectCreator } from './create';
 import type { IStore, StoreDefine } from "../store/types";
+import { RuntimeComputedOptions } from "../types";
 
 
    /**
@@ -20,8 +21,8 @@ export class ComputedObjects<T extends StoreDefine =  StoreDefine> extends Map<s
      * @param string 
      * @param param3 
      */
-    async runGroup(group:string){       
-        return Promise.all([...this.values()].filter(computedObject=>computedObject.group==group).map(computedObject=> computedObject.async ? computedObject.run() : computedObject.run()))   
+    async runGroup(group:string,options?:RuntimeComputedOptions){       
+        return Promise.all([...this.values()].filter(computedObject=>computedObject.group==group).map(computedObject=> computedObject.async ? computedObject.run(options) : computedObject.run(options)))   
     }
     /**
      * 启用或禁用计算

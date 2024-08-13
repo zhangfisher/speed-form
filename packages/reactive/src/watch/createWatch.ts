@@ -4,16 +4,15 @@
 
  */
 
-import { ComputedObject } from "../computed/computedObject";
 import type {  IStore, StoreDefine } from "../store/types"; 
-import { getVal, normalizeDeps } from "../utils";
+import {  normalizeDeps } from "../utils";
 
 
 /**
  * 
  * 
  *  
- *  @description  创建一个侦听器，用来侦听状态变化
+ *  @description  动态创建一个侦听器，用来侦听状态变化
  *  
  *  创建侦听时存在一个问题，当store中的成员是一个计算函数，并且该计算函数还没有被computed处理成computedObject时，
  *  侦听器是无法侦听到该计算函数的变化的，因为watch只能侦听到store中的常规数值类型的变化

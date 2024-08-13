@@ -15,7 +15,7 @@ export default defineConfig([
         clean: true,
         treeshake:true,  
         minify: true,
-        noExternal:['flex-tools']
+        noExternal:['flex-tools','mitt']
     },    
     {
         entry: [
@@ -29,7 +29,7 @@ export default defineConfig([
         clean: true,
         treeshake:true,  
         minify: true,
-        noExternal:['helux','flex-tools']
+        noExternal:['helux','flex-tools','mitt']
     }
 ])
  

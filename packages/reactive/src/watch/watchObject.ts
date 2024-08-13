@@ -14,11 +14,11 @@ export class WatchObject<T extends StoreDefine> {
     private _options: Required<WatchOptions>
     constructor(public store:IStore<T>,descriptor:WatchDescriptor){        
         this._options = Object.assign({ 
-            enable:true,
+            enable  : true,
             selfPath: [],
-            group:undefined,
-            context:undefined,
-            initial:undefined 
+            group   : undefined,
+            context : undefined,
+            initial : undefined 
         },descriptor.options) as Required<WatchOptions>
         if(typeof(this._options.depends)!=='function') throw new Error("watch options.depends must be a function")        
             // 如果没有id则生成一个id
@@ -66,8 +66,7 @@ export class WatchObject<T extends StoreDefine> {
         } 
         try{
             // 2.  执行监听函数
-            const result = this._listener.call(this,watchValue,watchPath,this as any)    
-
+            const result = this._listener.call(this,watchPath,watchValue,this as any)    
             // 3. 将返回值回写到状态中
             if(result!==undefined){            
                 if(this._options.context ){

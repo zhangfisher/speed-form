@@ -29,7 +29,7 @@ export function installWatch<T extends StoreDefine>(params:IReactiveReadHookPara
     }else{                
         params.replaceValue(watchDescriptor.options.initial)    
         // @ts-ignore
-        store.stateCtx.setState((draft)=>{
+        store.setState((draft)=>{
             setVal(draft,params.path,watchDescriptor.options.initial)
         })              
     }

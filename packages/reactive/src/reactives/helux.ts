@@ -131,7 +131,7 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
             const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
             listener(valuePaths)            
         },()=>{
-            return depends?.map(dep=>getValueByPath( this._stateCtx.state,dep))
+            return depends?.length==0 ? [] :  depends?.map(dep=>getValueByPath( this._stateCtx.state,dep))
         })
         return unwatch
 

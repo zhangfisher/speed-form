@@ -10,8 +10,8 @@ function getBookShop(opts?: {listener?:watchParams[0],depends?:watchParams[1],op
             books:{            
                 price:10,
                 count:10,
-                total:watch<number,number>((value,opts,watchObj)=>{  
-                    return listener(value,opts,watchObj) as number
+                total:watch<number,number>((path,value,watchObj)=>{  
+                    return listener(path,value,watchObj) as number
                 },(path:string[],value:any)=>{
                     return typeof(depends)=='function' ? depends!(path,value) : path[path.length-1]=='count'
                 },{              
@@ -74,7 +74,7 @@ describe("静态声明watch",()=>{
     test("通过enable控制total是否侦听",async ()=>{
         const listener = vi.fn()
         const bookShop= getBookShop({
-            listener:(value:number)=>{
+            listener:(_,value:number)=>{
                 listener()
                 return value * 100
             }
@@ -98,7 +98,20 @@ describe("静态声明watch",()=>{
     })
 
 
-
+    test("侦听所有变化",async ()=>{
+        const store = createStore({
+            a:1,b:2,
+            diary:watch((path,value,watchObj)=>{
+                return value
+            },[])
+        },{immediate:true})
+        store.setState(draft=>{
+            draft.a = 2
+        })
+        store.setState(draft=>{
+            draft.b = 1
+        })
+    })
 
 
 

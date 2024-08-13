@@ -283,15 +283,14 @@ describe("执行分组计算",()=>{
             }) 
             store.on("computed:done",(computedObj)=>{
                 results.push(computedObj.path.join(","))                
-                if(results.length===6){
-                    expect(results).toStrictEqual(["total1","total2","total3","total4","total5","total6"]) 
-                    //resolve()        
+                if(results.length===12){
+                    expect(results).toStrictEqual([
+                        "total1","total2","total3","total4","total5","total6",
+                        "total1","total2","total3","total4","total5","total6",
+                    ]) 
+                    resolve()        
                 }
-            })    
-            // store.on("computed:created",(computedObj)=>{
-            //     store.computedObjects.runGroup(computedObj.id)
-
-            // })
+            })     
 
             // 手动控制运行分组a
             store.computedObjects.runGroup("a")

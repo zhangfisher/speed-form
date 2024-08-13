@@ -26,6 +26,19 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject<
      * 负责处理动态侦听
      */
     private createWacher(){
+        this.store.reactiveable.createWatch((changedPaths)=>{
+            if(!this._enable) return 
+            const watchPaths:string[][] = changedPaths.map((reason:any)=>reason.keyPath) 
+            watchPaths.forEach((watchPath)=>{  
+                const watchValue = getVal(this.store.state,watchPath)
+                for(let watchObj of this.values()){
+                    if(watchObj.depends(watchPath,watchValue)){
+                        watchObj.run(watchPath,watchValue)
+                    }
+                    
+                }                
+            })
+        },['state'])
         // @ts-ignore
         const { unwatch } = heluxWatch(({triggerReasons})=>{
             if(!this._enable) return 

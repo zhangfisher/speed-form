@@ -13,7 +13,8 @@ function isFieldValue(path:string[]){
  
 /**
  * 
- * 侦听表单中entryPath下所有字段的dirty属性，当任何一个字段的dirty属性发生变化时，都会触发监听函数的执行并更新dirty()所在的值
+ * 侦听表单中entryPath下所有字段的dirty属性，
+ * 当任何一个字段的dirty属性发生变化时，都会触发监听函数的执行并更新dirty()所在的值
  * 
  * 
  * 只要有一个字段的dirty为true，则整个表单的dirty为true
@@ -23,7 +24,7 @@ function isFieldValue(path:string[]){
  * 
  */
 export function dirty(entryPath?:string[]){
-    return watch<any,boolean>((value,{ getSelfValue,fromPath,selfPath })=>{
+    return watch<any,boolean>((value,[],{ getSelfValue,fromPath,selfPath })=>{
         if(!isIncludePath(entryPath ? entryPath : selfPath,fromPath)) return       
         const selfValue = getSelfValue()
         if(!selfValue) return true

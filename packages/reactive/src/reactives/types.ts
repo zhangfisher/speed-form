@@ -91,6 +91,9 @@ export class Reactiveable<T extends Dict = Dict>{
     }
     /**
      * 创建一个watch
+     * 
+     * 如果没有指定依赖，则监听所有的状态变化
+     * 
      * @param listener 
      * @param depends 
      * @returns 返回取消监听的方法
