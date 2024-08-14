@@ -7,14 +7,15 @@
  * 
  */
 
-import type { StoreDefine, IStore } from "./store/types";
+import type {  IStore } from "./store/types";
 import { isSkipComputed, joinValuePath } from "./utils";
-import {  IComputeParams, installComputed } from "./computed"; 
+import {  installComputed } from "./computed"; 
 import { installWatch } from "./watch"; 
 import { IReactiveReadHookParams } from "./reactives/types";
+import { Dict } from "./types";
  
 
-// export function installExtends<T extends StoreDefine>(computedParams:IComputeParams,store:IStore<T>) {    
+// export function installExtends<T extends Dict>(computedParams:IComputeParams,store:IStore<T>) {    
 //     // 拦截读取state的操作，在第一次读取时，
 //     // - 为计算函数创建mutate
 //     // - 将原始属性替换为计算属性值或异步对象
@@ -31,7 +32,7 @@ import { IReactiveReadHookParams } from "./reactives/types";
 // }
 
 
-export function installExtends<T extends StoreDefine>(computedParams:IReactiveReadHookParams,store:IStore<T>) {    
+export function installExtends<T extends Dict>(computedParams:IReactiveReadHookParams,store:IStore<T>) {    
   // 拦截读取state的操作，在第一次读取时， 
     const { path, value } = computedParams;
     const key = joinValuePath(path);

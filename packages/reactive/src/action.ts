@@ -1,4 +1,4 @@
-// import type { StoreOptions, StoreDefine, IStore } from "./store/types"
+// import type { StoreOptions, Dict, IStore } from "./store/types"
 // import { Dict, StateUpdater  } from "./types"
 // import { isPromise } from "./utils" 
 
@@ -22,7 +22,7 @@
 //  * @param api
 //  * @returns
 //  */
-// export function createActions<T extends StoreDefine>(actions:T['actions'],store:IStore<T>,options?:StoreOptions<T>){
+// export function createActions<T extends Dict>(actions:T['actions'],store:IStore<T>,options?:StoreOptions<T>){
 //     return Object.entries(actions||{}).reduce((results:any,[key,action])=>{
 //         results[key] =  createAction(action as Action<any> ,store.stateCtx.setState)
 //         return results

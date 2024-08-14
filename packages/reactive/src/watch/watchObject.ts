@@ -1,7 +1,7 @@
 import { getSnap  } from "helux" 
 import { setVal } from "../utils/setVal"
 import { WatchListener, WatchOptions, WatchDescriptor } from './types';
-import { Dict,  IStore, StoreDefine } from "../types"
+import { Dict,  IStore } from "../types"
 import { getVal } from "../utils/getVal"
 import { OBJECT_PATH_DELIMITER } from "../consts" 
 import { getRndId } from "../utils/getRndId";
@@ -9,7 +9,7 @@ import { joinValuePath } from "../utils";
 import { isEq } from "../utils/isEq";
  
 
-export class WatchObject<T extends StoreDefine> {
+export class WatchObject<T extends Dict> {
     private _cache?: Dict
     private _listener:WatchListener 
     private _options: Required<WatchOptions>

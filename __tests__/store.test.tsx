@@ -1,6 +1,6 @@
 import React from 'react'
 import { test,describe,expect,beforeEach,afterEach } from "vitest"
-import { StoreDefine, createStore } from "../src/store"
+import { Dict, createStore } from "../src/store"
 import { render, renderHook,screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { delay } from "flex-tools/async/delay" 

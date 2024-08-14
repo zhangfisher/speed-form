@@ -1,7 +1,16 @@
-import { IStore, OBJECT_PATH_DELIMITER, isIncludePath, watch } from "@speedform/reactive";
+import { Dict, IStore, OBJECT_PATH_DELIMITER, isIncludePath, watch } from "@speedform/reactive";
 import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from "./consts";  
 import { ValidationError } from "./errors";
 
+
+/**
+ * 根据字段路径判定是否是字段值
+ * 
+ * 
+ * 
+ * @param path 
+ * @returns 
+ */
 export function isValidateField(path:string[]){
     return path.length>1 && path[0]== FIELDS_STATE_KEY && (
         path[path.length-1] ==='validate' 
@@ -46,10 +55,9 @@ export type ValidateOptions<T=any> = {
  */
 export function validate<T=any>(options?:ValidateOptions){
     const { entry  } = Object.assign({},options)
-    return watch<boolean,boolean>((value,path, watchObject)=>{        
+    return watch<boolean,boolean>((path,value, watchObject)=>{        
         // 只侦听entry下的所有字段
-        if(!isIncludePath(entry ? entry : watchObject.selfPath,path)) return   
-        const selfCache = watchObject.cache // 得到的是一个Dict用来保存所有字段的validate属性值
+        if(!isIncludePath(entry ? entry : watchObject.path,path)) return   
         // validate属性是一个boolean
         if(typeof(value)=='boolean'){
             const srcKey = path.join(OBJECT_PATH_DELIMITER)
@@ -90,7 +98,7 @@ export function assert(condition:boolean | ((...args:any[])=>boolean),tips:strin
  * @param store 
  * @returns 
  */
-export function createValidator(store:IStore){
+export function createValidator<State extends Dict = Dict>(store:IStore<State>){
     return  async (scope?:string[])=>{
         if(Array.isArray(scope) && scope.length>0){        
             let key= scope.join(OBJECT_PATH_DELIMITER)    

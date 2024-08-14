@@ -33,8 +33,8 @@
 
 import { ReactNode, useCallback, useRef, RefObject,useState} from "react";
 import React from "react";
-import type { FormOptions } from "./form";
-import {  AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedOptions, ComputedParams,  Dict, RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
+import type { RequiredFormOptions } from "./form";
+import {  AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorInfo, ComputedOptions, ComputedParams,  Dict, IStore, RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
 import { getId } from "./utils";
@@ -42,7 +42,7 @@ import { FIELDS_STATE_KEY } from "./consts";
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
   | ((fields:Fields)=>Promise<R>) 
-  | ComputedDescriptor<R>
+  | ComputedDescriptorInfo<R>
   | R  
 
 
@@ -95,7 +95,7 @@ export interface FormActionExtra{
  
 
  // 经过创建表单后的动作对象,  execute
-export type FormAction<T extends FormActionDefine> =ComputedDescriptor<{
+export type FormAction<T extends FormActionDefine> =ComputedDescriptorInfo<{
     [Key in keyof T]: Key extends 'execute' ? never : T[Key]
 }>
 
@@ -255,7 +255,7 @@ export const ActionChildren = React.memo((props: {actionProps:ActionRenderProps<
  * @param store 
  * @returns 
  */
-export function createActionComponent<Store extends Dict = Dict>(store:Store,formOptions?:Required<FormOptions>) {
+export function createActionComponent<State extends Dict = Dict>(store:IStore<State>,formOptions:RequiredFormOptions<State>) {
 
     /**
      * State:  指的是动作的对应状态数据，在schema中就是具有execute的一个对象
@@ -286,8 +286,8 @@ export function createActionComponent<Store extends Dict = Dict>(store:Store,for
             return <ActionChildren {...{actionProps:actionRenderProps,children:props.render}} />
         }else if(props.children){
             if(Array.isArray(props.children)){
-                return (props.children as any).map((children:any)=>{
-                    return <ActionChildren {...{actionProps:actionRenderProps,children:children}} />
+                return (props.children as any).map((children:any,index:any)=>{
+                    return <ActionChildren key={index} {...{actionProps:actionRenderProps,children:children}} />
                 })
             }else{
                 return <ActionChildren {...{actionProps:actionRenderProps,children:props.children}} />

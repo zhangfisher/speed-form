@@ -1,5 +1,5 @@
 import { useEffect } from "react"
-import { ComputedScopeRef, IComputeParams, IStore, StoreDefine } from "../types"
+import { ComputedScopeRef, IStore, Dict } from "../types"
 import { sharex } from "helux"
 import { installWatch } from "./install"
 import { WatchDescriptor,  WatchDependParams, WatchListener, WatchOptions } from "./types" 
@@ -18,7 +18,7 @@ import { IReactiveReadHookParams } from "../reactives/types"
  * 
  * @returns 
  */
-export function createUseWatch<T extends StoreDefine>(store:IStore<T>){
+export function createUseWatch<T extends Dict>(store:IStore<T>){
     return <Value = any,Result=Value>(listener:WatchListener<Value,Result>,depends:WatchDependParams<Value>,options?:WatchOptions<Result>)=>{
         useEffect(() => { 
             const params = {

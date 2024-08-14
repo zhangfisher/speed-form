@@ -1,7 +1,6 @@
 /**
  * 同步计算
  */
-import { StoreDefine } from "../store/types";
 import { getComputedId, getVal, setVal  } from "../utils"; 
 import { ComputedDescriptorParams, ComputedGetter, ComputedOptions,  ComputedRunContext,  RuntimeComputedOptions } from './types';
 import { getComputedScope } from '../context';
@@ -10,11 +9,12 @@ import { IReactiveReadHookParams } from "../reactives/types";
 import { ComputedObject } from "./computedObject";
 import { executeStoreHooks } from "./utils";
 import { OBJECT_PATH_DELIMITER } from "../consts";
+import { Dict } from "../types";
 
 
 
 
-function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
+function createComputed<T extends Dict>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
   const { valuePath, id:computedId,desc:computedDesc,resultPath,getter } = computedRunContext
   const { selfReactiveable } = computedOptions
 
@@ -64,7 +64,7 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
  * @param computedParams
  */
 
-export  function createComputedMutate<T extends StoreDefine,R=any>(computedParams:IReactiveReadHookParams,store:IStore<T>) :ComputedObject<T> {
+export  function createComputedMutate<T extends Dict,R=any>(computedParams:IReactiveReadHookParams,store:IStore<T>) :ComputedObject<T> {
     
   // 1. 获取计算属性的描述
   const {path:valuePath, parent,value } = computedParams;       

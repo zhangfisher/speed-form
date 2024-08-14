@@ -24,8 +24,8 @@ import { ReactNode, useCallback,useState,useEffect } from "react";
 import { DefaultFieldPropTypes } from "./field";
 import React from "react";
 import { assignObject } from "flex-tools/object/assignObject";
-import type { FormOptions } from "./form";
-import { Dict,getVal } from "@speedform/reactive";
+import type {  RequiredFormOptions } from "./form";
+import { Dict,getVal, IStore } from "@speedform/reactive";
 
 
 export type DefaultFieldGroupPropTypes = Omit<DefaultFieldPropTypes,'value' | 'oldValue' | 'initial' | 'validate'>
@@ -65,7 +65,7 @@ function createFieldGroupProps(name:string,value:any,fieldGroupUpdater:any){
 
 
 
-export function createFieldGroupComponent(this:Required<FormOptions>,store: any) {
+export function createFieldGroupComponent<State extends Dict = Dict>(store: IStore<State>,formOptions:RequiredFormOptions<State>) {
     return React.memo(<T extends Dict=Dict>(props: FieldGroupProps<T>):ReactNode=>{
         const { name } = props;  	       
         const [state,setState] = store.useState()
@@ -76,10 +76,10 @@ export function createFieldGroupComponent(this:Required<FormOptions>,store: any)
         const groupValue = getVal(state, fullGroupPath)        
         // 更新当前组信息，如update(group=>group.enable=true)
         const fieldGroupUpdater = useFieldGroupUpdater(fullGroupPath,setState)
-        const [fieldGroupProps,setfieldGroupProps] = useState(()=>createFieldGroupProps(this.getFieldName(groupPath),groupValue,fieldGroupUpdater))
+        const [fieldGroupProps,setfieldGroupProps] = useState(()=>createFieldGroupProps(formOptions.getFieldName(groupPath),groupValue,fieldGroupUpdater))
 
         useEffect(()=>{
-            setfieldGroupProps(createFieldGroupProps(this.getFieldName(groupPath),groupValue,fieldGroupUpdater))
+            setfieldGroupProps(createFieldGroupProps(formOptions.getFieldName(groupPath),groupValue,fieldGroupUpdater))
           },[groupValue])
  
         // 执行渲染

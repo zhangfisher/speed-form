@@ -5,9 +5,8 @@
  * 
  */
 
-import { StoreDefine } from "../store/types"
 import { AsyncComputedObject, ComputedDepends, ComputedGetter, Dict, IStore } from "../types"
-import { AsyncComputedGetter,  ComputedOptions, ComputedParams, IComputeParams } from "../computed/types"
+import { AsyncComputedGetter,  ComputedOptions } from "../computed/types"
 import { computed } from "./computed"
 import { installComputed } from "./install" 
 import { getRndId } from "../utils/getRndId"
@@ -58,7 +57,7 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
    * 
    * 
    */
-export function computedObjectCreator<T extends StoreDefine = StoreDefine>(store:IStore<T>){    
+export function computedObjectCreator<T extends Dict = Dict>(store:IStore<T>){    
     function creatorComputedObject<R = any>(getter:ComputedGetter<R>,options?:ComputedObjectCreateOptions<R>):ComputedObject<T,R>
     function creatorComputedObject<R = any>(getter:AsyncComputedGetter<R>,depends:ComputedDepends,options?:ComputedObjectCreateOptions<R>):ComputedObject<T,AsyncComputedObject<R>>
     function creatorComputedObject<R = any>(getter:any,depends:any,options?:any){ 

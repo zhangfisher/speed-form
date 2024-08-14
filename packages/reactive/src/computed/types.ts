@@ -217,14 +217,14 @@ export interface StateValueDescriptorParams<Fn extends Function,Options extends 
 
 
 
-export type ComputedDescriptor<R=any> = {
+export type ComputedDescriptorInfo<R=any> = {
   getter: AsyncComputedGetter<R> | ComputedGetter<R>;
   options: ComputedOptions<R>;
 }
 
 
 export  interface ComputedDescriptorCreator<R=any>  {
-  ():ComputedDescriptor<R>
+  ():ComputedDescriptorInfo<R>
   __COMPUTED__: 'sync' | 'async' | 'watch' 
 } 
 

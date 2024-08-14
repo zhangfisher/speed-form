@@ -3,17 +3,14 @@ import { ComputedState,  StateComputedType } from '../computed/types';
 import { type ComputedObjects, ComputedOptions } from '../computed';
 import type { WatchObjects, createUseWatch, createWatch } from "../watch";
 import { computedObjectCreator } from "../computed/create";
-import { Dict } from "../types"; 
 import type { createUseState } from "./useState";
 import type  { createSetState } from "./setState";
 import { Emitter } from "mitt";
 import { IReactive } from "../reactive";
 import { Reactiveable } from "../reactives";
-import { ComputedObject } from "../computed/computedObject";
 import { StoreEvents } from "../events/types";
+import { Dict } from "../types";
 
-
-export type StoreDefine<State extends Dict = Dict> = State
 
 
 
@@ -38,7 +35,7 @@ export type StateSetter<State,Value=any> = (state:State,value:Value)=>void
 
 
 
-export interface StoreOptions<T extends StoreDefine= StoreDefine>{
+export interface StoreOptions<T extends Dict= Dict>{
     id:string
     /**
      * 是否开启调试模式，开启后会打印出一些的信息

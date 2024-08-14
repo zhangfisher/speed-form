@@ -1,12 +1,13 @@
 import mitt, { Emitter } from "mitt"
-import type { IStore, StoreDefine } from "../store/types"
+import type { IStore } from "../store/types"
 import { StoreEvents } from "./types"
+import { Dict } from "../types"
 
  
 export * from "./types"
 
     
-export function setEventEmitter<T extends StoreDefine>(store:IStore<T>){
+export function setEventEmitter<T extends Dict>(store:IStore<T>){
     const emitter:Emitter<StoreEvents> = mitt()
     store._emitter = emitter as any
     store.on = emitter.on

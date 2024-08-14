@@ -1,6 +1,6 @@
 import {  RequiredComputedState } from "../computed/types"
 import { StateGetter, StateSetter } from "./types"
-import { IStore, StoreDefine } from "../types"
+import { IStore, Dict } from "../types"
 
 
  
@@ -15,7 +15,7 @@ import { IStore, StoreDefine } from "../types"
  *
  * @param useState
  */
-export function createUseState<T extends StoreDefine>(store:IStore<T>){
+export function createUseState<T extends Dict>(store:IStore<T>){
 
     return function<Value=any,SetValue=Value>(
         getter?:StateGetter<RequiredComputedState<T>,Value>,

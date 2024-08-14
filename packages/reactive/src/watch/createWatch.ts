@@ -4,7 +4,8 @@
 
  */
 
-import type {  IStore, StoreDefine } from "../store/types"; 
+import type {  IStore } from "../store/types"; 
+import { Dict } from "../types";
 import {  normalizeDeps } from "../utils";
 
 
@@ -24,7 +25,7 @@ import {  normalizeDeps } from "../utils";
  * @param store
  * @returns 侦听器会返回一个取消侦听的函数
  */
-export function createWatch<T extends StoreDefine>(store:IStore<T>){
+export function createWatch<T extends Dict>(store:IStore<T>){
     /**
      *  创建一个侦听器
      */

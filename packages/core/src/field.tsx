@@ -1,9 +1,9 @@
 import React, {	 ChangeEventHandler, ReactNode, useCallback,useRef,useState  } from "react";  
 import { debounce as debounceWrapper } from './utils';
 import { ComputedAttr } from "./types";   
-import type { FormOptions } from "./form";
+import type { FormOptions, RequiredFormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
-import { Dict,getVal, setVal } from "@speedform/reactive";  
+import { Dict,getVal, IStore, setVal } from "@speedform/reactive";  
 
 
 // 默认同步字段属性
@@ -133,8 +133,8 @@ export const FieldChildren = React.memo((props: {fieldProps:FieldRenderProps<any
   }) 
 })     
 
-export function createFieldComponent(this:Required<FormOptions>,store: any) {    
-  return React.memo(<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
+export function createFieldComponent<T extends Dict = Dict>(store: IStore<T>,formOptions:RequiredFormOptions<T>) {    
+  return React.memo(<T=Value>(props: T extends Value ? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
 		const { name } = props;  
     // 不含fields前缀的字段路径
     const fieldPath = Array.isArray(name) ? name : name.split(".")  
@@ -152,7 +152,7 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
     // 表单字段同步，允许指定防抖参数
     const syncer = useFieldSyncer(store,valueFieldPath)
   
-    const fieldProps = createFieldProps(this.getFieldName(fieldPath),value,syncer,filedUpdater)
+    const fieldProps = createFieldProps(formOptions.getFieldName(fieldPath),value,syncer,filedUpdater)
     
     // 调用渲染字段UI 
     if(props.render){ 
@@ -191,11 +191,11 @@ export interface IFieldProps<T=any>{
 }
  
 
-export interface Field<T=any>{
+export interface FormField<T=any>{
   value        : T;
   title?       : ComputedAttr<string>;                       // 标题
-  initial?: ComputedAttr<T>;                          // 默认值
-  oldValue?    : ComputedAttr<T>;                          // 默认值
+  initial?     : ComputedAttr<T>;                            // 默认值
+  oldValue?    : ComputedAttr<T>;                            // 默认值
   help?        : ComputedAttr<string>;                       // 提示信息
   placeholder? : ComputedAttr<string>;                       // 占位符
   required?    : ComputedAttr<boolean>;                      // 是否必填
@@ -207,9 +207,12 @@ export interface Field<T=any>{
 }
  
 
-export type Fields={
-  [name:string]:Record<string,Field>               
-              | Array<Field> 
-              | Array<Fields>
-              | Record<string,Fields> 
+export type FormFields<T extends Dict = Dict> = {
+  [name in keyof T]: T[name] extends { value: infer V } 
+    ? FormField<V>
+    : (
+      T extends Dict[] ? Array<FormField>   : ( T[name] extends Dict ? FormFields<T[name]> : never ) 
+    )
 }
+
+ 

@@ -1,10 +1,10 @@
 import { watch as heluxWatch  } from "helux" 
 import { WatchDescriptor } from './types';
-import { IStore, StoreDefine } from "../types" 
+import { IStore, Dict } from "../types" 
 import { WatchObject } from "./watchObject";
 import { getVal } from "../utils";
 
-export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject<T>>{
+export class WatchObjects<T extends Dict> extends Map<string,WatchObject<T>>{
     private _off?:()=>void
     private _enable:boolean=true                            // 是否启用侦听器
     constructor(public store:IStore<T>){

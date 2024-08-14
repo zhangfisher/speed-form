@@ -1,4 +1,4 @@
-import { IStore, StoreDefine } from "../types"
+import { IStore, Dict } from "../types"
 
 
  
@@ -13,7 +13,7 @@ import { IStore, StoreDefine } from "../types"
  *
  * @param useState
  */
-export function createSetState<T extends StoreDefine>(store: IStore<T>){
+export function createSetState<T extends Dict>(store: IStore<T>){
 
     return (updater:(draft:T)=>void)=>{
         // @ts-ignore

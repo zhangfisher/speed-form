@@ -8,17 +8,17 @@
  * 
  */
 import { markRaw, getSnap,  } from 'helux';
-import type { StoreDefine,   IStore } from "../store/types";
+import type { IStore } from "../store/types";
 import { skipComputed,  joinValuePath, getError, getDepValues,getVal, setVal, getComputedId  } from "../utils";
-import { Dict  } from "../types";
 import { delay } from 'flex-tools/async/delay'; 
 import { OBJECT_PATH_DELIMITER } from '../consts';
 import { getComputedScope } from '../context';
 import {  AsyncComputedObject,  ComputedOptions, ComputedParams, ComputedProgressbar } from './types';
-import type  { ComputedDescriptor, ComputedRunContext } from './types';
+import type  { ComputedDescriptorInfo, ComputedRunContext } from './types';
 import { IReactiveReadHookParams } from '../reactives/types';
 import { ComputedObject } from './computedObject';
 import { createAsyncComputedObject, executeStoreHooks } from './utils';
+import { Dict } from '../types';
 
 
 
@@ -68,7 +68,7 @@ export function setAsyncComputedObject<T extends Dict=Dict>(store:IStore<T>,draf
    * @param scopeDraft 
    * @param options 
    */
-async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
+async function executeComputedGetter<T extends Dict>(draft:any,computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
    
     const { id,valuePath,getter,resultPath,dependValues } = computedRunContext;  
     const { timeout=0,retry=[0,0],selfReactiveable }  = computedOptions  
@@ -178,7 +178,7 @@ async function executeComputedGetter<T extends StoreDefine>(draft:any,computedRu
 
   
 
-function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
+function createComputed<T extends Dict>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
   const { valuePath, id:computedId,deps,desc:computedDesc } = computedRunContext
   const { selfReactiveable,initial,noReentry } = computedOptions
 
@@ -232,7 +232,7 @@ function createComputed<T extends StoreDefine>(computedRunContext:ComputedRunCon
  * @param stateCtx
  * @param params
  */
-export  function createAsyncComputedMutate<T extends StoreDefine,R=any>(computedParams:IReactiveReadHookParams,store:IStore<T>) :ComputedObject<T,AsyncComputedObject<R>> {
+export  function createAsyncComputedMutate<T extends Dict,R=any>(computedParams:IReactiveReadHookParams,store:IStore<T>) :ComputedObject<T,AsyncComputedObject<R>> {
     
     // 1. 参数检查
     const { path:valuePath, parent ,value } = computedParams;
@@ -242,7 +242,7 @@ export  function createAsyncComputedMutate<T extends StoreDefine,R=any>(computed
     // }
 
     // 2. 获取到计算属性描述信息：  包括getter和配置。 此时value是一个函数
-    let { getter, options: computedOptions }  = value() as ComputedDescriptor<any>
+    let { getter, options: computedOptions }  = value() as ComputedDescriptorInfo<any>
     computedOptions.async = true; 
 
     // 3.运行Hook: 用来在创建computed前运行,允许拦截更改计算函数的依赖,上下文,以及getter等    

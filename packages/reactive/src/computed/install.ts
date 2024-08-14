@@ -1,10 +1,11 @@
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
-import { IStore, StoreDefine } from "../store/types";
-import { AsyncComputedObject, ComputedTarget } from "./types";
+import { IStore } from "../store/types";
+import { AsyncComputedObject } from "./types";
 import { createAsyncComputedMutate } from "./async";
 import { createComputedMutate } from "./sync"; 
 import { IReactiveReadHookParams } from "../reactives/types";
 import { ComputedObject } from "./computedObject";
+import { Dict } from "../types";
 
 /**
  * 安装计算函数
@@ -12,7 +13,7 @@ import { ComputedObject } from "./computedObject";
  */
  
 
-export function installComputed<T extends StoreDefine,R=any>(params:IReactiveReadHookParams,store:IStore<T>):ComputedObject<T,R> | ComputedObject<T,AsyncComputedObject<R>> {
+export function installComputed<T extends Dict,R=any>(params:IReactiveReadHookParams,store:IStore<T>):ComputedObject<T,R> | ComputedObject<T,AsyncComputedObject<R>> {
     const descriptor = params.value
     let computedObject:ComputedObject<T,R >  | ComputedObject<T,AsyncComputedObject<R>>  
     //@ts-ignore

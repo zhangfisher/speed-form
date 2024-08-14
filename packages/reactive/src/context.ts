@@ -22,7 +22,7 @@
  */
 import { IOperateParams } from "helux";
 import { OBJECT_PATH_DELIMITER } from "./consts";
-import { type ComputedScope, ComputedScopeRef, StoreOptions, StoreDefine, IStore } from "./store/types";
+import { type ComputedScope, ComputedScopeRef, StoreOptions, Dict, IStore } from "./store/types";
 import { getRelValuePath, getValueByPath } from "./utils";
 import { ComputedOptions, ComputedRunContext, ComputedType, StateComputedType } from "./computed/types";
 
@@ -46,7 +46,7 @@ function getContextOptions(state: any,computedCtxOption?: ComputedScope,storeCtx
   return ctx == undefined ? (storeCtxOption == undefined ? ComputedScopeRef.Root: storeCtxOption) : ctx;
 }
 
-export type GetComputedContextOptions<T extends StoreDefine =StoreDefine> ={
+export type GetComputedContextOptions<T extends Dict =Dict> ={
     // type:'context' | 'scope',                   // 要获取的是什么: context或scope
     computedType:StateComputedType,             // 取值， 'Computed' | 'Watch 
     dependValues:any[],                         // 当前计算函数依赖值，或watch的侦听的值
@@ -65,7 +65,7 @@ export type GetComputedContextOptions<T extends StoreDefine =StoreDefine> ={
  * @param params 
  * @returns 
  */
-export function getComputedScope<T extends StoreDefine = StoreDefine>(store:IStore<T>,computedOptions: ComputedOptions,ctx:{draft: any,dependValues:any[],valuePath:string[],computedType:ComputedType}) {
+export function getComputedScope<T extends Dict = Dict>(store:IStore<T>,computedOptions: ComputedOptions,ctx:{draft: any,dependValues:any[],valuePath:string[],computedType:ComputedType}) {
 
     const { draft,dependValues,  valuePath, computedType } = ctx;
   

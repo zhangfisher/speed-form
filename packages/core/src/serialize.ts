@@ -9,11 +9,12 @@
  * 
  */
 
-import { StoreDefine, getSnap, type Dict, type IStore } from "@speedform/reactive"
+import { Dict, getSnap, type Dict, type IStore } from "@speedform/reactive"
 import { isFieldGroup, isFieldList, isFieldValue } from "./utils"
 import { isPlainObject } from "flex-tools/typecheck/isPlainObject"
-import type { FormOptions, FormStore } from "./form" 
+import type { FormOptions, FormStore, ReuiredFormOptions } from "./form" 
 import { VALIDATE_COMPUTED_GROUP } from "./consts";
+import { dirty } from './dirty';
  
 
 function getFieldValue(data:Dict){
@@ -173,7 +174,7 @@ export function createFormData(data:Dict,options?:CreateFormDataOptions):FormDat
  * @param formOptions 
  * @returns 
  */
-export function createLoadApi<State extends Dict = Dict>(store:FormStore<State>,formOptions?:Required<FormOptions>) {    
+export function createLoadApi<State extends Dict = Dict>(store:IStore<State>,formOptions?:ReuiredFormOptions<State>) {    
     return function load(data:Dict,options?:LoadOptions){
         const opts = Object.assign({validate:true},options)
         try{ 
@@ -184,8 +185,7 @@ export function createLoadApi<State extends Dict = Dict>(store:FormStore<State>,
             store.setState(draft=>{
                 draft.dirty = false
                 draft.validate = null  // 未认证
-            })
-
+            }) 
             
         }catch(e){
             console.error(e)
@@ -218,7 +218,7 @@ export interface SaveOptions{
     entry?:string[]    
 }
 
-export function createGetValuesApi<Store extends IStore>(store:Store,formOptions?:Required<FormOptions>) {    
+export function createGetValuesApi<State extends Dict = Dict>(store:IStore<State>,formOptions?:ReuiredFormOptions<State>) {    
     return function save(options?:SaveOptions){
         const opts = Object.assign({},options)
         return getFormData(getSnap(store.state).fields)

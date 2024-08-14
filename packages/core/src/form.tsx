@@ -38,24 +38,41 @@
  *
  */
 
-import React, {	useCallback, useRef } from "react";
-import type {  StoreDefine,RequiredComputedState, ComputedOptions, Dict, IStore } from "@speedform/reactive";
-import { createStore ,ComputedScopeRef } from "@speedform/reactive";
+import React, {	useCallback } from "react";
+import type {  Dict,RequiredComputedState, ComputedOptions, IStore, StoreOptions, ComputedState } from "@speedform/reactive";
+import { computed, createStore  } from "@speedform/reactive";
 import type { ReactFC,  ComputedAttr } from "./types";
-import { createFieldComponent  } from './field'; 
+import { createFieldComponent, FormFields  } from './field'; 
 import { createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import {   UseActionType, createActionComponent, createUseAction, getAction } from './action';
+import {   FormActions, UseActionType, createActionComponent, createUseAction, getAction } from './action';
 import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from './consts';
 import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
-import defaultFormProps from "./form.default"
 import { createLoadApi, createGetValuesApi } from "./serialize"; 
-import { createValidator, isValidateField } from "./validate";
+import { createValidator, isValidateField, validate } from "./validate";
 import { createSubmitComponent } from "./submit";
-import { createResetComponent } from "./reset";
+import { createResetComponent } from "./reset"; 
+import { RequiredDeep } from "type-fest"
+import { dirty } from "./dirty";
 
-
+export const defaultFormProps =  {
+    name     : "SpeedForm",
+    title    : "SpeedForm",
+    help     : "",
+    tips     : "",
+    status   : "idle",    
+    dirty    : dirty(['fields']),               // 跟踪字段值,当值发生变化时，将dirty设置为true
+    validate : validate({
+        entry: ['fields']
+    }),
+    readonly : false,
+    enable   : true,
+    visible  : true,
+	actions  : {},
+	fields   : {}
+}  
+    
 export type FormEnctypeType = 'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain'
 
 export type FormTarget = '_self' | '_blank' | '_parent' | '_top'
@@ -75,27 +92,34 @@ export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{
 export type FormComponent<State extends Record<string, any>> = ReactFC<FormProps<State>>;
 
 export type FormSchemaBase = {
-	title?   	: string					    
-    help? 		: string					    
-    tips? 		: string					    
- 	visible?	: boolean					
-	enable?  	: boolean					
-	validate?	: boolean					
-	readonly?	: boolean			
-	dirty?   	: boolean					
+	name   	: ComputedAttr<string>							    
+	title   : ComputedAttr<string>							    
+    help 	: ComputedAttr<string>							    
+    tips 	: ComputedAttr<string>							    
+ 	visible : ComputedAttr<boolean>					
+    url 	: ComputedAttr<string>					    		
+	enable  : ComputedAttr<boolean>					
+	validate: ComputedAttr<boolean>
+	readonly: ComputedAttr<boolean>			
+	dirty   : ComputedAttr<boolean>	 
 }
 
-// 表单元数据
-export type FormSchema<State extends Dict=Dict> =   State & Omit<FormSchemaBase,keyof State> 
+export type FormDefine = Partial<FormSchemaBase> & {
+	fields: FormFields
+	actions?: FormActions
+} 
+ 
+export type FormSchema<State extends FormDefine = FormDefine> = FormSchemaBase & {
+	fields : State['fields']
+	actions: State['actions']
+}
 
-export type FormStore<State extends Dict = Dict> = IStore<{state:FormSchema<State>}>
-
-
-
+// export type RequiredFormSchema<State extends Dict = Dict > = Required<FormSchema<State>>
+// export type FormStore<State extends Dict = Dict> = IStore<FormSchema<State>>
+ 
 
 // 创建表单时的参数
-export interface FormOptions{
-	debug?:boolean										// 是否调试模式
+export interface FormOptions<T extends Dict> extends StoreOptions<T>{	
 	/**
 	 * 何时进行数据校验
 	 * - once : 默认值：实时校验
@@ -118,6 +142,7 @@ export interface FormOptions{
 	 */
 	singleton?:boolean
 }
+export type RequiredFormOptions<T extends Dict = Dict>  = Required<FormOptions<T>>
 
 
 
@@ -126,9 +151,7 @@ export type FormStatus = 'idle'
 	| 'validating' 			// 正在校验数据
 	| 'submiting'  			// 正在提交中	
 	| 'error'				// 表单错误
- 
-
-
+  
 /**
  * 
  * 表单状态数据==响应式数据
@@ -136,14 +159,15 @@ export type FormStatus = 'idle'
  */
 export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dict>{
 	name?:string,										// 表单名称
-	title?:ComputedAttr<string>,						// 表单标题
+	title?  : ComputedAttr<string>,						// 表单标题
 	status?	: ComputedAttr<FormStatus>					// 表单状态
 	dirty?  : ComputedAttr<boolean>						// 表单数据是否已脏，即已更新过
-	valid?  : ComputedAttr<boolean>						// 表单是否有效
-	actions	: Actions									// 表单动作
-	fields	: Fields
-	[key:string] : any
+	valid?  : ComputedAttr<boolean>						// 表单是否有效	
+	fields	: Fields									// 表单字段
+	actions	: Actions									// 表单动作	
 }
+
+
 /**
  * 
  * 在处理表单字段的validate属性时，对其进行处理
@@ -162,7 +186,7 @@ export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dic
  *    或者调用computedObjects.enableGroup(true/false)来启用或禁用分组验证
  * 
  */
-function createValidatorHook(valuePath:string[],getter:Function,options:ComputedOptions,formOptions:Required<FormOptions>){		
+function createValidatorHook<State extends Dict = Dict>(valuePath:string[],getter:Function,options:ComputedOptions,formOptions:RequiredFormOptions<State>){		
 	if(valuePath.length>=2 && valuePath[0]==FIELDS_STATE_KEY && valuePath[valuePath.length-1]==VALIDATE_COMPUTED_GROUP){	
 		// 如果没有指定scope,则默认指向value
 		if(!options.scope) options.scope="value"
@@ -189,8 +213,8 @@ function createValidatorHook(valuePath:string[],getter:Function,options:Computed
 	readonly?:ComputedAttr<boolean>				    // 是否只读	  
  * @param define 
  */
-function setFormDefault(define:any){
-	defaultObject(define,defaultFormProps) 
+function setFormDefault<T extends Dict>(define:T){
+	return defaultObject(define,defaultFormProps) as typeof defaultFormProps & T 
 }
 
 
@@ -252,23 +276,23 @@ function freezeForm(store:any){
 }
 
 /**
- * 声明表单
- * @param schema    表单
+ * 创建声明表单
+ * 
+ * @param schema    
  * @param options 
  * @returns 
  */
-export function createForm<State extends Dict=Dict>(schema: FormSchema<State>,options?:FormOptions) {
+export function createForm<State extends FormDefine=FormDefine>(schema: State,options?:FormOptions<FormSchema<State>>) {
 	const opts = assignObject({
 		getFieldName:(valuePath:string[])=>valuePath.length > 0 ? valuePath[valuePath.length-1]==='value' ? valuePath.slice(0,-1).join(".") : valuePath.join(".") : '',
 		validAt:'once',
-	},options) as Required<FormOptions>
-
-	type StoreType = IStore<{state:FormSchema<State>}>
-
+	},options) as RequiredFormOptions<State>
+ 
 	// 注入表单默认属性
 	setFormDefault(schema)  
+	
 	// 创建表单Store对象实例
-	const store = createStore({state:schema},{
+	const store = createStore(schema ,{
 		debug:opts.debug,
 		// 计算函数作用域默认指向fields
 		scope: ()=>[FIELDS_STATE_KEY],
@@ -288,50 +312,44 @@ export function createForm<State extends Dict=Dict>(schema: FormSchema<State>,op
 			if(computedType==='Computed' && valuePath.length >0 && valuePath[0]==FIELDS_STATE_KEY){
 				return draft.fields
 			}
-		},
-		/**
-		 * 当建立计算对象后时，会调用该函数
-		 * 
-		 * 如果validAt!=once，则禁用validate的计算，需要在lost-focus或submit时手动校验
-		 * 
-		 * @param keyPath 
-		 * @param computedObject 
-		 */
-		onCreateComputedObject(keyPath, computedObject) {
-			//  如果不马上校验，则禁用计算属性,需要在lost-focus或submit时手动校验
-			if(isValidateField(keyPath)){
-				computedObject.options.enable = opts.validAt==='once'
-			}			
-		},
-	});  
+		} 
+	}); 
+	type StoreType = IStore<State>
+
+	/**
+	 * 当建立计算对象后时，会调用该函数
+	 * 如果validAt!=once，则禁用validate的计算，需要在lost-focus或submit时手动校验 
+	 */ 
+	store.on("computed:created",(computedObject)=>{
+		// 如果不马上校验，则禁用计算属性,需要在lost-focus或submit时手动校验
+		if(isValidateField(computedObject.path)){
+			computedObject.options.enable = opts.validAt==='once'
+		}
+	})
+
 	type StateType = typeof store.state
 	type FieldsType = StateType['fields'] 
 	type ActionsType = StateType['actions'] 
-	return {
-		store,
+
+	return { 
 		getAction,
-		Form: createFormComponent.call<FormOptions,any[],FormComponent<State>>(opts,store),
-		Field: createFieldComponent.call(opts,store),	
-		Group: createFieldGroupComponent.call(opts,store),	
-		Action: createActionComponent<StoreType>(store,opts),
-		Submit: createSubmitComponent<StoreType>(store,opts),
-		Reset: createResetComponent<StoreType>(store,opts),		
-		useAction:createUseAction<StoreType>(store) as UseActionType,
-    	fields:createObjectProxy(()=>store.state.fields) as FieldsType,		
-		actions:createObjectProxy(()=>store.state.actions) as ActionsType,		
-		state:store.state as FormSchema<StateType>, 
-		useState:store.useState,
-		// 冻结表单，即表单计算函数不再执行，当初始化表单数据后，可以调用该函数来冻结表单
-		freeze:freezeForm(store),
-		// 加载表单数据
-		load:createLoadApi<State>(store,opts),
-		// 读取表单数据
-		getValues:createGetValuesApi(store ,opts),
-		// 引用所有计算属性
-		computedObjects:store.computedObjects,
-		watchObjects:store.watchObjects,		
-		// 手动执行表单校验：即运行所有校验计算函数,scope:
-		validate:createValidator(store)
+		Form           : createFormComponent<State>(store,opts),
+		Field          : createFieldComponent<State>(store,opts),	
+		Group          : createFieldGroupComponent<State>(store,opts),	
+		Action         : createActionComponent<State>(store,opts),
+		Submit         : createSubmitComponent<State>(store,opts),
+		Reset          : createResetComponent<State>(store,opts),		
+		useAction      : createUseAction<StoreType>(store) as UseActionType,
+    	fields         : createObjectProxy(()=>store.state.fields) as FieldsType,		
+		actions        : createObjectProxy(()=>store.state.actions!) as ActionsType,		
+		state          : store.state as (ComputedState<typeof defaultFormProps> & StateType ), 
+		useState       : store.useState, 
+		freeze         : freezeForm(store), 
+		load           : createLoadApi<State>(store,opts), 
+		getValues      : createGetValuesApi<State>(store ,opts), 
+		computedObjects: store.computedObjects,
+		watchObjects   : store.watchObjects,		 
+		validate       : createValidator<State>(store)
 	};
 }
 
@@ -359,14 +377,14 @@ export function createForm<State extends Dict=Dict>(schema: FormSchema<State>,op
  * @param store 
  * @returns 
  */
-function createFormComponent<Fields extends Dict>(this:FormOptions,store: IStore): FormComponent<Fields> {
+function createFormComponent<State extends Dict = Dict>(store: IStore<State>,formOptions:RequiredFormOptions<State>): FormComponent<State['fields']> {
 		
-	return React.forwardRef<HTMLFormElement>((props: FormProps<Fields>,ref:React.ForwardedRef<HTMLFormElement>) => {
+	return React.forwardRef<HTMLFormElement>((props: FormProps<State['fields']>,ref:React.ForwardedRef<HTMLFormElement>) => {
 		const {children } = props; 
 		// 提交表单
 		const onSubmit = useCallback((ev: React.FormEvent<HTMLFormElement>) => {
 			// 手动运行校验
-			if(this.validAt==='submit'){
+			if(formOptions.validAt==='submit'){
 				store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
 			}
 
@@ -381,29 +399,55 @@ function createFormComponent<Fields extends Dict>(this:FormOptions,store: IStore
 				{children}
 			</form>
 		)
-	}) as FormComponent<Fields> 
+	}) as FormComponent<State['fields']> 
 }
 
 
  
-/**
- * 在组件中使用
- * 
- * const Book = useForm<>(()=>{{
- * 		name:"书籍名称"
- * 		fields:{
- * 		}
- * }},options)
- * 
- * 
- * @param schema 
- * @param options 
- * @returns 
- */
-export function useForm<State extends Dict=Dict>(schema:()=>State,options?:FormOptions) {
-	const ref = useRef<ReturnType<typeof createForm<ReturnType<typeof schema>>>>()
-	if(ref.current==null){
-		ref.current = createForm<ReturnType<typeof schema>>(schema(),options)
+
+
+const form = createForm({
+	title:1,
+	// dirty:computed<number>(()=>1),
+	// validate: computed(async ()=>{
+	// 	return true
+	// },["username"]),	
+	fields:{
+		username:{
+			value:""
+		},
+		password:{
+			value:""
+		},
+		age:{
+			value:true,
+			validate: computed(async ()=>{
+				return true
+			},["username"])
+		},
+		wifi:{
+			ssid:{
+				value:111111
+			},
+			password:{
+				value:""
+			}
+		}
+	},
+	actions:{
+
 	}
-	return ref.current
-}
+})
+form.fields.username.value="123"
+form.state.fields.username.value="123"
+form.state 
+form.state.fields.age.value=true
+form.state.fields.age.validate
+form.state.fields.wifi.password.value
+form.state.fields.wifi.ssid.value
+form.state.title
+form.state.dirty
+form.state.fields.wifi.password.value
+form.state.validate
+
+

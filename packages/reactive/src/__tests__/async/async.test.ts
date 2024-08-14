@@ -1,6 +1,7 @@
 import { test,expect, describe, beforeAll, vi } from "vitest"
-import { createStore,ComputedScopeRef,computed, IStore } from "../.."
+import { createStore,computed } from "../.."
 import { ComputedObject } from "../../computed/computedObject"
+import { ComputedAttr } from '../../../../core/src/types';
 
  
 
@@ -29,7 +30,8 @@ describe("基于字段移花接木的异步计算",()=>{
                 }                
             })   
             store.setState((draft)=>draft.count = 4)
-            store.setState((draft)=>draft.count = 5)
+            store.setState((draft)=>draft.count = 5)            
+
         })
     })  
     test("从异步对象实例读取计算值",()=>{
@@ -300,3 +302,30 @@ describe("执行分组计算",()=>{
     })  
 
 })
+
+
+ 
+
+type FormDefine = {
+    price:ComputedAttr<number>
+    count:ComputedAttr<number>
+    total:ComputedAttr<number>
+} 
+
+function createForm<S extends FormDefine>(state:S){
+    return createStore(state)     
+}
+
+
+const fm = createForm({
+    price:computed<number>(async ()=>1,[]),
+    count:computed(()=>1),
+    total:computed(async (scope)=>{
+         return scope.price * scope.count
+    },['price','count'])
+})
+
+fm.state.price
+fm.state.count
+
+

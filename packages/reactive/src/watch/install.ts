@@ -1,8 +1,9 @@
 import { OBJECT_PATH_DELIMITER } from "../consts"
-import { IStore, StoreDefine } from "../store/types"
+import { IStore } from "../store/types"
 import { setVal } from "../utils"
 import { WatchDescriptor } from "./types" 
 import { IReactiveReadHookParams } from "../reactives/types"
+import { Dict } from "../types"
 
 /**
  * 安装一个watch函数
@@ -10,7 +11,7 @@ import { IReactiveReadHookParams } from "../reactives/types"
  * @param store 
  * @param watchTo 
  */ 
-export function installWatch<T extends StoreDefine>(params:IReactiveReadHookParams,store:IStore<T>) {
+export function installWatch<T extends Dict>(params:IReactiveReadHookParams,store:IStore<T>) {
     
     store.options.log(`install watch for <${params.path.length==0 ? "Dynamic" : params.path.join(OBJECT_PATH_DELIMITER)}>`)
 

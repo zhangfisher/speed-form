@@ -5,7 +5,10 @@ import validator from "validator";
 
 let count = 0
 
-export const schema = {
+ 
+
+ 
+const Network = createForm({
 	title: "网络配置",
 	fields: {
 		title: {
@@ -85,7 +88,7 @@ export const schema = {
 			},
 			submit: { // 这是一个动作,
 				title: "提交wifi",
-				enable: (net: any) => (net as NetworkType).interface.value === "wifi",
+				enable: (net: any) => net.interface.value === "wifi",
 				validate: (value: string) => value.length > 6,
 				execute:async (wifi:any)=>{
 					await delay(2000)
@@ -230,12 +233,7 @@ export const schema = {
             }
         }
 	},
-};
-
-type NetworkFormType = typeof schema;
-type NetworkType = NetworkFormType['fields'];
-
-const Network = createForm<NetworkFormType>(schema,{debug:true});
+},{debug:true});
 
 
 // @ts-ignore

@@ -1,13 +1,13 @@
 import { ComputedObject} from "./computedObject"
 import { computedObjectCreator } from './create';
-import type { IStore, StoreDefine } from "../store/types";
-import { RuntimeComputedOptions } from "../types";
+import type { IStore } from "../store/types";
+import { Dict, RuntimeComputedOptions } from "../types";
 
 
    /**
     * 
     */
-export class ComputedObjects<T extends StoreDefine =  StoreDefine> extends Map<string,ComputedObject<T>>{
+export class ComputedObjects<T extends Dict =  Dict> extends Map<string,ComputedObject<T>>{
     private _createComputed?:ReturnType<typeof computedObjectCreator<T>>
     constructor(public store:IStore<T>){
       super()
