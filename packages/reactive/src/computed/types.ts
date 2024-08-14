@@ -5,7 +5,7 @@
 import {  IOperateParams, ISharedCtx } from "helux";
 import type { ComputedScope,   ITargetState } from "../store/types";
 import { Dict } from "../types"
-import { WatchDescriptorCreator } from "../watch";
+import { WatchDescriptor } from "../watch";
 import { Reactiveable } from "../reactives/types";
 
 
@@ -21,8 +21,8 @@ export type AsyncReturnType<T extends (...args: any) => any> = T extends (...arg
     T extends (...args: any) => infer R ? R : any)
  
 
-export type PickComputedResult<T> = T extends  ComputedDescriptorCreator<infer X> ? AsyncComputedObject<X> : 
-    ( T extends WatchDescriptorCreator<any,infer X> ? X :
+export type PickComputedResult<T> = T extends  ComputedDescriptor<infer X> ? AsyncComputedObject<X> : 
+    ( T extends WatchDescriptor<any,infer X> ? X :
         ( T extends ComputedSyncReturns<infer X> ? X: 
             (T extends AsyncComputed<infer X> ? AsyncComputedObject<X>: 
                 (T extends Computed<infer R> ? R : T) 
@@ -217,14 +217,14 @@ export interface StateValueDescriptorParams<Fn extends Function,Options extends 
 
 
 
-export type ComputedDescriptorInfo<R=any> = {
+export type ComputedDescriptorDefine<R=any> = {
   getter: AsyncComputedGetter<R> | ComputedGetter<R>;
   options: ComputedOptions<R>;
 }
 
 
-export  interface ComputedDescriptorCreator<R=any>  {
-  ():ComputedDescriptorInfo<R>
+export  interface ComputedDescriptor<R=any>  {
+  ():ComputedDescriptorDefine<R>
   __COMPUTED__: 'sync' | 'async' | 'watch' 
 } 
 

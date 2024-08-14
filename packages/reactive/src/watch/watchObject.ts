@@ -1,6 +1,6 @@
 import { getSnap  } from "helux" 
 import { setVal } from "../utils/setVal"
-import { WatchListener, WatchOptions, WatchDescriptor } from './types';
+import { WatchListener, WatchOptions, WatchDescriptorDefine } from './types';
 import { Dict,  IStore } from "../types"
 import { getVal } from "../utils/getVal"
 import { OBJECT_PATH_DELIMITER } from "../consts" 
@@ -13,7 +13,7 @@ export class WatchObject<T extends Dict> {
     private _cache?: Dict
     private _listener:WatchListener 
     private _options: Required<WatchOptions>
-    constructor(public store:IStore<T>,descriptor:WatchDescriptor){        
+    constructor(public store:IStore<T>,descriptor:WatchDescriptorDefine){        
         this._options = Object.assign({ 
             enable  : true,
             selfPath: [],

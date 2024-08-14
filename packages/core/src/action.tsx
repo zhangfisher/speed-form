@@ -34,7 +34,7 @@
 import { ReactNode, useCallback, useRef, RefObject,useState} from "react";
 import React from "react";
 import type { RequiredFormOptions } from "./form";
-import {  AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorInfo, ComputedOptions, ComputedParams,  Dict, IStore, RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
+import {  AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict, IStore, RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
 import { getId } from "./utils";
@@ -42,7 +42,7 @@ import { FIELDS_STATE_KEY } from "./consts";
 
 export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
   | ((fields:Fields)=>Promise<R>) 
-  | ComputedDescriptorInfo<R>
+  | ComputedDescriptorDefine<R>
   | R  
 
 
@@ -95,7 +95,7 @@ export interface FormActionExtra{
  
 
  // 经过创建表单后的动作对象,  execute
-export type FormAction<T extends FormActionDefine> =ComputedDescriptorInfo<{
+export type FormAction<T extends FormActionDefine> =ComputedDescriptorDefine<{
     [Key in keyof T]: Key extends 'execute' ? never : T[Key]
 }>
 

@@ -13,13 +13,13 @@ export type WatchListenerOptions<Result=any> = {getSelfValue:()=>Result ,selfPat
 export type WatchListener<Value=any, Result= Value> = (path:string[],value:Value,watchObject:WatchObject<any>)=>(Exclude<Result,Promise<any>> | undefined)
 
  
-export type WatchDescriptor<Value=any, Result=Value> = {
+export type WatchDescriptorDefine<Value=any, Result=Value> = {
     listener : WatchListener<Value,Result>;
     options  : WatchOptions<Result>;              
   }
 
-export interface WatchDescriptorCreator<Value = any,Result=Value> {
-  ():WatchDescriptor<Value,Result>;
+export interface WatchDescriptor<Value = any,Result=Value> {
+  ():WatchDescriptorDefine<Value,Result>;
   __COMPUTED__: 'sync' | 'async' | 'watch' 
 } 
 

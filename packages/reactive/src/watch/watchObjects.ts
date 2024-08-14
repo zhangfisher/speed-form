@@ -1,5 +1,5 @@
 import { watch as heluxWatch  } from "helux" 
-import { WatchDescriptor } from './types';
+import { WatchDescriptorDefine } from './types';
 import { IStore, Dict } from "../types" 
 import { WatchObject } from "./watchObject";
 import { getVal } from "../utils";
@@ -56,7 +56,7 @@ export class WatchObjects<T extends Dict> extends Map<string,WatchObject<T>>{
      * @param watchTo               侦听结果写到处下载
      * @returns 
      */
-    add(descriptor:WatchDescriptor){
+    add(descriptor:WatchDescriptorDefine){
         const watchObject  = new WatchObject(this.store,descriptor)
         this.set(watchObject.id,watchObject)
         return watchObject

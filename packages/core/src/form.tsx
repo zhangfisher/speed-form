@@ -407,8 +407,8 @@ function createFormComponent<State extends Dict = Dict>(store: IStore<State>,for
 
 
 const form = createForm({
-	title:1,
-	// dirty:computed<number>(()=>1),
+	title:computed<string>(async ()=>"true"),
+	// dirty:computed<boolean>(()=>true),
 	// validate: computed(async ()=>{
 	// 	return true
 	// },["username"]),	

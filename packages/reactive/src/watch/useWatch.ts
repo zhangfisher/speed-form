@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { ComputedScopeRef, IStore, Dict } from "../types"
 import { sharex } from "helux"
 import { installWatch } from "./install"
-import { WatchDescriptor,  WatchDependParams, WatchListener, WatchOptions } from "./types" 
+import { WatchDescriptorDefine,  WatchDependParams, WatchListener, WatchOptions } from "./types" 
 import { normalizedWatchFilter } from "./utils"
 import { IReactiveReadHookParams } from "../reactives/types"
 /**
@@ -35,7 +35,7 @@ export function createUseWatch<T extends Dict>(store:IStore<T>){
                             enable  : true,
                             scope   : ComputedScopeRef.Depends         
                         },options)
-                    } as WatchDescriptor 
+                    } as WatchDescriptorDefine 
                     return descr
                 }
             } as unknown as IReactiveReadHookParams

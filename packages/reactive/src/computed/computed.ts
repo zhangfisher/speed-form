@@ -1,5 +1,5 @@
 import { isAsyncFunction } from "flex-tools/typecheck/isAsyncFunction";
-import type { ComputedDescriptorCreator, Dict } from "../types";
+import type { ComputedDescriptor, Dict } from "../types";
 import { AsyncComputedGetter, ComputedDepends, ComputedGetter, ComputedOptions } from "./types";
 import { normalizeDeps } from "../utils/normalizeDeps";
  
@@ -19,7 +19,7 @@ import { normalizeDeps } from "../utils/normalizeDeps";
  * @returns
  *
  */
-export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: AsyncComputedGetter<R>,depends?:ComputedDepends,options?: ComputedOptions<R,ExtraAttrs>): ComputedDescriptorCreator<R>;
+export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: AsyncComputedGetter<R>,depends?:ComputedDepends,options?: ComputedOptions<R,ExtraAttrs>): ComputedDescriptor<R>;
 export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: ComputedGetter<R>, options?: ComputedOptions<R,ExtraAttrs>): R
 export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depends?:any, options?: ComputedOptions<R,ExtraAttrs>):any {
 	
@@ -61,7 +61,7 @@ export function computed<R = any,ExtraAttrs extends Dict = {}>( getter: any,depe
   opts.async = isAsync;  
   opts.depends = normalizeDeps(deps) ; 
 
-  const descriptor:ComputedDescriptorCreator<R> = () => {
+  const descriptor:ComputedDescriptor<R> = () => {
     return {
       getter,
       options: opts,

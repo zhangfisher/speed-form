@@ -1,7 +1,7 @@
 import { OBJECT_PATH_DELIMITER } from "../consts"
 import { IStore } from "../store/types"
 import { setVal } from "../utils"
-import { WatchDescriptor } from "./types" 
+import { WatchDescriptorDefine } from "./types" 
 import { IReactiveReadHookParams } from "../reactives/types"
 import { Dict } from "../types"
 
@@ -15,7 +15,7 @@ export function installWatch<T extends Dict>(params:IReactiveReadHookParams,stor
     
     store.options.log(`install watch for <${params.path.length==0 ? "Dynamic" : params.path.join(OBJECT_PATH_DELIMITER)}>`)
 
-    const watchDescriptor = params.value() as WatchDescriptor
+    const watchDescriptor = params.value() as WatchDescriptorDefine
     
     watchDescriptor.options.path = params.path
 

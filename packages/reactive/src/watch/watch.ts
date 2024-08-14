@@ -1,4 +1,4 @@
-import { WatchDependParams, WatchDescriptorCreator, WatchListener, WatchOptions } from "./types";
+import { WatchDependParams, WatchDescriptor, WatchListener, WatchOptions } from "./types";
 import { normalizedWatchFilter } from "./utils";
 
  /* 
@@ -21,7 +21,7 @@ import { normalizedWatchFilter } from "./utils";
  * @param options 
  * @returns 
  */
- export function watch<Value =any,Result=Value>(listener:WatchListener<Value,Result>,depends?:WatchDependParams<Value>,options?:WatchOptions<Result>):WatchDescriptorCreator<Value,Result>{
+ export function watch<Value =any,Result=Value>(listener:WatchListener<Value,Result>,depends?:WatchDependParams<Value>,options?:WatchOptions<Result>):WatchDescriptor<Value,Result>{
     const opts : WatchOptions<Result> = Object.assign({
         depends:normalizedWatchFilter(depends),
         enable:true
@@ -31,7 +31,7 @@ import { normalizedWatchFilter } from "./utils";
         listener,
         options: opts,
       };
-    }) as WatchDescriptorCreator<Value,Result>
+    }) as WatchDescriptor<Value,Result>
     descriptor.__COMPUTED__ = 'watch'
     return descriptor        
 }

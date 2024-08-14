@@ -306,26 +306,26 @@ describe("执行分组计算",()=>{
 
  
 
-type FormDefine = {
-    price:ComputedAttr<number>
-    count:ComputedAttr<number>
-    total:ComputedAttr<number>
-} 
+// type FormDefine = {
+//     price:ComputedAttr<number>
+//     count:ComputedAttr<number>
+//     total:ComputedAttr<number>
+// } 
 
-function createForm<S extends FormDefine>(state:S){
-    return createStore(state)     
-}
+// function createForm<S extends FormDefine>(state:S){
+//     return createStore(state)     
+// }
 
 
-const fm = createForm({
-    price:computed<number>(async ()=>1,[]),
-    count:computed(()=>1),
-    total:computed(async (scope)=>{
-         return scope.price * scope.count
-    },['price','count'])
-})
+// const fm = createForm({
+//     price:computed<number>(async ()=>1,[]),
+//     count:computed(()=>1),
+//     total:computed(async (scope)=>{
+//          return scope.price * scope.count
+//     },['price','count'])
+// })
 
-fm.state.price
-fm.state.count
+// fm.state.price
+// fm.state.count
 
 
