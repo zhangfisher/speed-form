@@ -27,7 +27,7 @@ export interface WatchDescriptorCreator<Value = any,Result=Value> {
 
 export interface WatchOptions<R=any>{ 
     id?      : string                        // watch的id
-    selfPath?: string[],                     // 指的是watch()包装的所在的路径，如果使用useWatch则为[]
+    path?    : string[],                     // 指的是watch()包装的所在的路径，如果使用useWatch则为[]
     depends? : WatchDepends                  // 依赖
     context? : ITargetState,                 // 当执行listener的结果回写到此状态中，即调用state.setState方法来将listener的结果回写到此状态中
     initial? : R,                            // 初始值

@@ -95,7 +95,7 @@ export class Reactiveable<T extends Dict = Dict>{
      * 如果没有指定依赖，则监听所有的状态变化
      * 
      * @param listener 
-     * @param depends 
+     * @param depends   依赖的字段，为空时监听所有的状态变化
      * @returns 返回取消监听的方法
      */
     createWatch(listener:(changedPaths:string[][])=>void,depends?:(string | string[])[]):()=>void{

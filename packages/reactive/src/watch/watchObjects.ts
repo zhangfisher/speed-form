@@ -5,7 +5,7 @@ import { WatchObject } from "./watchObject";
 import { getVal } from "../utils";
 
 export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject<T>>{
-    private _off?:()=>{} 
+    private _off?:()=>void
     private _enable:boolean=true                            // 是否启用侦听器
     constructor(public store:IStore<T>){
         super()   
@@ -26,33 +26,18 @@ export class WatchObjects<T extends StoreDefine> extends Map<string,WatchObject<
      * 负责处理动态侦听
      */
     private createWacher(){
-        this.store.reactiveable.createWatch((changedPaths)=>{
+        const unwatch = this.store.reactiveable.createWatch((changedPaths)=>{
             if(!this._enable) return 
-            const watchPaths:string[][] = changedPaths.map((reason:any)=>reason.keyPath) 
-            watchPaths.forEach((watchPath)=>{  
-                const watchValue = getVal(this.store.state,watchPath)
+            changedPaths.forEach((keyPath)=>{  
+                const watchValue = getVal(this.store.state,keyPath)
                 for(let watchObj of this.values()){
-                    if(watchObj.depends(watchPath,watchValue)){
-                        watchObj.run(watchPath,watchValue)
+                    if(watchObj.isDepends(keyPath,watchValue)){
+                        watchObj.run(keyPath,watchValue)
                     }
                     
                 }                
             })
-        },['state'])
-        // @ts-ignore
-        const { unwatch } = heluxWatch(({triggerReasons})=>{
-            if(!this._enable) return 
-            const watchPaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
-            watchPaths.forEach((watchPath)=>{  
-                const watchValue = getVal(this.store.state,watchPath)
-                for(let watchObj of this.values()){
-                    if(watchObj.depends(watchPath,watchValue)){
-                        watchObj.run(watchPath,watchValue)
-                    }
-                    
-                }                
-            })
-        },()=>[this.store.state])
+        },[])
         this._off = unwatch
     } 
     /**

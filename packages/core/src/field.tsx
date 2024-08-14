@@ -134,7 +134,6 @@ export const FieldChildren = React.memo((props: {fieldProps:FieldRenderProps<any
 })     
 
 export function createFieldComponent(this:Required<FormOptions>,store: any) {    
-  const self = this
   return React.memo(<T=Value>(props: T extends Value? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
 		const { name } = props;  
     // 不含fields前缀的字段路径
@@ -153,14 +152,14 @@ export function createFieldComponent(this:Required<FormOptions>,store: any) {
     // 表单字段同步，允许指定防抖参数
     const syncer = useFieldSyncer(store,valueFieldPath)
   
-    const fieldProps = createFieldProps(self.getFieldName(fieldPath),value,syncer,filedUpdater)
+    const fieldProps = createFieldProps(this.getFieldName(fieldPath),value,syncer,filedUpdater)
     
     // 调用渲染字段UI 
     if(props.render){ 
       return <FieldChildren {...{fieldProps,children:props.render} as any}/>
     }else if(Array.isArray(props.children)){
-        return props.children.map((children:any)=>{
-          return <FieldChildren {...{fieldProps,children:children} as any}/>
+        return props.children.map((children:any,index)=>{
+          return <FieldChildren key={index} {...{fieldProps,children:children} as any}/>
         })
       }else{
         return <FieldChildren {...{fieldProps,children:props.children} as any}/>

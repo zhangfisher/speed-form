@@ -25,6 +25,9 @@ import {  normalizeDeps } from "../utils";
  * @returns 侦听器会返回一个取消侦听的函数
  */
 export function createWatch<T extends StoreDefine>(store:IStore<T>){
+    /**
+     *  创建一个侦听器
+     */
     return (listener:(changedPaths:string[][])=>void,depends?:(string | string[])[])=>{
         depends = normalizeDeps(depends)       
         if(depends.length===0){

@@ -125,13 +125,19 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
     markRaw<V=any>(value:V):V{
         return markRaw(value)
     }
+    /**
+     * 创建监听器
+     * @param listener 
+     * @param depends  依赖数组，如果没有指定则代表监听所有属性
+     * @returns 
+     */
     createWatch(listener: (changedPaths: string[][]) => void, depends?: (string | string[])[] | undefined) {
          // @ts-ignore
         const { unwatch } = watch(({triggerReasons})=>{
             const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
             listener(valuePaths)            
         },()=>{
-            return depends?.length==0 ? [] :  depends?.map(dep=>getValueByPath( this._stateCtx.state,dep))
+            return depends?.length==0 ? [this._stateCtx.state] :  depends?.map(dep=>getValueByPath( this._stateCtx.state,dep))
         })
         return unwatch
 

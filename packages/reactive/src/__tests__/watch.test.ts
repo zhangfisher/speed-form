@@ -1,6 +1,7 @@
 import { test,expect, describe, beforeEach,vi } from "vitest"
 import { watch,createStore,IStore} from "../"
 import { delay } from "flex-tools/async/delay"
+import { init } from "helux"
 
 type watchParams = Parameters<typeof watch<number,number>>
 
@@ -53,7 +54,7 @@ describe("静态声明watch",()=>{
         expect(store.watchObjects.has(watchId)).toBeDefined()
         expect(store.watchObjects.get(watchId)?.id).toBe(watchId)
         expect(store.watchObjects.get(watchId)?.options.initial).toBe(1)
-        expect(store.watchObjects.get(watchId)?.selfPath).toEqual(['books','total'])
+        expect(store.watchObjects.get(watchId)?.path).toEqual(['books','total'])
         expect(store.watchObjects.get(watchId)?.options.group).toBe("x")
 
     })
@@ -98,21 +99,35 @@ describe("静态声明watch",()=>{
     })
 
 
-    test("侦听所有变化",async ()=>{
-        const store = createStore({
-            a:1,b:2,
-            diary:watch((path,value,watchObj)=>{
-                return value
-            },[])
-        },{immediate:true})
-        store.setState(draft=>{
-            draft.a = 2
-        })
-        store.setState(draft=>{
-            draft.b = 1
-        })
+    test("侦听所有变化", ()=>{
+        return new Promise<void>((resolve)=>{ 
+            const changed:string[][] = []
+            const paths:string[][] = []
+            const values:number[] = []
+
+            const store = createStore({
+                a:1,b:2,
+                diary:watch((path,value,watchObj)=>{
+                    changed.push(path)
+                    return value
+                },[],{initial:0})
+            },{immediate:true})
+            store.watch((changedPaths)=>{
+                paths.push(...changedPaths)
+                values.push(store.state.diary)                
+                if(paths.length==2){
+                    expect(changed).toStrictEqual([['a'],['b']])
+                    expect(paths).toStrictEqual([['diary'],['diary']])
+                    expect(values).toStrictEqual([100,200])
+                    resolve()
+                }
+            },["diary"])
+            store.setState(draft=>{
+                draft.a = 100
+            })
+            store.setState(draft=>{
+                draft.b = 200
+            })
+        })        
     })
-
-
-
 })

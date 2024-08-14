@@ -16,7 +16,7 @@ export function installWatch<T extends StoreDefine>(params:IReactiveReadHookPara
 
     const watchDescriptor = params.value() as WatchDescriptor
     
-    watchDescriptor.options.selfPath = params.path
+    watchDescriptor.options.path = params.path
 
     // 创建一个侦听对象
     const watchObject = store.watchObjects.add(watchDescriptor)    

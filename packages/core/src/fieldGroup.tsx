@@ -66,8 +66,7 @@ function createFieldGroupProps(name:string,value:any,fieldGroupUpdater:any){
 
 
 export function createFieldGroupComponent(this:Required<FormOptions>,store: any) {
-    const self = this
-    return React.memo(function FieldGroup<T extends Dict=Dict>(props: FieldGroupProps<T>):ReactNode{
+    return React.memo(<T extends Dict=Dict>(props: FieldGroupProps<T>):ReactNode=>{
         const { name } = props;  	       
         const [state,setState] = store.useState()
         const groupPath = Array.isArray(name) ? name : name.split(".")   
@@ -77,10 +76,10 @@ export function createFieldGroupComponent(this:Required<FormOptions>,store: any)
         const groupValue = getVal(state, fullGroupPath)        
         // 更新当前组信息，如update(group=>group.enable=true)
         const fieldGroupUpdater = useFieldGroupUpdater(fullGroupPath,setState)
-        const [fieldGroupProps,setfieldGroupProps] = useState(()=>createFieldGroupProps(self.getFieldName(groupPath),groupValue,fieldGroupUpdater))
+        const [fieldGroupProps,setfieldGroupProps] = useState(()=>createFieldGroupProps(this.getFieldName(groupPath),groupValue,fieldGroupUpdater))
 
         useEffect(()=>{
-            setfieldGroupProps(createFieldGroupProps(self.getFieldName(groupPath),groupValue,fieldGroupUpdater))
+            setfieldGroupProps(createFieldGroupProps(this.getFieldName(groupPath),groupValue,fieldGroupUpdater))
           },[groupValue])
  
         // 执行渲染

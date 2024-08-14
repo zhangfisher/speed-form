@@ -6,6 +6,7 @@ import { getVal } from "../utils/getVal"
 import { OBJECT_PATH_DELIMITER } from "../consts" 
 import { getRndId } from "../utils/getRndId";
 import { joinValuePath } from "../utils"; 
+import { isEq } from "../utils/isEq";
  
 
 export class WatchObject<T extends StoreDefine> {
@@ -23,7 +24,7 @@ export class WatchObject<T extends StoreDefine> {
         if(typeof(this._options.depends)!=='function') throw new Error("watch options.depends must be a function")        
             // 如果没有id则生成一个id
         if(!this._options.id){
-            const selfPath = this._options.selfPath
+            const selfPath = this._options.path
             this._options.id = this._options.id || 
                 this._options.context ?  getRndId() : joinValuePath(selfPath) 
         }
@@ -31,7 +32,7 @@ export class WatchObject<T extends StoreDefine> {
     }
     get id(){ return this._options.id!}
     get options(){ return this._options}
-    get selfPath(){ return this._options.selfPath!}
+    get path(){ return this._options.path!}
     get depends(){ return this._options.depends!}
     get enable(){ return this._options.enable!}
     set enable(value:boolean){ this._options.enable = value}
@@ -45,11 +46,25 @@ export class WatchObject<T extends StoreDefine> {
      */
     get value(){
         const ctx = this._options.context ?  this._options.context : this.store.state
-        return getVal(getSnap(ctx),this.selfPath)
+        return getVal(getSnap(ctx),this.path)
     }    
     private getName(){
-        return this._options.context ? this.id : this.selfPath.join(OBJECT_PATH_DELIMITER)
+        return this._options.context ? this.id : this.path.join(OBJECT_PATH_DELIMITER)
     }
+    /**
+     * 返回输入的路径是否当前对象所依赖的路径
+     * 
+     * 如果路径是自身路径，则返回false
+     * 
+     * @param watchPath 
+     * @param watchValue 
+     * @returns 
+     */
+    isDepends(watchPath:string[],watchValue:any){
+        if(isEq(watchPath,this.path)) return false
+        return this.depends(watchPath,watchValue)
+    }
+
     reset(){
         this._cache = {}
     } 
@@ -75,7 +90,7 @@ export class WatchObject<T extends StoreDefine> {
                     })
                 }else{ // 回写到原地
                     this.store.setState((draft:any)=>{
-                        setVal(draft,this.selfPath,result)
+                        setVal(draft,this.path,result)
                     })
                 }            
             }    

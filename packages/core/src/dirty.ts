@@ -19,15 +19,12 @@ function isFieldValue(path:string[]){
  * 
  * 只要有一个字段的dirty为true，则整个表单的dirty为true
  * 表单的dirty = field1.dirty || field2.dirty || field3.dirty ..... || fieldN.dirty
- * 
- * 
- * 
+ *  
  */
 export function dirty(entryPath?:string[]){
-    return watch<any,boolean>((value,[],{ getSelfValue,fromPath,selfPath })=>{
-        if(!isIncludePath(entryPath ? entryPath : selfPath,fromPath)) return       
-        const selfValue = getSelfValue()
-        if(!selfValue) return true
+    return watch<any,boolean>((path,value,watchObj)=>{
+        if(!isIncludePath(entryPath ? entryPath : watchObj.path,path)) return       
+        if(!watchObj.value) return true
     },(path)=>isFieldValue(path),{
         initial:false
     })
