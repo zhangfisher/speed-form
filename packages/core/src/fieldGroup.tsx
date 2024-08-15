@@ -24,8 +24,8 @@ import { ReactNode, useCallback,useState,useEffect } from "react";
 import { DefaultFieldPropTypes } from "./field";
 import React from "react";
 import { assignObject } from "flex-tools/object/assignObject";
-import type {  RequiredFormOptions } from "./form";
-import { Dict,getVal, IStore } from "@speedform/reactive";
+import type {  FormStore, RequiredFormOptions } from "./form";
+import { Dict,getVal } from "@speedform/reactive";
 
 
 export type DefaultFieldGroupPropTypes = Omit<DefaultFieldPropTypes,'value' | 'oldValue' | 'initial' | 'validate'>
@@ -65,7 +65,7 @@ function createFieldGroupProps(name:string,value:any,fieldGroupUpdater:any){
 
 
 
-export function createFieldGroupComponent<State extends Dict = Dict>(store: IStore<State>,formOptions:RequiredFormOptions<State>) {
+export function createFieldGroupComponent<State extends Dict = Dict>(store: FormStore<State>,formOptions:RequiredFormOptions<State>) {
     return React.memo(<T extends Dict=Dict>(props: FieldGroupProps<T>):ReactNode=>{
         const { name } = props;  	       
         const [state,setState] = store.useState()

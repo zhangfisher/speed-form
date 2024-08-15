@@ -48,16 +48,16 @@ export type IReactiveableOptions = {
     onRead?(params: IReactiveReadHookParams):void
 } 
 
-export class Reactiveable<T extends Dict = Dict>{
-    constructor(state:T,options?:IReactiveableOptions){
+export class Reactiveable<State extends Dict = Dict>{
+    constructor(state:State,options?:IReactiveableOptions){
 
     }     
-    get state():ComputedState<T>{
+    get state():ComputedState<State>{
         throw new Error("state not implemented.")
     }
-    useState<Value=T,SetValue=Value>(
-        getter?:StateGetter<RequiredComputedState<T>,Value>,
-        setter?:StateSetter<RequiredComputedState<T>,SetValue>
+    useState<Value=State,SetValue=Value>(
+        getter?:StateGetter<RequiredComputedState<State>,Value>,
+        setter?:StateSetter<RequiredComputedState<State>,SetValue>
     ):[Value,(value:SetValue)=>void]        {
         throw new Error("useState not implemented.")
     }
@@ -65,16 +65,16 @@ export class Reactiveable<T extends Dict = Dict>{
      * 
      * @param fn 
      */
-    setState(fn:(draft:ComputedState<T>)=>void):void{
+    setState(fn:(draft:ComputedState<State>)=>void):void{
         throw new Error("setState not implemented.")
     }        
     /**
      * 创建计算属性
      */
-    createAsyncComputed(params:CreateAsyncComputedOptions<ComputedState<T>>):string{
+    createAsyncComputed(params:CreateAsyncComputedOptions<ComputedState<State>>):string{
         throw new Error("createAsyncComputed not implemented.")
     }
-    createComputed(params:CreateComputedOptions<ComputedState<T>>):string{
+    createComputed(params:CreateComputedOptions<ComputedState<State>>):string{
         throw new Error("createComputed not implemented.")
     }
     /**

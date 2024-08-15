@@ -53,7 +53,6 @@ import { createLoadApi, createGetValuesApi } from "./serialize";
 import { createValidator, isValidateField, validate } from "./validate";
 import { createSubmitComponent } from "./submit";
 import { createResetComponent } from "./reset"; 
-import { RequiredDeep } from "type-fest"
 import { dirty } from "./dirty";
 
 export const defaultFormProps =  {
@@ -77,6 +76,8 @@ export type FormEnctypeType = 'application/x-www-form-urlencoded' | 'multipart/f
 
 export type FormTarget = '_self' | '_blank' | '_parent' | '_top'
 
+export type FormState<State extends Dict> = ComputedState<typeof defaultFormProps & State> 
+export type FormStore<State extends Dict = Dict> = IStore<typeof defaultFormProps & State> 
 
 export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{		
 	name?:string;													// 表单名称,同时表示表单作用域，即提交范围，默认是整个表单fields		
@@ -157,15 +158,15 @@ export type FormStatus = 'idle'
  * 表单状态数据==响应式数据
  * 
  */
-export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dict>{
-	name?:string,										// 表单名称
-	title?  : ComputedAttr<string>,						// 表单标题
-	status?	: ComputedAttr<FormStatus>					// 表单状态
-	dirty?  : ComputedAttr<boolean>						// 表单数据是否已脏，即已更新过
-	valid?  : ComputedAttr<boolean>						// 表单是否有效	
-	fields	: Fields									// 表单字段
-	actions	: Actions									// 表单动作	
-}
+// export interface FormState<Fields extends Dict = Dict,Actions extends Dict = Dict>{
+// 	name?:string,										// 表单名称
+// 	title?  : ComputedAttr<string>,						// 表单标题
+// 	status?	: ComputedAttr<FormStatus>					// 表单状态
+// 	dirty?  : ComputedAttr<boolean>						// 表单数据是否已脏，即已更新过
+// 	valid?  : ComputedAttr<boolean>						// 表单是否有效	
+// 	fields	: Fields									// 表单字段
+// 	actions	: Actions									// 表单动作	
+// }
 
 
 /**
@@ -314,7 +315,6 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 			}
 		} 
 	}); 
-	type StoreType = IStore<State>
 
 	/**
 	 * 当建立计算对象后时，会调用该函数
@@ -326,30 +326,33 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 			computedObject.options.enable = opts.validAt==='once'
 		}
 	})
-
-	type StateType = typeof store.state
+	type StateType = ComputedState<typeof defaultFormProps> & typeof store.state
+	type StoreType = FormStore<State>
 	type FieldsType = StateType['fields'] 
 	type ActionsType = StateType['actions'] 
-
-	return { 
-		getAction,
-		Form           : createFormComponent<State>(store,opts),
-		Field          : createFieldComponent<State>(store,opts),	
-		Group          : createFieldGroupComponent<State>(store,opts),	
-		Action         : createActionComponent<State>(store,opts),
-		Submit         : createSubmitComponent<State>(store,opts),
-		Reset          : createResetComponent<State>(store,opts),		
-		useAction      : createUseAction<StoreType>(store) as UseActionType,
-    	fields         : createObjectProxy(()=>store.state.fields) as FieldsType,		
-		actions        : createObjectProxy(()=>store.state.actions!) as ActionsType,		
-		state          : store.state as (ComputedState<typeof defaultFormProps> & StateType ), 
-		useState       : store.useState, 
+	// 将store强制转换为FormStore，因为表单的根元数据如dirty等属性需要提供默认类型提示
+	const formStore = store as unknown as StoreType
+	 
+	return {  
+		state          : formStore.state,  
+		useState       : formStore.useState, 
+		setState       : formStore.setState, 
+		Form           : createFormComponent<State>(formStore,opts),
+		Field          : createFieldComponent<State>(formStore,opts),	
+		Group          : createFieldGroupComponent<State>(formStore,opts),	
+		Action         : createActionComponent<State>(formStore,opts),
+		Submit         : createSubmitComponent<State>(formStore,opts),
+		Reset          : createResetComponent<State>(formStore,opts),		
+		useAction      : createUseAction<State>(formStore) as UseActionType,
+    	fields         : createObjectProxy(()=>formStore.state.fields) as FieldsType,		
+		actions        : createObjectProxy(()=>formStore.state.actions!) as ActionsType,		
+		getAction,		
 		freeze         : freezeForm(store), 
-		load           : createLoadApi<State>(store,opts), 
-		getValues      : createGetValuesApi<State>(store ,opts), 
-		computedObjects: store.computedObjects,
-		watchObjects   : store.watchObjects,		 
-		validate       : createValidator<State>(store)
+		load           : createLoadApi<State>(formStore,opts), 
+		getValues      : createGetValuesApi<State>(formStore ,opts), 
+		computedObjects: formStore.computedObjects,
+		watchObjects   : formStore.watchObjects,		 
+		validate       : createValidator<State>(formStore)
 	};
 }
 
@@ -377,7 +380,7 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
  * @param store 
  * @returns 
  */
-function createFormComponent<State extends Dict = Dict>(store: IStore<State>,formOptions:RequiredFormOptions<State>): FormComponent<State['fields']> {
+function createFormComponent<State extends Dict>(store: FormStore<State>,formOptions:RequiredFormOptions<State>): FormComponent<State['fields']> {
 		
 	return React.forwardRef<HTMLFormElement>((props: FormProps<State['fields']>,ref:React.ForwardedRef<HTMLFormElement>) => {
 		const {children } = props; 
@@ -446,8 +449,15 @@ form.state.fields.age.validate
 form.state.fields.wifi.password.value
 form.state.fields.wifi.ssid.value
 form.state.title
-form.state.dirty
+form.state.dirty = true
 form.state.fields.wifi.password.value
-form.state.validate
+form.state.validate=true
 
 
+form.setState(draft=>{
+	draft.fields.username.value="123"
+	draft.fields.age.value=true
+	draft.fields.wifi.password.value="123"
+	draft.dirty = true
+	form.state.fields.age.validate.loading
+}) 

@@ -35,7 +35,7 @@ export type StateSetter<State,Value=any> = (state:State,value:Value)=>void
 
 
 
-export interface StoreOptions<T extends Dict= Dict>{
+export interface StoreOptions<State extends Dict= Dict>{
     id:string
     /**
      * 是否开启调试模式，开启后会打印出一些的信息
@@ -52,7 +52,7 @@ export interface StoreOptions<T extends Dict= Dict>{
      /**
      * 提供一个响应式核心
      */
-     reactiveable?:Reactiveable
+     reactiveable?:Reactiveable<State>
      /**
       * 默认计算函数仅在第一次读取时执行
       * 如果immediate=true时，则在创建对象时马上创建计算对象
@@ -75,7 +75,7 @@ export interface StoreOptions<T extends Dict= Dict>{
      * @param options 
      * @returns 
      */
-    onCreateComputed:(this:IStore<T>,keyPath:string[],getter:Function,options:ComputedOptions)=> void | (()=>any)
+    onCreateComputed:(this:IStore<State>,keyPath:string[],getter:Function,options:ComputedOptions)=> void | (()=>any)
     
     /**
      * 在传递给计算函数的scope时调用
@@ -99,25 +99,25 @@ export type ITargetState<T extends Dict = Dict> = {
     setState:(draft:ComputedState<T>)=>void
 }
 
-export type IStore<T extends Dict = Dict> = {
-    state          : ComputedState<T>
-    useState       : ReturnType<typeof createUseState<T>>
-    setState       : ReturnType<typeof createSetState<T>>  // (updater:(draft:T)=>void)=>void
+export type IStore<State extends Dict = Dict> = {
+    state          : ComputedState<State>
+    useState       : ReturnType<typeof createUseState<State>>
+    setState       : ReturnType<typeof createSetState<State>>  // (updater:(draft:T)=>void)=>void
     // 启用与停止计算
     enableComputed : (value:boolean)=>void
-    options        : StoreOptions<T>
-    reactiveable   : Reactiveable<T>
-    reactive       : IReactive<T>
+    options        : StoreOptions<State>
+    reactiveable   : Reactiveable<State>
+    reactive       : IReactive<State>
     // 计算
-    createComputed : ReturnType<typeof computedObjectCreator<T>>    
-    computedObjects: ComputedObjects<T>
+    createComputed : ReturnType<typeof computedObjectCreator<State>>    
+    computedObjects: ComputedObjects<State>
     // 侦测
-    watch          : ReturnType<typeof createWatch<T>>
-    useWatch       : ReturnType<typeof createUseWatch<T>>
-    watchObjects   : WatchObjects<T>
+    watch          : ReturnType<typeof createWatch<State>>
+    useWatch       : ReturnType<typeof createUseWatch<State>>
+    watchObjects   : WatchObjects<State>
 
     // 用来同步表单时使用
-    sync           : ISharedCtx<ComputedState<T>>['sync'] 
+    sync           : ISharedCtx<ComputedState<State>>['sync'] 
     // 简单事件触发与侦听
     on             : Emitter<StoreEvents>['on']
     off            : Emitter<StoreEvents>['off']

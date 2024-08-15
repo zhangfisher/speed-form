@@ -1,6 +1,7 @@
 import { Dict, IStore, OBJECT_PATH_DELIMITER, isIncludePath, watch } from "@speedform/reactive";
 import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from "./consts";  
 import { ValidationError } from "./errors";
+import { FormStore } from "./form";
 
 
 /**
@@ -98,7 +99,7 @@ export function assert(condition:boolean | ((...args:any[])=>boolean),tips:strin
  * @param store 
  * @returns 
  */
-export function createValidator<State extends Dict = Dict>(store:IStore<State>){
+export function createValidator<State extends Dict = Dict>(store:FormStore<State>){
     return  async (scope?:string[])=>{
         if(Array.isArray(scope) && scope.length>0){        
             let key= scope.join(OBJECT_PATH_DELIMITER)    

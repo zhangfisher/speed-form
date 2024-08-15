@@ -2,7 +2,7 @@
  * 同步计算
  */
 import { getComputedId, getVal, setVal  } from "../utils"; 
-import { ComputedDescriptorParams, ComputedGetter, ComputedOptions,  ComputedRunContext,  RuntimeComputedOptions } from './types';
+import { ComputedDescriptorParams, ComputedGetter, ComputedOptions,  ComputedRunContext } from './types';
 import { getComputedScope } from '../context';
 import { IStore } from '../store/types';
 import { IReactiveReadHookParams } from "../reactives/types";

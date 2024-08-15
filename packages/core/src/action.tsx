@@ -33,7 +33,7 @@
 
 import { ReactNode, useCallback, useRef, RefObject,useState} from "react";
 import React from "react";
-import type { RequiredFormOptions } from "./form";
+import type { FormStore, RequiredFormOptions } from "./form";
 import {  AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict, IStore, RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
@@ -255,7 +255,7 @@ export const ActionChildren = React.memo((props: {actionProps:ActionRenderProps<
  * @param store 
  * @returns 
  */
-export function createActionComponent<State extends Dict = Dict>(store:IStore<State>,formOptions:RequiredFormOptions<State>) {
+export function createActionComponent<State extends Dict = Dict>(store:FormStore<State>,formOptions:RequiredFormOptions<State>) {
 
     /**
      * State:  指的是动作的对应状态数据，在schema中就是具有execute的一个对象
@@ -360,7 +360,7 @@ export type UseActionType = <Scope extends Dict=Dict,R=any>(executor:AsyncComput
  * })
  * 
  */
-export function createUseAction<Store extends Dict = Dict>(store:Store) {
+export function createUseAction<State extends Dict = Dict>(store:FormStore<State>) {
     // useAction本质上就是创建一个计算属性
     return function useAction<Scope extends Dict=Dict,R=any>(executor:AsyncComputedGetter<R,Scope>,options?:ComputedOptions<R> & {name?:string}){
         const ref = useRef<string | null>()

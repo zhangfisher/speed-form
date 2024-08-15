@@ -1,4 +1,4 @@
-import { IStore, Dict } from "../types"
+import { IStore, Dict, ComputedState } from "../types"
 
 
  
@@ -13,9 +13,8 @@ import { IStore, Dict } from "../types"
  *
  * @param useState
  */
-export function createSetState<T extends Dict>(store: IStore<T>){
-
-    return (updater:(draft:T)=>void)=>{
+export function createSetState<State extends Dict>(store: IStore<State>){
+    return (updater:(draft:ComputedState<State>)=>void)=>{        
         // @ts-ignore
         store.reactiveable.setState((draft:any)=>{
             updater(draft as any)

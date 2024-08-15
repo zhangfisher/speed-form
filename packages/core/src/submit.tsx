@@ -10,7 +10,7 @@
  */
 
 import { Dict, getValueByPath, IStore } from "@speedform/reactive"; 
-import type { FormOptions, FormSchemaBase, RequiredFormOptions } from "./form";
+import type { FormOptions, FormSchemaBase, FormStore, RequiredFormOptions } from "./form";
 import React,{ CSSProperties, ReactElement, ReactNode } from "react";
 import { isFieldGroup, isFieldList, isFieldValue } from "./utils";
 import { styled } from  "styledfc"
@@ -136,7 +136,7 @@ const DefaultFormBehaviorButton =styled<DefaultBehaviorButtonProps>((props,{clas
 })
 export type FormBehaviorComponentProps = React.PropsWithChildren<BehaviorOptions>
 
-export function createFormBehaviorComponent<Store extends Dict = Dict>(store:Store,behaviorOptions?:BehaviorOptions,formOptions?:Required<FormOptions>) {
+export function createFormBehaviorComponent<State extends Dict = Dict>(store:FormStore<State>,behaviorOptions?:BehaviorOptions,formOptions?:RequiredFormOptions<State>) {
     const behaviorOpts = Object.assign({
         preventDefault:false,
     },behaviorOptions) as Required<BehaviorOptions>
@@ -160,8 +160,8 @@ export function createFormBehaviorComponent<Store extends Dict = Dict>(store:Sto
             {childrenType===1 ?
                 <BehaviorChildren {...{submitProps:submitRenderProps,children:props.render}} />
                 : ( childrenType===2 ? 
-                    (props.children as any).map((children:any)=>{
-                        return <BehaviorChildren {...{submitProps:submitRenderProps,children:children}} />
+                    (props.children as any).map((children:any,index:any)=>{
+                        return <BehaviorChildren key={index} {...{submitProps:submitRenderProps,children:children}} />
                     })
                     : <BehaviorChildren {...{submitProps:submitRenderProps,children:props.children}} />
                )
@@ -191,7 +191,7 @@ export type SubmitComponentProps = React.PropsWithChildren<{
  * @param formOptions 
  * @returns 
  */
-export function createSubmitComponent<State extends Dict = Dict>(store:IStore<State>,formOptions:RequiredFormOptions<State>) {
+export function createSubmitComponent<State extends Dict = Dict>(store:FormStore<State>,formOptions:RequiredFormOptions<State>) {
     const Action = createActionComponent(store,formOptions)
 
     return ((props:SubmitComponentProps)=>{

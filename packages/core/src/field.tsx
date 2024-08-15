@@ -1,7 +1,7 @@
 import React, {	 ChangeEventHandler, ReactNode, useCallback,useRef,useState  } from "react";  
 import { debounce as debounceWrapper } from './utils';
 import { ComputedAttr } from "./types";   
-import type { FormOptions, RequiredFormOptions } from "./form";
+import type { FormOptions, FormStore, RequiredFormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
 import { Dict,getVal, IStore, setVal } from "@speedform/reactive";  
 
@@ -133,7 +133,7 @@ export const FieldChildren = React.memo((props: {fieldProps:FieldRenderProps<any
   }) 
 })     
 
-export function createFieldComponent<T extends Dict = Dict>(store: IStore<T>,formOptions:RequiredFormOptions<T>) {    
+export function createFieldComponent<State extends Dict = Dict>(store: FormStore<State>,formOptions:RequiredFormOptions<State>) {    
   return React.memo(<T=Value>(props: T extends Value ? FieldProps<T> :  FieldProps<{value:T}>):ReactNode=>{
 		const { name } = props;  
     // 不含fields前缀的字段路径
