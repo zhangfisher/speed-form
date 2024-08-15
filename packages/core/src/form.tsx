@@ -120,7 +120,7 @@ export type FormSchema<State extends FormDefine = FormDefine> = FormSchemaBase &
  
 
 // 创建表单时的参数
-export interface FormOptions<T extends Dict> extends StoreOptions<T>{	
+export interface FormOptions<T extends Dict> extends Partial<StoreOptions<T>>{	
 	/**
 	 * 何时进行数据校验
 	 * - once : 默认值：实时校验
@@ -452,6 +452,7 @@ form.state.title
 form.state.dirty = true
 form.state.fields.wifi.password.value
 form.state.validate=true
+form.fields.age.value=true
 
 
 form.setState(draft=>{

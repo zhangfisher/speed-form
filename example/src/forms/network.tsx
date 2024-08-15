@@ -7,7 +7,6 @@ let count = 0
 
  
 
- 
 const Network = createForm({
 	title: "网络配置",
 	fields: {
@@ -174,67 +173,74 @@ const Network = createForm({
 			}
 		}
 	},
-	actions: {
-		submit: {
-			title: "提交",
-			enable: (root: any) => {
-				return root.fields.wifi.ssid.value.length > 3
-			},
-			validate:computed<true>(async ()=>{
-				return true
-			}),
-			execute: action(async (scope:any,{abortSignal}) => {		
-				console.log(scope)
-				return new Promise<number>((resolve,reject)=>{
-					setTimeout(()=>{
-						resolve(count++)
-					},2000)
-					abortSignal.addEventListener("abort",()=>{
-						reject("cancelled")
-					})
-				})			 
-			}),
-		},
-		errorSubmit: {
-			title: "提交错误", 
-			execute: async () => {
-				await delay(1000);
-				throw new Error("提交错误"+count++);
-			},
-		},		
-		timeoutSubmit: {
-			title: "提交超时倒计时", 
-			execute: computed(async () => {
-				await delay(5000);								
-			},[],{timeout:2000}),
-		},
-		ping: {
-			title: "测试网络连通性",
-			scope: "wifi", // 表示该动作的上下文是wifi这个子表单
-			enable: (wifi: any) => wifi.ssid.value.length > 0,
-			execute: async (a: Dict) => {
-				await delay(2000);
-				console.log(a);
-			},
-		},		
-        // 向导表单:上一步
-        previous:{
-            enable: (wifi: any) => wifi.ssid.value.length > 0,
-			execute:async ()=>{
-				return 1
-			}
-        },
-        // 向导表单:下一步        
-        next:{
-            enable: (wifi: any) => wifi.ssid.value.length > 0,
-            execute: async () => {
-				await delay(1000)
-                return 2
-            }
-        }
-	},
+	// actions: {
+	// 	submit: {
+	// 		title: "提交",
+	// 		enable: (root: any) => {
+	// 			return root.fields.wifi.ssid.value.length > 3
+	// 		},
+	// 		validate:computed<true>(async ()=>{
+	// 			return true
+	// 		}),
+	// 		execute: action(async (scope:any,{abortSignal}) => {		
+	// 			console.log(scope)
+	// 			return new Promise<number>((resolve,reject)=>{
+	// 				setTimeout(()=>{
+	// 					resolve(count++)
+	// 				},2000)
+	// 				abortSignal.addEventListener("abort",()=>{
+	// 					reject("cancelled")
+	// 				})
+	// 			})			 
+	// 		}),
+	// 	},
+	// 	errorSubmit: {
+	// 		title: "提交错误", 
+	// 		execute: async () => {
+	// 			await delay(1000);
+	// 			throw new Error("提交错误"+count++);
+	// 		},
+	// 	},		
+	// 	timeoutSubmit: {
+	// 		title: "提交超时倒计时", 
+	// 		execute: computed(async () => {
+	// 			await delay(5000);								
+	// 		},[],{timeout:2000}),
+	// 	},
+	// 	ping: {
+	// 		title: "测试网络连通性",
+	// 		scope: "wifi", // 表示该动作的上下文是wifi这个子表单
+	// 		enable: (wifi: any) => wifi.ssid.value.length > 0,
+	// 		execute: async (a: Dict) => {
+	// 			await delay(2000);
+	// 			console.log(a);
+	// 		},
+	// 	},		
+    //     // 向导表单:上一步
+    //     previous:{
+    //         enable: (wifi: any) => wifi.ssid.value.length > 0,
+	// 		execute:async ()=>{
+	// 			return 1
+	// 		}
+    //     },
+    //     // 向导表单:下一步        
+    //     next:{
+    //         enable: (wifi: any) => wifi.ssid.value.length > 0,
+    //         execute: async () => {
+	// 			await delay(1000)
+    //             return 2
+    //         }
+    //     }
+	// },
 },{debug:true});
 
+Network.fields.title
+Network.fields.ip.validate
+Network.fields.wifi.title
+Network.fields.wifi.ssid.validate
+Network.fields.wifi.progressSubmit.execute
+Network.fields.wifi.timeoutSubmit.execute
+Network.fields.wifi.cancelableSubmit.execute
 
 // @ts-ignore
 globalThis.Network = Network;

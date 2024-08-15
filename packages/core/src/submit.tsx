@@ -9,8 +9,8 @@
  * 
  */
 
-import { Dict, getValueByPath, IStore } from "@speedform/reactive"; 
-import type { FormOptions, FormSchemaBase, FormStore, RequiredFormOptions } from "./form";
+import { Dict, getValueByPath } from "@speedform/reactive"; 
+import type {  FormSchemaBase, FormStore, RequiredFormOptions } from "./form";
 import React,{ CSSProperties, ReactElement, ReactNode } from "react";
 import { isFieldGroup, isFieldList, isFieldValue } from "./utils";
 import { styled } from  "styledfc"

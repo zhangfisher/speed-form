@@ -1,9 +1,10 @@
 import React, {	 ChangeEventHandler, ReactNode, useCallback,useRef,useState  } from "react";  
 import { debounce as debounceWrapper } from './utils';
 import { ComputedAttr } from "./types";   
-import type { FormOptions, FormStore, RequiredFormOptions } from "./form";
+import type { FormStore, RequiredFormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
-import { Dict,getVal, IStore, setVal } from "@speedform/reactive";  
+import { Dict,getVal, setVal } from "@speedform/reactive";  
+import type { FormAction, FormActionDefine } from "./action";
 
 
 // 默认同步字段属性
@@ -207,12 +208,21 @@ export interface FormField<T=any>{
 }
  
 
+// 表单字段中允许声明动作，即FormAction
 export type FormFields<T extends Dict = Dict> = {
   [name in keyof T]: T[name] extends { value: infer V } 
     ? FormField<V>
     : (
-      T extends Dict[] ? Array<FormField>   : ( T[name] extends Dict ? FormFields<T[name]> : never ) 
-    )
+        T[name] extends { execute: any } ? FormAction<T[name]>
+        : ( T[name] extends Dict ? FormFields<T[name]>
+            : ( T[name] extends (infer Item)[] ? 
+                  ( Item extends FormActionDefine 
+                    ? FormAction<Item> : Item extends {value:infer V2} 
+                    ? FormField<V2> : Item extends Dict 
+                    ? FormFields<T[name]> : Item  
+                  )[]
+                  : T[name]
+              )
+          )
+      )
 }
-
- 
