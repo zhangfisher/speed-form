@@ -4,7 +4,7 @@
 
 
 import React from "react"
-import { ReactFC } from "./types"; 
+import { ReactFC } from "../../types"; 
 import {ColorBlock} from "@speedform/demo-components";
 import { createStore } from "@speedform/reactive";
 
@@ -18,7 +18,6 @@ export type AccountStateType = {
     };
 } 
 const storeDefine= {
-    state:{
         user:{
             id:'zhangfisher',
             firstName:'zhang',
@@ -26,8 +25,7 @@ const storeDefine= {
             fullName:(user:AccountStateType['user'])=> {
                return (user.firstName+user.lastName) as string
             }
-        }          
-    }
+        }  
 }
 
 const accountStore = createStore<typeof storeDefine>(storeDefine)

@@ -68,8 +68,8 @@ export const defaultFormProps =  {
     readonly : false,
     enable   : true,
     visible  : true,
-	actions  : {},
-	fields   : {}
+	fields   : {},
+	actions  : {}
 }  
     
 export type FormEnctypeType = 'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain'

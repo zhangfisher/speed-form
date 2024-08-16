@@ -80,25 +80,25 @@ const storeDefine= {
         sales:{
             total:0,
         },
-        actions:{
-            addBook(name:string,author:string,price:number,count:number){
-              return (state:MyStateType)=>state.books.push({
-                name,
-                price,
-                author,
-                count,
-                // @ts-ignore
-                total:(book:any)=>book.price*book.count
-              })
-            },  
-            async addBookAsync(data:{name:string,price:number,author:string,count:number}){
-                await delay(1000)
-                // @ts-ignore
-                data.total =(book:any)=>book.price*book.count
-                // 模拟异步请求
-                return (state:MyStateType)=>state.books.push(data)
-            }
-        }
+        // actions:{
+        //     addBook(name:string,author:string,price:number,count:number){
+        //       return (state:MyStateType)=>state.books.push({
+        //         name,
+        //         price,
+        //         author,
+        //         count,
+        //         // @ts-ignore
+        //         total:(book:any)=>book.price*book.count
+        //       })
+        //     },  
+        //     async addBookAsync(data:{name:string,price:number,author:string,count:number}){
+        //         await delay(1000)
+        //         // @ts-ignore
+        //         data.total =(book:any)=>book.price*book.count
+        //         // 模拟异步请求
+        //         return (state:MyStateType)=>state.books.push(data)
+        //     }
+        // }
 }   
 
 const store =  createStore(storeDefine)  

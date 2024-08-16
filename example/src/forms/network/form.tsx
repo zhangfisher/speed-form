@@ -246,6 +246,11 @@ globalThis.Network = Network;
 export default Network;
  
 
+Network.setState(draft=>{
+	draft.fields.title.value="123"
+	draft.fields.ip.value="123"
+})
+
 
 
 // const form = createForm({

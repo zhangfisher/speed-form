@@ -96,8 +96,8 @@ function ComputedDemo() {
                 <input  style={{width:80}} value={newBook.price} onChange={(e)=>newBook.price=Number(e.target.value)}/>
                 <input  style={{width:80}} value={newBook.count} onChange={(e)=>newBook.count=Number(e.target.value)}/>
             </div>
-            <button onClick={()=>state.actions.addBook(newBook.name,newBook.author,newBook.price,newBook.count)}>添加书籍</button>              
-            <button onClick={()=>state.actions.addBookAsync(newBook)}>异步添加书籍</button>              
+            {/* <button onClick={()=>state.actions.addBook(newBook.name,newBook.author,newBook.price,newBook.count)}>添加书籍</button>              
+            <button onClick={()=>state.actions.addBookAsync(newBook)}>异步添加书籍</button>               */}
           </div>  
         </Card> 
           

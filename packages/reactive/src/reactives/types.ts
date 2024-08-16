@@ -55,10 +55,7 @@ export class Reactiveable<State extends Dict = Dict>{
     get state():ComputedState<State>{
         throw new Error("state not implemented.")
     }
-    useState<Value=State,SetValue=Value>(
-        getter?:StateGetter<RequiredComputedState<State>,Value>,
-        setter?:StateSetter<RequiredComputedState<State>,SetValue>
-    ):[Value,(value:SetValue)=>void]        {
+    useState<Value=State>(getter?:StateGetter<RequiredComputedState<State>,Value>):[Value,(updater:(draft:State)=>void)=>void]        {
         throw new Error("useState not implemented.")
     }
     /**
@@ -85,6 +82,16 @@ export class Reactiveable<State extends Dict = Dict>{
     runComputed(id:string,options?:RuntimeComputedOptions):void{
         throw new Error("runComputed not implemented.")
     }
+    /**
+     * 用在input的onChange事件中，用于同步输入框的值到状态
+     * <input onChange={store.sync(['user','name'])} />
+     * 
+     * @param path 
+     */
+    sync(path:string[]):((event:any)=>void){
+        throw new Error("sync not implemented.")
+    } 
+
 
     markRaw<V=any>(value:V):V{
         throw new Error("makeRaw not implemented.")

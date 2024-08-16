@@ -33,7 +33,7 @@
 
 import { ReactNode, useCallback, useRef, RefObject,useState} from "react";
 import React from "react";
-import type { FormStore, RequiredFormOptions } from "./form";
+import type { FormDefine, FormStore, RequiredFormOptions } from "./form";
 import {  AsyncComputedDefine, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict,  RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
@@ -259,7 +259,7 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
 
         const actionState = getValueByPath(state,actionKey,".")
         const actionRunner = useActionRunner(actionState,props)
-        const actionCanceller = useActionCanceller(state,actionKey)
+        const actionCanceller = useActionCanceller(actionState,actionKey)
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
 
@@ -345,23 +345,23 @@ export type UseActionType = <Scope extends Dict=Dict,R=any>(executor:AsyncComput
  * })
  * 
  */
-export function createUseAction<State extends Dict = Dict>(store:FormStore<State>) {
+export function createUseAction<State extends FormDefine = FormDefine>(store:FormStore<State>) {
     // useAction本质上就是创建一个计算属性
     return function useAction<Scope extends Dict=Dict,R=any>(executor:AsyncComputedGetter<R,Scope>,options?:ComputedOptions<R> & {name?:string}){
         const ref = useRef<string | null>()
         const [state,setState] = store.useState()        
-        const [actionKey] = useState(()=>options?.name ?  options?.name : getId())
+        const [actionName] = useState(()=>options?.name ?  options?.name : getId())
         if(!ref.current){
-            setState((draft:any)=>{
-                if(!(actionKey in draft.actions)){
-                    draft.actions[actionKey] = {
-                        execute:action(executor,options)
-                    }                       
+                if(!(actionName in state.actions)){
+                    setState((draft:any)=>{
+                        draft.actions[actionName] = {
+                            execute:action(executor,options)
+                        }                       
+                    })
                 }
-            })   
-            ref.current = actionKey
+            ref.current = actionName
         } 
-        return getValueByPath(state,['actions',actionKey]).execute as FormActionState['execute']
+        return getValueByPath(state,['actions',actionName]).execute as FormActionState['execute']
     }
 
 }

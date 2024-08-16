@@ -117,7 +117,7 @@ export type IStore<State extends Dict = Dict> = {
     watchObjects   : WatchObjects<State>
 
     // 用来同步表单时使用
-    sync           : ISharedCtx<ComputedState<State>>['sync'] 
+    sync           : (path:string[])=>((event:any)=>void) 
     // 简单事件触发与侦听
     on             : Emitter<StoreEvents>['on']
     off            : Emitter<StoreEvents>['off']

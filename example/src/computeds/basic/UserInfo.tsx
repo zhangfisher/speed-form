@@ -4,8 +4,8 @@
 
 
 import React from "react"
-import { ReactFC } from "./types";
-import store from "./computeds/basic/computed"
+import { ReactFC } from "../../types";
+import store from "./computed"
 import {ColorBlock} from "@speedform/demo-components";
 
 const UserInfo:ReactFC<React.PropsWithChildren> = ()=>{   

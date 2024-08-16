@@ -35,7 +35,7 @@ const userDefine =  {
             title: "验证码", 
             validate: computed(async (value: string) => { 
                 return value.length > 3
-            })
+            },[])
         },
         submit: { // 这是一个动作,
             title: "提交wifi",

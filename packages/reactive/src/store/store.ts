@@ -53,6 +53,7 @@ export function createStore<T extends Dict>(data:T,options?:Partial<StoreOptions
     store.useState = createUseState<T>(store)
     store.setState = createSetState<T>(store)
     store.enableComputed = (value:boolean=true)=>store.options.enableComputed = value
+    store.sync = store.reactiveable.sync.bind(store.reactiveable)
     // store.sync = store.stateCtx.sync
     // 侦听
     store.watch = createWatch<T>(store)

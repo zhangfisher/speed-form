@@ -1,5 +1,5 @@
 import { useRef } from "react" 
-import { createForm, FormDefine,  FormSchema,  RequiredFormOptions } from "../form"
+import { createForm, FormDefine,  FormOptions,  FormSchema } from "../form"
 
 
 /**
@@ -18,7 +18,7 @@ import { createForm, FormDefine,  FormSchema,  RequiredFormOptions } from "../fo
  * @param options 
  * @returns 
  */
-export function useForm<State extends FormDefine=FormDefine>(schema:()=>State,options?:RequiredFormOptions<FormSchema<State>>) {
+export function useForm<State extends FormDefine=FormDefine>(schema:()=>State,options?:FormOptions<FormSchema<State>>) {
 	type FormType = ReturnType<typeof createForm<State>>
 	const ref = useRef<FormType>()
 	if(ref.current==null){

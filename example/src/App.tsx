@@ -3,15 +3,15 @@ import { useState } from 'react'
 import classnames from "classnames"
 // import UseStateDemo from './UseStateDemo'
 import ComputedDemo from './computeds/basic'
-import NetworkForm from './forms/network'
-import UserForm from './forms/userform/UserForm'
-import UserFormWithValidate from "./UserFormValidate"
+// import NetworkForm from './forms/network'
+// import UserForm from './forms/userform/UserForm'
+// import UserFormWithValidate from "./UserFormValidate"
 
 const menuItems=[
-  // {id:"render",title:"useState",component:<UseStateDemo/>},
-  // {id:"computed",title:"计算属性",component:<ComputedDemo/>},
+  {id:"computed",title:"计算属性",component:<ComputedDemo/>,default:true},
+  // {id:"render",title:"useState",component:<UseStateDemo/>},  
   // {id:"user",title:"用户",component:<UserForm/>},
-  {id:"user_valid",title:"校验",component:<UserFormWithValidate/>,default:true},
+  // {id:"user_valid",title:"校验",component:<UserFormWithValidate/>,default:true},
   // {id:"network",title:"网络",component:<NetworkForm/>},  
 ] 
 

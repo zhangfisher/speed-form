@@ -6,11 +6,11 @@ import { getValueByPath } from "../utils/getValueByPath";
 
  
 
-export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
-    private _stateCtx:ISharedCtx<T>
-    constructor(state:T,options?:IReactiveableOptions){ 
+export class HeluxReactiveable<State extends Dict =Dict> extends Reactiveable<State>{
+    private _stateCtx:ISharedCtx<State>
+    constructor(state:State,options?:IReactiveableOptions){ 
         super(state,options)
-        this._stateCtx = sharex<T>(state as any,{
+        this._stateCtx = sharex<State>(state as any,{
             stopArrDep: false,
             moduleName:options?.id ?? getRndId(),
             onRead:(params)=>{
@@ -24,45 +24,39 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
         }) 
     }
     get state(){
-        return this._stateCtx.state as ComputedState<T>
+        return this._stateCtx.state as ComputedState<State>
     }
     /**
      * const [ state ] = useState()
      * const [ firstName ] = useState<string>((state)=>state.firstName)
      * const [ fullName ] = useState<string>((state)=>state.firstName+state.lastName)
-     * const [ fullName,updateFullName ] = useState<string,string[]>(
+     * const [ fullName,setFullName ] = useState<string,string[]>(
      *      (state)=>state.firstName+state.lastName,
      *      (state,value)=>{
      *          state.firstName = value[0]
      *         state.lastName = value[1]
      *      }
      * )
-     * updateFullName(['zhang','fisher])
+     * setFullName(dratf=>{draft.firstName='zhang';draft.lastName='fisher'})
      * 
      * @param getter 
      * @param setter 
      * @returns 
      */
-    useState<Value=T,SetValue=Value>(
-        getter?:StateGetter<RequiredComputedState<T>,Value>,
-        setter?:StateSetter<RequiredComputedState<T>,SetValue>
-    ):[Value,(value:SetValue)=>void]{ 
+    useState<Value=State>(getter?:StateGetter<RequiredComputedState<State>,Value>):[Value,(updater:(draft:State)=>void)=>void]{ 
         const [ state,setState ] = this._stateCtx.useState()
-        const value = (typeof(getter)==='function' ? getter(state as RequiredComputedState<T>) : state)  as Value 
-        const updateValue = (typeof(setter)=='function' ?
-            (value:SetValue)=>{ 
-                //@ts-ignore
-                setState((draft:any)=>{ 
-                    setter.call(draft,draft as any,value)
-                }) 
-            } : setState ) as (value:SetValue)=>void
- 
-        return [ value, updateValue ]
+        const value = (typeof(getter)==='function' ? getter(state as RequiredComputedState<State>) : state)  as Value 
+   
+        return [ value, setState as unknown as (updater:(draft:State)=>void)=>void ]
     }
 
-    setState(fn:(draft:T)=>void):void{
+
+    setState(fn:(draft:State)=>void):void{
         //@ts-ignore
        this._stateCtx.setState(fn)
+    }
+    sync(path: string[]): ((event: any) => void) {
+        return this._stateCtx.sync(path)
     }
     /**
      * 创建计算属性
@@ -70,7 +64,7 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
      * @param depents 
      * @param options 
      */
-    createAsyncComputed(params: CreateAsyncComputedOptions<ComputedState<T>>): string { 
+    createAsyncComputed(params: CreateAsyncComputedOptions<ComputedState<State>>): string { 
         const {initial,onComputed,depends,options} = params
         this._stateCtx.mutate({            
             // 收集依赖
@@ -97,7 +91,7 @@ export class HeluxReactiveable<T extends Dict =Dict> extends Reactiveable<T>{
         
         return options.id as string
     }
-    createComputed(params:CreateComputedOptions<ComputedState<T>>):string{
+    createComputed(params:CreateComputedOptions<ComputedState<State>>):string{
         const {onComputed,options} = params        
         this._stateCtx.mutate({   
             fn:(draft,{input})=>{
