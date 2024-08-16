@@ -14,7 +14,7 @@ import { setEventEmitter } from '../events';
 
 
 
-export function createStore<T extends Dict = Dict>(data:T,options?:Partial<StoreOptions<T>>){
+export function createStore<T extends Dict>(data:T,options?:Partial<StoreOptions<T>>){
     // 1.初始化配置参数
     const opts = Object.assign({
         id            : getRndId(),

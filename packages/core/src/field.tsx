@@ -1,9 +1,9 @@
 import React, {	 ChangeEventHandler, ReactNode, useCallback,useRef,useState  } from "react";  
 import { debounce as debounceWrapper } from './utils';
-import { ComputedAttr } from "./types";   
+import { ComputedAttr, ComputedAttr1 } from "./types";   
 import type { FormStore, RequiredFormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
-import { Dict,getVal, setVal } from "@speedform/reactive";  
+import { ComputedDescriptor, Dict,getVal, setVal } from "@speedform/reactive";  
 import type { FormAction, FormActionDefine } from "./action";
 
 
@@ -34,7 +34,7 @@ export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultField
   sync	  	    : (debounce?:number)=>ChangeEventHandler	   		  		                    // 同步状态表单计算
   update	  	  : (valueOrUpdater:PropTypes['value'] | ((field:PropTypes)=>void),options?:{debounce?:number})=>any
   cancel        : ()=>void        	  	   
-  initial  : PropTypes['value'] | undefined
+  initial       : PropTypes['value'] | undefined
   oldValue      : PropTypes['value'] 
 } 
 
@@ -179,7 +179,7 @@ export function createFieldComponent<State extends Dict = Dict>(store: FormStore
 export interface IFieldProps<T=any>{
   value        : T;
   title?       : string;                       // 标题
-  initial?: T;                            // 默认值
+  initial?     : T;                            // 默认值
   oldValue?    : T;                            // 默认值
   help?        : string;                       // 提示信息
   placeholder? : string;                       // 占位符
@@ -192,7 +192,7 @@ export interface IFieldProps<T=any>{
 }
  
 
-export interface FormField<T=any>{
+export interface FormField<T>{
   value        : T;
   title?       : ComputedAttr<string>;                       // 标题
   initial?     : ComputedAttr<T>;                            // 默认值
@@ -203,26 +203,33 @@ export interface FormField<T=any>{
   readonly?    : ComputedAttr<boolean>;                      // 是否只读
   visible?     : ComputedAttr<boolean>;                      // 是否可见
   enable?      : ComputedAttr<boolean>;                      // 是否可用
-  validate?    : ComputedAttr<boolean>;                      // 验证
+  validate?    : ComputedAttr<boolean>;                   // 验证
   select?      : ComputedAttr<any[]>                         // 枚举值  
 }
- 
+
+export type FormFieldBase<T=any> = {
+  value: T 
+} 
+
+export type FormFieldArray<T extends Dict[] = Dict[]> = {
+  [index:number]: T[number] extends FormFieldBase<infer V> ? FormField<V> 
+    : T[number] extends Dict ?
+      FormFields<T[number]> 
+      : T[number] extends any[] ? 
+      FormFieldArray<T[number]> : never
+}
 
 // 表单字段中允许声明动作，即FormAction
 export type FormFields<T extends Dict = Dict> = {
-  [name in keyof T]: T[name] extends { value: infer V } 
+  [name in keyof T]: T[name] extends FormFieldBase<infer V>
     ? FormField<V>
-    : (
-        T[name] extends { execute: any } ? FormAction<T[name]>
+    : ( T[name] extends FormActionDefine ? FormAction<T[name]>
         : ( T[name] extends Dict ? FormFields<T[name]>
-            : ( T[name] extends (infer Item)[] ? 
-                  ( Item extends FormActionDefine 
-                    ? FormAction<Item> : Item extends {value:infer V2} 
-                    ? FormField<V2> : Item extends Dict 
-                    ? FormFields<T[name]> : Item  
-                  )[]
-                  : T[name]
-              )
+            : (              
+              T[name] extends any[] ? FormFieldArray<T[name]> : T[name]
+            )
           )
       )
 }
+
+ 

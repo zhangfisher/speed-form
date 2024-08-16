@@ -34,7 +34,7 @@
 import { ReactNode, useCallback, useRef, RefObject,useState} from "react";
 import React from "react";
 import type { FormStore, RequiredFormOptions } from "./form";
-import {  AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict,  RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
+import {  AsyncComputedDefine, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict,  RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
 import { getId } from "./utils";
@@ -62,7 +62,7 @@ export type ActionRunOptions = {
 
 
 
-export type FormActionExecutor<Scope extends Dict=Dict,Result =any> =(scope:Scope,options?:ComputedParams)=> Promise<void | Result> 
+export type FormActionExecutor<Scope extends Dict=Dict,Result =any> = (scope:Scope,options?:ComputedParams)=> Promise<void | Result> 
 
 // 动作声明，供createForm时使用来声明动作
 /**
@@ -70,38 +70,23 @@ export type FormActionExecutor<Scope extends Dict=Dict,Result =any> =(scope:Scop
  * Result: 动作函数execute执行结果返回值类型
  */
 export interface FormActionDefine<Scope extends Dict=Dict,Result =any>{
-    scope?  : string | string[] | (()=>string | string[])                   // 动作提交范围
+    scope?  : string | string[]                                             // 动作提交范围
     title?  : ActionComputedAttr<string,Scope>					            // 动作标题    
     help?   : ActionComputedAttr<string,Scope>					            // 动作帮助
     tips?   : ActionComputedAttr<string,Scope>					            // 动作提示
     visible?: ActionComputedAttr<boolean,Scope>					            // 是否可见
     enable? : ActionComputedAttr<boolean,Scope>					            // 是否可用	            
-    count:number                                                            // 动作执行次数
-    execute :FormActionExecutor<Scope,Result>                               // 执行动作，用来对表单数据进行处理
+    count?  : number                                                        // 动作执行次数
+    execute : AsyncComputedDefine                              // 执行动作，用来对表单数据进行处理
 } 
 
+export type FormAction<T extends FormActionDefine> = {
+    [Key in keyof T]: FormActionDefine
+}
 
-// 表单基本属性
-export interface FormActionExtra{    
-    $action  : true                                  // 是否是动作，用来标识该字段是动作 
-    title   : string					            // 动作标题    
-    help    : string					            // 动作帮助
-    tips    : string					            // 动作提示
-    visible : boolean					            // 是否可见
-    enable  : boolean					            // 是否可用	            
-    validate: boolean
-    count   : number
-} 
  
 
- // 经过创建表单后的动作对象,  execute
-export type FormAction<T extends FormActionDefine> = ComputedDescriptorDefine<{
-    [Key in keyof T]: Key extends 'execute' ? never : T[Key]
-}>
-
-export type FormActions<T extends FormActionDefines = FormActionDefines> = {
-    [Key in keyof T]: FormAction<T[Key]>
-}
+export type FormActions = Record<string,FormActionDefine>
 
 
  

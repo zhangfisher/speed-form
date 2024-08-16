@@ -77,7 +77,7 @@ export type FormEnctypeType = 'application/x-www-form-urlencoded' | 'multipart/f
 export type FormTarget = '_self' | '_blank' | '_parent' | '_top'
 
 export type FormState<State extends Dict> = ComputedState<typeof defaultFormProps & State> 
-export type FormStore<State extends Dict = Dict> = IStore<typeof defaultFormProps & State> 
+export type FormStore<State extends Dict> = IStore<typeof defaultFormProps & State> 
 
 export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{		
 	name?:string;													// 表单名称,同时表示表单作用域，即提交范围，默认是整个表单fields		
@@ -113,10 +113,7 @@ export type FormDefine = Partial<FormSchemaBase> & {
 export type FormSchema<State extends FormDefine = FormDefine> = FormSchemaBase & {
 	fields : State['fields']
 	actions: State['actions']
-}
-
-// export type RequiredFormSchema<State extends Dict = Dict > = Required<FormSchema<State>>
-// export type FormStore<State extends Dict = Dict> = IStore<FormSchema<State>>
+} 
  
 
 // 创建表单时的参数
@@ -356,8 +353,7 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 	};
 }
 
-
-
+  
 /**
  * 创建表单组件
  * 
@@ -408,57 +404,3 @@ function createFormComponent<State extends Dict>(store: FormStore<State>,formOpt
 
  
 
-
-const form = createForm({
-	title:computed<string>(async ()=>"true"),
-	// dirty:computed<boolean>(()=>true),
-	// validate: computed(async ()=>{
-	// 	return true
-	// },["username"]),	
-	fields:{
-		username:{
-			value:""
-		},
-		password:{
-			value:""
-		},
-		age:{
-			value:true,
-			validate: computed(async ()=>{
-				return true
-			},["username"])
-		},
-		wifi:{
-			ssid:{
-				value:111111
-			},
-			password:{
-				value:""
-			}
-		}
-	},
-	actions:{
-
-	}
-})
-form.fields.username.value="123"
-form.state.fields.username.value="123"
-form.state 
-form.state.fields.age.value=true
-form.state.fields.age.validate
-form.state.fields.wifi.password.value
-form.state.fields.wifi.ssid.value
-form.state.title
-form.state.dirty = true
-form.state.fields.wifi.password.value
-form.state.validate=true
-form.fields.age.value=true
-
-
-form.setState(draft=>{
-	draft.fields.username.value="123"
-	draft.fields.age.value=true
-	draft.fields.wifi.password.value="123"
-	draft.dirty = true
-	form.state.fields.age.validate.loading
-}) 

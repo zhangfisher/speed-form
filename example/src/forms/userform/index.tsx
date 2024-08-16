@@ -35,13 +35,15 @@ const FormDemo:React.FC = ()=>{
     const { run,loading,progress } = User.useAction(async (scope,{getProgressbar})=>{
         setFormData(JSON.stringify(scope))
         const progressbar = getProgressbar()
-        return new Promise(async (resolve)=>{            
-            for(let i=1;i<=100;i++){
-                await delay(20)
-                progressbar.value(i)
-            }
-            progressbar.end()            
-            resolve(scope)
+        return new Promise((resolve)=>{            
+            (async ()=>{
+                for(let i=1;i<=100;i++){
+                    await delay(20)
+                    progressbar.value(i)
+                }
+                progressbar.end()            
+                resolve(scope)
+            })()            
         }) 
     },{name:"x"})
     const { run : timeoutRun,timeout } = User.useAction(async (scope)=>{

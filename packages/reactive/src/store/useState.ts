@@ -7,23 +7,26 @@ import { IStore, Dict } from "../types"
 /**
  *  StateGetter函数返回
  *
- *  [ fullName,setFullName ] = useState<string,[string,string]>((state)=>state.user.firstName+state.user.lastName,(state,fullName:[string,string])=>{
+ *  [ fullName,setFullName ] = useState(
+ *      (state)=>state.user.firstName+state.user.lastName,
+ *      (state,fullName:[string,string])=>{
  *        state.user.firstName = fullName[0]
  *        state.user.lastName = fullName[1]
  *  })
- *
+ *   
+ *   setFullName(['zhang','fisher])
  *
  * @param useState
  */
 export function createUseState<T extends Dict>(store:IStore<T>){
-
-    return function<Value=any,SetValue=Value>(
-        getter?:StateGetter<RequiredComputedState<T>,Value>,
-        setter?:StateSetter<RequiredComputedState<T>,SetValue>
-    ){
-        const useState =store.reactiveable.useState 
+    type StateType = IStore<T>['state']
+    return function<Value=StateType,SetValue=Value>(
+        getter?:StateGetter<StateType,Value>,
+        setter?:StateSetter<StateType,SetValue>
+    ):[Value,(value:SetValue)=>void]{
+        const useState = store.reactiveable.useState<Value,SetValue> 
         if(getter==undefined){
-            return useState()
+            return useState()  
         }
         const [ state,setState ] = useState()
         const value = getter(state as RequiredComputedState<T>)

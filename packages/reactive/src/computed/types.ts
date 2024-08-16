@@ -2,7 +2,6 @@
  * 类型
  */
 
-import {  IOperateParams, ISharedCtx } from "helux";
 import type { ComputedScope } from "../store/types";
 import { Dict } from "../types"
 import { WatchDescriptor } from "../watch";
@@ -10,9 +9,16 @@ import { Reactiveable } from "../reactives/types";
 
 
 // 指向helux的IOperateParams类型，但是我们只用到其是的部分类型
-export type IComputeParams = Pick<IOperateParams,'keyPath' | 'fullKeyPath' | 'value' | 'parent' | 'replaceValue'>;
- 
+// Pick<IOperateParams,'keyPath' | 'fullKeyPath' | 'value' | 'parent' | 'replaceValue'>;
+export type IComputeParams = {
+  keyPath:string[]              // 路径
+  fullKeyPath:string[]          // 完整路径，包括自身
+  value:any
+  parent?:any
+  replaceValue:(newValue: any) => void;
+}
 
+ 
 /**
  * 返回函数的返回值类型
  * 支持返回()=>Promise<R>中的R类型 
@@ -51,7 +57,6 @@ export type RequiredComputedState<T extends Record<string, any>> = {
 
 // 表示Store中的函数的类型， =Computed代表是一个计算属性，=Watch代表是一个观察函数
 export type StateComputedType = 'Computed' | 'Watch'
-
 
 export interface ComputedProgressbar{
     value:(num:number)=>void
@@ -217,6 +222,10 @@ export interface StateValueDescriptorParams<Fn extends Function,Options extends 
 
 
 
+// 用在声明一个计算属性
+export type AsyncComputedDefine<R=any> = AsyncComputedGetter<R> | ComputedDescriptor<R>
+
+
 export type ComputedDescriptorDefine<R=any> = {
   getter: AsyncComputedGetter<R> | ComputedGetter<R>;
   options: ComputedOptions<R>;
@@ -231,10 +240,6 @@ export  interface ComputedDescriptor<R=any>  {
 
 export type ComputedSyncReturns<T=any> = (...args: any) => Exclude<T,Promise<any>>;  
 
-
-export type ComputedTarget<T extends Dict = Dict > ={
-  stateCtx: ISharedCtx<T>
-}
  
 
 // 执行计算函数时的上下文

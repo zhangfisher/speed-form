@@ -1,11 +1,11 @@
 import store  from "./computed" 
 import { $  } from "helux" 
-import {ColorBlock,Card, Divider} from "@speedform/demo-components" 
-import { Tips } from "./Tips"
-import { useReactive } from "ahooks"
+import {ColorBlock,Card, Divider,Tips} from "@speedform/demo-components" 
+import { useReactive } from "ahooks" 
  
 function ComputedDemo() {
-  const [state] = store.useState()   
+  const [state] =  store.useState()
+  
   const newBook= useReactive({
     name:"新书",
     author:"zhang",
@@ -57,7 +57,7 @@ function ComputedDemo() {
                     (
                         state.user.projects.error? (<tr><td colSpan={2}>加载错误:{state.user.projects.error.message}</td></tr>)
                         : (
-                          state.user.projects && state.user.projects.result.map((project,index)=>{
+                          state.user.projects && state.user.projects.result.map((project:any,index:any)=>{
                                 return <tr key={index}><td>{project.name}</td><td>{project.stars}</td></tr>
                             })
                         )
@@ -79,7 +79,7 @@ function ComputedDemo() {
             </div>
                   
             {
-              state.books.map((book,index)=>{
+              state.books.map((book,index:any)=>{
                 return <div key={index} style={{width:'100%',display:'flex',flexDirection:"row"}}>
                   <ColorBlock style={{flexGrow:1}}  value={$(book.name)}/>
                   <ColorBlock style={{width:80}}  value={$(book.author)}/>
@@ -96,8 +96,8 @@ function ComputedDemo() {
                 <input  style={{width:80}} value={newBook.price} onChange={(e)=>newBook.price=Number(e.target.value)}/>
                 <input  style={{width:80}} value={newBook.count} onChange={(e)=>newBook.count=Number(e.target.value)}/>
             </div>
-            <button onClick={()=>store.actions.addBook(newBook.name,newBook.author,newBook.price,newBook.count)}>添加书籍</button>              
-            <button onClick={()=>store.actions.addBookAsync(newBook)}>异步添加书籍</button>              
+            <button onClick={()=>state.actions.addBook(newBook.name,newBook.author,newBook.price,newBook.count)}>添加书籍</button>              
+            <button onClick={()=>state.actions.addBookAsync(newBook)}>异步添加书籍</button>              
           </div>  
         </Card> 
           

@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import Network from './forms/network';
+import Network from './form';
 import classnames from 'classnames';
 import {Card,JsonViewer, Button,Divider,Field,Input  } from "@speedform/demo-components";
  

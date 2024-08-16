@@ -2,9 +2,9 @@ import './App.css'
 import { useState } from 'react' 
 import classnames from "classnames"
 // import UseStateDemo from './UseStateDemo'
-import ComputedDemo from './ComputedDemo'
-import NetworkForm from './networkForm'
-import UserForm from './UserForm'
+import ComputedDemo from './computeds/basic'
+import NetworkForm from './forms/network'
+import UserForm from './forms/userform/UserForm'
 import UserFormWithValidate from "./UserFormValidate"
 
 const menuItems=[

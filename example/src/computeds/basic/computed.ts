@@ -1,6 +1,6 @@
 import { createStore,computed, ComputedScopeRef  } from "@speedform/reactive"
 import { delay }  from "flex-tools/async/delay"
-import { getProjects,type Project } from "./api/getProjects";
+import { getProjects,type Project } from "../../api/getProjects";
    
  
 export type MyStateType = {
@@ -40,8 +40,7 @@ export type BookType =  {
   total:number
 }
 
-const storeDefine= {
-    state:{
+const storeDefine= { 
         user:{
             id:'zhangfisher',
             firstName:'zhang',
@@ -80,30 +79,29 @@ const storeDefine= {
         orders:[],
         sales:{
             total:0,
-        }          
-    },
-    actions:{
-        addBook(name:string,author:string,price:number,count:number){
-          return (state:MyStateType)=>state.books.push({
-            name,
-            price,
-            author,
-            count,
-            // @ts-ignore
-            total:(book:any)=>book.price*book.count
-          })
-        },  
-        async addBookAsync(data:{name:string,price:number,author:string,count:number}){
-            await delay(1000)
-            // @ts-ignore
-            data.total =(book:any)=>book.price*book.count
-            // 模拟异步请求
-            return (state:MyStateType)=>state.books.push(data)
+        },
+        actions:{
+            addBook(name:string,author:string,price:number,count:number){
+              return (state:MyStateType)=>state.books.push({
+                name,
+                price,
+                author,
+                count,
+                // @ts-ignore
+                total:(book:any)=>book.price*book.count
+              })
+            },  
+            async addBookAsync(data:{name:string,price:number,author:string,count:number}){
+                await delay(1000)
+                // @ts-ignore
+                data.total =(book:any)=>book.price*book.count
+                // 模拟异步请求
+                return (state:MyStateType)=>state.books.push(data)
+            }
         }
-    }
 }   
 
-const store =  createStore<typeof storeDefine>(storeDefine)  
+const store =  createStore(storeDefine)  
 
 
 

@@ -1,5 +1,5 @@
 import React, { MouseEvent } from "react";
-import Network from './forms/network';
+import Network from '../network';
 import classnames from 'classnames';
 import { Field,JsonViewer,Card } from "@speedform/demo-components";
 

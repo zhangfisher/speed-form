@@ -5,7 +5,7 @@ import { IStore, Dict, ComputedState } from "../types"
 /**
  *  StateGetter函数返回
  *
- *  [ fullName,setFullName ] = useState<string,[string,string]>((state)=>state.user.firstName+state.user.lastName,(state,fullName:[string,string])=>{
+ *  [ fullName,setFullName ] = store.setState<string,[string,string]>((state)=>state.user.firstName+state.user.lastName,(state,fullName:[string,string])=>{
  *        state.user.firstName = fullName[0]
  *        state.user.lastName = fullName[1]
  *  })
