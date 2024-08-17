@@ -1,4 +1,4 @@
-export * from "./store/store" 
+export * from "./store" 
 export * from "./computed"
 export * from "./types"
 export * from "./watch"
@@ -12,6 +12,7 @@ export {
     $,
     share as createObject
 } from "helux"
+
 export { 
     getValueByPath,
     isIncludePath,
