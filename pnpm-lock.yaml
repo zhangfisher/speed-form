@@ -298,6 +298,9 @@ importers:
       flex-tools:
         specifier: ^1.4.5
         version: 1.4.5
+      limu:
+        specifier: ^3.12.4
+        version: 3.12.4
       mitt:
         specifier: ^3.0.1
         version: 3.0.1

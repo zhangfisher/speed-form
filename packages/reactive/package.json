@@ -38,6 +38,7 @@
   "license": "ISC",
   "dependencies": {
     "flex-tools": "^1.4.5",
+    "limu": "^3.12.4",
     "mitt": "^3.0.1"
   },
   "devDependencies": {
