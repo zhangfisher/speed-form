@@ -8,7 +8,7 @@ import { OBJECT_PATH_DELIMITER } from "../consts"
 self =  [ 'a', 'b', 'c', 'd', 'e', 'f' ]
 root =  []
 parent =  [ 'a', 'b', 'c', 'd' ]
-current =  [ 'a', 'b', 'c', 'd', 'e' ]
+current =  [ 'a', 'b', 'c', 'd', 'e' ]  当前对象
 ['a','b'] =  [ 'a', 'b' ]
 m =  [ 'a', 'b', 'c', 'd', 'e', 'm' ]
 x =  [ 'a', 'b', 'c', 'd', 'e', 'x' ]
@@ -23,6 +23,7 @@ x =  [ 'a', 'b', 'c', 'd', 'e', 'x' ]
  * 
  * @param curPath 
  * @param relPath 
+ * @param isRelPath   是否使用相对路径
  * @returns 
  */
 export function getRelValuePath(curPath:string[],relPath:'self' | 'root' | 'parent' | 'current' | string[] | string,isRelPath?:boolean):string[]{
@@ -43,7 +44,7 @@ export function getRelValuePath(curPath:string[],relPath:'self' | 'root' | 'pare
             return getRelValuePath(curPath.slice(0,-1),relPath.slice(3),true)
         }else if(relPath.startsWith("/")){     // 绝对路径             
             relPath = relPath.replace(/^(\/)*/,"") 
-            return [...relPath.split(OBJECT_PATH_DELIMITER)]
+            return relPath.split(OBJECT_PATH_DELIMITER)
         }else{
             return isRelPath ?  [...curPath.slice(0,-1),...relPath.split(OBJECT_PATH_DELIMITER)] : [...relPath.split(OBJECT_PATH_DELIMITER)]
         }

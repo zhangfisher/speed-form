@@ -186,8 +186,8 @@ export type FormStatus = 'idle'
  */
 function createValidatorHook<State extends Dict = Dict>(valuePath:string[],getter:Function,options:ComputedOptions,formOptions:RequiredFormOptions<State>){		
 	if(valuePath.length>=2 && valuePath[0]==FIELDS_STATE_KEY && valuePath[valuePath.length-1]==VALIDATE_COMPUTED_GROUP){	
-		// 如果没有指定scope,则默认指向value
-		if(!options.scope) options.scope="value"
+		// 如果没有指定scope,则默认指向当前字段的value
+		if(!options.scope) options.scope="./value"
 		if(!options.depends) options.depends=[]
 		options.depends.push([...valuePath.slice(0,-1),"value"])
 		// 默认=null代表还未校验

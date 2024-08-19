@@ -31,17 +31,18 @@
     }
   },
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "build:rslib":"rslib build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "flex-tools": "^1.4.5",
-    "limu": "^3.12.4",
     "mitt": "^3.0.1"
   },
   "devDependencies": {
+    "@rslib/core": "^0.0.2",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@vitejs/plugin-react": "^4.2.1",

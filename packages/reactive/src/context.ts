@@ -20,11 +20,11 @@
  *  watch函数的使用方式与computed类似，使用相同的逻辑
  * 
  */
-import { IOperateParams } from "helux";
 import { OBJECT_PATH_DELIMITER } from "./consts";
-import { type ComputedScope, ComputedScopeRef, StoreOptions, Dict, IStore } from "./store/types";
+import { type ComputedScope, ComputedScopeRef, StoreOptions, IStore } from "./store/types";
 import { getRelValuePath, getValueByPath } from "./utils";
-import { ComputedOptions, ComputedRunContext, ComputedType, StateComputedType } from "./computed/types";
+import { ComputedOptions,  ComputedType, StateComputedType } from "./computed/types";
+import { Dict } from "./types";
 
 /*
 * 计算函数的context可以在全局Store中通过computedThis参数指定

@@ -192,7 +192,7 @@ function useActionRunner<State extends FormActionState=FormActionState>(actionSt
 
 
 
-function useActionCanceller<State extends FormActionState=FormActionState>(state:State,valuePath:string | string[]){
+function useActionCanceller<State>(state:State,valuePath:string | string[]){
     return useCallback((event:any)=>{  
         const execute = getValueByPath(state,[...Array.isArray(valuePath) ? valuePath : valuePath.split(".") ,'execute'])      
         execute.cancel()
@@ -251,15 +251,14 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
      * @returns 
      */
     function Action<State extends FormActionState=FormActionState,Scope extends Dict=Dict>(props: ActionProps<State,Scope>):ReactNode{
-        const [state] = store.useState()  
-        
+        const [state] = store.useState()          
         let { name:actionKey } = props  
         // 如果动作是声明在actions里面可以省略actions前缀
         if(!actionKey.includes(".")) actionKey = `actions.${actionKey}`
 
         const actionState = getValueByPath(state,actionKey,".")
         const actionRunner = useActionRunner(actionState,props)
-        const actionCanceller = useActionCanceller(actionState,actionKey)
+        const actionCanceller = useActionCanceller(state,actionKey)
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
 
