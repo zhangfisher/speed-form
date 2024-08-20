@@ -1,11 +1,11 @@
 import React, {	 ChangeEventHandler, ReactNode, useCallback,useRef,useState  } from "react";  
 import { debounce as debounceWrapper } from './utils';
-import { ComputedAttr, ComputedAttr1 } from "./types";   
+import { ComputedAttr } from "./types";   
 import type { FormStore, RequiredFormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
-import { ComputedDescriptor, Dict,getVal, setVal } from "@speedform/reactive";  
+import {  Dict,getVal, setVal } from "@speedform/reactive";  
 import type { FormAction, FormActionDefine } from "./action";
-
+import { Paths } from "type-fest"
 
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{
@@ -173,8 +173,6 @@ export function createFieldComponent<State extends Dict = Dict>(store: FormStore
 }
 
  
-
-
 
 export interface IFieldProps<T=any>{
   value        : T;

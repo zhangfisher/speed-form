@@ -54,6 +54,7 @@ import { createValidator, isValidateField, validate } from "./validate";
 import { createSubmitComponent } from "./submit";
 import { createResetComponent } from "./reset"; 
 import { dirty } from "./dirty";
+import { createFieldComponent2 } from "./field2";
 
 export const defaultFormProps =  {
     name     : "SpeedForm",
@@ -336,6 +337,7 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 		setState       : formStore.setState, 
 		Form           : createFormComponent<State>(formStore,opts),
 		Field          : createFieldComponent<State>(formStore,opts),	
+		Field2          : createFieldComponent2<State>(formStore,opts),	
 		Group          : createFieldGroupComponent<State>(formStore,opts),	
 		Action         : createActionComponent<State>(formStore,opts),
 		Submit         : createSubmitComponent<State>(formStore,opts),

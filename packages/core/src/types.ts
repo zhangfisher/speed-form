@@ -22,6 +22,9 @@ export type FormData = Record<string, any>;
  
 export type Primitive = number | boolean | string | null | undefined 
 
+// 指定字符串路径来提取对象类型中的类型，如GetTypeByPath<{a:{b:number}},"a.b"> == number
+export type GetTypeByPath<T ,P extends string> = P extends `${infer K}.${infer R}` ? K extends keyof T ? GetTypeByPath<T[K],R> : never : P extends keyof T ? T[P] : never   
+
 
  /**
  * 

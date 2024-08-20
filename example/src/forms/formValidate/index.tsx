@@ -1,10 +1,12 @@
 import React ,{useCallback, useState} from "react";
 import classnames from 'classnames';
 import {Field,Card,JsonViewer, Button} from "@speedform/demo-components";
-import { useForm,computed, action } from "@speedform/core";
+import { computed, action, createForm } from "@speedform/core";
 import { delay } from "flex-tools/async/delay"; 
 
-const userDefine =  {
+ 
+
+const User = createForm( {
     fields: {
         user:{
             username: {
@@ -46,32 +48,28 @@ const userDefine =  {
         },
     }
 
-}
+})
+
+
 const FormDemo:React.FC = ()=>{
     const  [ formData ,setFormData] = useState('')
 
     const  [ validateAt ,setValidateAt] = useState('once')
 
-
-    
-    const User = useForm(()=>{
-        return Object.assign({},userDefine)
-    },{
-        validAt:"once"
-    })
-
-    const [state] = User.useState()
+ 
 
     const { run } = User.useAction(async (scope,{getProgressbar})=>{
         setFormData(JSON.stringify(scope))
         const progressbar = getProgressbar()
-        return new Promise(async (resolve)=>{            
-            for(let i=1;i<=100;i++){
-                await delay(20)
-                progressbar.value(i)
-            }
-            progressbar.end()            
-            resolve(scope)
+        return new Promise((resolve)=>{            
+            (async ()=>
+                {for(let i=1;i<=100;i++){
+                    await delay(20)
+                    progressbar.value(i)
+                }
+                progressbar.end()            
+                resolve(scope)
+            })()
         }) 
     },{name:"x"}) 
 
@@ -86,7 +84,9 @@ const FormDemo:React.FC = ()=>{
 
     const handleValidateAtChange = (event:any) => {
         setValidateAt(event.target.value);
-      };
+    };
+
+
     return (
         <div style={{display:"flex",flexDirection:'row',padding:"8px",margin:"8px"}}>
             <div style={{padding:"8px",margin:'8px',width:'60%'}}>              

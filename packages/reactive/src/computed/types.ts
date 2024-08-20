@@ -39,14 +39,15 @@ export type PickComputedResult<T> = T extends  ComputedDescriptor<infer X> ? Asy
  
  转换状态中的计算属性函数的类型
  将状态中的计算属性函数转换为计算属性函数的返回值类型
- 如：{count:()=>1} => {count:number}
- 如：{count:async ()=>1} => {count:number}
+ 如：ComputedState<{count:()=>1}> => {count:number}
+ 如：ComputedState<{count:async ()=>1}> => {count:number}
 
 */
 export type ComputedState<T extends Record<string, any>> = {
     [K in keyof T]: T[K] extends (...args:any) => any ? PickComputedResult<T[K]> : T[K] extends Record<string, any> ? ComputedState<T[K]> : T[K];
 };
 
+ 
 
 // 在ComputedState的基础上，排除了undefined的类型
 export type RequiredComputedState<T extends Record<string, any>> = {

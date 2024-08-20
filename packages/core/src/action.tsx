@@ -88,7 +88,11 @@ export type FormAction<T extends FormActionDefine> = {
 
 export type FormActions = Record<string,FormActionDefine>
 
+export type FormActionBase<R> = {
+    execute:AsyncComputedDefine<R>
+} 
 
+ 
  
 // 动作状态，必须包含一个名称为execute的异步计算属性
 export type FormActionState = {

@@ -4,8 +4,7 @@ import classnames from 'classnames';
 import {Card,JsonViewer, Button,Divider,Field,Input  } from "@speedform/demo-components";
  
  
-const NetworkForm = ()=>{     
-    
+const NetworkForm = ()=>{         
     return <Network.Form className="panel">
        <div data-loader="circle"></div>
         <Card title="网络配置">
@@ -16,6 +15,15 @@ const NetworkForm = ()=>{
                     </Field>
                 } }
             </Network.Field>
+            
+            <Network.Field2 name="wifi.cancelableSubmit">                      
+                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
+                    console.log(required,visible,validate,enable)
+                    return <Field visible={visible} label={title}>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                    </Field>
+                } }
+            </Network.Field2>
              <Network.Field<typeof Network.fields.interface> name="interface">                      
                 {({name,title,required,visible,validate,enable,value,initial,select,sync})=>{     
                     console.log(name,required,visible,validate,enable,initial)

@@ -1,8 +1,7 @@
 
-import { computed} from "@speedform/reactive"
 import { createForm } from "@speedform/core"
-import { Project, getProjects } from "../../api/getProjects"
 import { delay } from "flex-tools/async/delay"
+import { Paths} from "type-fest"
 
 
 
@@ -83,21 +82,17 @@ const orderForm ={
             }
         }
     }
-} 
+}  as const
  
+
 
 
 const BookOrders = createForm(orderForm,{
     debug:true    
 })
 
- 
-BookOrders.actions
-
-
-
-BookOrders.fields.orders[0]!.book.value
-
+   
 // @ts-ignore
 globalThis.BookOrders = BookOrders
 export default BookOrders
+ 
