@@ -9,15 +9,15 @@ const NetworkForm = ()=>{
     return <Network.Form className="panel">
        <div data-loader="circle"></div>
         <Card title="网络配置">
-          <Network.Field<string> name="title">                      
+          <Network.Field2 name="title">                      
                 {({name,title,value,visible,validate,placeholder,sync})=>{                 
                     return <Field  name="title" visible={visible} label={title}>
                          <Input name={name}  className={classnames({invalid:validate===false})} placeholder={placeholder} value={value} onChange={sync()}/>
                     </Field>
                 } }
-            </Network.Field>
+            </Network.Field2>
             
-            <Network.Field2 name="wifi.password">                      
+            <Network.Field2 name="wifi.cancelableSubmit">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <Field visible={visible} label={title}>

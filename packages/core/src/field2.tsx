@@ -78,37 +78,44 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
     },[])
   }
 
-// 提取表单中的的有效字段，如fields.xxx.value => fields.xxx，用在Field.props.name是指定字段
-type FormFinalState<State extends Dict> = {
-    [K in keyof State]: State[K] extends FormFieldBase<infer V> ? V : 
-        (   State[K] extends { execute:any } ? never
-            : (
-              State[K] extends Dict ? FormFinalState<State[K]>: never
-            )
-        )        
-}
 
+/**
+ * 
+ * 实现一个字段组件根据name属性自动推断children的类型
+ * 
+ * 比较复杂，思路如下：
+ * 
+ * 1. 首先是Name泛型 = Paths<FormFinalState<State>['fields']>，根据状态推断出所有的字段路径，比如
+ *   {fields:{name:{value:"zhang"},age:{value:18}}} => "fields.name" | "fields.age"
+ * 2. 使用FormFieldState将State转换为只包含字段值的对象，如{fields:{name:string,age:number}}
+ * 3. FormFieldNames用来生成每一个字段路径对应的声明类型,如{fields.xxx:{value,...}}
+ * 4. MutableRecord<FormFieldNames,'name'>用根据name值推断FormFieldNames成员的类型
+ * 
+ */
+
+// 提取表单中的的有效字段，如fields.xxx.value => fields.xxx，用在Field.props.name是指定字段
+type FormFieldState<Fields extends Dict> = {
+    [K in keyof Fields]: Fields[K] extends Dict ? (
+      Fields[K] extends FormFieldBase<infer V> ? V : 
+        ( 
+          Fields[K] extends { execute: any } ? never : FormFieldState<Fields[K]>
+        )
+    ) : never          
+} 
 // 生成每一个字段路径对应的声明类型,如{fields.xxx:{value,...}}
 type FormFieldNames<State extends Dict> = {
-    [Key in keyof Record<Paths<FormFinalState<State>['fields']>,any>]: {      
+    [Key in keyof Record<Paths<FormFieldState<State>['fields']>,any>]: {      
       render?:FieldRender<GetTypeByPath<State,`fields.${Key}`>> 
       children?: FieldRender<GetTypeByPath<State,`fields.${Key}`>> | FieldRender<GetTypeByPath<State,`fields.${Key}`>>[];  
     }
-}
-
-export type FieldProps2<State extends Dict,Name extends string | number | bigint | boolean | null | undefined> = {
-	name: Name
-  render?:FieldRender<GetTypeByPath<State,`fields.${Name}`>> 
-	children?: FieldRender<GetTypeByPath<State,`fields.${Name}`>> | FieldRender<GetTypeByPath<State,`fields.${Name}`>>[];  
 } 
-export type FieldProps3<State extends Dict,Name> =  MutableRecord<FormFieldNames<State>,'name'> & {
-  name: Name
+
+export type FieldProps3<State extends Dict> = MutableRecord<FormFieldNames<State>,'name'> & {
+  name: Paths<FormFieldState<State['fields']>>
 }
-
-
 
 export function createFieldComponent2<State extends Dict >(store: FormStore<State>,formOptions:RequiredFormOptions<State>) {    
-    return React.memo(<Name extends Paths<FormFinalState<State>['fields']>>(props: FieldProps3<FormState<State>,Name>):ReactNode=>{
+    return React.memo((props: FieldProps3<FormState<State>>):ReactNode=>{
       const { name } = props;  
       // 不含fields前缀的字段路径
       const fieldPath = Array.isArray(name) ? name : String(name).split(".")  

@@ -161,7 +161,7 @@ const Network = createForm({
 				})
 			},
 			cancelableSubmit: { // 这是一个动作,
-				title: "可取消的提交",
+				title: "可取消的提交", 
 				execute:action(async (fields,{abortSignal})=>{
 					console.log("formData=",fields)	
 					return new Promise<void>((resolve,reject)=>{
