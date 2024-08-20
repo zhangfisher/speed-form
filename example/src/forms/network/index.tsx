@@ -5,6 +5,7 @@ import {Card,JsonViewer, Button,Divider,Field,Input  } from "@speedform/demo-com
  
  
 const NetworkForm = ()=>{         
+    Network.state.fields.wifi.password.value
     return <Network.Form className="panel">
        <div data-loader="circle"></div>
         <Card title="网络配置">
@@ -16,9 +17,25 @@ const NetworkForm = ()=>{
                 } }
             </Network.Field>
             
-            <Network.Field2 name="wifi.cancelableSubmit">                      
+            <Network.Field2 name="wifi.password">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
+                    return <Field visible={visible} label={title}>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                    </Field>
+                } }
+            </Network.Field2>
+            <Network.Field2 name="wifi.signal">                      
+                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
+                    console.log(required,visible,validate,enable)
+                    return <Field visible={visible} label={title}>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                    </Field>
+                } }
+            </Network.Field2>
+            <Network.Field2 name="title">                      
+                {({title,value,required,visible,initial,validate,enable,placeholder,sync})=>{ 
+                    console.log(required,visible,initial,validate,enable)
                     return <Field visible={visible} label={title}>
                          <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
                     </Field>

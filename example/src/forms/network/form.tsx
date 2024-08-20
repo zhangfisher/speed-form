@@ -80,6 +80,11 @@ const Network = createForm({
 				placeholder: "无线网络",
 				validate: (value: string) => value.length > 3,
 			},
+			signal: {
+				value: 1,
+				placeholder: "无线网络",
+				validate: (value: string) => value.length > 3,
+			},
 			password: {
 				value: "123",
 				placeholder: "输入无线密码",

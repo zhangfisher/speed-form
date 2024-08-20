@@ -43,14 +43,12 @@ export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultField
 export type FieldRender<PropTypes extends Dict>= (props: FieldRenderProps<PropTypes>) => ReactNode
 
 export type FieldProps<PropTypes extends Dict = Dict> = {
-	name: string | string[]
-  render?:FieldRender<PropTypes> 
-	children?: FieldRender<PropTypes> | FieldRender<PropTypes>[];
+	name      : string | string[]
+  render?   : FieldRender<PropTypes> 
+	children? : FieldRender<PropTypes> | FieldRender<PropTypes>[];
 } 
-      
 
 export type FieldComponent = React.FC<FieldProps>;
-
 
 function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){  
   return Object.assign({

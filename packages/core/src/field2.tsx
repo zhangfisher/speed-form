@@ -1,12 +1,13 @@
 import { Dict, getVal, setVal } from "@speedform/reactive";
 import { FIELDS_STATE_KEY } from "./consts";
-import { FieldChildren, FieldProps, FieldRender, FormFieldBase } from "./field";
+import { FieldChildren,  FieldRender, FormFieldBase } from "./field";
 import { ReactNode, useCallback, useRef, useState } from "react";
 import { debounce as debounceWrapper } from './utils';
 import { FormState, FormStore, RequiredFormOptions } from './form';
 import React from "react";
 import { GetTypeByPath } from './types';
 import { Paths } from "type-fest";
+import { MutableRecord  } from "flex-tools/types"
 
 
 function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){  
@@ -80,35 +81,44 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
 // 提取表单中的的有效字段，如fields.xxx.value => fields.xxx，用在Field.props.name是指定字段
 type FormFinalState<State extends Dict> = {
     [K in keyof State]: State[K] extends FormFieldBase<infer V> ? V : 
-        (
-            State[K] extends { execute:any } ?  never
+        (   State[K] extends { execute:any } ? never
             : (
-                State[K] extends Dict ? FormFinalState<State[K]>: never
+              State[K] extends Dict ? FormFinalState<State[K]>: never
             )
-
         )        
 }
 
-type FormFieldNames<State extends Dict> = Paths<FormState<State>['fields']>
+// 生成每一个字段路径对应的声明类型,如{fields.xxx:{value,...}}
+type FormFieldNames<State extends Dict> = {
+    [Key in keyof Record<Paths<FormFinalState<State>['fields']>,any>]: {      
+      render?:FieldRender<GetTypeByPath<State,`fields.${Key}`>> 
+      children?: FieldRender<GetTypeByPath<State,`fields.${Key}`>> | FieldRender<GetTypeByPath<State,`fields.${Key}`>>[];  
+    }
+}
 
 export type FieldProps2<State extends Dict,Name extends string | number | bigint | boolean | null | undefined> = {
 	name: Name
-    render?:FieldRender<GetTypeByPath<State,`fields.${Name}`>> 
-	children?: FieldRender<GetTypeByPath<State,`fields.${Name}`>> | FieldRender<GetTypeByPath<State,`fields.${Name}`>>[];
+  render?:FieldRender<GetTypeByPath<State,`fields.${Name}`>> 
+	children?: FieldRender<GetTypeByPath<State,`fields.${Name}`>> | FieldRender<GetTypeByPath<State,`fields.${Name}`>>[];  
 } 
-      
+export type FieldProps3<State extends Dict,Name> =  MutableRecord<FormFieldNames<State>,'name'> & {
+  name: Name
+}
+
+
+
 export function createFieldComponent2<State extends Dict >(store: FormStore<State>,formOptions:RequiredFormOptions<State>) {    
-    return React.memo(<Name extends Paths<FormFinalState<State>['fields']>>(props: FieldProps2<FormFinalState<State>,Name>):ReactNode=>{
-        const { name } = props;  
+    return React.memo(<Name extends Paths<FormFinalState<State>['fields']>>(props: FieldProps3<FormState<State>,Name>):ReactNode=>{
+      const { name } = props;  
       // 不含fields前缀的字段路径
-      const fieldPath = Array.isArray(name) ? name : name.split(".")  
+      const fieldPath = Array.isArray(name) ? name : String(name).split(".")  
       // 含fields前缀的字段路径
       const fullFieldPath:string[] = [FIELDS_STATE_KEY,...fieldPath]
       const valueFieldPath:string[] = [FIELDS_STATE_KEY,...fieldPath]
       fieldPath.push("value") 
       valueFieldPath.push("value") 
       // 读取字段值,指整个字段对象{value,...}
-          const [value,setValue] = store.useState((draft:any)=>getVal(draft,fullFieldPath))  
+      const [value,setValue] = store.useState((draft:any)=>getVal(draft,fullFieldPath))  
       
       // 更新当前字段信息，如update(field=>field.enable=true)
       const filedUpdater = useFieldUpdater(valueFieldPath,setValue)
@@ -130,7 +140,7 @@ export function createFieldComponent2<State extends Dict >(store: FormStore<Stat
       }
     },(oldProps:any, newProps:any)=>{
         return oldProps.name === newProps.name
-    }) as <Name extends Paths<FormFinalState<State>['fields']>>(props: FieldProps2<FormFinalState<State>,Name>)=>ReactNode
+    }) //as <Name extends Paths<FormFinalState<State>['fields']>>(props: FieldProps2<FormState<State>,Name>)=>ReactNode
   }
   
   
