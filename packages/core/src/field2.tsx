@@ -115,9 +115,11 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
  */
 export type UnknownArray = readonly unknown[];
 
-type PickArrayItem<T extends any[],R=never> =
-  T extends [infer First,...infer rest] 
-    ? (First extends FormFieldBase<infer V> ? PickArrayItem<rest , V> : R): R
+
+// 主类型，用于从数组中提取每个对象的 `value` 类型，并将其组合成一个元组类型
+type PickArrayItem<T extends { value: any }[]> = {
+  [K in keyof T]:T[K] extends { value: infer V } ? V : never
+};
 
 type FormFieldState<Fields extends Dict> = {
     [Name in keyof Fields]: 
@@ -137,8 +139,9 @@ const data = {
    ],
    a:{value:"aaaa"}
 }
-
-type ass=FormFieldState<typeof data>
+ 
+// 使用 PickArrayItem 类型来自动推断 data.fields 中每个成员的 `value` 类型
+type ass = PickArrayItem<typeof data.fields>;
 
  
 
