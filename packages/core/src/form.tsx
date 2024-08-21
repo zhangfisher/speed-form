@@ -37,8 +37,8 @@
  * }
  *
  */
-
-import React, {	useCallback } from "react";
+import React from 'react'
+import  {	useCallback } from "react";
 import type {  Dict,RequiredComputedState, ComputedOptions, IStore, StoreOptions, ComputedState } from "@speedform/reactive";
 import { createStore  } from "@speedform/reactive";
 import type { ReactFC,  ComputedAttr } from "./types";

@@ -4,7 +4,8 @@
   "description": "high-performance and easy-to-use final form management for react",
   "main": "src/index.ts",
   "scripts": {
-    "docs:dev": "cd docs && pnpm dev"
+    "docs:dev": "cd docs && pnpm dev",
+    "docs:build": "cd docs && pnpm build"
   },
   "keywords": [],
   "author": "",

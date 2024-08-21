@@ -14,11 +14,4 @@ export default defineConfig({
     treeshake:true,  
     minify: true,
     external:['helux','@helux/utils'],
-    // esbuildPlugins:[
-    //     // @ts-ignore
-    //     copy({
-    //         source:['package.json','README.md','LICENSE'],
-    //         target:"dist/"
-    //     })
-    // ] 
 }) 

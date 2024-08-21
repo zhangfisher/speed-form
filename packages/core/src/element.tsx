@@ -9,8 +9,8 @@
  * 
  */
 
-
-import React, { ReactElement, ReactNode, HTMLProps,forwardRef, CSSProperties } from 'react';
+import React from 'react'
+import { ReactElement, ReactNode, HTMLProps,forwardRef, CSSProperties } from 'react';
 
 interface ElementProps<T extends keyof JSX.IntrinsicElements = 'div'> {
   tag?: keyof JSX.IntrinsicElements;

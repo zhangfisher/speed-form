@@ -1,13 +1,13 @@
+import React from 'react'
 import { Dict, getVal, setVal } from "@speedform/reactive";
 import { FIELDS_STATE_KEY } from "./consts";
-import { FieldChildren,  FieldRender, FormFieldBase } from "./field";
 import { ReactNode, useCallback, useRef, useState } from "react";
 import { debounce as debounceWrapper } from './utils';
 import { FormState, FormStore, RequiredFormOptions } from './form';
-import React from "react";
 import { GetTypeByPath } from './types';
 import { Paths } from "type-fest";
 import { MutableRecord  } from "flex-tools/types"
+import { FieldChildren,  FieldRender, FormFieldBase } from "./field";
 
 
 function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){  
@@ -113,17 +113,34 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
  *  }
  * 
  */
+export type UnknownArray = readonly unknown[];
+
+type PickArrayItem<T extends any[],R=never> =
+  T extends [infer First,...infer rest] 
+    ? (First extends FormFieldBase<infer V> ? PickArrayItem<rest , V> : R): R
+
 type FormFieldState<Fields extends Dict> = {
-    [Name in keyof Fields]: Fields[Name] extends any[] ? (
-      {
-        [index in keyof Fields[Name]]: Fields[Name][index] extends FormFieldBase<infer V> ? V : never
-      }
-    ) : (Fields[Name] extends Dict ? (
-      Fields[Name] extends FormFieldBase<infer V> ? V : FormFieldState<Fields[Name]>
-    ) : never)          
+    [Name in keyof Fields]: 
+      Fields[Name] extends any[]  
+        ? PickArrayItem<Fields[Name]>
+        : ( 
+          Fields[Name] extends Dict ? 
+            (Fields[Name] extends FormFieldBase<infer V> ? V : FormFieldState<Fields[Name]>)
+            : never
+        )          
 } 
 
+const data = {
+   fields:[
+    {value:1},
+    {value:true}
+   ],
+   a:{value:"aaaa"}
+}
 
+type ass=FormFieldState<typeof data>
+
+ 
 
 // 生成每一个字段路径对应的声明类型,如{fields.xxx:{value,...}}
 type FormFieldNames<State extends Dict> = {
@@ -160,13 +177,13 @@ export function createFieldComponent2<State extends Dict >(store: FormStore<Stat
       
       // 调用渲染字段UI 
       if(props.render){ 
-        return <FieldChildren {...{fieldProps,children:props.render} as any}/>
+        return <FieldChildren {...{fieldProps,children:props.render}}/>
       }else if(Array.isArray(props.children)){
           return props.children.map((children:any,index:any)=>{
-            return <FieldChildren key={index} {...{fieldProps,children:children} as any}/>
+            return <FieldChildren key={index} {...{fieldProps,children:children} }/>
           })
         }else{
-          return <FieldChildren {...{fieldProps,children:props.children} as any}/>
+          return <FieldChildren {...{fieldProps,children:props.children} }/>
       }
     },(oldProps:any, newProps:any)=>{
         return oldProps.name === newProps.name

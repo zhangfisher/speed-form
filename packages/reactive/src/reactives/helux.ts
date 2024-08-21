@@ -1,6 +1,6 @@
 import { ISharedCtx, sharex,markRaw,watch } from "helux"
 import { CreateAsyncComputedOptions, Reactiveable, IReactiveableOptions, CreateComputedOptions } from "./types";
-import { ComputedState, Dict, RequiredComputedState, RuntimeComputedOptions, StateGetter, StateSetter } from "../types";
+import { ComputedState, Dict, RequiredComputedState, RuntimeComputedOptions, StateGetter } from "../types";
 import { getRndId } from "../utils/getRndId";
 import { getValueByPath } from "../utils/getValueByPath";
 

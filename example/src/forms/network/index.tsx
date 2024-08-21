@@ -24,6 +24,14 @@ const NetworkForm = ()=>{
                     </Field>
                 } }
             </Network.Field2>
+            <Network.Field2 name="wifi.cancelableSubmit">                      
+                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
+                    console.log(required,visible,validate,enable)
+                    return <Field visible={visible} label={title}>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                    </Field>
+                } }
+            </Network.Field2>
             <Network.Field2 name="wifi.password">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
@@ -32,7 +40,7 @@ const NetworkForm = ()=>{
                     </Field>
                 } }
             </Network.Field2>
-            <Network.Field2 name="dns.0">                      
+            <Network.Field2 name="dns">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <Field visible={visible} label={title}>

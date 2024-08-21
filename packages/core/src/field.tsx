@@ -1,11 +1,11 @@
-import React, {	 ChangeEventHandler, ReactNode, useCallback,useRef,useState  } from "react";  
+import React from 'react'
+import {	 ChangeEventHandler, ReactNode, useCallback,useRef,useState  } from "react";  
 import { debounce as debounceWrapper } from './utils';
 import { ComputedAttr } from "./types";   
 import type { FormStore, RequiredFormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
 import {  Dict,getVal, setVal } from "@speedform/reactive";  
 import type { FormAction, FormActionDefine } from "./action";
-import { Paths } from "type-fest"
 
 // 默认同步字段属性
 export interface DefaultFieldPropTypes{

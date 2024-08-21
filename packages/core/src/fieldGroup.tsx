@@ -22,7 +22,7 @@
 
 import { ReactNode, useCallback,useState,useEffect } from "react";
 import { DefaultFieldPropTypes } from "./field";
-import React from "react";
+import * as React from "react";
 import { assignObject } from "flex-tools/object/assignObject";
 import type {  FormStore, RequiredFormOptions } from "./form";
 import { Dict,getVal } from "@speedform/reactive";

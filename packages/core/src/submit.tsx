@@ -8,14 +8,14 @@
 
  * 
  */
-
+import React from 'react'
 import { Dict, getValueByPath } from "@speedform/reactive"; 
 import type {  FormSchemaBase, FormStore, RequiredFormOptions } from "./form";
-import React,{ CSSProperties, ReactElement, ReactNode } from "react";
+import { CSSProperties, ReactElement, ReactNode } from "react";
 import { isFieldGroup, isFieldList, isFieldValue } from "./utils";
-import { styled } from  "styledfc"
 import { ActionProps, createActionComponent } from "./action";
 import { DEFAULT_SUBMIT_ACTION } from "./consts";
+import { styled } from 'flexstyled';
 
 
 
@@ -112,7 +112,6 @@ interface DefaultBehaviorButtonProps{
  
 
 const DefaultFormBehaviorButton =styled<DefaultBehaviorButtonProps>((props,{className})=>{
-    const { visible } = props
     return <input className={className + ' ' + props.className} 
         style={props.style}
         type={ props.type ?? 'submit'} value={props.title}
@@ -134,6 +133,7 @@ const DefaultFormBehaviorButton =styled<DefaultBehaviorButtonProps>((props,{clas
         border:"1px solid #1e5786"
     }
 })
+
 export type FormBehaviorComponentProps = React.PropsWithChildren<BehaviorOptions>
 
 export function createFormBehaviorComponent<State extends Dict = Dict>(store:FormStore<State>,behaviorOptions?:BehaviorOptions,formOptions?:RequiredFormOptions<State>) {

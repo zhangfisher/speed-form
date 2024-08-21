@@ -87,12 +87,12 @@ export const schema = {
 
 
 
-type NetworkFormType = typeof schema;
-type NetworkType = NetworkFormType['fields'];
 
-export const Network = createForm<NetworkFormType>(schema,{debug:true});
+export const Network = createForm(schema,{debug:true});
 
 
+export type NetworkFormType = typeof schema;
+export type NetworkType = (typeof Network.state)['fields'];
 
 
 // @ts-ignore

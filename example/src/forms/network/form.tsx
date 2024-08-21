@@ -90,7 +90,7 @@ const Network = createForm({
 				validate: (value: string) => value.length > 3,
 			},
 			signal: {
-				value: 1,
+				value: true,
 				placeholder: "无线网络",
 				validate: (value: string) => value.length > 3,
 			},
