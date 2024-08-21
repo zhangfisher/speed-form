@@ -113,45 +113,36 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
  *  }
  * 
  */
-export type UnknownArray = readonly unknown[];
-
-
 // 主类型，用于从数组中提取每个对象的 `value` 类型，并将其组合成一个元组类型
 type PickArrayItem<T extends { value: any }[]> = {
-  [K in keyof T]:T[K] extends { value: infer V } ? V : never
+  [K in keyof T]: T[K] extends { value: infer V } ? V : never
 };
-
 type FormFieldState<Fields extends Dict> = {
-    [Name in keyof Fields]: 
-      Fields[Name] extends any[]  
+    [Name in keyof Fields
+      as Fields[Name] extends { execute: any } ?  never :  Name  
+    ]: 
+      Fields[Name] extends readonly any[]
         ? PickArrayItem<Fields[Name]>
         : ( 
-          Fields[Name] extends Dict ? 
-            (Fields[Name] extends FormFieldBase<infer V> ? V : FormFieldState<Fields[Name]>)
-            : never
-        )          
+            Fields[Name] extends Dict 
+              ? (
+                  Fields[Name] extends FormFieldBase<infer V> 
+                  ?  V : FormFieldState<Fields[Name]>
+                )
+              : never
+        ) 
 } 
-
-const data = {
-   fields:[
-    {value:1},
-    {value:true}
-   ],
-   a:{value:"aaaa"}
-}
- 
-// 使用 PickArrayItem 类型来自动推断 data.fields 中每个成员的 `value` 类型
-type ass = PickArrayItem<typeof data.fields>;
-
- 
 
 // 生成每一个字段路径对应的声明类型,如{fields.xxx:{value,...}}
 type FormFieldNames<State extends Dict> = {
-    [Key in keyof Record<Paths<FormFieldState<State>['fields']>,any>]: {      
-      render?:FieldRender<GetTypeByPath<State,`fields.${Key}`>> 
-      children?: FieldRender<GetTypeByPath<State,`fields.${Key}`>> | FieldRender<GetTypeByPath<State,`fields.${Key}`>>[];  
+    [Key in keyof Record<Paths<FormFieldState<State['fields']>>,any>]: {      
+      render?  : FieldRender<GetTypeByPath<State,`fields.${Key}`>> 
+      children?: FieldRender<GetTypeByPath<State,`fields.${Key}`>> 
+                | FieldRender<GetTypeByPath<State,`fields.${Key}`>>[];  
     }
 } 
+
+ 
 
 export type FieldProps3<State extends Dict> = MutableRecord<FormFieldNames<State>,'name'> & {
   name: Paths<FormFieldState<State['fields']>> 
@@ -190,7 +181,27 @@ export function createFieldComponent2<State extends Dict >(store: FormStore<Stat
       }
     },(oldProps:any, newProps:any)=>{
         return oldProps.name === newProps.name
-    }) //as <Name extends Paths<FormFinalState<State>['fields']>>(props: FieldProps2<FormState<State>,Name>)=>ReactNode
+    })  
   }
   
   
+// const f={ 
+//   fields:{
+//     ss1:{execute:1},
+//     name:{value:"zhang"},
+//     age:{value:18},
+//     wifi:{
+//       ssid:{value:""},
+//       password:{value:1},
+//       ss1:{execute:1},
+//       ss2:{execute:1}
+//     },
+//     dns:[
+//       {value:"192.168.1.1",a:1},
+//       {value:1,a:2}
+//     ]  
+//   }
+// } 
+// type Net = FormFieldState<typeof f>
+// type NETL = Paths<FormFieldState<typeof f>['fields']>  
+// type NETL2 = FormFieldNames<FormFieldState<typeof f>,never>

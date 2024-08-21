@@ -24,7 +24,7 @@ const NetworkForm = ()=>{
                     </Field>
                 } }
             </Network.Field2>
-            <Network.Field2 name="wifi.cancelableSubmit">                      
+            <Network.Field2 name="wifi.password">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <Field visible={visible} label={title}>

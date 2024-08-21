@@ -23,33 +23,12 @@ export type FormData = Record<string, any>;
 export type Primitive = number | boolean | string | null | undefined 
 
 // 指定字符串路径来提取对象类型中的类型，如GetTypeByPath<{a:{b:number}},"a.b"> == number
-export type GetTypeByPath<T ,P> = P extends `${infer K}.${infer R}` ? K extends keyof T ? GetTypeByPath<T[K],R> : never : P extends keyof T ? T[P] : never   
+export type GetTypeByPath<T ,P extends string> = P extends `${infer K}.${infer R}` 
+  ? K extends keyof T     
+    ? GetTypeByPath<T[K],R> : never : P extends keyof T 
+      ? T[P] : any   
 
- /**
- * 
- * 根据路径提取对象类型中的类型
- * 
- * PickByPath<{a:boolean},"a">  == boolean
- * PickByPath<{a:boolean},["a"]>  == boolean
- * PickByPath<{a:{b:number}},["a","b"]>  == number
- * 
- * 
- */
-export type PickByPath<T extends Record<string, any>, P extends string | string[]> = 
-  P extends string 
-    ? T[P] 
-    : P extends [infer First, ...infer Rest]
-      ? First extends keyof T
-        ? Rest extends []
-          ? T[First]
-          : Rest extends string[]
-            ? PickByPath<T[First], Rest>
-            : never
-        : never
-      : never;
-
-// 测试用例
-type Test1 = PickByPath<{a: boolean}, "a">; // boolean
-type Test2 = PickByPath<{a: boolean}, ["a"]>; // boolean
-type Test3 = PickByPath<{a: {b: number}}, ["a", "b"]>; // number
-type Test4 = PickByPath<{a: {b: number,c:string[]}}, ["a", "c"]>; // string[]
+// 移除对象中的never类型
+export type RemoveNeverItem<T extends Record<string, any>> = {
+        [K in keyof T as T[K] extends never ? never : K]: T[K]
+      }
