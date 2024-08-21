@@ -9,5 +9,6 @@
         "**/node_modules": false
     },
     "commentTranslate.hover.enabled": false,
-    "testing.automaticallyOpenPeekView": "never"
+    "testing.automaticallyOpenPeekView": "never",
+    "typescript.tsdk": "node_modules\\typescript\\lib"
 }

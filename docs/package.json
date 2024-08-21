@@ -55,7 +55,7 @@
   "devDependencies": {
     "@commitlint/cli": "^18.4.3",
     "@commitlint/config-conventional": "^18.4.3",
-    "@types/react": "^18.2.45",
+    "@types/react": "^18.3.4",
     "@types/react-dom": "^18.2.18",
     "@types/validator": "^13.11.7",
     "@umijs/lint": "^4.0.90",
@@ -67,8 +67,8 @@
     "prettier": "^3.1.1",
     "prettier-plugin-organize-imports": "^3.2.4",
     "prettier-plugin-packagejson": "^2.4.7",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "stylelint": "^16.1.0"
   },
   "dependencies": {

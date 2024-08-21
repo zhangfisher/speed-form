@@ -105,15 +105,16 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
  *  { name:{value:""},
  *    age:{value:18},
  *    check:{execute:()=>{...}}}  // 移
- *  } =>
+ *  } 
+ *  ===
  *  {
  *    name: string
- *    age:number 
+ *    age: number 
  *  }
  * 
  */
 type FormFieldState<Fields extends Dict> = {
-    [Name in keyof Fields]: Fields[Name] extends (infer Item)[] ? (
+    [Name in keyof Fields]: Fields[Name] extends any[] ? (
       {
         [index in keyof Fields[Name]]: Fields[Name][index] extends FormFieldBase<infer V> ? V : never
       }
