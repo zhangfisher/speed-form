@@ -16,6 +16,11 @@ const Network = createForm({
 			title: "网络名称",
 			validate: (value:string) => value.length > 3,
 		},
+		mtu:{
+			value: 1500,
+			title: "MTU",
+			validate: (value: number) => value > 0 && value < 1500,
+		},
 		interface: {
 			value: "wifi",
 			title: 1,//"网卡类型",
@@ -70,6 +75,10 @@ const Network = createForm({
 				validate: (value: any) => validator.isIP(value),
 			},
 		},
+		dns:[
+			{ name:"masterDns", title:"DNS服务器",value:"8.8.8.8"},
+			{ name:"slaveDns" , title:"备用DNS服务器",value:"4.4.4.4"}
+		],
 		wifi: {
 			title: "无线配置",
 			visible: computed<boolean>((net: any) => {

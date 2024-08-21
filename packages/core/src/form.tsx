@@ -40,7 +40,7 @@
 
 import React, {	useCallback } from "react";
 import type {  Dict,RequiredComputedState, ComputedOptions, IStore, StoreOptions, ComputedState } from "@speedform/reactive";
-import { computed, createStore  } from "@speedform/reactive";
+import { createStore  } from "@speedform/reactive";
 import type { ReactFC,  ComputedAttr } from "./types";
 import { createFieldComponent, FormFields  } from './field'; 
 import { createFieldGroupComponent } from "./fieldGroup";
@@ -62,10 +62,8 @@ export const defaultFormProps =  {
     help     : "",
     tips     : "",
     status   : "idle",    
-    dirty    : dirty(['fields']),               // 跟踪字段值,当值发生变化时，将dirty设置为true
-    validate : validate({
-        entry: ['fields']
-    }),
+    dirty    : dirty(['fields']),               
+    validate : validate({entry: ['fields']}),
     readonly : false,
     enable   : true,
     visible  : true,

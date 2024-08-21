@@ -16,8 +16,31 @@ const NetworkForm = ()=>{
                     </Field>
                 } }
             </Network.Field2>
-            
-            <Network.Field2 name="wifi.cancelableSubmit">                      
+            <Network.Field2 name="mtu">                      
+                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
+                    console.log(required,visible,validate,enable)
+                    return <Field visible={visible} label={title}>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                    </Field>
+                } }
+            </Network.Field2>
+            <Network.Field2 name="wifi.password">                      
+                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
+                    console.log(required,visible,validate,enable)
+                    return <Field visible={visible} label={title}>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                    </Field>
+                } }
+            </Network.Field2>
+            <Network.Field2 name="dns.0">                      
+                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
+                    console.log(required,visible,validate,enable)
+                    return <Field visible={visible} label={title}>
+                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
+                    </Field>
+                } }
+            </Network.Field2>
+            <Network.Field2 name="dns.1">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <Field visible={visible} label={title}>

@@ -93,15 +93,37 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
  * 
  */
 
-// 提取表单中的的有效字段，如fields.xxx.value => fields.xxx，用在Field.props.name是指定字段
+
+
+// 将表单中的所有字段转提取表单中的的有效字段，如fields.xxx={value} => fields.xxx，用在Field.props.name是指定字段
+
+/**
+ * 
+ *  提取表单中的所有字段的类型
+ *  字段是一个对象，具有特征：{value:any}
+ * 
+ *  { name:{value:""},
+ *    age:{value:18},
+ *    check:{execute:()=>{...}}}  // 移
+ *  } =>
+ *  {
+ *    name: string
+ *    age:number 
+ *  }
+ * 
+ */
 type FormFieldState<Fields extends Dict> = {
-    [K in keyof Fields]: Fields[K] extends Dict ? (
-      Fields[K] extends FormFieldBase<infer V> ? V : 
-        ( 
-          Fields[K] extends { execute: any } ? never : FormFieldState<Fields[K]>
-        )
-    ) : never          
+    [Name in keyof Fields]: Fields[Name] extends (infer Item)[] ? (
+      {
+        [index in keyof Fields[Name]]: Fields[Name][index] extends FormFieldBase<infer V> ? V : never
+      }
+    ) : (Fields[Name] extends Dict ? (
+      Fields[Name] extends FormFieldBase<infer V> ? V : FormFieldState<Fields[Name]>
+    ) : never)          
 } 
+
+
+
 // 生成每一个字段路径对应的声明类型,如{fields.xxx:{value,...}}
 type FormFieldNames<State extends Dict> = {
     [Key in keyof Record<Paths<FormFieldState<State>['fields']>,any>]: {      
@@ -111,7 +133,7 @@ type FormFieldNames<State extends Dict> = {
 } 
 
 export type FieldProps3<State extends Dict> = MutableRecord<FormFieldNames<State>,'name'> & {
-  name: Paths<FormFieldState<State['fields']>>
+  name: Paths<FormFieldState<State['fields']>> 
 }
 
 export function createFieldComponent2<State extends Dict >(store: FormStore<State>,formOptions:RequiredFormOptions<State>) {    

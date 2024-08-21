@@ -26,7 +26,7 @@ importers:
         version: 18.2.42
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.6(@types/node@20.11.16)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6))
+        version: 4.2.1(vite@5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6))
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -38,10 +38,10 @@ importers:
         version: 18.2.0(react@18.2.0)
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@swc/core@1.3.100)(@types/node@20.11.16)(typescript@5.5.4)
+        version: 10.9.2(@swc/core@1.3.100)(@types/node@22.4.1)(typescript@5.5.4)
       tsup:
         specifier: ^8.0.1
-        version: 8.0.1(@microsoft/api-extractor@7.36.3(@types/node@20.11.16))(@swc/core@1.3.100)(postcss@8.4.35)(ts-node@10.9.2(@swc/core@1.3.100)(@types/node@20.11.16)(typescript@5.5.4))(typescript@5.5.4)
+        version: 8.0.1(@microsoft/api-extractor@7.36.3(@types/node@22.4.1))(@swc/core@1.3.100)(postcss@8.4.35)(ts-node@10.9.2(@swc/core@1.3.100)(@types/node@22.4.1)(typescript@5.5.4))(typescript@5.5.4)
       tsx:
         specifier: ^4.7.0
         version: 4.7.0
@@ -50,7 +50,7 @@ importers:
         version: 5.5.4
       vite:
         specifier: ^5.0.6
-        version: 5.0.6(@types/node@20.11.16)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
+        version: 5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
       vitest:
         specifier: ^0.34.6
         version: 0.34.6(jsdom@23.0.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
@@ -202,7 +202,7 @@ importers:
         version: 6.13.2(eslint@8.55.0)(typescript@5.5.4)
       '@vitejs/plugin-react-swc':
         specifier: ^3.5.0
-        version: 3.5.0(@swc/helpers@0.5.11)(vite@5.0.6(@types/node@22.3.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6))
+        version: 3.5.0(@swc/helpers@0.5.11)(vite@5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6))
       eslint:
         specifier: ^8.55.0
         version: 8.55.0
@@ -220,10 +220,10 @@ importers:
         version: 5.5.4
       vite:
         specifier: ^5.0.6
-        version: 5.0.6(@types/node@22.3.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
+        version: 5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
       vite-plugin-mock:
         specifier: ^3.0.1
-        version: 3.0.1(esbuild@0.21.2)(mockjs@1.1.0)(vite@5.0.6(@types/node@22.3.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6))
+        version: 3.0.1(esbuild@0.21.2)(mockjs@1.1.0)(vite@5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6))
 
   packages/components:
     dependencies:
@@ -245,7 +245,7 @@ importers:
         version: 18.2.0
       tsup:
         specifier: ^8.0.1
-        version: 8.0.1(@microsoft/api-extractor@7.36.3(@types/node@20.11.16))(@swc/core@1.3.100)(postcss@8.4.35)(ts-node@10.9.2(@swc/core@1.3.100)(@types/node@20.11.16)(typescript@5.5.4))(typescript@5.5.4)
+        version: 8.0.1(@microsoft/api-extractor@7.36.3(@types/node@22.4.1))(@swc/core@1.3.100)(postcss@8.4.35)(ts-node@10.9.2(@swc/core@1.3.100)(@types/node@22.4.1)(typescript@5.5.4))(typescript@5.5.4)
 
   packages/core:
     dependencies:
@@ -255,9 +255,6 @@ importers:
       flex-tools:
         specifier: ^1.4.5
         version: 1.4.5
-      styledfc:
-        specifier: ^1.1.1
-        version: 1.1.1(@types/react@18.2.46)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
     devDependencies:
       '@testing-library/jest-dom':
         specifier: ^6.1.5
@@ -270,7 +267,7 @@ importers:
         version: 18.2.46
       '@vitejs/plugin-react':
         specifier: ^4.2.1
-        version: 4.2.1(vite@5.0.6(@types/node@20.11.16)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6))
+        version: 4.2.1(vite@5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6))
       jsdom:
         specifier: ^23.0.1
         version: 23.0.1
@@ -283,9 +280,12 @@ importers:
       type-fest:
         specifier: ^4.8.3
         version: 4.8.3
+      typescript:
+        specifier: ^5.5.4
+        version: 5.5.4
       vite:
         specifier: ^5.0.6
-        version: 5.0.6(@types/node@20.11.16)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
+        version: 5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
       vitest:
         specifier: ^0.34.6
         version: 0.34.6(jsdom@23.0.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
@@ -329,6 +329,9 @@ importers:
       type-fest:
         specifier: ^4.8.3
         version: 4.8.3
+      typescript:
+        specifier: ^5.5.4
+        version: 5.5.4
       vite:
         specifier: ^5.0.6
         version: 5.0.6(@types/node@20.11.16)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
@@ -7482,13 +7485,6 @@ packages:
       react: ^18.2.0
       react-dom: ^18.2.0
 
-  styledfc@1.1.1:
-    resolution: {integrity: sha512-QbdGGZm46x+JiD7pZxyOLGlefLhr1wEGH3t+rOEMt9KHMwHPmIm0dPGIZ+3MlX5naQ7PBBXKgcIMuyPRgvgSMw==}
-    peerDependencies:
-      '@types/react': ^18.2.40
-      react: ^18.2.0
-      react-dom: ^18.2.0
-
   stylelint-config-recommended@7.0.0:
     resolution: {integrity: sha512-yGn84Bf/q41J4luis1AZ95gj0EQwRX8lWmGmBwkwBNSkpGSpl66XcPTulxGa/Z91aPoNGuIGBmFkcM1MejMo9Q==}
     peerDependencies:
@@ -9642,6 +9638,15 @@ snapshots:
       - '@types/node'
     optional: true
 
+  '@microsoft/api-extractor-model@7.27.5(@types/node@22.4.1)':
+    dependencies:
+      '@microsoft/tsdoc': 0.14.2
+      '@microsoft/tsdoc-config': 0.16.2
+      '@rushstack/node-core-library': 3.59.6(@types/node@22.4.1)
+    transitivePeerDependencies:
+      - '@types/node'
+    optional: true
+
   '@microsoft/api-extractor@7.36.3(@types/node@18.19.4)':
     dependencies:
       '@microsoft/api-extractor-model': 7.27.5(@types/node@18.19.4)
@@ -9665,6 +9670,24 @@ snapshots:
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
       '@rushstack/node-core-library': 3.59.6(@types/node@20.11.16)
+      '@rushstack/rig-package': 0.4.0
+      '@rushstack/ts-command-line': 4.15.1
+      colors: 1.2.5
+      lodash: 4.17.21
+      resolve: 1.22.8
+      semver: 7.5.4
+      source-map: 0.6.1
+      typescript: 5.0.4
+    transitivePeerDependencies:
+      - '@types/node'
+    optional: true
+
+  '@microsoft/api-extractor@7.36.3(@types/node@22.4.1)':
+    dependencies:
+      '@microsoft/api-extractor-model': 7.27.5(@types/node@22.4.1)
+      '@microsoft/tsdoc': 0.14.2
+      '@microsoft/tsdoc-config': 0.16.2
+      '@rushstack/node-core-library': 3.59.6(@types/node@22.4.1)
       '@rushstack/rig-package': 0.4.0
       '@rushstack/ts-command-line': 4.15.1
       colors: 1.2.5
@@ -9881,6 +9904,19 @@ snapshots:
       z-schema: 5.0.5
     optionalDependencies:
       '@types/node': 20.11.16
+    optional: true
+
+  '@rushstack/node-core-library@3.59.6(@types/node@22.4.1)':
+    dependencies:
+      colors: 1.2.5
+      fs-extra: 7.0.1
+      import-lazy: 4.0.0
+      jju: 1.4.0
+      resolve: 1.22.8
+      semver: 7.5.4
+      z-schema: 5.0.5
+    optionalDependencies:
+      '@types/node': 22.4.1
     optional: true
 
   '@rushstack/rig-package@0.4.0':
@@ -10822,10 +10858,10 @@ snapshots:
 
   '@vercel/ncc@0.33.3': {}
 
-  '@vitejs/plugin-react-swc@3.5.0(@swc/helpers@0.5.11)(vite@5.0.6(@types/node@22.3.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6))':
+  '@vitejs/plugin-react-swc@3.5.0(@swc/helpers@0.5.11)(vite@5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6))':
     dependencies:
       '@swc/core': 1.3.100(@swc/helpers@0.5.11)
-      vite: 5.0.6(@types/node@22.3.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
+      vite: 5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
     transitivePeerDependencies:
       - '@swc/helpers'
 
@@ -10847,6 +10883,17 @@ snapshots:
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.0
       vite: 5.0.6(@types/node@20.11.16)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
+    transitivePeerDependencies:
+      - supports-color
+
+  '@vitejs/plugin-react@4.2.1(vite@5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6))':
+    dependencies:
+      '@babel/core': 7.23.9
+      '@babel/plugin-transform-react-jsx-self': 7.23.3(@babel/core@7.23.9)
+      '@babel/plugin-transform-react-jsx-source': 7.23.3(@babel/core@7.23.9)
+      '@types/babel__core': 7.20.5
+      react-refresh: 0.14.0
+      vite: 5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
     transitivePeerDependencies:
       - supports-color
 
@@ -15679,13 +15726,13 @@ snapshots:
       postcss: 8.4.32
       postcss-value-parser: 4.2.0
 
-  postcss-load-config@4.0.2(postcss@8.4.35)(ts-node@10.9.2(@swc/core@1.3.100)(@types/node@20.11.16)(typescript@5.5.4)):
+  postcss-load-config@4.0.2(postcss@8.4.35)(ts-node@10.9.2(@swc/core@1.3.100)(@types/node@22.4.1)(typescript@5.5.4)):
     dependencies:
       lilconfig: 3.0.0
       yaml: 2.3.4
     optionalDependencies:
       postcss: 8.4.35
-      ts-node: 10.9.2(@swc/core@1.3.100)(@types/node@20.11.16)(typescript@5.5.4)
+      ts-node: 10.9.2(@swc/core@1.3.100)(@types/node@22.4.1)(typescript@5.5.4)
 
   postcss-logical@5.0.4(postcss@8.4.32):
     dependencies:
@@ -17042,13 +17089,6 @@ snapshots:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
 
-  styledfc@1.1.1(@types/react@18.2.46)(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
-    dependencies:
-      '@changesets/cli': 2.27.1
-      '@types/react': 18.2.46
-      react: 18.2.0
-      react-dom: 18.2.0(react@18.2.0)
-
   stylelint-config-recommended@7.0.0(stylelint@16.1.0(typescript@5.0.4)):
     dependencies:
       stylelint: 16.1.0(typescript@5.0.4)
@@ -17343,14 +17383,14 @@ snapshots:
 
   ts-interface-checker@0.1.13: {}
 
-  ts-node@10.9.2(@swc/core@1.3.100)(@types/node@20.11.16)(typescript@5.5.4):
+  ts-node@10.9.2(@swc/core@1.3.100)(@types/node@22.4.1)(typescript@5.5.4):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       '@tsconfig/node10': 1.0.9
       '@tsconfig/node12': 1.0.11
       '@tsconfig/node14': 1.0.3
       '@tsconfig/node16': 1.0.4
-      '@types/node': 20.11.16
+      '@types/node': 22.4.1
       acorn: 8.11.3
       acorn-walk: 8.3.1
       arg: 4.1.3
@@ -17377,7 +17417,7 @@ snapshots:
 
   tslib@2.6.2: {}
 
-  tsup@8.0.1(@microsoft/api-extractor@7.36.3(@types/node@20.11.16))(@swc/core@1.3.100)(postcss@8.4.35)(ts-node@10.9.2(@swc/core@1.3.100)(@types/node@20.11.16)(typescript@5.5.4))(typescript@5.5.4):
+  tsup@8.0.1(@microsoft/api-extractor@7.36.3(@types/node@22.4.1))(@swc/core@1.3.100)(postcss@8.4.35)(ts-node@10.9.2(@swc/core@1.3.100)(@types/node@22.4.1)(typescript@5.5.4))(typescript@5.5.4):
     dependencies:
       bundle-require: 4.0.2(esbuild@0.19.10)
       cac: 6.7.14
@@ -17387,14 +17427,14 @@ snapshots:
       execa: 5.1.1
       globby: 11.1.0
       joycon: 3.1.1
-      postcss-load-config: 4.0.2(postcss@8.4.35)(ts-node@10.9.2(@swc/core@1.3.100)(@types/node@20.11.16)(typescript@5.5.4))
+      postcss-load-config: 4.0.2(postcss@8.4.35)(ts-node@10.9.2(@swc/core@1.3.100)(@types/node@22.4.1)(typescript@5.5.4))
       resolve-from: 5.0.0
       rollup: 4.7.0
       source-map: 0.8.0-beta.0
       sucrase: 3.34.0
       tree-kill: 1.2.2
     optionalDependencies:
-      '@microsoft/api-extractor': 7.36.3(@types/node@20.11.16)
+      '@microsoft/api-extractor': 7.36.3(@types/node@22.4.1)
       '@swc/core': 1.3.100(@swc/helpers@0.5.11)
       postcss: 8.4.35
       typescript: 5.5.4
@@ -17773,7 +17813,7 @@ snapshots:
       - supports-color
       - terser
 
-  vite-plugin-mock@3.0.1(esbuild@0.21.2)(mockjs@1.1.0)(vite@5.0.6(@types/node@22.3.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)):
+  vite-plugin-mock@3.0.1(esbuild@0.21.2)(mockjs@1.1.0)(vite@5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)):
     dependencies:
       '@types/mockjs': 1.0.10
       bundle-require: 4.0.2(esbuild@0.21.2)
@@ -17784,7 +17824,7 @@ snapshots:
       mockjs: 1.1.0
       path-to-regexp: 6.2.1
       picocolors: 1.0.0
-      vite: 5.0.6(@types/node@22.3.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
+      vite: 5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6)
     transitivePeerDependencies:
       - esbuild
       - supports-color
@@ -17814,13 +17854,13 @@ snapshots:
       sass: 1.69.7
       terser: 5.31.6
 
-  vite@5.0.6(@types/node@22.3.0)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6):
+  vite@5.0.6(@types/node@22.4.1)(less@4.1.3)(lightningcss@1.22.1)(sass@1.69.7)(terser@5.31.6):
     dependencies:
       esbuild: 0.19.10
       postcss: 8.4.32
       rollup: 4.7.0
     optionalDependencies:
-      '@types/node': 22.3.0
+      '@types/node': 22.4.1
       fsevents: 2.3.3
       less: 4.1.3
       lightningcss: 1.22.1
