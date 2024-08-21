@@ -131,18 +131,17 @@ type FormFieldState<Fields extends Dict> = {
                 )
               : never
         ) 
-} 
+}
 
 // 生成每一个字段路径对应的声明类型,如{fields.xxx:{value,...}}
 type FormFieldNames<State extends Dict> = {
     [Key in keyof Record<Paths<FormFieldState<State['fields']>>,any>]: {      
       render?  : FieldRender<GetTypeByPath<State,`fields.${Key}`>> 
-      children?: FieldRender<GetTypeByPath<State,`fields.${Key}`>> 
+      children?: FieldRender<GetTypeByPath<State,`fields.${Key}`> > 
                 | FieldRender<GetTypeByPath<State,`fields.${Key}`>>[];  
     }
 } 
 
- 
 
 export type FieldProps3<State extends Dict> = MutableRecord<FormFieldNames<State>,'name'> & {
   name: Paths<FormFieldState<State['fields']>> 
@@ -185,23 +184,27 @@ export function createFieldComponent2<State extends Dict >(store: FormStore<Stat
   }
   
   
-// const f={ 
-//   fields:{
-//     ss1:{execute:1},
-//     name:{value:"zhang"},
-//     age:{value:18},
-//     wifi:{
-//       ssid:{value:""},
-//       password:{value:1},
-//       ss1:{execute:1},
-//       ss2:{execute:1}
-//     },
-//     dns:[
-//       {value:"192.168.1.1",a:1},
-//       {value:1,a:2}
-//     ]  
-//   }
-// } 
-// type Net = FormFieldState<typeof f>
-// type NETL = Paths<FormFieldState<typeof f>['fields']>  
-// type NETL2 = FormFieldNames<FormFieldState<typeof f>,never>
+const f={ 
+  fields:{
+    ss1:{execute:1},
+    name:{value:"zhang"},
+    age:{value:18},
+    wifi:{
+      ssid:{value:""},
+      password:{value:1},
+      ss1:{execute:1},
+      ss2:{execute:1}
+    },
+    dns:[
+      {value:"192.168.1.1",a:1},
+      {value:1,a:2},
+      {
+        a:{value:1,a:2},
+        b:{value:1,a:2},
+      }
+    ]   
+  }
+} 
+type Net = FormFieldState<typeof f>
+type NETL = Paths<FormFieldState<typeof f>['fields']>  
+type NETL2 = FormFieldNames<FormFieldState<typeof f>>

@@ -78,7 +78,7 @@ const Network = createForm({
 		dns:[
 			{ name:"masterDns", title:"DNS服务器",value:"8.8.8.8"},
 			{ name:"slaveDns" , title:"备用DNS服务器",value:"4.4.4.4"}
-		],
+		] ,
 		wifi: {
 			title: "无线配置",
 			visible: computed<boolean>((net: any) => {
@@ -90,7 +90,7 @@ const Network = createForm({
 				validate: (value: string) => value.length > 3,
 			},
 			signal: {
-				value: true,
+				value: 1,
 				placeholder: "无线网络",
 				validate: (value: string) => value.length > 3,
 			},

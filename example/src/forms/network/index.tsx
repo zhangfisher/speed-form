@@ -48,7 +48,7 @@ const NetworkForm = ()=>{
                     </Field>
                 } }
             </Network.Field2>
-            <Network.Field2 name="dns.1">                      
+            <Network.Field2 name="dns.2">                      
                 {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
                     console.log(required,visible,validate,enable)
                     return <Field visible={visible} label={title}>
