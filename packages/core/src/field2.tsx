@@ -1,3 +1,15 @@
+/**
+ * 
+ * 本文件的目标是实现一个字段组件，
+ *  根据props.name属性自动推断value的类型，
+ *  但是碰到一个困难，无法处理字段数组嵌套的推断
+ * 
+ *  因此，暂时放弃
+ *  
+ * 
+ * 
+ */
+
 import React from 'react'
 import { Dict, getVal, setVal } from "@speedform/reactive";
 import { FIELDS_STATE_KEY } from "./consts";
@@ -7,7 +19,7 @@ import { FormState, FormStore, RequiredFormOptions } from './form';
 import { GetTypeByPath } from './types';
 import { Paths } from "type-fest";
 import { MutableRecord  } from "flex-tools/types"
-import { FieldChildren,  FieldRender, FormFieldBase } from "./field";
+import { FieldChildren,  FieldProps,  FieldRender, FormFieldBase } from "./field";
 
 
 function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){  
@@ -134,21 +146,22 @@ type FormFieldState<Fields extends Dict> = {
 }
 
 // 生成每一个字段路径对应的声明类型,如{fields.xxx:{value,...}}
-type FormFieldNames<State extends Dict> = {
-    [Key in keyof Record<Paths<FormFieldState<State['fields']>>,any>]: {      
+type FormFieldNames<State extends Dict> =  { 
+    [Key in keyof Record<Paths<FormFieldState<State['fields']>> ,any>]: {      
       render?  : FieldRender<GetTypeByPath<State,`fields.${Key}`>> 
-      children?: FieldRender<GetTypeByPath<State,`fields.${Key}`> > 
-                | FieldRender<GetTypeByPath<State,`fields.${Key}`>>[];  
-    }
+      children?: FieldRender<GetTypeByPath<State,`fields.${Key}`> >  
+                | FieldRender<GetTypeByPath<State,`fields.${Key}`>>[];    
+    }  
 } 
 
-
-export type FieldProps3<State extends Dict> = MutableRecord<FormFieldNames<State>,'name'> & {
-  name: Paths<FormFieldState<State['fields']>> 
-}
+// 根据输入的props.name自动推断children的类型，主要是value类型
+export type FieldAutoInferProps<State extends Dict,V=undefined> = V extends undefined ?
+  MutableRecord<FormFieldNames<State>,'name'> 
+  : FieldProps<{value:V}>
 
 export function createFieldComponent2<State extends Dict >(store: FormStore<State>,formOptions:RequiredFormOptions<State>) {    
-    return React.memo((props: FieldProps3<FormState<State>>):ReactNode=>{
+    type FieldType = <V=undefined>(props:  FieldAutoInferProps<FormState<State>,V>)=>ReactNode
+    return React.memo(<V=undefined>(props: FieldAutoInferProps<FormState<State>,V>):ReactNode=>{
       const { name } = props;  
       // 不含fields前缀的字段路径
       const fieldPath = Array.isArray(name) ? name : String(name).split(".")  
@@ -180,7 +193,7 @@ export function createFieldComponent2<State extends Dict >(store: FormStore<Stat
       }
     },(oldProps:any, newProps:any)=>{
         return oldProps.name === newProps.name
-    })  
+    })  as unknown as FieldType
   }
   
   
@@ -205,6 +218,15 @@ const f={
     ]   
   }
 } 
-type Net = FormFieldState<typeof f>
-type NETL = Paths<FormFieldState<typeof f>['fields']>  
-type NETL2 = FormFieldNames<FormFieldState<typeof f>>
+// type Net = FormFieldState<typeof f>
+// type NETL = Paths<FormFieldState<typeof f>['fields']>  
+// type NETL2 = FormFieldNames<FormFieldState<typeof f>>
+
+
+
+// function test<T = undefined,S extends Record<string,any>=Record<string,any>>(a:S): T extends undefined ? S['name'] : T {
+//   return a.name 
+// }
+
+// const r1 = test({name:1,age:18})         
+// const r2 = test<string>({name:"zhang",age:18})         

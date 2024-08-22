@@ -14,7 +14,6 @@ group:
 
 - `useState`: 用来在组件中访问和更新`Store`的状态数据，更新时会导致重新渲染。
 - `store.state`: 直接读写`Store`的状态数据，`store.state`返回的是一个响应式对象`reactive`，其实质是通过`Proxy`实现的，当读写`store.state`时，会触发内部的依赖收集，相关计算属性的运行，配合`signal`机制可以自动触发组件的细粒度重新渲染。
-- `Action`：通过派发执行`Action`来更新状态。
 
 
 ## 读写状态
@@ -33,7 +32,7 @@ const state = {
   age:18
 }
 
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 
 export default () => {
   const [state,setState] = store.useState() 
@@ -58,7 +57,7 @@ const state = {
   lastName:"Fisher",
   fullName:(state)=>state.firstName+state.lastName,
 }
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 
 const FirstName = React.memo(()=>{
   const [first] = store.useState((state)=>state.firstName)
@@ -95,7 +94,7 @@ export default () => {
 除了使用`useState`方法读写状态外，`sotre.state`返回的是一个`reactive`响应式对象，你可以直接读写它的属性。
 
 :::info
-`响应式对象`指的是可以对该对象进行读取，其修改行为会触发内部的依赖收集，相关计算属性的运行，当然也会自动触发组件的重新渲染。因此，当您使用`store.state.xxx=<value>`直接修改状态时，就绕过了通过`Action`修改`State`的限制。
+`响应式对象`指的是可以对该对象进行读取，其修改行为会触发内部的依赖收集，相关计算属性的运行，当然也会自动触发组件的重新渲染。
 :::
 
 
@@ -113,7 +112,7 @@ const state = {
   age:18
 }
 
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 
 export default () => {
 

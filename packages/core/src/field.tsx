@@ -11,7 +11,7 @@ import type { FormAction, FormActionDefine } from "./action";
 export interface DefaultFieldPropTypes{
   name         : string
   value        : any
-  initial?: any
+  initial?     : any
   oldValue?    : any
   title?       : string;               // 标题
   help?        : string;               // 提示信息
@@ -43,7 +43,7 @@ export type FieldRenderProps<PropTypes extends Dict>= Required<Omit<DefaultField
 export type FieldRender<PropTypes extends Dict>= (props: FieldRenderProps<PropTypes>) => ReactNode
 
 export type FieldProps<PropTypes extends Dict = Dict> = {
-	name      : string | string[]
+	name      : string  
   render?   : FieldRender<PropTypes> 
 	children? : FieldRender<PropTypes> | FieldRender<PropTypes>[];
 } 

@@ -68,7 +68,7 @@ const storeDefine= {
 let store
 
 beforeEach(() => {
-    store = createStore<typeof storeDefine>(storeDefine)  
+    store = createStore(storeDefine)  
 })
 afterEach(() => {
     store = null as any

@@ -34,7 +34,7 @@
 import { ReactNode, useCallback, useRef, RefObject,useState} from "react";
 import React from "react";
 import type { FormDefine, FormStore, RequiredFormOptions } from "./form";
-import {  AsyncComputedDefine, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptor, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict,  RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
+import {  AsyncComputedDefine, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict,  RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
 import { getId } from "./utils";
@@ -69,7 +69,7 @@ export type FormActionExecutor<Scope extends Dict=Dict,Result =any> = (scope:Sco
  * Scope:动作作用域，用来指定动作作用的表单数据范围
  * Result: 动作函数execute执行结果返回值类型
  */
-export interface FormActionDefine<Scope extends Dict=Dict,Result =any>{
+export interface FormActionDefine<Scope extends Dict=Dict>{
     scope?  : string | string[]                                             // 动作提交范围
     title?  : ActionComputedAttr<string,Scope>					            // 动作标题    
     help?   : ActionComputedAttr<string,Scope>					            // 动作帮助
@@ -244,7 +244,7 @@ export const ActionChildren = React.memo((props: {actionProps:ActionRenderProps<
  * @param store 
  * @returns 
  */
-export function createActionComponent<State extends Dict = Dict>(store:FormStore<State>,formOptions:RequiredFormOptions<State>) {
+export function createActionComponent<State extends Dict = Dict>(store:FormStore<State>) {
 
     /**
      * State:  指的是动作的对应状态数据，在schema中就是具有execute的一个对象

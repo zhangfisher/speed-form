@@ -34,7 +34,7 @@ const state = {
   }
 } 
 
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 
 export default ()=>{
   const [state] = store.useState()
@@ -133,7 +133,7 @@ const state = {
   }
 } 
 
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 
 export default ()=>{
   const [state] = store.useState()
@@ -218,7 +218,7 @@ const state = {
   }
 } 
 
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 
 export default ()=>{
   const [state] = store.useState()
@@ -284,7 +284,7 @@ const state = {
   }
 } 
 
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 
 export default ()=>{
   const [state] = store.useState()

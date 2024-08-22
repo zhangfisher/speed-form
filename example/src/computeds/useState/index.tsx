@@ -28,7 +28,7 @@ const storeDefine= {
         }  
 }
 
-const accountStore = createStore<typeof storeDefine>(storeDefine)
+const accountStore = createStore(storeDefine)
 
 const UseInfo:ReactFC<React.PropsWithChildren> =React.memo(()=>{   
     const [state] = accountStore.useState()

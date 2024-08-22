@@ -38,7 +38,7 @@
  *
  */
 import React from 'react'
-import  {	useCallback } from "react";
+import  { useCallback } from "react";
 import type {  Dict,RequiredComputedState, ComputedOptions, IStore, StoreOptions, ComputedState } from "@speedform/reactive";
 import { createStore  } from "@speedform/reactive";
 import type { ReactFC,  ComputedAttr } from "./types";
@@ -53,8 +53,7 @@ import { createLoadApi, createGetValuesApi } from "./serialize";
 import { createValidator, isValidateField, validate } from "./validate";
 import { createSubmitComponent } from "./submit";
 import { createResetComponent } from "./reset"; 
-import { dirty } from "./dirty";
-import { createFieldComponent2 } from "./field2";
+import { dirty } from "./dirty"; 
 
 export const defaultFormProps =  {
     name     : "SpeedForm",
@@ -183,7 +182,7 @@ export type FormStatus = 'idle'
  *    或者调用computedObjects.enableGroup(true/false)来启用或禁用分组验证
  * 
  */
-function createValidatorHook<State extends Dict = Dict>(valuePath:string[],getter:Function,options:ComputedOptions,formOptions:RequiredFormOptions<State>){		
+function createValidatorHook(valuePath:string[],options:ComputedOptions){		
 	if(valuePath.length>=2 && valuePath[0]==FIELDS_STATE_KEY && valuePath[valuePath.length-1]==VALIDATE_COMPUTED_GROUP){	
 		// 如果没有指定scope,则默认指向当前字段的value
 		if(!options.scope) options.scope="./value"
@@ -225,7 +224,7 @@ function setFormDefault<T extends Dict>(define:T){
  * - 让scope默认指向fields,这样就可以直接使用fields下的字段,而不需要fields前缀
  * 
  */
-function createActionHook(valuePath:string[],getter:Function,options:ComputedOptions){
+function createActionHook(valuePath:string[],options:ComputedOptions){
 	if(valuePath.length>1 && valuePath[valuePath.length-1]=='execute'){
 		options.immediate = false			// 默认不自动执行,需要手动调用action.execute.run()来执行
 		// 如果没有指定scope，则默认指向fields,这样就可以直接使用fields下的字段,而不需要fields前缀
@@ -248,7 +247,7 @@ function createActionHook(valuePath:string[],getter:Function,options:ComputedOpt
  * @param getter 
  * @param options 
  */
-function createDepsHook(valuePath:string[],getter:Function,options:ComputedOptions){
+function createDepsHook(valuePath:string[],options:ComputedOptions){
 	if(valuePath.length > 0 && valuePath[0]==FIELDS_STATE_KEY && options.depends){ 
 		options.depends.forEach((depend,i)=>{
 			if(Array.isArray(depend) && (depend.length>0 && depend[0]!=FIELDS_STATE_KEY)){
@@ -294,13 +293,13 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 		// 计算函数作用域默认指向fields
 		scope: ()=>[FIELDS_STATE_KEY],
 		// 创建计算函数时的钩子函数，可以在创建前做一些不可描述的处理
-		onCreateComputed(valuePath,getter,options) {		 
+		onCreateComputed(valuePath,_,options) {		 
 			// 1. 只对validator进行处理,目的是使validate函数依赖于当前字段的值value，将使得validate函数的第一个参数总是当前字段的值
-			createValidatorHook(valuePath,getter,options,opts)
+			createValidatorHook(valuePath,options)
 			// 2. 对所有位于fields下的的依赖均自动添加fields前缀，这样在声明依赖时就可以省略fields前缀
-			createDepsHook(valuePath,getter,options)
+			createDepsHook(valuePath,options)
 			// 3. 将表单actions的execute的onComputedResult指向其current
-			createActionHook(valuePath,getter,options)
+			createActionHook(valuePath,options)
 		},
 		onComputedDraft(draft,{computedType,valuePath}){
 			// 针对计属性
@@ -335,10 +334,9 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 		setState       : formStore.setState, 
 		Form           : createFormComponent<State>(formStore,opts),
 		Field          : createFieldComponent<State>(formStore,opts),	
-		Field2          : createFieldComponent2<State>(formStore,opts),	
 		Group          : createFieldGroupComponent<State>(formStore,opts),	
-		Action         : createActionComponent<State>(formStore,opts),
-		Submit         : createSubmitComponent<State>(formStore,opts),
+		Action         : createActionComponent<State>(formStore),
+		Submit         : createSubmitComponent<State>(formStore),
 		Reset          : createResetComponent<State>(formStore,opts),		
 		useAction      : createUseAction<State>(formStore) as UseActionType,
     	fields         : createObjectProxy(()=>formStore.state.fields) as FieldsType,		

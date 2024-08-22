@@ -38,12 +38,12 @@ import { Dict } from "./types";
 * @param computedThis
 * @param storeCtxOption
 */
-function getContextOptions(state: any,computedCtxOption?: ComputedScope,storeCtxOption?: ComputedScope) {
-  let ctx = computedCtxOption == undefined ? storeCtxOption : computedCtxOption;
-  if (typeof ctx == "function") {
-    try { ctx = ctx.call(state, state) } catch { }
+function getScopeOptions(state: any,computedScope?: ComputedScope,storeScope?: ComputedScope) {
+  let scope = computedScope == undefined ? storeScope : computedScope;
+  if (typeof scope == "function") {
+    try { scope = scope.call(state, state) } catch { }
   }
-  return ctx == undefined ? (storeCtxOption == undefined ? ComputedScopeRef.Root: storeCtxOption) : ctx;
+  return scope == undefined ? (storeScope == undefined ? ComputedScopeRef.Current: storeScope) : scope;
 }
 
 export type GetComputedContextOptions<T extends Dict =Dict> ={
@@ -81,7 +81,7 @@ export function getComputedScope<T extends Dict = Dict>(store:IStore<T>,computed
     const parentPath = valuePath.length>=1 ? valuePath.slice(0, valuePath.length - 1) : [];
 
    // 2. 读取计算函数的上下文配置参数
-   const contexRef = getContextOptions(draft,computedOptions.scope, (store.options.scope && store.options.scope(computedType)))
+   const contexRef = getScopeOptions(draft,computedOptions.scope, (store.options.scope && store.options.scope(computedType)))
   
     // 3. 根据配置参数获取计算函数的上下文对象
     try { 

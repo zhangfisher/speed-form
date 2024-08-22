@@ -93,7 +93,7 @@ const book = {
   })
 }
 
-const store = createStore<typeof book>({state:book},{singleton:false})
+const store = createStore({state:book},{singleton:false})
  
 export default ()=>{
   const [state] = store.useState()

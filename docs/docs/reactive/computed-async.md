@@ -15,7 +15,7 @@ demo:
 异步计算属性具有以下特性：
 
 - 异步计算属性是一个异步函数或者返回值是一个`Promise`对象。
-- 异步计算属性的依赖收集需要手动显式指定。
+- 异步计算属性的必须显式指定依赖,不能像同步计算一样自动收集依赖。
 - 异步计算属性会被替换为`AsyncComputedObject`对象，通过该对象可以读取到异步计算的进度以及结果等。
 
 <Divider></Divider>
@@ -24,29 +24,67 @@ demo:
 
 异步计算属性使用`computed`进行声明，方式如下：
 
+```tsx  
+import { createStore,computed,ComputedScopeRef,getSnap,$} from '@speedform/reactive';
+import { useRef,useEffect } from "react" 
+import { delay } from "speedform-docs"
+
+const store = createStore({
+  user:{
+    firstName:"Zhang",
+    lastName:"Fisher",
+    fullName: computed(async (user)=>{
+      await delay()       
+      return user.firstName+user.lastName  
+    },["user.firstName","./lastName"]) 
+  }
+})
+
+export default ()=>{ 
+  const [state] = store.useState() 
+  return <>
+    <div>
+      firstName:          
+      <input value={state.user.firstName} onChange={store.sync(['user','firstName'])} />
+    </div>
+    <div>
+      lastName:          
+      <input value={state.user.lastName} onChange={store.sync(['user','lastName'])} />
+    </div>
+    <div>fullName:{state.user.fullName.loading ? '重新计算...' : state.user.fullName.result}</div>
+    </>
+}
+```
+
+- 以上`fullName`是一个异步计算属性，其依赖于`firstName`和`lastName`。
+- `computed`函数用来封装异步计算函数，第一个参数是一个异步函数，第二个参数是一个字符串数组，用来指定依赖的状态路径。
+- 依赖可以使用绝对路径或相对路径，使用`.`作为路径分割符，`./`指的是当前对象，`../`指的是父对象。
+- 当我们更新`firstName`或`lastName`时，`fullName`会自动重新计算。
+- 计算属性的结果保存在`state.user.fullName.result`中。
+- 当计算属性正在计算时，`state.user.fullName.loading`为`true`。计算完成后，`state.user.fullName.loading`为`false`。
+
+**下面是一个更加完整的例子：**
+
 ```tsx 
 import { computed,createStore } from "@speedform/reactive"
 import { api } from "speedform-docs"
-
-const mygithub = {
+ 
+const store = createStore({
   user:{
     repo:"https://api.github.com/users/zhangfisher/repos",
     projects:computed<Project[]>(async ([repoUrl])=>{
       await new Promise(resolve=>setTimeout(resolve,2000))
         return await api.getProjects(repoUrl) 
      },
-     ["user/repo"],
+     ["user.repo"],
      {
       scope:"depends"
      })
   }
-}
-
-const store = createStore<typeof mygithub>({state:mygithub})
+})
 
 export default ()=>{
-  const [state] = store.useState()
-  globalThis.MyGithub=state
+  const [state] = store.useState() 
   return <div>
       <p><b>修改仓库地址将触发重新加载该仓库项目列表</b></p>
       仓库地址：<input value={state.user.repo} onChange={store.sync(["user","repo"])}/>
@@ -203,8 +241,8 @@ const user = {
     fullName: computed(async ([first,last])=>{ 
       return first + last
     },[
-      "user/firstName",
-      "user/lastName"
+      "user.firstName",
+      "user.lastName"
     ],{  
       // 默认scope指向的是current，即fullName所在的对象
       // 这里指定scope为Depends，这样就可以传入
@@ -225,8 +263,8 @@ const user = {
     },[
     // 使用相对依赖，../父对象指向的是other的父对象
     // ../user就指向user对象
-      "../user/firstName",
-      "../user/lastName"
+      "../user.firstName",
+      "../user.lastName"
     ],{   
       scope:ComputedScopeRef.Depends
     })
@@ -234,7 +272,7 @@ const user = {
 
 }
 
-const store = createStore({state:user})
+const store = createStore(user)
 
 export default ()=>{
   const [state]=store.useState()
@@ -254,7 +292,7 @@ export default ()=>{
 **注意：**
 
 - 相对路径的相对指的是**相对使用`computed`声明的数据项所在的对象**，而不是使用`computed`声明的数据项
-- 依赖分割符推荐使用`/`
+- 依赖分割符使用`.`
 - 如果异步计算没有指定依赖，则该计算属性不会被触发重新计算，会在控制台给出一个警告，也可以手动执行。
 
 <Divider></Divider>
@@ -271,13 +309,22 @@ export default ()=>{
 
 ```ts
 export type AsyncComputedObject<Result= any,ExtAttrs extends Dict = {}> ={
-  loading? : boolean;               // 是否正在计算
-  progress?: number;                // 进度值    
-  timeout? : number ;               // 超时时间，单位ms，当启用超时时进行倒计时
-  error?   : any;                   // 执行出错时的错误信息
-  retry?   : number                 // 重试次数，当执行重试操作时，会进行倒计时，每次重试-1，直到为0时停止重试
-  result   : Result;                // 计算函数的返回值保存到此处
-  run      : (options?:RuntimeComputedOptions) => {};    // 重新执行任务
+  // 是否正在计算
+  loading? : boolean;               
+  // 进度值    
+  progress?: number;                
+  // 超时时间，单位ms，当启用超时时进行倒计时
+  timeout? : number ;               
+  // 执行出错时的错误信息
+  error?   : any;        
+  // 重试次数，当执行重试操作时，会进行倒计时，每次重试-1，直到为0时停止重试           
+  retry?   : number                 
+  // 计算函数的返回值保存到此处
+  result   : Result;                
+  // 重新运行计算函数
+  run      : (options?:RuntimeComputedOptions) => {};    
+  // 中止正在执行的异步计算
+  cancel  : ()=>void                                        
 } & ExtAttrs                        // 额外的属性
 ```
 
@@ -295,7 +342,7 @@ const state = {
     } 
   }
 }  
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 // 经createStore处理后的fullName是一个AsyncComputedObject对象
 store.state.user.fullName=={
   loading:false,          // 是否正在计算
@@ -305,6 +352,7 @@ store.state.user.fullName=={
   result:"ZhangFisher",   // 计算结果
   progress:0,             // 计算进度
   run:()=>{},             // 重新执行计算
+  cancel: ()=>void 
 }
 ```
 
@@ -330,10 +378,10 @@ const state = {
     fullName: computed(async (user)=>{
       await delay() 
       return user.firstName+user.lastName  
-    },["user/firstName","user/lastName"]) 
+    },["user.firstName","user.lastName"]) 
   }
 }  
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 
 export default ()=>{
   const count = useRef(0)
@@ -374,7 +422,8 @@ import { useRef,useEffect } from "react"
 import { delay } from "speedform-docs"
 import { Box} from "@speedform/demo-components"
 
-const shop = {
+ 
+const store = createStore({
   order:{
     bookName:"ZhangFisher",
     price:100,
@@ -390,11 +439,10 @@ const shop = {
         resolve(count*price)
       }) 
     },
-    ["order/count","order/price"],
+    ["order.count","order.price"],
     {scope:ComputedScopeRef.Depends}) 
   }
-}  
-const store = createStore({state:shop})
+}  )
 
 export default ()=>{
   const [state,setState] = store.useState()
@@ -443,8 +491,8 @@ import { createStore,computed,ComputedScopeRef,getSnap } from '@speedform/reacti
 import { useRef,useEffect } from "react"
 import { delay } from "speedform-docs"
 import { Box} from "@speedform/demo-components"
-
-const shop = {
+ 
+const store = createStore({
   order:{
     bookName:"ZhangFisher",
     price:100,
@@ -453,14 +501,13 @@ const shop = {
         await delay(2000)    // 模拟长时间计算
         return count*price
     },
-    ["order/count","order/price"],
+    ["order.count","order.price"],
     {
       timeout:1000 ,
       scope:ComputedScopeRef.Depends
     })
   }
-}  
-const store = createStore({state:shop})
+}  )
 
 export default ()=>{
   const [state,setState] = store.useState()
@@ -515,8 +562,8 @@ import { createStore,computed,ComputedScopeRef,getSnap } from '@speedform/reacti
 import { useRef,useEffect } from "react"
 import { delay } from "speedform-docs"
 import { Box} from "@speedform/demo-components"
-
-const shop = {
+ 
+const store = createStore({
   order:{
     bookName:"ZhangFisher",
     price:100,
@@ -525,14 +572,13 @@ const shop = {
         await delay(100000)    // 模拟长时间计算
         return count*price
     },
-    ["order/count","order/price"],
+    ["order.count","order.price"],
     {
       timeout:[5*1000,5] ,
       scope:ComputedScopeRef.Depends
     })
   }
-}  
-const store = createStore({state:shop})
+}  )
 
 export default ()=>{
   const [state,setState] = store.useState()
@@ -582,8 +628,8 @@ import { createStore,computed,ComputedScopeRef,getSnap } from '@speedform/reacti
 import { useRef,useEffect } from "react"
 import { delay } from "speedform-docs"
 import { Box } from "@speedform/demo-components"
-let count = 0
-const shop = {
+let count = 0 
+const store = createStore( {
   order:{
     bookName:"ZhangFisher",
     price:100,
@@ -593,14 +639,13 @@ const shop = {
         await delay()
         throw new Error("计算出错"+(count))
     },
-    ["order/count","order/price"],
+    ["order.count","order.price"],
     {
       retry:[5,1000] ,// 重试5次，每次间隔1秒
       scope:ComputedScopeRef.Depends
     })
   }
-}  
-const store = createStore({state:shop})
+}  )
 
 export default ()=>{
   const [state,setState] = store.useState()
@@ -660,7 +705,8 @@ import { useRef,useEffect } from "react"
 import { delay } from "speedform-docs"
 import { Box} from "@speedform/demo-components"
 
-const shop = {
+ 
+const store = createStore({
   order:{
     bookName:"ZhangFisher",
     price:100,
@@ -675,14 +721,13 @@ const shop = {
 					})
 				})	
     },
-    ["order/count","order/price"],
+    ["order.count","order.price"],
     {
       timeout:[10*1000,10] ,
       scope:ComputedScopeRef.Depends
     })
   }
-}  
-const store = createStore({state:shop})
+}  )
 
 export default ()=>{
   const [state,setState] = store.useState()
@@ -752,7 +797,8 @@ const order = {
 
 ```tsx
 import { createStore,computed} from "@speedform/reactive"
-const order = {
+
+const store = createStore({
     bookName:"ZhangFisher",
     price:100,
     count:3,
@@ -760,8 +806,7 @@ const order = {
       return order.price*order.count
     },[]) // 依赖是空的
 }
- 
-const store = createStore({state:order})
+ )
 
 export default ()=>{
   const [state] = store.useState()
@@ -787,7 +832,8 @@ export default ()=>{
 
 ```tsx
 import { createStore} from "@speedform/reactive"
-const order = {
+
+const store = createStore({
     bookName:"ZhangFisher",
     price:100,
     count:3,
@@ -795,8 +841,7 @@ const order = {
       return order.price*order.count
     }
 }   
-
-const store = createStore({state:order})
+)
 
 export default ()=>{
   const [state] = store.useState()
@@ -823,6 +868,7 @@ total(_x15) {
 
 这导致`Speedform`将其识别为异步函数，也就不能相应地创建异步`AsyncComputedObject`，而只是将其当作一个普通的同步计算属性。
 
+解决方法是显式指定`computed(async ()=>{...},[...],{async:true})`，这样就可以正确识别为异步函数。
 
 
 

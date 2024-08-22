@@ -45,7 +45,7 @@ const BookShop = {
 describe("静态声明watch",()=>{
     let store:IStore<typeof BookShop>
     beforeEach(()=>{
-        store = createStore<typeof BookShop>(BookShop)
+        store = createStore(BookShop)
     })
     test("创建监视对象",async ()=>{
         store.state.books.total // 注意：watch仅在第一次读取时创建        

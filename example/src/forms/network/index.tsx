@@ -9,69 +9,6 @@ const NetworkForm = ()=>{
     return <Network.Form className="panel">
        <div data-loader="circle"></div>
         <Card title="网络配置">
-          <Network.Field2 name="title">                      
-                {({name,title,value,visible,validate,placeholder,sync})=>{                 
-                    return <Field  name="title" visible={visible} label={title}>
-                         <Input name={name}  className={classnames({invalid:validate===false})} placeholder={placeholder} value={value} onChange={sync()}/>
-                    </Field>
-                } }
-            </Network.Field2>
-            <Network.Field2 name="mtu">                      
-                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
-                    console.log(required,visible,validate,enable)
-                    return <Field visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
-                    </Field>
-                } }
-            </Network.Field2>
-            <Network.Field2 name="wifi.password">                      
-                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
-                    console.log(required,visible,validate,enable)
-                    return <Field visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
-                    </Field>
-                } }
-            </Network.Field2>
-            <Network.Field2 name="wifi.password">                      
-                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
-                    console.log(required,visible,validate,enable)
-                    return <Field visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
-                    </Field>
-                } }
-            </Network.Field2>
-            <Network.Field2 name="dns">                      
-                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
-                    console.log(required,visible,validate,enable)
-                    return <Field visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
-                    </Field>
-                } }
-            </Network.Field2>
-            <Network.Field2 name="dns.2">                      
-                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
-                    console.log(required,visible,validate,enable)
-                    return <Field visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
-                    </Field>
-                } }
-            </Network.Field2>
-            <Network.Field2 name="wifi.signal">                      
-                {({title,value,required,visible,validate,enable,placeholder,sync})=>{ 
-                    console.log(required,visible,validate,enable)
-                    return <Field visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
-                    </Field>
-                } }
-            </Network.Field2>
-            <Network.Field2 name="title">                      
-                {({title,value,required,visible,initial,validate,enable,placeholder,sync})=>{ 
-                    console.log(required,visible,initial,validate,enable)
-                    return <Field visible={visible} label={title}>
-                         <input className={classnames({invalid:!validate})} placeholder={placeholder} value={value} onChange={sync()}/>
-                    </Field>
-                } }
-            </Network.Field2>
              <Network.Field<typeof Network.fields.interface> name="interface">                      
                 {({name,title,required,visible,validate,enable,value,initial,select,sync})=>{     
                     console.log(name,required,visible,validate,enable,initial)

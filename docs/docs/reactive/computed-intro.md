@@ -43,7 +43,7 @@ const user = {
   }
 }
 
-const store = createStore<typeof user>({state:user},{singleton:false})
+const store = createStore(user,{singleton:false})
  
 export default ()=>{
   const [state,setState] = store.useState()
@@ -63,85 +63,63 @@ export default ()=>{
 - `store.state.fullName`是一个字符串
 - 默认情况下，`createStore`直接在输入的`user`上进行创建，指定`singleton:false`时会深拷贝一份`user`，然后在拷贝的`user`上创建`mutate`或`computed`。
 
-## 上下文
+## 作用域
 
-在学习如何声明创建计算属性之前，我们先来了解一下`计算上下文`的概念。
+在学习如何声明创建计算属性之前，我们先来了解一下`计算作用域 - Scope`的概念。
 
 :::info
- **`计算上下文`指的是计算属性函数执行时的上下文对象，即`this`指向的对象。**
+ **`计算作用域`指的是传递给计算函数的第一个参数**
 :::
 
-`@speedform/reactive`在创建`Store`时，支持配置`computedThis`参数来指定计算属性函数的默认`this`上下文，`computedThis`取值如下：
+`@speedform/reactive`在创建`Store`时，支持配置`scope`参数来指定计算属性函数的第一个参数，如下：
 
 ```ts
 export enum ComputedScopeRef{
-  None = 'none',                      // 不指定上下文
-  Root = 'root',                      // 指向State根对象
+  Root    = 'root',                      // 指向State根对象
   Current = 'current',                // 指向计算属性所在的对象
-  Parent = 'parent',                  // 指向计算属性所在对象的父对象
+  Parent  = 'parent',                  // 指向计算属性所在对象的父对象
   Depends = 'depends'                 // 指向异步计算的依赖数组，仅在异步计算时生效
   Self    = 'self'                    // 指向自身，默认值   
 }
 
 // 指定Store中计算函数的上下文,如果是字符串代表是当前对象的指定键，如果是string[]，则代表是当前Store对象的完整路径
-export type StoreComputedScope  = ComputedScopeRef | string | string[] | ((state:any)=>string | string[] | ComputedScopeRef)
-
-```
-
-### Root
-
-默认情况下，`@speedform/reactive`会将计算属函数的上下文指向`ComputedScopeRef.Root`，即当前的`State`根对象，如下：
-
-```tsx 
-/**
- * title: ComputedScopeRef.Root
- * description: store.computedThis==ComputedScopeRef.Root,
- */
-import { createStore } from '@speedform/reactive'; 
-const state = {
+export type ComputedScope  =  ComputedScopeRef | string | string[] | ((state:any)=>string | string[] | ComputedScopeRef)
+ 
+const store = createStore( {
   user:{
     firstName:"Zhang",
     lastName:"Fisher",
-    fullName: function(user){
-      // this指向State根对象      
-      return this.user.firstName+this.user.lastName
-    }
+    fullName: computed((scope)=>{
+      // ...
+    },["user.firstName","user.lastName"])
   }
-} 
-const store = createStore<typeof user>({state})
+} )
 
-export default ()=>{
-  const [state,setState] = store.useState()
-  return <div> 
-    <div>FullName:{state.user.fullName}</div>
-  </div>
-}
-
-``` 
+```
 
 ### Current
 
-当`computedThis==ComputedScopeRef.Current`时，计算函数的`this`指向计算函数所在的对象。
+默认情况下，`scope==ComputedScopeRef.Current`时，计算函数的`this`指向计算函数所在的对象。
 
 ```tsx 
 /**
  * title: ComputedScopeRef.Current
- * description: store.computedThis==ComputedScopeRef.Current,
+ * description: store.options.scope==ComputedScopeRef.Current,
  */
 import { createStore,ComputedScopeRef } from '@speedform/reactive'; 
 const state = {
   user:{
     firstName:"Zhang",
     lastName:"Fisher",
-    fullName: function(user){
-      // this指向user对象      
-      return this.firstName+this.lastName
+    fullName: function(scope){
+      // scope指向user对象      
+      return scope.firstName+scope.lastName
     }
   }
 } 
-const store = createStore<typeof user>({state},{
+const store = createStore(state,{
   // 指定计算属性的默认上下文指向计算函数所有的当前对象
-  computedThis: ()=>ComputedScopeRef.Current,
+  scope: ()=>ComputedScopeRef.Current,
 })
 
 export default ()=>{
@@ -152,30 +130,64 @@ export default ()=>{
 }
 ```
 
+### Root
+
+`@speedform/reactive`会将计算属函数的`scope`指向`ComputedScopeRef.Root`，即当前的`State`根对象，如下：
+
+```tsx 
+/**
+ * title: ComputedScopeRef.Root
+ * description: store.options.scope==ComputedScopeRef.Root,
+ */
+import { createStore,ComputedScopeRef } from '@speedform/reactive'; 
+ 
+const store = createStore({
+  user:{
+    firstName:"Zhang",
+    lastName:"Fisher",
+    fullName: function(scope){
+      // scope指向State根对象      
+      return scope.user.firstName+scope.user.lastName
+    }
+  }
+},{
+  // 指定计算属性的默认上下文指向State根对象
+  scope: () => ComputedScopeRef.Root
+})
+
+export default ()=>{
+  const [state,setState] = store.useState()
+  return <div> 
+    <div>FullName:{state.user.fullName}</div>
+  </div>
+}
+
+``` 
+
 
 #### Parent
 
-当`computedThis==ComputedScopeRef.Parent`时，计算函数的`this`指向计算函数所在的对象的父对象。
+当`scope==ComputedScopeRef.Parent`时，指向计算函数所在的对象的父对象。
 
 ```tsx 
 /**
  * title: ComputedScopeRef.Parent
- * description: store.computedThis==ComputedScopeRef.Parent
+ * description: scope==ComputedScopeRef.Parent
  */
 import { createStore,ComputedScopeRef } from '@speedform/reactive'; 
 const state = {
   user:{
     firstName:"Zhang",
     lastName:"Fisher",
-    fullName: function(user){
-      // this指向user对象的父对象，即根
-      return this.user.firstName+this.user.lastName
+    fullName: function(scope){
+      // scope指向user对象的父对象，即根
+      return scope.user.firstName+scope.user.lastName
     }
   }
 } 
-const store = createStore<typeof user>({state},{
+const store = createStore(state,{
   // 指定计算属性的默认上下文指向计算函数所有的当前对象
-  computedThis: ()=>ComputedScopeRef.Parent,
+  scope: ()=>ComputedScopeRef.Parent,
 })
 
 export default ()=>{
@@ -189,12 +201,12 @@ export default ()=>{
 
 ### 字符串
 
-当`computedThis==<字符串>`时，此时`<字符串>`就是指向计算函数所在对象的键名称，`this`指向计算函数所在对象成员。
+当`store.options.scope==<字符串>`时，此时`<字符串>`就是指向计算函数所在对象的键名称。
 
 ```tsx
 /**
  * title: <字符串>
- * description: store.computedThis==<字符串>
+ * description: store.options.scope==<字符串>
  */
 import { createStore } from '@speedform/reactive'; 
 
@@ -202,17 +214,17 @@ const state = {
   user:{
     firstName:"Zhang",
     lastName:"Fisher",
-    fullName: function(){
+    fullName: function(scope){
       // this指向user对象的firstName
-      return this
+      return scope
     },
     address:{
       city:"Quanzhou",
     }
   }
 } 
-const store = createStore<typeof user>({state},{
-  computedThis: ()=>'firstName'
+const store = createStore(state,{
+  scope: ()=>'firstName'
 })
 
 export default ()=>{
@@ -233,7 +245,7 @@ export default ()=>{
 ```tsx
 /**
  * title: <字符串数组>
- * description: store.computedThis==<字符串数组>
+ * description: scope==<字符串数组>
  */
 import { createStore } from '@speedform/reactive'; 
 
@@ -241,17 +253,16 @@ const state = {
   user:{
     firstName:"Zhang",
     lastName:"Fisher",
-    fullName: function(){
-      // this指向user对象的firstName
-      return this
+    fullName: function(scope){ 
+      return scope
     },
     address:{
       city:"Quanzhou",
     }
   }
 } 
-const store = createStore<typeof user>({state},{
-  computedThis: ()=>['user','address','city']
+const store = createStore(state,{
+  scope: ()=>['user','address','city']
 })
 
 export default ()=>{
@@ -262,23 +273,23 @@ export default ()=>{
 }
 
 ```
-`computedThis==<字符串数组>`与`computedThis==<字符串>`的区别在于:
-- `computedThis==<字符串数组>`代表是以**根对象**为起点的完整路径，并且这个路径可以是多级的，如`['user','address','city']`。
-- `computedThis==<字符串>`代表是以**当前计算函数所在对象**为起点的路径，并且这个键名称可以是多级的，如`address.city`。
+`scope==<字符串数组>`与`scope==<字符串>`的区别在于:
+- `scope==<字符串数组>`代表是以**根对象**为起点的完整路径，并且这个路径可以是多级的，如`['user','address','city']`。
+- `scope==<字符串>`代表是以**当前计算函数所在对象**为起点的路径，并且这个键名称可以是多级的，如`address.city`。
 
 
 ### Depends
 
-当`computedThis==ComputedScopeRef.Depends`时，计算函数的`this`指向计算函数的依赖数组。
+当`scope==ComputedScopeRef.Depends`时，计算函数的`this`指向计算函数的依赖项的值。
 
 :::warn
 **`ComputedScopeRef.Depends`仅在异步计算时生效,而异步计算必须通过computed函数来指定依赖**
 :::
-
+ 
 ```tsx
 /**
  * title: <字符串数组>
- * description: store.computedThis==<字符串数组>
+ * description: scope==<字符串数组>
  */
 import { createStore,computed,ComputedScopeRef  } from '@speedform/reactive'; 
 
@@ -290,14 +301,14 @@ const state = {
       return deps[0] + deps[1]
     },
       // 声明依赖
-      ['user/firstName','user/lastName'], 
+      ['user.firstName','user.lastName'], 
     {      
       async:true,
       scope:ComputedScopeRef.Depends
     }) 
   }
 } 
-const store = createStore<typeof user>({state})
+const store = createStore(state)
 
 export default ()=>{
   const [state,setState] = store.useState()
@@ -306,15 +317,7 @@ export default ()=>{
   </div>
 }
 
-```
-
-## 作用域
-
-计算属性的`作用域`指的是传递给**计算函数的第一个参数**,取值与上下文`computedThis`相同。
-
-- `@speedform/reactive`提供了`computedScope`参数来指定计算函数的全局默认作用域。
-- 计算函数也可以在创建时指定作用域(通过`computed`指定，见后续介绍)，优先级高于全局`computedScope`参数。
-- `computedScope`取值与`computedThis`基本一样。
-
+```  
+ 
  
  

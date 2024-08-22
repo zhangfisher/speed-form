@@ -110,7 +110,7 @@ const state = {
   total:(state)=>state.books.reduce((total,book)=>total+book.total,0)
 }
 
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 
 export default ()=>{
   const [state,setState] = store.useState()
@@ -163,7 +163,7 @@ const state = {
     }
   }
 }  
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 store.state.user.fullName=="ZhangFisher" // 计算结果
 
 ```

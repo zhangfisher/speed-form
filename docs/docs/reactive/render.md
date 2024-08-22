@@ -75,7 +75,7 @@ const state = {
   age:18
 }
 
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 
 const FirstName = React.memo((props)=>{
     const [state,setState] = store.useState()
@@ -130,7 +130,7 @@ const state = {
   age:18
 }
 
-const store = createStore<typeof state>({state})
+const store = createStore(state)
 
 const FirstName = React.memo((props)=>{
     return <Block name={`子组件:FirstName`}>

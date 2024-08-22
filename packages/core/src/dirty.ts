@@ -22,7 +22,7 @@ function isFieldValue(path:string[]){
  *  
  */
 export function dirty(entryPath?:string[]){
-    return watch<any,boolean>((path,value,watchObj)=>{
+    return watch<any,boolean>((path,_,watchObj)=>{
         if(!isIncludePath(entryPath ? entryPath : watchObj.path,path)) return       
         if(!watchObj.value) return true
     },(path)=>isFieldValue(path),{

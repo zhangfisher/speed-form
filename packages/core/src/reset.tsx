@@ -3,7 +3,7 @@ import type { FormStore, RequiredFormOptions } from "./form"
 import { createActionComponent } from "./action"
 
 export function createResetComponent<State extends Dict = Dict>(store:FormStore<State>,formOptions:RequiredFormOptions<State>) {
-    const Action = createActionComponent(store,formOptions)
+    const Action = createActionComponent(store)
     return (props:any)=>{
         return <Action name="ffff">        
             {

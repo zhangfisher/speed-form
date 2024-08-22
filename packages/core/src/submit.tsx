@@ -191,8 +191,8 @@ export type SubmitComponentProps = React.PropsWithChildren<{
  * @param formOptions 
  * @returns 
  */
-export function createSubmitComponent<State extends Dict = Dict>(store:FormStore<State>,formOptions:RequiredFormOptions<State>) {
-    const Action = createActionComponent(store,formOptions)
+export function createSubmitComponent<State extends Dict = Dict>(store:FormStore<State>) {
+    const Action = createActionComponent(store)
 
     return ((props:SubmitComponentProps)=>{
         return (<Action {...props} name={DEFAULT_SUBMIT_ACTION}>        
