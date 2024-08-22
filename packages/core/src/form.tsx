@@ -51,8 +51,8 @@ import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
 import { createLoadApi, createGetValuesApi } from "./serialize"; 
 import { createValidator, isValidateField, validate } from "./validate";
-import { createSubmitComponent } from "./submit";
-import { createResetComponent } from "./reset"; 
+import { $submit, createSubmitComponent } from "./submit";
+import { $reset, createResetComponent } from "./reset"; 
 import { dirty } from "./dirty"; 
 
 export const defaultFormProps =  {
@@ -67,7 +67,10 @@ export const defaultFormProps =  {
     enable   : true,
     visible  : true,
 	fields   : {},
-	actions  : {}
+	actions  : {
+		$submit,
+		$reset
+	}
 }  
     
 export type FormEnctypeType = 'application/x-www-form-urlencoded' | 'multipart/form-data' | 'text/plain'

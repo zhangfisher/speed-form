@@ -48,12 +48,11 @@ order: 1
 ## 第1步: 安装
 
 `SpeedForm`核心由两个包组成：`@speedform/core`和`@speedform/reactive`。
-
-```shell
-pnpm install @speedform/core @speedform/reactive
-yarn add @speedform/core @speedform/reactive
-npm install @speedform/core @speedform/reactive
-```
+<InstallDependencies 
+  npm='$ npm install @speedform/core @speedform/reactive ' 
+  yarn='$ yarn add @speedform/core @speedform/reactive' 
+  pnpm='$ pnpm install @speedform/core @speedform/reactive ' 
+/> 
 
 <Divider></Divider>
 
@@ -96,7 +95,7 @@ const schema = {
 ```ts
 {  
   title:{
-    value: "React-Helux-Form"    
+    value: "React-Speed-Form"    
   }
 }
 ```
@@ -107,7 +106,7 @@ const schema = {
 ```ts | pure
 {  
   title:{
-    value: "React-Helux-Form",
+    value: "React-Speed-Form",
     placeholder: "输入网络配置名称",
     title: "网络名称",
     // ...
@@ -147,7 +146,7 @@ const schema = {
 import { assert } from "@speedform/core"
 {  
   title:{
-    value: "React-Helux-Form",
+    value: "React-Speed-Form",
     placeholder: "输入网络配置名称",
     title: "网络名称",
     help:"网络名称不能小于3",

@@ -103,11 +103,11 @@ const BehaviorChildren = React.memo((props:{submitProps:BehaviorRenderProps<any>
 
   
 interface DefaultBehaviorButtonProps{
-    title?:string
-    type?:'submit' | 'reset'
-    visible?:boolean
-    className?:string
-    style?:CSSProperties
+    title?    : string
+    type?     : 'submit' | 'reset'
+    visible?  : boolean
+    className?: string
+    style?    : CSSProperties
 }
  
 
@@ -197,7 +197,7 @@ export function createSubmitComponent<State extends Dict = Dict>(store:FormStore
     return ((props:SubmitComponentProps)=>{
         return (<Action {...props} name={DEFAULT_SUBMIT_ACTION}>        
             {
-                ({title,visible,loading,enable,run,cancel,error,progress})=>{ 
+                ({loading})=>{ 
                     return (
                         <div className="speedform-submit">
                             提交
@@ -211,3 +211,18 @@ export function createSubmitComponent<State extends Dict = Dict>(store:FormStore
     }) as React.FC<SubmitComponentProps>
 
 }
+
+
+// 默认的提交动作
+export const $submit = {
+    title: "提交",
+    help: "",
+    tips: "提交",
+    visible: true,
+    enable: true,
+    validate: true,
+    readonly: false,
+    execute: async () => {
+        
+    }
+} 

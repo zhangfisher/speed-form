@@ -261,6 +261,12 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
         if(!actionKey.includes(".")) actionKey = `actions.${actionKey}`
 
         const actionState = getValueByPath(state,actionKey,".")
+        
+        if(actionState==null){
+            store.options.log(`Action ${actionKey} is not defined`,"error")
+            return <>{props.children}</>
+        }
+
         const actionRunner = useActionRunner(actionState,props)
         const actionCanceller = useActionCanceller(state,actionKey)
         // 用来引用当前动作
@@ -368,3 +374,6 @@ export function createUseAction<State extends FormDefine = FormDefine>(store:For
     }
 
 }
+
+
+

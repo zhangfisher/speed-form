@@ -1,6 +1,6 @@
 {
   "name": "speedform-docs",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "high-performance and easy-to-use final form management for react",
   "main": "src/index.ts",
   "scripts": {
@@ -60,6 +60,7 @@
     "@types/validator": "^13.11.7",
     "@umijs/lint": "^4.0.90",
     "dumi": "^2.4.7",
+    "dumi-theme-antd": "^0.4.2",
     "eslint": "^8.56.0",
     "father": "^4.3.8",
     "husky": "^8.0.3",
