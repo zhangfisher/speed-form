@@ -88,6 +88,10 @@ export interface ComputedProgressbar{
      * @returns 
      */
     cancel:()=>void
+    /**
+     * 额外的参数，用来传递给计算函数
+     */
+    extras?:any
   }
   
   export interface ComputedOptions<Value=any,Extras extends Dict={}> {
@@ -181,7 +185,7 @@ export interface ComputedProgressbar{
      * 当在hook中使用时就不需要保存到store.computedObjects中
      * 
      */
-    save?:boolean
+    save?:boolean 
 
   };
   

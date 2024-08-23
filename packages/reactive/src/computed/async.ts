@@ -88,7 +88,8 @@ async function executeComputedGetter<T extends Dict>(draft:any,computedRunContex
       getProgressbar: (options)=>createComputeProgressbar(setState,valuePath,options),
       getSnap       : (scope:any)=>getSnap(scope,false),
       abortSignal   : abortController.signal,
-      cancel        : abortController.abort
+      cancel        : abortController.abort,
+      extras        : computedOptions.extras
     }   
     let hasAbort=false  // 是否接收到可中止信号
   
@@ -203,6 +204,7 @@ function createComputed<T extends Dict>(computedRunContext:ComputedRunContext,co
         store.options.log(`Async computed <${computedDesc}> is disabled`,'warn')
         return 
       }
+      
       store.options.log(`Run async computed for : ${computedDesc}`);
 
       const finalComputedOptions = Object.assign({},computedOptions,options) as Required<ComputedOptions>

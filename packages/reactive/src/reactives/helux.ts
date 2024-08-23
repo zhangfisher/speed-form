@@ -80,7 +80,7 @@ export class HeluxReactiveable<State extends Dict =Dict> extends Reactiveable<St
             //  此函数在依赖变化时执行，用来异步计算
             // extraArgs是在调用run方法时传入的额外计算参数，可用来覆盖计算参数
             task: async ({ draft, setState, input, extraArgs }) => {                
-                if(typeof(initial)=='function'){// @ts-ignore
+                if(typeof(onComputed)=='function'){// @ts-ignore
                     return onComputed({draft,setState,values:input,options:Object.assign({},extraArgs)})              
                 }                
             },

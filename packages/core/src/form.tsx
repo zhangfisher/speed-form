@@ -347,7 +347,7 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 		Field          : createFieldComponent<State>(formStore,opts),	
 		Group          : createFieldGroupComponent<State>(formStore,opts),	
 		Action         : createActionComponent<State>(formStore),
-		Submit         : createSubmitComponent<State>(formStore),
+		Submit         : createSubmitComponent<State>(formStore,opts),
 		Reset          : createResetComponent<State>(formStore,opts),		
 		useAction      : createUseAction<State>(formStore) as UseActionType,
     	fields         : createObjectProxy(()=>formStore.state.fields) as FieldsType,		

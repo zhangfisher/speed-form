@@ -1,6 +1,6 @@
 import { Dict } from "@speedform/reactive"
 import type { FormStore, RequiredFormOptions } from "./form"
-import { ActionProps, createActionComponent } from "./action"
+import { action, ActionProps, createActionComponent } from "./action"
 import { DEFAULT_RESET_ACTION } from "./consts"
 
 export type ResetComponentProps = React.PropsWithChildren<{
@@ -35,7 +35,7 @@ export const $reset = {
     enable: true,
     validate: true,
     readonly: false,
-    execute: async () => {
+    execute: action(async () => {
         
-    }
+    })
 } 

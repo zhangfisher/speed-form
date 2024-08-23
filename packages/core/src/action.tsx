@@ -311,7 +311,7 @@ export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGett
         // 比如 getSnap(state.fields.xxx.xxx)也是返回整个state的快照
         const data = getFormData(Object.assign({},scope))        
         return await (getter as unknown as AsyncComputedGetter<R>)(data,opts)
-    },[],options)
+    },[],Object.assign({},options,{async:true}))
 }
 
 

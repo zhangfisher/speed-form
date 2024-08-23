@@ -8,12 +8,12 @@
 
  * 
  */
-import React, { useRef } from 'react'
+import React, { useCallback, useRef } from 'react'
 import { Dict, getValueByPath } from "@speedform/reactive"; 
 import type {  FormSchemaBase, FormStore, RequiredFormOptions } from "./form";
 import { CSSProperties, ReactElement, ReactNode } from "react";
 import { isFieldGroup, isFieldList, isFieldValue } from "./utils";
-import { ActionProps, createActionComponent } from "./action";
+import { ActionProps, createActionComponent,action } from "./action";
 import { DEFAULT_SUBMIT_ACTION } from "./consts";
 import { styled } from 'flexstyled';
 
@@ -91,6 +91,7 @@ function createBehaviorRenderProps<State extends FormBehaviorState=FormBehaviorS
     },
     getFormAttrs(formState))  
 } 
+
 const BehaviorChildren = React.memo((props:{submitProps:BehaviorRenderProps<any>,children:any})=>{
     return <>{
       typeof(props.children)=='function' && props.children(props.submitProps as any)  
@@ -183,7 +184,7 @@ export type SubmitComponentProps = React.PropsWithChildren<{
  *  创建一个提交组件，某行为
  * 
  * 提交整个表单
- * <Submit label="" timeout={12}></Submit>
+ *  <Submit label="" timeout={12}></Submit>
  * 提交表单局部，scope=只能指定一个字段组
  *  <Submit label="" timeout={12} scope={["xx","xx"]}></Submit>
  *  <Submit label="" timeout={12} scope="user.password"}></Submit>
@@ -192,22 +193,33 @@ export type SubmitComponentProps = React.PropsWithChildren<{
  * @param formOptions 
  * @returns 
  */
-export function createSubmitComponent<State extends Dict = Dict>(store:FormStore<State>) {
+export function createSubmitComponent<State extends Dict = Dict>(store:FormStore<State>,formOptions:RequiredFormOptions<State>) {
     const Action = createActionComponent(store)
 
     return ((props:SubmitComponentProps)=>{
         const submitRef = useRef<HTMLInputElement>(null)
-        const handleSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
-            event.preventDefault();
-           
-        };
+        
+        // 处理提交事件
+        const handleSubmit = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+            if(formOptions.validAt==='submit'){
+                // store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP).then(()=>{
+                //     submitRef.current?.click()
+                // })
+            }else{
+                submitRef.current?.click()
+            }
+            event.preventDefault();           
+        },[])
+
         return (<Action {...props} name={DEFAULT_SUBMIT_ACTION}>        
             {
-                ({loading,title})=>{ 
+                ({loading,title,run})=>{                     
+                    
+
                     return (
                         <div className="speedform-submit">
-                            <input ref={submitRef} type="submit" value={props.label || title} />     
-                            <button type="submit" onClick={handleSubmit}>{props.label || title} </button>                       
+                            <input ref={submitRef} type="submit"  style={{display:'none'}} value={props.label || title} />     
+                            <button type="submit" onClick={run({extras:1})}>=={props.label || title} ==</button>                       
                             <span>{loading ? '提交中2' : ''}</span>
                         </div>
                     )
@@ -221,14 +233,15 @@ export function createSubmitComponent<State extends Dict = Dict>(store:FormStore
 
 // 默认的提交动作
 export const $submit = {
-    title: "提交",
-    help: "",
-    tips: "提交",
-    visible: true,
-    enable: true,
+    title   : "提交",
+    help    : "",
+    tips    : "提交",
+    visible : true,
+    enable  : true,
     validate: true,
     readonly: false,
-    execute: async () => {
-        
-    }
+    execute: action(async (scope:any,options:any) => {
+        console.log("scope=",scope,"options=",options)
+        debugger        
+    })
 } 
