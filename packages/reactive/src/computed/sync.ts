@@ -87,7 +87,7 @@ export  function createComputedMutate<T extends Dict,R=any>(computedParams:IReac
 
     // 计算对象的id和name，name用于打印日志时提供更多信息
     const computedId = getComputedId(valuePath,computedOptions)
-    const computedDesc = `${computedId}_${valuePath.join(OBJECT_PATH_DELIMITER)}`
+    const computedDesc = valuePath.join(OBJECT_PATH_DELIMITER)
   
 
     store.options.log(`Create sync computed: ${computedDesc}`);    

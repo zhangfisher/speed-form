@@ -2,10 +2,10 @@
 group:
   title: 开始
   order: 0
-order: 2
+order: 3
 
 ---
-# 🚀 快速入门
+# 基础教程
 
 本节将通过开发一个网络配置表单，体验`SpeedForm`的强大与灵活。
 

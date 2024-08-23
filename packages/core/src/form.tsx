@@ -81,10 +81,11 @@ export type FormState<State extends Dict> = ComputedState<typeof defaultFormProp
 export type FormStore<State extends Dict> = IStore<typeof defaultFormProps & State> 
 
 export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{		
-	name?:string;													// 表单名称,同时表示表单作用域，即提交范围，默认是整个表单fields		
-	enctype?:FormEnctypeType;										// 表单加密方式			
-	method?: 'get' | 'post' | 'dialog'  							// 表单提交方式
-	action?: string;												// 表单提交地址
+	name?   : string;													// 表单名称,同时表示表单作用域，即提交范围，默认是整个表单fields		
+	enctype?: FormEnctypeType;											// 表单加密方式			
+	method? : 'get' | 'post' | 'dialog'  								// 表单提交方式
+	action? : string;													// 表单提交地址
+	scope?  : string | string[]											// 提交范围
 	onSubmit?: (value: RequiredComputedState<State>) => void;
 	onReset?: (value: RequiredComputedState<State>) => void;
 }>;
@@ -274,6 +275,13 @@ function freezeForm(store:any){
 	}
 }
 
+
+export function getFieldName(valuePath:string[]){
+	return valuePath.length > 0 ? 
+		valuePath[valuePath.length-1]==='value' ? 
+			valuePath.slice(0,-1).join(".") : valuePath.join(".") : ''
+}
+
 /**
  * 创建声明表单
  * 
@@ -283,7 +291,7 @@ function freezeForm(store:any){
  */
 export function createForm<State extends FormDefine=FormDefine>(schema: State,options?:FormOptions<FormSchema<State>>) {
 	const opts = assignObject({
-		getFieldName:(valuePath:string[])=>valuePath.length > 0 ? valuePath[valuePath.length-1]==='value' ? valuePath.slice(0,-1).join(".") : valuePath.join(".") : '',
+		getFieldName,
 		validAt:'once',
 	},options) as RequiredFormOptions<State>
  
@@ -380,24 +388,35 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 function createFormComponent<State extends Dict>(store: FormStore<State>,formOptions:RequiredFormOptions<State>): FormComponent<State['fields']> {
 		
 	return React.forwardRef<HTMLFormElement>((props: FormProps<State['fields']>,ref:React.ForwardedRef<HTMLFormElement>) => {
-		const {children } = props; 
+		const {children } = props; 	
+
 		// 提交表单
-		const onSubmit = useCallback((ev: React.FormEvent<HTMLFormElement>) => {
-			// 手动运行校验
-			if(formOptions.validAt==='submit'){
-				store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
+		const onSubmit = useCallback(async (ev: React.FormEvent<HTMLFormElement>) => {		
+			// 提交前运行校验
+			if(formOptions.validAt==='submit'){			
+				await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
 			}
-
-
+			debugger
+			await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
+			ev.preventDefault(); 
+			if(store.state.validate){
+				return true	
+			}else{
+				return false
+			}
 		},[]);
+
 		// 重置表单
 		const onReset = useCallback((e: React.FormEvent<HTMLFormElement>) => {
 
 		},[]);
 		return (
-			<form ref={ref} className="speedform"  {...props} onSubmit={onSubmit} onReset={onReset}>
-				{children}
-			</form>
+			<form ref={ref} 
+				className="speedform"  
+				{...props} 
+				onSubmit={onSubmit} 
+				onReset={onReset}
+			>{children}</form>
 		)
 	}) as FormComponent<State['fields']> 
 }

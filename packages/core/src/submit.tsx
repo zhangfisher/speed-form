@@ -8,7 +8,7 @@
 
  * 
  */
-import React from 'react'
+import React, { useRef } from 'react'
 import { Dict, getValueByPath } from "@speedform/reactive"; 
 import type {  FormSchemaBase, FormStore, RequiredFormOptions } from "./form";
 import { CSSProperties, ReactElement, ReactNode } from "react";
@@ -176,16 +176,17 @@ export function createFormBehaviorComponent<State extends Dict = Dict>(store:For
 }
 
 export type SubmitComponentProps = React.PropsWithChildren<{
-    
+    label?:string
 } & ActionProps>
 
 /**
  *  创建一个提交组件，某行为
  * 
  * 提交整个表单
- * <Submit title="" timeout={12}></Submit>
+ * <Submit label="" timeout={12}></Submit>
  * 提交表单局部，scope=只能指定一个字段组
- * <Submit title="" timeout={12} scope={["xx","xx"]}></Submit>
+ *  <Submit label="" timeout={12} scope={["xx","xx"]}></Submit>
+ *  <Submit label="" timeout={12} scope="user.password"}></Submit>
  * 
  * @param store 
  * @param formOptions 
@@ -195,14 +196,19 @@ export function createSubmitComponent<State extends Dict = Dict>(store:FormStore
     const Action = createActionComponent(store)
 
     return ((props:SubmitComponentProps)=>{
+        const submitRef = useRef<HTMLInputElement>(null)
+        const handleSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
+            event.preventDefault();
+           
+        };
         return (<Action {...props} name={DEFAULT_SUBMIT_ACTION}>        
             {
-                ({loading})=>{ 
+                ({loading,title})=>{ 
                     return (
                         <div className="speedform-submit">
-                            提交
-                            <input type="submit"/>       
-                            <span>{loading ? '提交中' : '已提交'}</span>
+                            <input ref={submitRef} type="submit" value={props.label || title} />     
+                            <button type="submit" onClick={handleSubmit}>{props.label || title} </button>                       
+                            <span>{loading ? '提交中2' : ''}</span>
                         </div>
                     )
                 }

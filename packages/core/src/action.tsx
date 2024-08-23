@@ -130,11 +130,13 @@ export type ActionRender<State extends Dict,Params extends Dict = Dict>= (props:
  * 
  */
 export type ActionProps<State extends FormActionState=FormActionState,Params extends Dict = Dict> = {
-    name:string | string[]                      // 声明该动作对应的状态路径
+    // 声明该动作对应的状态路径
+    name:string | string[]                      
     // 动作作用域，用来指定动作作用的表单数据范围,用来传递数据给动作
-    scope?:string[]                             
+    scope?:string | string[]    
+    params?:Params                              // 动作参数                         
     render?: ActionRender<State,Params>  
-    children?: ActionRender<State,Params>  
+    children?: ActionRender<State,Params> 
 }  & ActionRunOptions
  
 

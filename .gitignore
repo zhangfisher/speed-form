@@ -62,3 +62,5 @@ docs/.vitepress/cache
 templates/*/data
 templates/*/dist
 templates/*/node_modules
+
+*storybook.log

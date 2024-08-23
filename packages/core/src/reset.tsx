@@ -1,15 +1,24 @@
 import { Dict } from "@speedform/reactive"
 import type { FormStore, RequiredFormOptions } from "./form"
-import { createActionComponent } from "./action"
+import { ActionProps, createActionComponent } from "./action"
 import { DEFAULT_RESET_ACTION } from "./consts"
+
+export type ResetComponentProps = React.PropsWithChildren<{
+    label?:string
+} & ActionProps>
+
 
 export function createResetComponent<State extends Dict = Dict>(store:FormStore<State>,formOptions:RequiredFormOptions<State>) {
     const Action = createActionComponent(store)
-    return (props:any)=>{
-        return <Action name={DEFAULT_RESET_ACTION}>        
+    return (props:ResetComponentProps)=>{
+        return <Action  {...props} name={DEFAULT_RESET_ACTION}>        
             {
-                (actionProps)=>{
-                    return <input type="submit" value={props.title} />
+                ({loading,title})=>{
+                    return (
+                        <div className="speedform-reset">
+                            <input type="reset" value={props.label || title} />                        
+                            <span>{loading ? '提交中' : '已提交'}</span>
+                    </div>)
                 }
             }
         </Action>

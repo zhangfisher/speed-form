@@ -1,16 +1,18 @@
 /**
  * 显示一段具备格式的文本内容
  * 
- * <RichLabel text="My name is {tom},I'm {age} years old"" color="red"></RichLabel> 
+ * <Tips text="My name is {tom},I'm {age} years old"" color="red"></Tips> 
  * text内容中使用{}包裹的内容使用red进行渲染
  * 
- * * <RichLabel text="My name is {tom},I'm {age} years old" color={tom:"blue",age:"red"}></RichLabel>
+ * * <Tips text="My name is {tom},I'm {age} years old" color={tom:"blue",age:"red"}></Tips>
  *  tom采用蓝色渲染，age采用红色渲染
  * 
- *  <RichLabel text="My name is {tom},I'm {age} years old" color={default:"blue",age:"red"}></RichLabel>
+ *  <Tips text="My name is {tom},I'm {age} years old" color={default:"blue",age:"red"}></Tips>
      age采用红色渲染，其他采用蓝色渲染
  * 
  */ 
+import React from "react"
+
  export interface RichLabelProps {
     text:string
     color?:string | Record<string,string>

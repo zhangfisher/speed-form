@@ -1,11 +1,12 @@
 {
-  "name": "@speedform/core",
+  "name": "@speedform/storybook",
   "version": "0.0.1",
   "description": "high-performance and easy-to-use final form management for react",
   "main": "src/index.ts",
   "scripts": {
     "docs:dev": "cd docs && pnpm dev",
-    "docs:build": "cd docs && pnpm build"
+    "docs:build": "cd docs && pnpm build",
+    "storybook":"cd storybook && pnpm storybook"
   },
   "keywords": [],
   "author": "",

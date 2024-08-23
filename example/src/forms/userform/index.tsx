@@ -1,7 +1,6 @@
 import React ,{useState} from "react";
 import classnames from 'classnames';
 import {Field,Card,JsonViewer, Button} from "@speedform/demo-components";
-import { useForm } from "@speedform/core";
 import { delay } from "flex-tools/async/delay";
 import validator from 'validator';
 

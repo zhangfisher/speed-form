@@ -74,8 +74,8 @@ export default defineConfig({
             '在 dumi 内置 markdown 增强基础上新增特有 FrontMatter 配置，并且内置多种组件，使文档展示效果得以提升。'
         },
         {
-          title: '开箱即用',
-          details: '接入简单，安装即使用，全面融入 Ant Design 风格，内置主题切换，紧凑模式等功能。'
+          title: 'TypeScript',
+          details: '提供完善自动TypeScript类型推断。'
         }
       ],
       'en-US': [
