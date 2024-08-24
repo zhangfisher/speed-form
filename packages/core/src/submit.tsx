@@ -9,7 +9,7 @@
  * 
  */
 import React, { useCallback, useRef } from 'react'
-import { Dict, getValueByPath } from "@speedform/reactive"; 
+import { AsyncComputedGetter, ComputedOptions, Dict, getValueByPath } from "@speedform/reactive"; 
 import type {  FormSchemaBase, FormStore, RequiredFormOptions } from "./form";
 import { CSSProperties, ReactElement, ReactNode } from "react";
 import { isFieldGroup, isFieldList, isFieldValue } from "./utils";
@@ -245,3 +245,26 @@ export const $submit = {
         debugger        
     })
 } 
+
+
+export type SubmitAsyncComputedGetter<R> = AsyncComputedGetter<R,FormData>
+export type SubmitActionOptions<R> =  ComputedOptions<R> 
+
+
+/**
+ * 
+ * 特殊的对象传入一个FormData对象
+ * 声明一个提交动作
+ * submit动作总是返回一个FormData对象
+ * 
+ * @param getter 
+ * @param options 
+ * @returns 
+ */
+export function submit<R=any>(getter: SubmitAsyncComputedGetter<R>,options?: SubmitActionOptions<R>){
+    return action<Dict,R>(async (data:Dict,opts)=>{
+        const formData = new FormData()
+        return await (getter as unknown as SubmitAsyncComputedGetter<R>)(formData,opts)
+    },options)
+
+}

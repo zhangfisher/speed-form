@@ -43,11 +43,10 @@ export interface StoreOptions<State extends Dict= Dict>{
     /**
      * 计算函数的默认上下文，即传入的给计算函数的draft对象是根state还是所在的对象或父对象
      * 如果未指定时，同步计算的上下文指向current，异步指定的上下文指向root
-     * computedThis:(computedType:StateComputedType)=>ComputedContext
      * @param computedType 
      * @returns 
      */
-    scope:(computedType:StateComputedType)=> ComputedScope 
+    scope:(computedType:StateComputedType,valuePath:string[])=> ComputedScope 
      /**
      * 提供一个响应式核心
      */

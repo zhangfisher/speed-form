@@ -11,7 +11,7 @@ import { Dict } from "../types"
  * @param store 
  * @param watchTo 
  */ 
-export function installWatch<T extends Dict>(params:IReactiveReadHookParams,store:IStore<T>) {
+export function installWatch<State extends Dict>(params:IReactiveReadHookParams,store:IStore<State>) {
     
     store.options.log(`install watch for <${params.path.length==0 ? "Dynamic" : params.path.join(OBJECT_PATH_DELIMITER)}>`)
 

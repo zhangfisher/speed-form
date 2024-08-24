@@ -33,7 +33,7 @@
 
 import { ReactNode, useCallback, useRef, RefObject,useState} from "react";
 import React from "react";
-import type { FormDefine, FormStore, RequiredFormOptions } from "./form";
+import type { FormDefine, FormStore } from "./form";
 import {  AsyncComputedDefine, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict,  RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
@@ -148,6 +148,8 @@ export type ActionProps<State extends FormActionState=FormActionState,Params ext
  *  run({..计算函数的配置参数，覆盖上面的配置...
  *     abortable?:boolean           // 是否可取消,如果可取消
  *     abortController?:AbortController  // 传入一个AbortController用来传递给动作计算函数
+ *     abortSignal?:AbortSignal      // 传入一个AbortSignal用来传递给动作计算函数    
+ *     extras?:any                 // 传递给计算函数的额外参数
  *   })
  * 
  * 
@@ -242,6 +244,9 @@ export const ActionChildren = React.memo((props: {actionProps:ActionRenderProps<
  * 
  * 用于创建动作组件，动作组件用于提交表单，重置表单，校验表单以及自定义等操作
  * 
+ * <Action name="指向声明动作的路径">
+ * 
+ * 
  * @param this 
  * @param store 
  * @returns 
@@ -260,10 +265,8 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
         const [state] = store.useState()          
         let { name:actionKey } = props  
         // 如果动作是声明在actions里面可以省略actions前缀
-        if(!actionKey.includes(".")) actionKey = `actions.${actionKey}`
-
-        const actionState = getValueByPath(state,actionKey,".")
-        
+        if(!actionKey.includes(".")) actionKey = `actions.${actionKey}` 
+        const actionState = getValueByPath(state,actionKey)        
         if(actionState==null){
             store.options.log(`Action ${actionKey} is not defined`,"error")
             return <>{props.children}</>
@@ -273,10 +276,8 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
         const actionCanceller = useActionCanceller(state,actionKey)
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
-
         // 创建动作组件的Props
         const actionRenderProps = createActionRenderProps(actionState,actionRunner,actionCanceller,ref)        
-
         // 执行渲染动作组件
         if(typeof(props.render)==='function'){
             return <ActionChildren {...{actionProps:actionRenderProps,children:props.render}} />
@@ -288,6 +289,8 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
             }else{
                 return <ActionChildren {...{actionProps:actionRenderProps,children:props.children}} />
             }            
+        }else{
+            return <></>
         } 
     }
     return React.memo(Action,(oldProps:any, newProps:any)=>{
@@ -302,6 +305,7 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
  * 该函数实现以下功能:
  * - 从store中获取动作的状态数据传递给Action的getter函数 * 
  * 
+ * 
  * @param getter 
  * @param options 
  */
@@ -311,32 +315,16 @@ export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGett
         // 比如 getSnap(state.fields.xxx.xxx)也是返回整个state的快照
         const data = getFormData(Object.assign({},scope))        
         return await (getter as unknown as AsyncComputedGetter<R>)(data,opts)
-    },[],Object.assign({},options,{async:true}))
+    },[
+        // 不依赖于任意表单数据，需要手动触发执行
+    ],Object.assign({},options,{
+        async:true
+    }))
 }
 
 
 
 
-export type SubmitAsyncComputedGetter<R> = AsyncComputedGetter<R,FormData>
-export type SubmitActionOptions<R> =  ComputedOptions<R> 
-
-/**
- * 
- * 特殊的对象传入一个FormData对象
- * 声明一个提交动作
- * submit动作总是返回一个FormData对象
- * 
- * @param getter 
- * @param options 
- * @returns 
- */
-export function submit<R=any>(getter: SubmitAsyncComputedGetter<R>,options?: SubmitActionOptions<R>){
-    return action<Dict,R>(async (data:Dict,opts)=>{
-        const formData = new FormData()
-        return await (getter as unknown as SubmitAsyncComputedGetter<R>)(formData,opts)
-    },options)
-
-}
 
 
 export type UseActionType = <Scope extends Dict=Dict,R=any>(executor:AsyncComputedGetter<R,Scope>,options?:ComputedOptions<R> & {name?:string})=>FormActionState['execute']

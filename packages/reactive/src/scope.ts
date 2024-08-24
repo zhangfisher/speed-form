@@ -38,7 +38,7 @@ import { Dict } from "./types";
 * @param computedThis
 * @param storeCtxOption
 */
-function getScopeOptions(state: any,computedScope?: ComputedScope,storeScope?: ComputedScope) {
+function getScopeOptions(state: any,valuePath:string[],computedScope?: ComputedScope,storeScope?: ComputedScope) {
   let scope = computedScope == undefined ? storeScope : computedScope;
   if (typeof scope == "function") {
     try { scope = scope.call(state, state) } catch { }
@@ -70,6 +70,7 @@ export function getComputedScope<T extends Dict = Dict>(store:IStore<T>,computed
     const { draft,dependValues,  valuePath, computedType } = ctx;
   
     let rootDraft = draft;
+    
   
     // 1. 执行hook：可以在hook函数中修改计算函数的根上下文以及相关配置参数
     if (typeof store.options.onComputedDraft == "function") {
@@ -81,34 +82,35 @@ export function getComputedScope<T extends Dict = Dict>(store:IStore<T>,computed
     const parentPath = valuePath.length>=1 ? valuePath.slice(0, valuePath.length - 1) : [];
 
    // 2. 读取计算函数的上下文配置参数
-   const contexRef = getScopeOptions(draft,computedOptions.scope, (store.options.scope && store.options.scope(computedType)))
+   const scopeRef = getScopeOptions(draft,valuePath,computedOptions.scope, (store.options.scope && store.options.scope(computedType,valuePath)))
   
     // 3. 根据配置参数获取计算函数的上下文对象
     try { 
-      if(contexRef === ComputedScopeRef.Current) {
+      if(scopeRef === ComputedScopeRef.Current) {
           return getValueByPath(draft, parentPath);
-      }else if (contexRef === ComputedScopeRef.Parent) {
+      }else if (scopeRef === ComputedScopeRef.Parent) {
         return getValueByPath(draft,valuePath.slice(0, valuePath.length - 2));
-      }else if (contexRef === ComputedScopeRef.Root) {
+      }else if (scopeRef === ComputedScopeRef.Root) {
           return rootDraft;
-      }else if (contexRef === ComputedScopeRef.Depends) {      // 异步计算的依赖值      
+      }else if (scopeRef === ComputedScopeRef.Depends) {      // 异步计算的依赖值      
         return Array.isArray(dependValues) ? dependValues.map(dep=>typeof(dep)=='function' ? dep() : dep) : [];
-      }else if (typeof contexRef == "string") {               // 当前对象的指定键      
-        return  getValueByPath(draft, getRelValuePath(valuePath,contexRef))
-      }else if (Array.isArray(contexRef)) {                   // 从根对象开始的完整路径
-        if(contexRef.length>0 && contexRef[0].startsWith("@")){
-          const finalKeys = getValueByPath(draft, [...contexRef[0].substring(1).split(OBJECT_PATH_DELIMITER),...contexRef.slice(1)]);
-          return getValueByPath(draft,finalKeys);
-        }else{
-          return getValueByPath(draft, contexRef);
-        }      
-      }else if (typeof contexRef == "number") {
-        const endIndex = contexRef > valuePath.length - 2 ? valuePath.length - contexRef - 1 : 0;
-        return getValueByPath(draft, valuePath.slice(0, endIndex));
-      }else {
-        return draft;
+      }else{
+       if (typeof scopeRef == "string") {       
+          if(scopeRef.startsWith("@")){
+            return getComputedScope(store,{...computedOptions,scope:scopeRef.slice(1)},{draft,dependValues,valuePath,computedType})          
+          }else{
+            return getValueByPath(draft, getRelValuePath(valuePath,scopeRef)); 
+          } 
+        }else if (Array.isArray(scopeRef)) {                   // 从根对象开始的完整路径
+            return getValueByPath(draft, scopeRef);
+        }else if (typeof scopeRef == "number") {
+          const endIndex = scopeRef > valuePath.length - 2 ? valuePath.length - scopeRef - 1 : 0;
+          return getValueByPath(draft, valuePath.slice(0, endIndex));
+        }else {
+          return draft;
+        }
       }
     }catch (e) {
-          return draft;
+        return draft;
     }
   }

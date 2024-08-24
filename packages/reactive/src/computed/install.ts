@@ -13,15 +13,15 @@ import { Dict } from "../types";
  */
  
 
-export function installComputed<T extends Dict,R=any>(params:IReactiveReadHookParams,store:IStore<T>):ComputedObject<T,R> | ComputedObject<T,AsyncComputedObject<R>> {
+export function installComputed<State extends Dict,R=any>(params:IReactiveReadHookParams,store:IStore<State>):ComputedObject<State,R> | ComputedObject<State,AsyncComputedObject<R>> | undefined {
     const descriptor = params.value
-    let computedObject:ComputedObject<T,R >  | ComputedObject<T,AsyncComputedObject<R>>  
+    let computedObject:ComputedObject<State,R >  | ComputedObject<State,AsyncComputedObject<R>>  |undefined
     //@ts-ignore
     if (descriptor.__COMPUTED__=='async') {
-      computedObject = createAsyncComputedMutate<T,R>(params,store);
+      computedObject = createAsyncComputedMutate<State,R>(params,store);
     //@ts-ignore
     }else if (descriptor.__COMPUTED__=='sync') {
-      computedObject = createComputedMutate<T>(params,store);
+      computedObject = createComputedMutate<State>(params,store);
     }else if (isAsyncFunction(descriptor)) { // 简单的异步计算函数，没有通过computed函数创建，此时由于没有指定依赖，所以只会执行一次   
         params.value = () => ({
           getter: descriptor,
@@ -32,7 +32,7 @@ export function installComputed<T extends Dict,R=any>(params:IReactiveReadHookPa
             enable   : true,
         },
         });
-        computedObject = createAsyncComputedMutate<T,R>(params,store);
+        computedObject = createAsyncComputedMutate<State,R>(params,store);
     }else {       // 简单的同步计算函数，没有通过computed函数创建
       params.value = () => ({
         getter: descriptor,
@@ -42,7 +42,7 @@ export function installComputed<T extends Dict,R=any>(params:IReactiveReadHookPa
         }
       })
       // 直接声明同步计算函数,使用全局配置的计算上下文
-      computedObject = createComputedMutate<T,R>(params,store);
+      computedObject = createComputedMutate<State,R>(params,store);
     }
     // 当创建计算完毕后的回调
     if(computedObject){

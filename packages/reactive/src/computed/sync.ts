@@ -3,7 +3,7 @@
  */
 import { getComputedId, getVal, setVal  } from "../utils"; 
 import { ComputedDescriptorParams, ComputedGetter, ComputedOptions,  ComputedRunContext } from './types';
-import { getComputedScope } from '../context';
+import { getComputedScope } from '../scope';
 import { IStore } from '../store/types';
 import { IReactiveReadHookParams } from "../reactives/types";
 import { ComputedObject } from "./computedObject";
@@ -38,7 +38,7 @@ function createComputed<T extends Dict>(computedRunContext:ComputedRunContext,co
         // 2. 执行getter函数
         let computedResult = computedOptions.initial;
         try {
-          computedResult = (getter as ComputedGetter<any>).call(thisDraft,scopeDraft);
+          computedResult = (getter as ComputedGetter<any>).call(store,scopeDraft);
           store.emit("computed:done",{ path:valuePath,id: computedId,value:computedResult})
         } catch (e: any) {// 如果执行计算函数出错,则调用        
           store.emit("computed:error", { path:valuePath,id: computedId, error: e })
@@ -64,13 +64,13 @@ function createComputed<T extends Dict>(computedRunContext:ComputedRunContext,co
  * @param computedParams
  */
 
-export  function createComputedMutate<T extends Dict,R=any>(computedParams:IReactiveReadHookParams,store:IStore<T>) :ComputedObject<T> {
+export  function createComputedMutate<State extends Dict,R=any>(computedParams:IReactiveReadHookParams,store:IStore<State>) :ComputedObject<State> | undefined {
     
   // 1. 获取计算属性的描述
   const {path:valuePath, parent,value } = computedParams;       
-  // if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
-  //   return;         // 排除掉所有非own属性,例如valueOf等
-  // }
+  if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
+    return;         // 排除掉所有非own属性,例如valueOf等
+  }
   // 2. 获取到计算属性描述信息：  包括getter和配置。 此时value是一个函数
 
   let { getter, options: computedOptions }  = value() as ComputedDescriptorParams<any>    
@@ -89,7 +89,6 @@ export  function createComputedMutate<T extends Dict,R=any>(computedParams:IReac
     const computedId = getComputedId(valuePath,computedOptions)
     const computedDesc = valuePath.join(OBJECT_PATH_DELIMITER)
   
-
     store.options.log(`Create sync computed: ${computedDesc}`);    
     
     const computedRunContext:ComputedRunContext = {
@@ -109,7 +108,7 @@ export  function createComputedMutate<T extends Dict,R=any>(computedParams:IReac
     if(!selfReactiveable) computedParams.replaceValue(getVal(store.state, valuePath));
     
     // 5. 创建计算对象实例
-    const computedObject = new ComputedObject<T,R>(store,selfReactiveable,valuePath,computedOptions) 
+    const computedObject = new ComputedObject<State,R>(store,selfReactiveable,valuePath,computedOptions) 
     if(computedOptions.save) store.computedObjects.set(computedId,computedObject)
     return  computedObject
   }

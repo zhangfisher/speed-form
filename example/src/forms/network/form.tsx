@@ -194,8 +194,7 @@ const Network = createForm({
 			enable: (root: any) => {
 				return root.fields.wifi.ssid.value.length > 3
 			},
-			execute: action(async (scope:any,{abortSignal}) => {		
-				console.log(scope)
+			execute: action(async (_:any,{abortSignal}) => {		
 				return new Promise<number>((resolve,reject)=>{
 					setTimeout(()=>{
 						resolve(count++)
@@ -221,8 +220,10 @@ const Network = createForm({
 		},
 		ping: {
 			title: "测试网络连通性",
-			scope: "wifi", // 表示该动作的上下文是wifi这个子表单
-			enable: (wifi: any) => wifi.ssid.value.length > 0,
+			scope:"fields.wifi",
+			enable: computed((wifi: any) => {
+				return wifi.ssid.value.length > 0
+			},{scope:"fields.wifi"}),
 			execute: async (a: Dict) => {
 				await delay(2000);
 				console.log(a);
@@ -230,6 +231,7 @@ const Network = createForm({
 		},		
         // 向导表单:上一步
         previous:{
+
             enable: (wifi: any) => wifi.ssid.value.length > 0,
 			execute:async ()=>{
 				return 1

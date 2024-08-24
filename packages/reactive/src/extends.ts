@@ -32,16 +32,16 @@ import { Dict } from "./types";
 // }
 
 
-export function installExtends<T extends Dict>(computedParams:IReactiveReadHookParams,store:IStore<T>) {    
+export function installExtends<State extends Dict>(computedParams:IReactiveReadHookParams,store:IStore<State>) {    
   // 拦截读取state的操作，在第一次读取时， 
     const { path, value } = computedParams;
     const key = joinValuePath(path);
     if ( typeof value === "function" && !store._replacedKeys[key] && !isSkipComputed(value) ) {
       store._replacedKeys[key] = true;    
       if(value.__COMPUTED__=='watch'){
-          installWatch<T>(computedParams,store)
+          installWatch<State>(computedParams,store)
       }else{  
-          installComputed<T>(computedParams,store)
+          installComputed<State>(computedParams,store)
       } 
     }
 }

@@ -105,7 +105,7 @@ export class Reactiveable<State extends Dict = Dict>{
      * @param depends   依赖的字段，为空时监听所有的状态变化
      * @returns 返回取消监听的方法
      */
-    createWatch(listener:(changedPaths:string[][])=>void,depends?:(string | string[])[]):()=>void{
+    createWatch(listener:(changedPaths:string[][])=>void,depends?:(string | string[])[] | (()=>any)):()=>void{
         throw new Error("createWatch not implemented.")
     }
 

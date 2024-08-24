@@ -5,7 +5,8 @@ import {Card,JsonViewer, Button,Divider,Field,Input  } from "@speedform/demo-com
  
  
 const NetworkForm = ()=>{         
-    Network.state.fields.wifi.password.value
+    // @ts-ignore
+    globalThis.Network = Network
     return <Network.Form className="panel">
        <div data-loader="circle"></div>
         <Card title="网络配置">
@@ -109,6 +110,14 @@ const NetworkForm = ()=>{
                         return <>
                         <Button loading={loading} progress={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
                         {retry>0 && <span>重试次数：{retry}</span>}
+                        </>
+                    }}
+                </Network.Action>
+                <Network.Action<typeof Network.actions.ping> name="ping" >
+                    {({title,visible,loading,enable,run,error,progress})=>{ 
+                        return <>
+                       enable= {String(enable)}
+                        <Button disabled={!enable} loading={loading} progress={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
                         </>
                     }}
                 </Network.Action>

@@ -125,12 +125,12 @@ export class HeluxReactiveable<State extends Dict =Dict> extends Reactiveable<St
      * @param depends  依赖数组，如果没有指定则代表监听所有属性
      * @returns 
      */
-    createWatch(listener: (changedPaths: string[][]) => void, depends?: (string | string[])[] | undefined) {
+    createWatch(listener: (changedPaths: string[][]) => void, depends?: (string | string[])[] | (()=>any)) {
          // @ts-ignore
         const { unwatch } = watch(({triggerReasons})=>{
             const valuePaths:string[][] = triggerReasons.map((reason:any)=>reason.keyPath) 
             listener(valuePaths)            
-        },()=>{
+        },typeof(depends)==='function' ? depends : ()=>{
             return depends?.length==0 ? [this._stateCtx.state] :  depends?.map(dep=>getValueByPath( this._stateCtx.state,dep))
         })
         return unwatch

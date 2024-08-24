@@ -227,10 +227,20 @@ function setFormDefault<T extends Dict>(define:T){
  * - immediate=false : 不会自动执行,需要手动调用action.execute.run()来执行
  * - 让scope默认指向fields,这样就可以直接使用fields下的字段,而不需要fields前缀
  * 
+ * actions:{
+ * 	ping:{
+ *  	scope:"wifi",  //  当指定scope时，execute.scope由scope指定
+ * 		execute:computed(async (wifi: any) => {
+ * 			// ....
+ *      })
+ *  }
+ * }
+ * 
  */
 function createActionHook(valuePath:string[],options:ComputedOptions){
 	if(valuePath.length>1 && valuePath[valuePath.length-1]=='execute'){
-		options.immediate = false			// 默认不自动执行,需要手动调用action.execute.run()来执行
+		// 默认不自动执行,需要手动调用action.execute.run()来执行
+		options.immediate = false			
 		// 如果没有指定scope，则默认指向fields,这样就可以直接使用fields下的字段,而不需要fields前缀
 		if(options.scope){
 			if(Array.isArray(options.scope)){
@@ -239,8 +249,8 @@ function createActionHook(valuePath:string[],options:ComputedOptions){
 					options.scope.unshift(FIELDS_STATE_KEY)
 				}				
 			}
-		}else{
-			options.scope = [FIELDS_STATE_KEY]	
+		}else{// 如果没有指定scope,则默认指向fields,
+			options.scope = [FIELDS_STATE_KEY]
 		}
 		options.noReentry = true			// 禁止重入
 	}
@@ -313,13 +323,14 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 			createActionHook(valuePath,options)
 		},
 		onComputedDraft(draft,{computedType,valuePath}){
-			// 针对计属性
+			// 针对计算属性
 			// 修改fields下的所有计算函数的作用域根，使之总是指向fields开头
 			// 这样可以保证在计算函数中,当scope->Root时，总是指向fields，否则就需要state.fields.xxx.xxx
 			if(computedType==='Computed' && valuePath.length >0 && valuePath[0]==FIELDS_STATE_KEY){
 				return draft.fields
 			}
-		} 
+		},
+		immediate:true					// 默认立即执行完成所有计算属性的初始化 
 	}); 
 
 	/**

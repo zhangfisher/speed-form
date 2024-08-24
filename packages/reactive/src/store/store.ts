@@ -14,7 +14,7 @@ import { setEventEmitter } from '../events';
 
 
 
-export function createStore<T extends Dict>(data:T,options?:Partial<StoreOptions<T>>){
+export function createStore<State extends Dict>(data:State,options?:Partial<StoreOptions<State>>){
     // 1.初始化配置参数
     const opts = Object.assign({
         id            : getRndId(),
@@ -22,7 +22,7 @@ export function createStore<T extends Dict>(data:T,options?:Partial<StoreOptions
         immediate  : false,
         enableComputed: true,
         scope         : ()=>ComputedScopeRef.Current,
-    },options) as StoreOptions<T>
+    },options) as StoreOptions<State>
 
     opts.log = (...args:any[])=>{
         if(opts.debug) (log as any)(...args)
@@ -30,42 +30,42 @@ export function createStore<T extends Dict>(data:T,options?:Partial<StoreOptions
     // 2. 创建store对象
 
     // @ts-ignore 
-    const store:IStore<T> = { 
+    const store:IStore<State> = { 
         options: opts, 
         _replacedKeys:{}                             // 用来保存已经替换过的key
     }
 
     setEventEmitter(store)
 
-    store.computedObjects = new ComputedObjects<T>(store as IStore<T>),
-    store.watchObjects = new WatchObjects<T>(store as IStore<T>)
+    store.computedObjects = new ComputedObjects<State>(store as IStore<State>),
+    store.watchObjects = new WatchObjects<State>(store as IStore<State>)
 
     // 3. 创建响应式对象， 此处使用helux
-    store.reactiveable = new HeluxReactiveable<T>(data,{
+    store.reactiveable = new HeluxReactiveable<State>(data,{
         id:opts.id,
         onRead: (params) => {
-            installExtends<T>(params,store as IStore<T>);
+            installExtends<State>(params,store as IStore<State>);
         }
-    }) as Reactiveable<T>
+    }) as Reactiveable<State>
 
     store.state = store.reactiveable.state    
     store.emit("created")
-    store.useState = createUseState<T>(store)
-    store.setState = createSetState<T>(store)
+    store.useState = createUseState<State>(store)
+    store.setState = createSetState<State>(store)
     store.enableComputed = (value:boolean=true)=>store.options.enableComputed = value
     store.sync = store.reactiveable.sync.bind(store.reactiveable)
     // store.sync = store.stateCtx.sync
     // 侦听
-    store.watch = createWatch<T>(store)
-    store.useWatch = createUseWatch<T>(store)
-    store.watch = createWatch<T>(store)
+    store.watch = createWatch<State>(store)
+    store.useWatch = createUseWatch<State>(store)
+    store.watch = createWatch<State>(store)
 
     // 创建计算对象的函数
     // store.computed = createComputed<>(store)
     // store.useComputed = createComputed<>(store)
 
     // 3. 创建计算对象的函数
-    store.createComputed = computedObjectCreator<T>(store)
+    store.createComputed = computedObjectCreator<State>(store)
     // // @ts-ignore
     // extendObjects.computedObjects.new = createComputed
 

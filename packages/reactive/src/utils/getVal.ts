@@ -6,8 +6,18 @@ export function getVal(obj: any, keyPath: string[]): any {
     let val;
     let parent = obj;
     keyPath.forEach((key) => { 
-      val = isMap(parent) ? getMapVal(parent, key) : parent[key]; 
-      parent = val;
+      if(isMap(parent)){
+        val = getMapVal(parent, key)
+      }else{
+        if(key in parent){
+          val = parent[key]
+        }else{
+          throw new Error(`key ${key} not in object ${parent}`)
+        }
+      }      
     });
     return val;
   }
+
+
+ 

@@ -12,7 +12,7 @@ import type { IStore } from "../store/types";
 import { skipComputed,  joinValuePath, getError, getDepValues,getVal, setVal, getComputedId  } from "../utils";
 import { delay } from 'flex-tools/async/delay'; 
 import { OBJECT_PATH_DELIMITER } from '../consts';
-import { getComputedScope } from '../context';
+import { getComputedScope } from '../scope';
 import {  AsyncComputedObject,  ComputedOptions, ComputedParams, ComputedProgressbar } from './types';
 import type  { ComputedDescriptorDefine, ComputedRunContext } from './types';
 import { IReactiveReadHookParams } from '../reactives/types';
@@ -74,7 +74,6 @@ async function executeComputedGetter<T extends Dict>(draft:any,computedRunContex
     const { timeout=0,retry=[0,0],selfReactiveable }  = computedOptions  
     const setState  = selfReactiveable ? selfReactiveable.setState.bind(selfReactiveable) : store.setState
     // 
-    const thisDraft = draft
     const scopeDraft = getComputedScope(store,computedOptions,{draft,dependValues,valuePath,computedType:"Computed"} )  
      
     const [retryCount,retryInterval] = Array.isArray(retry) ? retry : [Number(retry),0]
@@ -135,7 +134,7 @@ async function executeComputedGetter<T extends Dict>(draft:any,computedRunContex
           }
         }      
         // 执行计算函数
-        computedResult = await getter.call(thisDraft, scopeDraft,computedParams);
+        computedResult = await getter.call(store, scopeDraft,computedParams);
         if(hasAbort) throw new Error("Abort") 
         if(!hasTimeout){
           Object.assign(afterUpdated,{result:computedResult,error:null,timeout:0})
@@ -179,7 +178,7 @@ async function executeComputedGetter<T extends Dict>(draft:any,computedRunContex
 
   
 
-function createComputed<T extends Dict>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
+function createComputed<State extends Dict>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<State>){
   const { valuePath, id:computedId,deps,desc:computedDesc } = computedRunContext
   const { selfReactiveable,initial,noReentry } = computedOptions
 
@@ -218,7 +217,7 @@ function createComputed<T extends Dict>(computedRunContext:ComputedRunContext,co
       computedRunContext.isComputedRunning=true
       computedRunContext.dependValues = values        // 即所依赖项的值
       try{
-        const r= await executeComputedGetter(draft,computedRunContext,finalComputedOptions,store)
+        const r= await executeComputedGetter<State>(draft,computedRunContext,finalComputedOptions,store)
         return r
       }finally{
         computedRunContext.isComputedRunning=false
@@ -234,14 +233,14 @@ function createComputed<T extends Dict>(computedRunContext:ComputedRunContext,co
  * @param stateCtx
  * @param params
  */
-export  function createAsyncComputedMutate<T extends Dict,R=any>(computedParams:IReactiveReadHookParams,store:IStore<T>) :ComputedObject<T,AsyncComputedObject<R>> {
+export  function createAsyncComputedMutate<State extends Dict,R=any>(computedParams:IReactiveReadHookParams,store:IStore<State>) :ComputedObject<State,AsyncComputedObject<R>> | undefined {
     
     // 1. 参数检查
     const { path:valuePath, parent ,value } = computedParams;
     // // 排除掉所有非own属性,例如valueOf等
-    // if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
-    //   return;
-    // }
+    if (parent && !Object.hasOwn(parent, valuePath[valuePath.length - 1])) {
+      return;
+    }
 
     // 2. 获取到计算属性描述信息：  包括getter和配置。 此时value是一个函数
     let { getter, options: computedOptions }  = value() as ComputedDescriptorDefine<any>
@@ -264,7 +263,7 @@ export  function createAsyncComputedMutate<T extends Dict,R=any>(computedParams:
     // 计算对象的id和name，name用于打印日志时提供更多信息
     const computedId = getComputedId(valuePath,computedOptions)
     computedOptions.id = computedId
-    const computedDesc = `${computedId}_${valuePath.join(OBJECT_PATH_DELIMITER)}`
+    const computedDesc = valuePath.join(OBJECT_PATH_DELIMITER)
   
     store.options.log(`Create async computed: ${computedDesc} (depends=${depends.length==0 ? 'None' : joinValuePath(depends)})`);
     
@@ -279,13 +278,13 @@ export  function createAsyncComputedMutate<T extends Dict,R=any>(computedParams:
       deps             : depends,
       getter
     }    
-    createComputed(computedRunContext,computedOptions,store)  
+    createComputed<State>(computedRunContext,computedOptions,store)  
 
     // 移花接木原地替换
     if(!selfReactiveable) computedParams.replaceValue(getVal(store.state, valuePath));
 
     // 8. 创建计算对象实例
-    const computedObject = new ComputedObject<T,AsyncComputedObject<R>>(store,selfReactiveable,valuePath,computedOptions) 
+    const computedObject = new ComputedObject<State,AsyncComputedObject<R>>(store,selfReactiveable,valuePath,computedOptions) 
     if(computedOptions.save) store.computedObjects.set(computedId,computedObject)
     return  computedObject
 }
