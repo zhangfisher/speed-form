@@ -24,6 +24,22 @@ export class ComputedObjects<T extends Dict =  Dict> extends Map<string,Computed
     async runGroup(group:string,options?:RuntimeComputedOptions){       
         return Promise.all([...this.values()].filter(computedObject=>computedObject.group==group).map(computedObject=> computedObject.async ? computedObject.run(options) : computedObject.run(options)))   
     }
+    
+    async run(filter:(computedObject:ComputedObject<T>)=>boolean,options?:RuntimeComputedOptions):Promise<any>
+    async run(id:string,options?:RuntimeComputedOptions):Promise<any>
+    async run():Promise<any>{
+      if(arguments.length==0){
+        return Promise.all([...this.values()].map(computedObject=>computedObject.run()))
+      }      
+      let filter,id=''
+      if(typeof(arguments[0])==='function'){
+        filter = arguments[0] 
+      }else if(typeof(arguments[0])==='string'){
+        id=arguments[0]
+      }            
+      const options:RuntimeComputedOptions|undefined = arguments[1]      
+      return Promise.all([...this.values()].filter(filter).map(computedObject=>computedObject.run(options)))
+    }
     /**
      * 启用或禁用计算
      * @param value 

@@ -13,6 +13,7 @@ import {  installComputed } from "./computed";
 import { installWatch } from "./watch"; 
 import { IReactiveReadHookParams } from "./reactives/types";
 import { Dict } from "./types";
+import { isValidPath } from "./utils/isValidPath";
  
 
 // export function installExtends<T extends Dict>(computedParams:IComputeParams,store:IStore<T>) {    
@@ -35,6 +36,7 @@ import { Dict } from "./types";
 export function installExtends<State extends Dict>(computedParams:IReactiveReadHookParams,store:IStore<State>) {    
   // 拦截读取state的操作，在第一次读取时， 
     const { path, value } = computedParams;
+    if(!isValidPath(path)) return 
     const key = joinValuePath(path);
     if ( typeof value === "function" && !store._replacedKeys[key] && !isSkipComputed(value) ) {
       store._replacedKeys[key] = true;    

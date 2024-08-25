@@ -68,49 +68,51 @@ export type GetComputedContextOptions<T extends Dict =Dict> ={
 export function getComputedScope<T extends Dict = Dict>(store:IStore<T>,computedOptions: ComputedOptions,ctx:{draft: any,dependValues:any[],valuePath:string[],computedType:ComputedType}) {
 
     const { draft,dependValues,  valuePath, computedType } = ctx;
-  
+
     let rootDraft = draft;
-    
-  
-    // 1. 执行hook：可以在hook函数中修改计算函数的根上下文以及相关配置参数
-    if (typeof store.options.onComputedDraft == "function") {
-      const newDraft = store.options.onComputedDraft.call(draft,draft,{computedType,valuePath});
+      // 1. 执行hook：可以在hook函数中修改计算函数的根上下文以及相关配置参数
+    if (typeof store.options.getRootScope == "function") {
+      const newDraft = store.options.getRootScope.call(draft,draft,{computedType,valuePath});
       if (newDraft !== undefined) {
         rootDraft = newDraft;
       }
     }
+    
     const parentPath = valuePath.length>=1 ? valuePath.slice(0, valuePath.length - 1) : [];
 
    // 2. 读取计算函数的上下文配置参数
    const scopeRef = getScopeOptions(draft,valuePath,computedOptions.scope, (store.options.scope && store.options.scope(computedType,valuePath)))
   
+    let scope = draft
     // 3. 根据配置参数获取计算函数的上下文对象
     try { 
       if(scopeRef === ComputedScopeRef.Current) {
-          return getValueByPath(draft, parentPath);
+        scope = getValueByPath(draft, parentPath);
       }else if (scopeRef === ComputedScopeRef.Parent) {
-        return getValueByPath(draft,valuePath.slice(0, valuePath.length - 2));
+        scope = getValueByPath(draft,valuePath.slice(0, valuePath.length - 2));
       }else if (scopeRef === ComputedScopeRef.Root) {
-          return rootDraft;
+        scope = rootDraft;
       }else if (scopeRef === ComputedScopeRef.Depends) {      // 异步计算的依赖值      
-        return Array.isArray(dependValues) ? dependValues.map(dep=>typeof(dep)=='function' ? dep() : dep) : [];
+        scope = Array.isArray(dependValues) ? dependValues.map(dep=>typeof(dep)=='function' ? dep() : dep) : [];
       }else{
        if (typeof scopeRef == "string") {       
-          if(scopeRef.startsWith("@")){
-            return getComputedScope(store,{...computedOptions,scope:scopeRef.slice(1)},{draft,dependValues,valuePath,computedType})          
+          // 当scope是以@开头的字符串时，代表是一个路径指向，如：@./user，代表其scope是由user属性值指向的对象路径
+          if(scopeRef.startsWith("@")){ // 
+            scope = getComputedScope(store,{
+                ...computedOptions,
+                scope:getComputedScope(store,{
+                    ...computedOptions,scope:scopeRef.slice(1)
+                  },ctx)
+              },ctx)          
           }else{
-            return getValueByPath(draft, getRelValuePath(valuePath,scopeRef)); 
+            scope = getValueByPath(draft, getRelValuePath(valuePath,scopeRef)); 
           } 
         }else if (Array.isArray(scopeRef)) {                   // 从根对象开始的完整路径
-            return getValueByPath(draft, scopeRef);
-        }else if (typeof scopeRef == "number") {
-          const endIndex = scopeRef > valuePath.length - 2 ? valuePath.length - scopeRef - 1 : 0;
-          return getValueByPath(draft, valuePath.slice(0, endIndex));
-        }else {
-          return draft;
+          scope = getValueByPath(draft, scopeRef);
         }
       }
-    }catch (e) {
-        return draft;
-    }
+    }catch (e:any) {
+        store.options.log(`Error while getting computed scope ${valuePath.join(OBJECT_PATH_DELIMITER)}: ${e.message}`);
+    } 
+    return scope
   }

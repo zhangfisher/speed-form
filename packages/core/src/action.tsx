@@ -34,7 +34,7 @@
 import { ReactNode, useCallback, useRef, RefObject,useState} from "react";
 import React from "react";
 import type { FormDefine, FormStore } from "./form";
-import {  AsyncComputedDefine, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict,  RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
+import {  AsyncComputedDefine, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict,  RuntimeComputedOptions, computed, getVal, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
 import { getFormData } from "./serialize"; 
 import { getId } from "./utils";
@@ -357,6 +357,8 @@ export function createUseAction<State extends FormDefine = FormDefine>(store:For
                             execute:action(executor,options)
                         }                       
                     })
+                    // 读取一次以触发计算属性对象的创建
+                    getValueByPath(state,['actions',actionName])
                 }
             ref.current = actionName
         } 

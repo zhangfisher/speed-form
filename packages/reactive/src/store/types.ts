@@ -75,6 +75,7 @@ export interface StoreOptions<State extends Dict= Dict>{
      */
     onCreateComputed:(this:IStore<State>,keyPath:string[],getter:Function,options:ComputedOptions)=> void | (()=>any)
     
+    
     /**
      * 在传递给计算函数的scope时调用
      * 默认draft指向的是当前根对象，可以在此返回一个新的draft指向
@@ -82,7 +83,8 @@ export interface StoreOptions<State extends Dict= Dict>{
      * 比如,return  draft.fields，代表计算函数的draft指向state.fields
      * 
      */
-    onComputedDraft(draft:any,options:{computedType:StateComputedType, valuePath:string[]}):any
+    getRootScope(draft:any,options:{computedType:StateComputedType, valuePath:string[]}):any
+
     // 输出日志信息
     log:(message:any,level?:'log' | 'error' | 'warn')=>void 
    

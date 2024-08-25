@@ -46,7 +46,7 @@ import { createFieldComponent, FormFields  } from './field';
 import { createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
 import {   FormActions, UseActionType, createActionComponent, createUseAction, getAction } from './action';
-import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from './consts';
+import { ACTIONS_STATE_KEY, FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from './consts';
 import { defaultObject } from "flex-tools/object/defaultObject";
 import { createObjectProxy } from "./utils";
 import { createLoadApi, createGetValuesApi } from "./serialize"; 
@@ -167,6 +167,21 @@ export type FormStatus = 'idle'
 // 	actions	: Actions									// 表单动作	
 // }
 
+/**
+ *  设置表单默认属性
+ * 	title?:ComputedAttr<string>					    // 动作标题    
+    help?:ComputedAttr<string>					    // 动作帮助
+    tips?:ComputedAttr<string>					    // 动作提示
+ 	visible?:ComputedAttr<boolean>					// 是否可见
+	enable?:ComputedAttr<boolean>					// 是否可用		
+	valid?:ComputedAttr<boolean>					// 是否有效
+	readonly?:ComputedAttr<boolean>				    // 是否只读	  
+ * @param define 
+ */
+	function setFormDefault<T extends Dict>(define:T){
+		return defaultObject(define,defaultFormProps) as typeof defaultFormProps & T 
+	}
+	
 
 /**
  * 
@@ -202,21 +217,6 @@ function createValidatorHook(valuePath:string[],options:ComputedOptions){
 }
 
 
-/**
- *  设置表单默认属性
- * 	title?:ComputedAttr<string>					    // 动作标题    
-    help?:ComputedAttr<string>					    // 动作帮助
-    tips?:ComputedAttr<string>					    // 动作提示
- 	visible?:ComputedAttr<boolean>					// 是否可见
-	enable?:ComputedAttr<boolean>					// 是否可用		
-	valid?:ComputedAttr<boolean>					// 是否有效
-	readonly?:ComputedAttr<boolean>				    // 是否只读	  
- * @param define 
- */
-function setFormDefault<T extends Dict>(define:T){
-	return defaultObject(define,defaultFormProps) as typeof defaultFormProps & T 
-}
-
 
  
 /**
@@ -238,25 +238,29 @@ function setFormDefault<T extends Dict>(define:T){
  * 
  */
 function createActionHook(valuePath:string[],options:ComputedOptions){
-	if(valuePath.length>1 && valuePath[valuePath.length-1]=='execute'){
-		// 默认不自动执行,需要手动调用action.execute.run()来执行
-		options.immediate = false			
-		// 如果没有指定scope，则默认指向fields,这样就可以直接使用fields下的字段,而不需要fields前缀
-		if(options.scope){
-			if(Array.isArray(options.scope)){
-				// 如果scope中没有fields,则添加fields,并且保证fields在第一个位置
-				if(options.scope.length>0 && options.scope[0]!=FIELDS_STATE_KEY){
-					options.scope.unshift(FIELDS_STATE_KEY)
-				}				
+	if(valuePath.length>1 ){
+		if(valuePath[valuePath.length-1]=='execute'){
+			// 默认不自动执行,需要手动调用action.execute.run()来执行
+			options.immediate = false			
+			// 如果没有指定scope，则默认指向fields,这样就可以直接使用fields下的字段,而不需要fields前缀
+			if(options.scope){
+				if(Array.isArray(options.scope)){
+					// 如果scope中没有fields,则添加fields,并且保证fields在第一个位置
+					if(options.scope.length>0 && options.scope[0]!=FIELDS_STATE_KEY){
+						options.scope.unshift(FIELDS_STATE_KEY)
+					}				
+				}
+			}else{// 如果没有指定scope,则默认指向fields		
+				options.scope = [FIELDS_STATE_KEY]
 			}
-		}else{// 如果没有指定scope,则默认指向fields,
-			options.scope = [FIELDS_STATE_KEY]
-		}
-		options.noReentry = true			// 禁止重入
+			options.noReentry = true			// 禁止重入
+		}		
 	}
+
 }
 /**
  *  对所有位于fields下的的依赖均自动添加fields前缀，这样在声明依赖时就可以省略fields前缀
+ * 
  * @param valuePath 
  * @param getter 
  * @param options 
@@ -272,6 +276,7 @@ function createDepsHook(valuePath:string[],options:ComputedOptions){
 		})
 	}
 }
+
 
 /**
  * 
@@ -292,6 +297,27 @@ export function getFieldName(valuePath:string[]){
 			valuePath.slice(0,-1).join(".") : valuePath.join(".") : ''
 }
 
+export type FormObject<State extends FormDefine=FormDefine> = {
+	state: FormState<State['fields']>,
+	useState: (fn: (state: FormState<State['fields']>) => any) => any,
+	setState: (fn: (draft: FormState<State['fields']>) => void) => void,
+	Form: FormComponent<State['fields']>,
+	Field: ReactFC<any>,
+	Group: ReactFC<any>,
+	Action: ReactFC<any>,
+	Submit: ReactFC<any>,
+	Reset: ReactFC<any>,
+	useAction: UseActionType,
+	fields: State['fields'],
+	actions: State['actions'],
+	getAction: (name: string) => any,
+	freeze: (value?: boolean) => void,
+	load: (data: Dict) => void,
+	getValues: () => Dict,
+	computedObjects: Dict,
+	watchObjects: Dict,
+	validate: (value?: Dict) => Promise<boolean>
+}
 /**
  * 创建声明表单
  * 
@@ -310,7 +336,8 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 	
 	// 创建表单Store对象实例
 	const store = createStore(schema ,{
-		debug:opts.debug,
+		debug:opts.debug,		
+		immediate:true,					// 默认立即执行完成所有计算属性的初始化 
 		// 计算函数作用域默认指向fields
 		scope: ()=>[FIELDS_STATE_KEY],
 		// 创建计算函数时的钩子函数，可以在创建前做一些不可描述的处理
@@ -322,15 +349,13 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 			// 3. 将表单actions的execute的onComputedResult指向其current
 			createActionHook(valuePath,options)
 		},
-		onComputedDraft(draft,{computedType,valuePath}){
-			// 针对计算属性
+		getRootScope(draft,{computedType,valuePath}){
 			// 修改fields下的所有计算函数的作用域根，使之总是指向fields开头
 			// 这样可以保证在计算函数中,当scope->Root时，总是指向fields，否则就需要state.fields.xxx.xxx
 			if(computedType==='Computed' && valuePath.length >0 && valuePath[0]==FIELDS_STATE_KEY){
 				return draft.fields
 			}
-		},
-		immediate:true					// 默认立即执行完成所有计算属性的初始化 
+		} 
 	}); 
 
 	/**
@@ -370,7 +395,7 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 		computedObjects: formStore.computedObjects,
 		watchObjects   : formStore.watchObjects,		 
 		validate       : createValidator<State>(formStore)
-	};
+	}   
 }
 
   
@@ -379,55 +404,100 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
  * 
  * 当使用标准的表单提交模式时,使用该组件
  * 
+ * 简单用法:
+ *  <Network.Form 
+ * 		scope="wifi" 
+ * 		action="/api/wifi"
+ * 		method="post"
+ * 		enctype="application/x-www-form-urlencoded"
+ * 		onSubmit={(data)=>{
+ * 			console.log(data)
+ * 		}}
+ *      onLoading={(loading)=>{   		}}
+ * 		onError={(error)=>{}}
+ *      onValid={(valid)=>{}}
+ *  >
+ * 	<Network.Field name="username"></Network.Field>
+ * 	<Network.Field name="password"></Network.Field>
+ * 	<Network.Submit>提交</Network.Submit> 
+ *  </Network.Form>
  * 
- * <Form></From>			// 表单组件
- * <Network.Form<typeof Network.wifi> name="wifi">
- * 	   <Network.Field name="ssid"></Network.Field>			// 声明字段
- * 	   <Network.Submit>
- *        {({action})=>{
- * 			retrun <button onClick={action()}></button>
- *        }}
- *     </Network.Submit>
- * </Network.Form>			// 声明子表单
- * 
+ * 高级用法：
+ * <Network.Form 
+ * 		scope="wifi"    提交范围,默认是整个表单fields
+ * 		format="json"   提交数据
+ * 		
+ * >
+ * {({timeout,loading})=>{
+ * 			return <>
+ * 				<Network.Field name="username"></Network.Field>
+ * 				<Network.Field name="password"></Network.Field>
+ * 				<Network.Submit>
+ * 			</>
+ * }}
+ * </Network.Form>
  * 
  * 
  * @param this 
  * @param store 
  * @returns 
  */
-function createFormComponent<State extends Dict>(store: FormStore<State>,formOptions:RequiredFormOptions<State>): FormComponent<State['fields']> {
-		
+function createFormComponent<State extends FormDefine>(store: FormStore<State>,formOptions:RequiredFormOptions<State>): FormComponent<State['fields']> {
+	const Action = createActionComponent<State>(store)
+	const useAction =  createUseAction<State>(store)
+
 	return React.forwardRef<HTMLFormElement>((props: FormProps<State['fields']>,ref:React.ForwardedRef<HTMLFormElement>) => {
 		const {children } = props; 	
-
+		
+		// 
+		const { run } = useAction(async (scope:any,params)=>{ 			
+			await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
+			
+		},{
+			save:false
+		})
+	
 		// 提交表单
-		const onSubmit = useCallback(async (ev: React.FormEvent<HTMLFormElement>) => {		
+		const onSubmit = useCallback(async (ev: React.FormEvent<HTMLFormElement>) => {
+			run()
 			// 提交前运行校验
 			if(formOptions.validAt==='submit'){			
 				await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
-			}
-			debugger
+			} 
 			await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
 			ev.preventDefault(); 
-			if(store.state.validate){
-				return true	
-			}else{
-				return false
-			}
 		},[]);
 
 		// 重置表单
 		const onReset = useCallback((e: React.FormEvent<HTMLFormElement>) => {
 
 		},[]);
+
 		return (
-			<form ref={ref} 
-				className="speedform"  
-				{...props} 
-				onSubmit={onSubmit} 
-				onReset={onReset}
-			>{children}</form>
+			<> 
+				<form ref={ref} className="speedform"  {...props} onSubmit={onSubmit} onReset={onReset}>
+					{children}
+				</form>
+			</>
+			// <Action<any> name="$submit">
+			// 	{(params)=>{
+
+			// 		return <>{ 
+			// 			typeof(children)=='function' ? 
+			// 			(children as any)(params)
+			// 		:
+			// 			<form ref={ref} 
+			// 					className="speedform"  
+			// 					{...props} 
+			// 					onSubmit={(ev:any)=>onSubmit(ev,run)} 
+			// 					onReset={onReset}
+			// 			>{children}</form>					
+			// 		}
+			// 		</>
+			// 	}}
+				
+			// </Action>
+			
 		)
 	}) as FormComponent<State['fields']> 
 }

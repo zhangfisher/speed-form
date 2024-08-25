@@ -23,7 +23,7 @@ const Network = createForm({
 		},
 		interface: {
 			value: "wifi",
-			title: 1,//"网卡类型",
+			title: "网卡类型",
 			enable: true,
 			select: () => {
 				return [
@@ -103,7 +103,7 @@ const Network = createForm({
 			submit: { // 这是一个动作,
 				title: "提交wifi",
 				enable: (net: any) => net.interface.value === "wifi",
-				validate: (value: string) => value.length > 6,
+				// validate: (value: string) => value.length > 6,
 				execute:async (wifi:any)=>{
 					await delay(2000)
 					console.log("提交wifi=",wifi)
@@ -145,9 +145,6 @@ const Network = createForm({
 			},
 			progressSubmit2: { // 这是一个动作,
 				title: "提交进度2",
-				validate:async ()=>{
-					return true
-				},
 				execute:action(async (fields,{getProgressbar})=>{
 					console.log("submit fields=",fields)
 					const bar = getProgressbar()
@@ -214,24 +211,23 @@ const Network = createForm({
 		},		
 		timeoutSubmit: {
 			title: "提交超时倒计时", 
-			execute: computed(async () => {
+			execute: computed(async (scope: Dict) => {
+				console.log("ping=",Object.assign({},scope));
 				await delay(5000);								
 			},[],{timeout:2000}),
 		},
 		ping: {
 			title: "测试网络连通性",
-			scope:"fields.wifi",
 			enable: computed((wifi: any) => {
 				return wifi.ssid.value.length > 0
 			},{scope:"fields.wifi"}),
 			execute: async (a: Dict) => {
-				await delay(2000);
-				console.log(a);
+				await delay(1000);
+				console.log("ping=",Object.assign({},a));
 			},
 		},		
         // 向导表单:上一步
         previous:{
-
             enable: (wifi: any) => wifi.ssid.value.length > 0,
 			execute:async ()=>{
 				return 1

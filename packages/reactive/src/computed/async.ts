@@ -73,7 +73,7 @@ async function executeComputedGetter<T extends Dict>(draft:any,computedRunContex
     const { id,valuePath,getter,resultPath,dependValues } = computedRunContext;  
     const { timeout=0,retry=[0,0],selfReactiveable }  = computedOptions  
     const setState  = selfReactiveable ? selfReactiveable.setState.bind(selfReactiveable) : store.setState
-    // 
+    
     const scopeDraft = getComputedScope(store,computedOptions,{draft,dependValues,valuePath,computedType:"Computed"} )  
      
     const [retryCount,retryInterval] = Array.isArray(retry) ? retry : [Number(retry),0]
@@ -265,7 +265,7 @@ export  function createAsyncComputedMutate<State extends Dict,R=any>(computedPar
     computedOptions.id = computedId
     const computedDesc = valuePath.join(OBJECT_PATH_DELIMITER)
   
-    store.options.log(`Create async computed: ${computedDesc} (depends=${depends.length==0 ? 'None' : joinValuePath(depends)})`);
+    store.options.log(()=>`Create async computed: ${computedDesc} (depends=${depends.length==0 ? 'None' : joinValuePath(depends)},scope=${computedOptions.scope})`);
     
     // 7. 创建mutate
     const computedRunContext:ComputedRunContext = {

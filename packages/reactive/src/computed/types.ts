@@ -100,7 +100,7 @@ export interface ComputedProgressbar{
     scope?   : ComputedScope               // 计算函数的第一个参数
     initial? : Value
     // 异步计算,默认情况下，通过typeof(fn)=="async function"来判断是否是异步计算函数
-    // 但是在返回Promise或者Babel转码等情况下，判断可能失效时，需要手动指定async=true
+    // 但是在返回Promise或者Babel转码等情况下，判断会失效时，需要手动指定async=true
     async?:boolean
     // 指定依赖，例如["key","a.b.c"]等形式
     depends?:ComputedDepends

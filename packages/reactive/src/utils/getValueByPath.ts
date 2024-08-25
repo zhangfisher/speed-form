@@ -9,7 +9,8 @@ export function getValueByPath(state:any,path?:string | string[] | ((state:any)=
         }
         paths = Array.isArray(path) ? path : (typeof(path)=='string' ? path.split(delimiter) : [])    
         return paths.length > 0 ? getVal(state,paths) : state
-    }catch{
+    }catch(e){
+        console.warn(e)
         return state
     }
 }

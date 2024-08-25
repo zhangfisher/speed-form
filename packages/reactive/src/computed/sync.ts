@@ -89,7 +89,7 @@ export  function createComputedMutate<State extends Dict,R=any>(computedParams:I
     const computedId = getComputedId(valuePath,computedOptions)
     const computedDesc = valuePath.join(OBJECT_PATH_DELIMITER)
   
-    store.options.log(`Create sync computed: ${computedDesc}`);    
+    store.options.log(()=>`Create sync computed: ${computedDesc} (scope=${computedOptions.scope})`);    
     
     const computedRunContext:ComputedRunContext = {
       id             : computedId,

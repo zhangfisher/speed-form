@@ -12,9 +12,10 @@ export function getVal(obj: any, keyPath: string[]): any {
         if(key in parent){
           val = parent[key]
         }else{
-          throw new Error(`key ${key} not in object ${parent}`)
-        }
-      }      
+          throw new Error(`invalid keypath: ${keyPath.join(".")}`)
+        }        
+      } 
+      parent = val     
     });
     return val;
   }
