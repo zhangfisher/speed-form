@@ -10,13 +10,11 @@ import { ComputedObject } from "./computedObject";
 import { executeStoreHooks } from "./utils";
 import { OBJECT_PATH_DELIMITER } from "../consts";
 import { Dict } from "../types";
-
-
-
+ 
 
 function createComputed<T extends Dict>(computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
   const { valuePath, id:computedId,desc:computedDesc,resultPath,getter } = computedRunContext
-  const { selfReactiveable } = computedOptions
+  const { selfReactiveable,onDone } = computedOptions
 
     store.reactiveable.createComputed({
       onComputed:({draft,values,options})=>{
@@ -32,7 +30,6 @@ function createComputed<T extends Dict>(computedRunContext:ComputedRunContext,co
         const finalComputedOptions = Object.assign({},computedOptions,options) as Required<ComputedOptions>
 
         // 1. 根据配置参数获取计算函数的上下文对象      
-        const thisDraft = draft 
         const scopeDraft = getComputedScope(store,finalComputedOptions,{draft,dependValues:values,valuePath,computedType:"Computed"} )  
 
         // 2. 执行getter函数
@@ -40,8 +37,10 @@ function createComputed<T extends Dict>(computedRunContext:ComputedRunContext,co
         try {
           computedResult = (getter as ComputedGetter<any>).call(store,scopeDraft);
           store.emit("computed:done",{ path:valuePath,id: computedId,value:computedResult})
+          setTimeout(()=>{onDone && onDone.call(store as unknown as IStore<any>,{id:computedId,error:undefined,abort:false,timeout:false,scope:scopeDraft,valuePath,result:computedResult})},0)      
         } catch (e: any) {// 如果执行计算函数出错,则调用        
           store.emit("computed:error", { path:valuePath,id: computedId, error: e })
+          setTimeout(()=>{onDone && onDone.call(store as unknown as IStore<any>,{id:computedId,error:e,abort:false,timeout:false,scope:scopeDraft,valuePath,result:computedResult})},0)      
         }
         // 3. 将getter的返回值替换到状态中的,完成移花接木
         if(selfReactiveable){

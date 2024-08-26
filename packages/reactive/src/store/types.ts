@@ -60,6 +60,11 @@ export interface StoreOptions<State extends Dict= Dict>{
       * 默认启用计算属性
       * enableComputed=false时，会创建计算属性，但不会执行计算函数
       * 可以通过enableComputed方法启用
+      * 
+      * 是否执行计算函数的全局开关，
+      * 
+      * 当enableComputed=false时，不会执行计算函数
+      * 
       */
      enableComputed:boolean
     /**

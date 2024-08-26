@@ -109,7 +109,7 @@ export interface ActionRunCancelOptions {
     preventDefault?:boolean 
 }
 
-export type ActionRenderProps<State extends Dict> = 
+export type ActionRenderProps<State extends FormActionState = FormActionState> = 
     DefaultActionRenderProps 
     & State 
     & Required<Omit<AsyncComputedObject,'run'>> 
@@ -119,7 +119,7 @@ export type ActionRenderProps<State extends Dict> =
         ref: RefObject<HTMLElement>                       // 动作元素引用
     } 
 
-export type ActionRender<State extends Dict,Params extends Dict = Dict>= (props: ActionRenderProps<State>) => ReactNode
+export type ActionRender<State extends FormActionState> = (props: ActionRenderProps<State>) => ReactNode
 
 
 /**
@@ -132,11 +132,10 @@ export type ActionRender<State extends Dict,Params extends Dict = Dict>= (props:
 export type ActionProps<State extends FormActionState=FormActionState,Params extends Dict = Dict> = {
     // 声明该动作对应的状态路径
     name:string | string[]                      
-    // 动作作用域，用来指定动作作用的表单数据范围,用来传递数据给动作
-    scope?:string | string[]    
-    params?:Params                              // 动作参数                         
-    render?: ActionRender<State,Params>  
-    children?: ActionRender<State,Params> 
+    scope?   : string | string[]                   // 动作作用域，用来指定动作作用的表单数据范围,用来传递数据给动作   
+    params?  : Params                              // 动作参数                         
+    render?  : ActionRender<State>  
+    children?: ActionRender<State> 
 }  & ActionRunOptions
  
 
@@ -267,6 +266,7 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
         // 如果动作是声明在actions里面可以省略actions前缀
         if(!actionKey.includes(".")) actionKey = `actions.${actionKey}` 
         const actionState = getValueByPath(state,actionKey)        
+
         if(actionState==null){
             store.options.log(`Action ${actionKey} is not defined`,"error")
             return <>{props.children}</>
@@ -293,6 +293,7 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
             return <></>
         } 
     }
+
     return React.memo(Action,(oldProps:any, newProps:any)=>{
         return oldProps.name === newProps.name  
     }) as (<State extends FormActionState=FormActionState,Scope extends Dict=Dict>(props: ActionProps<State,Scope>)=>ReactNode)
@@ -310,15 +311,14 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
  * @param options 
  */
 export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGetter<R,Values>,options?: ComputedOptions<R>){
-    return computed<R>(async (scope:any,opts)=>{
-        // 注意： getSnap(scope,false)无论scope是状态中的哪一个值，总是返回整个状态的快照
-        // 比如 getSnap(state.fields.xxx.xxx)也是返回整个state的快照
+
+    return computed<R>(async (scope:any,opts)=>{ 
         const data = getFormData(Object.assign({},scope))        
         return await (getter as unknown as AsyncComputedGetter<R>)(data,opts)
-    },[
-        // 不依赖于任意表单数据，需要手动触发执行
-    ],Object.assign({},options,{
-        async:true
+    },[],Object.assign({},options,{
+        scope    : options?.scope,
+        async    : true,
+        immediate: false
     }))
 }
 
@@ -351,15 +351,15 @@ export function createUseAction<State extends FormDefine = FormDefine>(store:For
         const [state,setState] = store.useState()        
         const [actionName] = useState(()=>options?.name ?  options?.name : getId())
         if(!ref.current){
-                if(!(actionName in state.actions)){
-                    setState((draft:any)=>{
-                        draft.actions[actionName] = {
-                            execute:action(executor,options)
-                        }                       
-                    })
-                    // 读取一次以触发计算属性对象的创建
-                    getValueByPath(state,['actions',actionName])
-                }
+            if(!(actionName in state.actions)){
+                setState((draft:any)=>{
+                    draft.actions[actionName] = {
+                        execute:action(executor,options)
+                    }                       
+                })
+                // 读取一次以触发计算属性对象的创建
+                getValueByPath(state,['actions',actionName])
+            }
             ref.current = actionName
         } 
         return getValueByPath(state,['actions',actionName]).execute as FormActionState['execute']

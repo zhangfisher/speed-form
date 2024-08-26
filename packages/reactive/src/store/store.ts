@@ -65,9 +65,7 @@ export function createStore<State extends Dict>(data:State,options?:Partial<Stor
     // store.useComputed = createComputed<>(store)
 
     // 3. 创建计算对象的函数
-    store.createComputed = computedObjectCreator<State>(store)
-    // // @ts-ignore
-    // extendObjects.computedObjects.new = createComputed
+    store.createComputed = computedObjectCreator<State>(store) 
 
     if(opts.immediate){
         forEachObject(store.state)

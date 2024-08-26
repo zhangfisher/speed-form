@@ -90,7 +90,7 @@ export type CreateObjectProxyOptions = {
  */
 export function createObjectProxy<T extends Record<string | symbol,any>=Record<string | symbol,any>>(fn: () => T): T {
 	return new Proxy<T>({} as T, {
-	  get: (target:T, prop: keyof T, receiver) => {
+	  get: (_:T, prop: keyof T) => {
 		return fn()[prop];
 	  },
 	});
@@ -122,7 +122,7 @@ export function isFieldGroup(data:Dict){
     return isPlainObject(data) && !isFieldValue(data) && !isFormAction(data)
 }
 
-
 export function isDev(){
+	// @ts-ignore
 	return process.env.NODE_ENV == 'development' || process.env.NODE_ENV === 'test';
 }

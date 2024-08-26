@@ -2,10 +2,11 @@
  * 类型
  */
 
-import type { ComputedScope } from "../store/types";
+import type { ComputedScope, IStore } from "../store/types";
 import { Dict } from "../types"
 import { WatchDescriptor } from "../watch";
 import { Reactiveable } from "../reactives/types";
+import { ComputedObject } from "./computedObject";
 
 
 // 指向helux的IOperateParams类型，但是我们只用到其是的部分类型
@@ -112,9 +113,21 @@ export interface ComputedProgressbar{
      * 这样就可以通过绑定timeout值来实现倒计时的效果
      * 如果要实现60秒倒计时，可以这样写：[60*1000,60],这样value.timeout就会从60开始递减
      */
-    timeout?:number  | [number,number]
-    // 是否立刻计算，默认为true，在创建时马上进行计算，=false,则只有在依赖变化时才会执行，或者手动调用reset方法
-    immediate?:boolean                     
+    timeout?:number  | [number,number]    
+
+    /**
+     * 
+     * 针对异步计算属性
+     * 
+     * true: 在创建异步计算时马上执行一次
+     * false: 在创建异步计算时不马上执行一次，后续仅在依赖变化时执行
+     * auto: 当initial==undefined时会马上执行一次，initial!=undefined不会马上执行一次，因为该计算属性已经有初始化了
+     * 
+     * 同步计算没有此问题
+     * 
+     * 
+     */
+    immediate?:'auto' | boolean
     /**
      *  计算函数不可重入，即同一个计算函数在执行过程中，不会再次执行   
      *  如果重入时，则在debug=true时会在控制台打印出警告信息
@@ -180,13 +193,16 @@ export interface ComputedProgressbar{
     selfReactiveable?: Reactiveable
     /**
      * 
-     * 当创建计算属性的computedObject是否保存到store.computedObjects中
+     * 默认情况下，每一个计算属性均会创建一个computedObject对象实便并且保存到store.computedObjects中
      * 
-     * 当在hook中使用时就不需要保存到store.computedObjects中
+     * 默认=true,=false则不会保存
      * 
      */
-    save?:boolean 
-
+    objectify?:boolean 
+    /**
+     * 当计算完成后的回调函数
+     */
+    onDone?(this:IStore<any>,args:{id:string,error:Error | undefined,timeout:boolean ,abort:boolean ,valuePath:string[],scope:any,result:any}):void
   };
   
   export type ComputedDepends =Array<string | Array<string>> 
@@ -194,7 +210,7 @@ export interface ComputedProgressbar{
   export type AsyncComputedGetter<R,Scope=any> = (scopeDraft:Scope,options:Required<ComputedParams>) => Promise<R>
   
   // 当调用run方法时，用来传参覆盖原始的计算参数
-  export type RuntimeComputedOptions = Pick<ComputedOptions,'scope' | 'abortSignal' | 'noReentry' | 'retry' | 'onError' | 'timeout' | 'extras'>
+  export type RuntimeComputedOptions = Pick<ComputedOptions,'onDone' | 'scope' | 'abortSignal' | 'noReentry' | 'retry' | 'onError' | 'timeout' | 'extras'>
   
   export type AsyncComputedObject<Result= any,ExtAttrs extends Dict = {}> ={
     loading : boolean;

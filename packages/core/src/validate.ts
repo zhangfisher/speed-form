@@ -1,4 +1,4 @@
-import { Dict, IStore, OBJECT_PATH_DELIMITER, isIncludePath, watch } from "@speedform/reactive";
+import { Dict, OBJECT_PATH_DELIMITER, pathStartsWith, watch } from "@speedform/reactive";
 import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from "./consts";  
 import { ValidationError } from "./errors";
 import { FormStore } from "./form";
@@ -22,8 +22,8 @@ export function isValidateField(path:string[]){
 }
 
 
-export type ValidateOptions<T=any> = {
-    entry?:string[]                 // 指定入口 
+export type ValidateOptions = {
+    entry?: string[]                 // 指定入口 
 }
 
 /**
@@ -54,11 +54,11 @@ export type ValidateOptions<T=any> = {
  * 
  * @returns 
  */
-export function validate<T=any>(options?:ValidateOptions){
+export function validate(options?:ValidateOptions){
     const { entry  } = Object.assign({},options)
     return watch<boolean,boolean>((path,value, watchObject)=>{        
         // 只侦听entry下的所有字段
-        if(!isIncludePath(entry ? entry : watchObject.path,path)) return   
+        if(!pathStartsWith(entry ? entry : watchObject.path,path)) return   
         // validate属性是一个boolean
         if(typeof(value)=='boolean'){
             const srcKey = path.join(OBJECT_PATH_DELIMITER)

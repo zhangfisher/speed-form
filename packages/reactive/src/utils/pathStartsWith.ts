@@ -3,11 +3,10 @@
  * @param basePath 
  * @param destPath 
  */
-export function isIncludePath(basePath:string[],destPath:string[]){
+export function pathStartsWith(basePath:string[],destPath:string[]){
     if(basePath.length>destPath.length) return false
     return basePath.every((p,i)=>{
         return p===destPath[i]
     })
 }
-
  

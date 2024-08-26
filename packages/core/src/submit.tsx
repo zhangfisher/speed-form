@@ -14,7 +14,7 @@ import type {  FormSchemaBase, FormStore, RequiredFormOptions } from "./form";
 import { CSSProperties, ReactElement, ReactNode } from "react";
 import { isFieldGroup, isFieldList, isFieldValue } from "./utils";
 import { ActionProps, createActionComponent,action } from "./action";
-import { DEFAULT_SUBMIT_ACTION } from "./consts";
+import { DEFAULT_SUBMIT_ACTION, VALIDATE_COMPUTED_GROUP } from "./consts";
 import { styled } from 'flexstyled';
 
 
@@ -178,7 +178,7 @@ export function createFormBehaviorComponent<State extends Dict = Dict>(store:For
 
 export type SubmitComponentProps = React.PropsWithChildren<{
     label?:string
-} & ActionProps>
+} >
 
 /**
  *  创建一个提交组件，某行为
@@ -193,59 +193,19 @@ export type SubmitComponentProps = React.PropsWithChildren<{
  * @param formOptions 
  * @returns 
  */
-export function createSubmitComponent<State extends Dict = Dict>(store:FormStore<State>,formOptions:RequiredFormOptions<State>) {
-    const Action = createActionComponent(store)
-
-    return ((props:SubmitComponentProps)=>{
+export function createSubmitComponent<State extends Dict = Dict>(store: FormStore<State>, formOptions: RequiredFormOptions<State>) {
+    return ((props: SubmitComponentProps) => {
+        const { label } = props
         const submitRef = useRef<HTMLInputElement>(null)
-        
-        // 处理提交事件
-        const handleSubmit = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-            if(formOptions.validAt==='submit'){
-                // store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP).then(()=>{
-                //     submitRef.current?.click()
-                // })
-            }else{
-                submitRef.current?.click()
-            }
-            event.preventDefault();           
-        },[])
-
-        return (<Action {...props} name={DEFAULT_SUBMIT_ACTION}>        
-            {
-                ({loading,title,run})=>{                     
-                    
-
-                    return (
-                        <div className="speedform-submit">
-                            <input ref={submitRef} type="submit"  style={{display:'none'}} value={props.label || title} />     
-                            <button type="submit" onClick={run({extras:1})}>=={props.label || title} ==</button>                       
-                            <span>{loading ? '提交中2' : ''}</span>
-                        </div>
-                    )
-                }
-            }
-        </Action>)
-    }) as React.FC<SubmitComponentProps>
-
-}
-
-
-// 默认的提交动作
-export const $submit = {
-    title   : "提交",
-    help    : "",
-    tips    : "提交",
-    visible : true,
-    enable  : true,
-    validate: true,
-    readonly: false,
-    execute: action(async (scope:any,options:any) => {
-        console.log("scope=",scope,"options=",options)
-        debugger        
+        return (
+            <div className="speedform-submit">
+                <input ref={submitRef} type="submit"
+                    value={label+"="} />
+            </div>
+        ) 
     })
-} 
-
+}
+ 
 
 export type SubmitAsyncComputedGetter<R> = AsyncComputedGetter<R,FormData>
 export type SubmitActionOptions<R> =  ComputedOptions<R> 

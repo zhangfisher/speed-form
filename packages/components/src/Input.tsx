@@ -1,8 +1,8 @@
  
 
 import React, { CSSProperties } from "react"
-import { ReactFC } from "./types";
-import { validate } from '../../core/src/validate'; 
+import { ReactFC } from "./types"; 
+
 
 export type InputProps = React.PropsWithChildren<Partial<HTMLInputElement> & {
     type?:"text" | 'submit' | 'reset'

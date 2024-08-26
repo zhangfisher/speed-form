@@ -71,7 +71,7 @@ export function setAsyncComputedObject<T extends Dict=Dict>(store:IStore<T>,draf
 async function executeComputedGetter<T extends Dict>(draft:any,computedRunContext:ComputedRunContext,computedOptions:ComputedOptions,store:IStore<T>){
    
     const { id,valuePath,getter,resultPath,dependValues } = computedRunContext;  
-    const { timeout=0,retry=[0,0],selfReactiveable }  = computedOptions  
+    const { timeout=0,retry=[0,0],selfReactiveable,onDone }  = computedOptions  
     const setState  = selfReactiveable ? selfReactiveable.setState.bind(selfReactiveable) : store.setState
     
     const scopeDraft = getComputedScope(store,computedOptions,{draft,dependValues,valuePath,computedType:"Computed"} )  
@@ -98,7 +98,7 @@ async function executeComputedGetter<T extends Dict>(draft:any,computedRunContex
     abortController.signal.addEventListener('abort',()=>{
       hasAbort=true
     })
-    let hasError=false
+    let hasError=false,err:any
     let hasTimeout=false
     let computedResult:any
 
@@ -140,6 +140,7 @@ async function executeComputedGetter<T extends Dict>(draft:any,computedRunContex
           Object.assign(afterUpdated,{result:computedResult,error:null,timeout:0})
         }            
       }catch (e:any) {
+        err=e
         hasError = true
         if(!hasTimeout){        
           Object.assign(afterUpdated,{error:getError(e).message,timeout:0})        
@@ -168,11 +169,16 @@ async function executeComputedGetter<T extends Dict>(draft:any,computedRunContex
     }
     // 计算完成后触发事件
     if(hasAbort || hasTimeout){
-      store.emit("computed:cancel",{path:valuePath,id,reason:hasTimeout ? 'timeout' : 'abort'})
+      store.emit("computed:cancel",{path:valuePath,id,reason:hasTimeout ? 'timeout' : 'abort'})            
+      setTimeout(()=>{
+        onDone && onDone.call(store as unknown as IStore<any>,{id,error:undefined,abort:hasAbort,timeout:hasTimeout,scope:scopeDraft,valuePath,result:computedResult})
+      },0)      
     }else if(hasError){      
-       store.emit("computed:error",{path:valuePath,id,error:hasError})
+      store.emit("computed:error",{path:valuePath,id,error:err})
+      setTimeout(()=>{onDone && onDone.call(store as unknown as IStore<any>,{id,error:err,abort:false,timeout:false,scope:scopeDraft,valuePath,result:computedResult})},0)      
     }else{
       store.emit("computed:done",{path:valuePath,id,value:computedResult})
+      onDone && onDone.call(store as unknown as IStore<any>,{id,error:undefined,abort:false,timeout:false,scope:scopeDraft,valuePath,result:computedResult})
     }    
 }
 
@@ -217,8 +223,7 @@ function createComputed<State extends Dict>(computedRunContext:ComputedRunContex
       computedRunContext.isComputedRunning=true
       computedRunContext.dependValues = values        // 即所依赖项的值
       try{
-        const r= await executeComputedGetter<State>(draft,computedRunContext,finalComputedOptions,store)
-        return r
+        return await executeComputedGetter<State>(draft,computedRunContext,finalComputedOptions,store)
       }finally{
         computedRunContext.isComputedRunning=false
       }
@@ -285,7 +290,7 @@ export  function createAsyncComputedMutate<State extends Dict,R=any>(computedPar
 
     // 8. 创建计算对象实例
     const computedObject = new ComputedObject<State,AsyncComputedObject<R>>(store,selfReactiveable,valuePath,computedOptions) 
-    if(computedOptions.save) store.computedObjects.set(computedId,computedObject)
+    if(computedOptions.objectify) store.computedObjects.set(computedId,computedObject)
     return  computedObject
 }
 

@@ -37,21 +37,21 @@
  * }
  *
  */
-import React from 'react'
+import React, { ReactNode, useRef, useState } from 'react'
 import  { useCallback } from "react";
 import type {  Dict,RequiredComputedState, ComputedOptions, IStore, StoreOptions, ComputedState } from "@speedform/reactive";
-import { createStore  } from "@speedform/reactive";
+import { createStore, OBJECT_PATH_DELIMITER, pathStartsWith  } from "@speedform/reactive";
 import type { ReactFC,  ComputedAttr } from "./types";
 import { createFieldComponent, FormFields  } from './field'; 
 import { createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import {   FormActions, UseActionType, createActionComponent, createUseAction, getAction } from './action';
-import { ACTIONS_STATE_KEY, FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from './consts';
+import { ActionRenderProps,  FormActions, UseActionType, createActionComponent, createUseAction, getAction } from './action';
+import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from './consts';
 import { defaultObject } from "flex-tools/object/defaultObject";
-import { createObjectProxy } from "./utils";
+import { createObjectProxy, getId } from "./utils";
 import { createLoadApi, createGetValuesApi } from "./serialize"; 
 import { createValidator, isValidateField, validate } from "./validate";
-import { $submit, createSubmitComponent } from "./submit";
+import { createSubmitComponent } from './submit';
 import { $reset, createResetComponent } from "./reset"; 
 import { dirty } from "./dirty"; 
 
@@ -67,8 +67,7 @@ export const defaultFormProps =  {
     enable   : true,
     visible  : true,
 	fields   : {},
-	actions  : {
-		$submit,
+	actions  : { 
 		$reset
 	}
 }  
@@ -80,15 +79,7 @@ export type FormTarget = '_self' | '_blank' | '_parent' | '_top'
 export type FormState<State extends Dict> = ComputedState<typeof defaultFormProps & State> 
 export type FormStore<State extends Dict> = IStore<typeof defaultFormProps & State> 
 
-export type FormProps<State extends Dict = Dict> = React.PropsWithChildren<{		
-	name?   : string;													// 表单名称,同时表示表单作用域，即提交范围，默认是整个表单fields		
-	enctype?: FormEnctypeType;											// 表单加密方式			
-	method? : 'get' | 'post' | 'dialog'  								// 表单提交方式
-	action? : string;													// 表单提交地址
-	scope?  : string | string[]											// 提交范围
-	onSubmit?: (value: RequiredComputedState<State>) => void;
-	onReset?: (value: RequiredComputedState<State>) => void;
-}>;
+
 
 
 // 表单组件
@@ -220,21 +211,11 @@ function createValidatorHook(valuePath:string[],options:ComputedOptions){
 
  
 /**
+ * 
+ * 
  * 我们约定，每一个动作均由一个{execute:computed(async ()=>{})}对象来描述
- * 
- * 并且对其行为进行了一些约定
- * 
- * - immediate=false : 不会自动执行,需要手动调用action.execute.run()来执行
- * - 让scope默认指向fields,这样就可以直接使用fields下的字段,而不需要fields前缀
- * 
- * actions:{
- * 	ping:{
- *  	scope:"wifi",  //  当指定scope时，execute.scope由scope指定
- * 		execute:computed(async (wifi: any) => {
- * 			// ....
- *      })
- *  }
- * }
+ *  
+ * - scope总是指定scope为fields
  * 
  */
 function createActionHook(valuePath:string[],options:ComputedOptions){
@@ -249,6 +230,10 @@ function createActionHook(valuePath:string[],options:ComputedOptions){
 					if(options.scope.length>0 && options.scope[0]!=FIELDS_STATE_KEY){
 						options.scope.unshift(FIELDS_STATE_KEY)
 					}				
+				}else if(typeof(options.scope)=='string'){
+					if(!options.scope.startsWith(FIELDS_STATE_KEY)){
+						options.scope = `${FIELDS_STATE_KEY}.${options.scope}`
+					}
 				}
 			}else{// 如果没有指定scope,则默认指向fields		
 				options.scope = [FIELDS_STATE_KEY]
@@ -398,6 +383,21 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 	}   
 }
 
+export type FormIndicatorRenderProps =ActionRenderProps
+// 表单状态指示器，用来显示表单提交状态，包括超时/加载中/错误/倒计时等等等等等等
+export type FormIndicatorRender  = (props: FormIndicatorRenderProps) => ReactNode
+
+export type FormProps<State extends Dict = Dict,Scope extends Dict = State> = React.PropsWithChildren<{		
+	name?     : string;													// 表单名称,同时表示表单作用域，即提交范围，默认是整个表单fields		
+	enctype?  : FormEnctypeType;										// 表单编码加密方式			
+	method?   : 'get' | 'post' | 'dialog'  								// 表单提交方式
+	action?   : string;													// 表单提交地址
+	scope?    : string | string[]										// 提交范围
+	valid?    : boolean													// 是否进行校验
+	indicator?: FormIndicatorRender							    // 提交指示器
+	onSubmit? : (value: RequiredComputedState<Scope>) => void;
+	onReset?  : (value: RequiredComputedState<State>) => void;
+}>;
   
 /**
  * 创建表单组件
@@ -410,12 +410,13 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
  * 		action="/api/wifi"
  * 		method="post"
  * 		enctype="application/x-www-form-urlencoded"
- * 		onSubmit={(data)=>{
+ * 		onSubmit={(data)=>{  // 如果提供此函数
  * 			console.log(data)
  * 		}}
- *      onLoading={(loading)=>{   		}}
- * 		onError={(error)=>{}}
- *      onValid={(valid)=>{}}
+ * 		提交指示元素
+ * 		indicator={({timeout,loading,})=>{
+ * 			return <div className={loading ? 'submiting' : ''}></>
+ * 		}}
  *  >
  * 	<Network.Field name="username"></Network.Field>
  * 	<Network.Field name="password"></Network.Field>
@@ -423,10 +424,11 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
  *  </Network.Form>
  * 
  * 高级用法：
+ * 完全控制表单提交的超时，loading状态，倒计时等
  * <Network.Form 
  * 		scope="wifi"    提交范围,默认是整个表单fields
  * 		format="json"   提交数据
- * 		
+ * 		onSubmit={(data)=>{....}}
  * >
  * {({timeout,loading})=>{
  * 			return <>
@@ -443,29 +445,50 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
  * @returns 
  */
 function createFormComponent<State extends FormDefine>(store: FormStore<State>,formOptions:RequiredFormOptions<State>): FormComponent<State['fields']> {
-	const Action = createActionComponent<State>(store)
 	const useAction =  createUseAction<State>(store)
+	const Action =  createActionComponent<State>(store)
+	// 局部提交时，用来指定Scope范围，如<Network.Form<typeof Network.fields.wifi> scope="wifi"
+	return <Scope extends Dict = State['fields']>(props: FormProps<State['fields'],Scope>) => {
+		const {scope, children,indicator } = props; 
 
-	return React.forwardRef<HTMLFormElement>((props: FormProps<State['fields']>,ref:React.ForwardedRef<HTMLFormElement>) => {
-		const {children } = props; 	
+		const ref = useRef<HTMLFormElement>(null)
 		
-		// 
-		const { run } = useAction(async (scope:any,params)=>{ 			
-			await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
-			
-		},{
-			save:false
-		})
-	
+		// 正在提交中的状态
+		const [submiting,setSubmiting] = useState(false) 
+
+
+		// 动态创建一个Action
+		const actionId =  getId()
+		const actionArgs = useAction(async (data:any,params)=>{ 	
+			// 运行表单校验
+			if(formOptions.validAt==='submit' || props.valid!==false){
+				if(scope && scope.length>0){  // 指定了提交范围			
+					const scopeValue = typeof(scope)=='string' ? scope.split(OBJECT_PATH_DELIMITER) : scope
+					await store.computedObjects.run((cobj)=>{
+						return pathStartsWith(scopeValue,cobj.path)
+					},undefined,{wait:true})	
+
+				}else{  // 全局提交
+					await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP,undefined,{wait:true})	
+				}
+			}
+
+		},{name: actionId,scope})	
+		
 		// 提交表单
-		const onSubmit = useCallback(async (ev: React.FormEvent<HTMLFormElement>) => {
-			run()
-			// 提交前运行校验
-			if(formOptions.validAt==='submit'){			
-				await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
-			} 
-			await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP)
+		const onSubmitCallback = useCallback(async (ev: React.FormEvent<HTMLFormElement>) => {
+			setSubmiting(true)
+			// 运行表单校参
+			actionArgs.run({
+				onDone:()=>{
+					console.log("提交成功")
+					ref.current?.submit()
+					setSubmiting(false)					
+				}
+			})
 			ev.preventDefault(); 
+			// 总是拒绝提交，因为需要等到校验通过后才能提交,而运行校验可能是异步的
+			return false 
 		},[]);
 
 		// 重置表单
@@ -473,33 +496,22 @@ function createFormComponent<State extends FormDefine>(store: FormStore<State>,f
 
 		},[]);
 
-		return (
-			<> 
-				<form ref={ref} className="speedform"  {...props} onSubmit={onSubmit} onReset={onReset}>
+		return <Action name={actionId}>
+			{(args)=>{
+				return <form ref={ref} 	// 标准提交					
+						className={"speedform" + (submiting ? " submiting" : "")}  
+						action={props.action}
+						method={props.method}
+						encType={props.enctype}
+						onSubmit={(ev:any)=>onSubmitCallback(ev)} 
+						onReset={onReset}
+					>
+					{ indicator ? indicator(args) : null}
 					{children}
 				</form>
-			</>
-			// <Action<any> name="$submit">
-			// 	{(params)=>{
-
-			// 		return <>{ 
-			// 			typeof(children)=='function' ? 
-			// 			(children as any)(params)
-			// 		:
-			// 			<form ref={ref} 
-			// 					className="speedform"  
-			// 					{...props} 
-			// 					onSubmit={(ev:any)=>onSubmit(ev,run)} 
-			// 					onReset={onReset}
-			// 			>{children}</form>					
-			// 		}
-			// 		</>
-			// 	}}
-				
-			// </Action>
-			
-		)
-	}) as FormComponent<State['fields']> 
+			}}				
+		</Action>
+	} 
 }
 
 

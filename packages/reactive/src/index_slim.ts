@@ -5,23 +5,15 @@ export * from "./watch"
 export * from "./consts" 
 export * from "./reactive"
 export * from  "./events/types"
-export * from "./errors"
-
+export * from "./errors" 
 export { 
-    markRaw,
-    getSnap,
-    $,
-    share as createObject
-} from "helux"
-
-export { 
-    getValueByPath, 
+    getValueByPath,
+    pathStartsWith as isIncludePath,
     isSkipComputed,
     skipComputed,
     getVal,
-    setVal,
-    pathStartsWith,
-    getRelValuePath,
-    getRndId
+    setVal
 } from "./utils"
+ 
+export * as utils from "./utils"
  

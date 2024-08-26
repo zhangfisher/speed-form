@@ -7,7 +7,13 @@ import {Card,JsonViewer, Button,Divider,Field,Input  } from "@speedform/demo-com
 const NetworkForm = ()=>{         
     // @ts-ignore
     globalThis.Network = Network
-    return <Network.Form className="panel">
+    return <Network.Form className="panel"
+        indicator={({loading})=>{
+            return <div>
+                { loading && <div>loading...</div>}
+            </div>
+        }}
+    >
        <div data-loader="circle"></div>
         <Card title="网络配置">
              <Network.Field<typeof Network.fields.interface> name="interface">                      
@@ -85,7 +91,7 @@ const NetworkForm = ()=>{
             </Network.Field>   
             <Divider title='提交'></Divider>
             <div style={{display:'flex',flexDirection:'column'}}>
-                <Network.Action<typeof Network.fields.wifi.submit> name="fields.wifi.submit" >
+                <Network.Action name="fields.wifi.submit" >
                     {({title,visible,loading,enable,run,timeout})=>{ 
                         return <Button loading={loading} timeout={timeout} visible={visible} enable={enable} onClick={run()}>{title}</Button>
                     }}
@@ -134,14 +140,16 @@ const NetworkForm = ()=>{
                         </>
                     }}
                 </Network.Action>     
-                {/* <Network.Submit>
-                    {({title,dirty,validate})=>{ 
+                <Network.Submit label="ddd">                    
+                    {/* {({title,dirty,validate})=>{ 
                         return <>
                              <button type="submit" value={title}/>
                              dirty={String(dirty)},validate={String(validate)}
                         </>
-                    }}
-                </Network.Submit>       */}
+                    }} */}
+                </Network.Submit>     
+
+                {/* <button onClick={submit}>提交</button> */}
                 
                 <Network.Action<typeof Network.actions.timeoutSubmit> name="actions.timeoutSubmit" >
                     {({title,visible,loading,enable,run,cancel,error,progress})=>{ 

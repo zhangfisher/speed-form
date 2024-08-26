@@ -84,7 +84,8 @@ export class HeluxReactiveable<State extends Dict =Dict> extends Reactiveable<St
                     return onComputed({draft,setState,values:input,options:Object.assign({},extraArgs)})              
                 }                
             },
-            immediate     : options.immediate,
+            // 如果immediate='auto'，则提供initial时不会马上执行
+            immediate     : options.immediate == 'auto' ? options.initial===undefined  : options.immediate,
             desc          : options.id,
             checkDeadCycle: false,
         });        

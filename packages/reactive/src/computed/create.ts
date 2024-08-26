@@ -31,14 +31,11 @@ export type ComputedObjectCreateOptions<R = any,ExtraAttrs extends Dict = {}> = 
    * 默认情况下是根据state中的计算函数创建计算对象的，这导致所有计算对象均需要先在state中声明才可以创建。
    * 这样在组件中使用是有时会比较不方便
    * 
-   * 本函数就是可以动态创建一个计算函数，而不需要在state中声明
-   * 
-   * 
-   * 
+   * 本函数就是可以动态创建一个计算函数，而不需要在state中声明 
    * 
    * 实现不需要在状态上声明就可以创建计算属性
    * 
-   * const computedObject = store.computedObject.create(async (scope:any,options)=>{
+   * const computedObject = store.computedObjects.create(async (scope:any,options)=>{
    * 
    * },{
    *    id:"指定一个有意义的名称"   

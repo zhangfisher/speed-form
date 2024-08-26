@@ -1,8 +1,7 @@
-import { test,expect, describe, beforeAll, vi } from "vitest"
+import { test,expect, describe,vi} from "vitest"
 import { createStore,computed } from "../.."
 import { ComputedObject } from "../../computed/computedObject"
-import { ComputedAttr } from '../../../../core/src/types';
-
+import { delay } from "flex-tools/async/delay"
  
 
 describe("基于字段移花接木的异步计算",()=>{
@@ -188,7 +187,7 @@ describe("基于字段移花接木的异步计算",()=>{
                 extras:1
            })
         })        
-    })
+    })    
     test("异步计算属性的计算执行次数，初始化时执行一次",()=>{
         let count = 0
         return new Promise<void>((resolve)=>{
@@ -254,7 +253,7 @@ describe("基于字段移花接木的异步计算",()=>{
 })
 
 
-describe("执行分组计算",()=>{   
+describe("执行分组或满足条件的计算函数",()=>{   
 
     test("异步计算分组",()=>{
         let results:string[] = []
@@ -300,32 +299,91 @@ describe("执行分组计算",()=>{
             store.computedObjects.runGroup("c")
         })
     })  
-
+    test("手动执行满足条件的计算",()=>{
+        let results:string[] = []
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                price:2,
+                count:3,
+                total1:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{id:'a',group:'a',initial:0}),                
+                total2:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{id:'b', group:'a',initial:0}),                
+                total3:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{id:'c',group:'b',initial:0}),                
+                total4:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{id:'d',group:'b',initial:0}),                
+                total5:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{id:'e',group:'c',initial:0}),                
+                total6:computed(async (scope)=>{
+                    return scope.price * scope.count
+                },['price','count'],{id:'f',group:'c',initial:0})
+            },{    
+                immediate:true               // 遍历对象，从而导致计算属性被读取而立刻创建，注意是创建而不是执行
+            }) 
+            store.on("computed:done",(computedObj)=>{
+                results.push(computedObj.path.join(","))                
+                if(results.length===3){
+                    expect(results).toStrictEqual([
+                        "total1","total3","total5",
+                    ]) 
+                    resolve()        
+                }
+            })     
+            store.computedObjects.run((obj)=>{
+                return ['a','c','e'].includes(obj.id)
+            }) 
+        })
+    })  
+    test("指定超时手动执行满足条件的计算",()=>{
+        vi.useFakeTimers()
+        return new Promise<void>((resolve)=>{
+            const store = createStore({
+                price:2,
+                count:3,
+                total1:computed(async (scope)=>{
+                    await delay(5000)
+                    return scope.price * scope.count
+                },['price','count'],{id:'a',group:'a',initial:0}),                
+                total2:computed(async (scope)=>{
+                    await delay(5000)
+                    return scope.price * scope.count
+                },['price','count'],{id:'b', group:'a',initial:0}),                
+                total3:computed(async (scope)=>{
+                    await delay(5000)
+                    return scope.price * scope.count
+                },['price','count'],{id:'c',group:'b',initial:0}),                
+                total4:computed(async (scope)=>{
+                    await delay(5000)
+                    return scope.price * scope.count
+                },['price','count'],{id:'d',group:'b',initial:0}),                
+                total5:computed(async (scope)=>{
+                    await delay(5000)
+                    return scope.price * scope.count
+                },['price','count'],{id:'e',group:'c',initial:0}),                
+                total6:computed(async (scope)=>{
+                    await delay(5000)
+                    return scope.price * scope.count
+                },['price','count'],{id:'f',group:'c',initial:0})
+            },{    
+                immediate:true               // 遍历对象，从而导致计算属性被读取而立刻创建，注意是创建而不是执行
+            })  
+            store.computedObjects.run((obj)=>{
+                return ['a','c','e'].includes(obj.id)
+            },{},{timeout:200,wait:true}).catch((e)=>{
+                expect(e).toBeInstanceOf(Error) 
+                vi.restoreAllMocks()
+                resolve()
+            })
+            vi.runAllTimers()
+        })
+    })  
 })
 
-
  
-
-// type FormDefine = {
-//     price:ComputedAttr<number>
-//     count:ComputedAttr<number>
-//     total:ComputedAttr<number>
-// } 
-
-// function createForm<S extends FormDefine>(state:S){
-//     return createStore(state)     
-// }
-
-
-// const fm = createForm({
-//     price:computed<number>(async ()=>1,[]),
-//     count:computed(()=>1),
-//     total:computed(async (scope)=>{
-//          return scope.price * scope.count
-//     },['price','count'])
-// })
-
-// fm.state.price
-// fm.state.count
-
 
