@@ -37,7 +37,7 @@
  * }
  *
  */
-import React, { ReactNode, useRef, useState } from 'react'
+import React, { ReactNode, useId, useRef, useState } from 'react'
 import  { useCallback } from "react";
 import type {  Dict,RequiredComputedState, ComputedOptions, IStore, StoreOptions, ComputedState } from "@speedform/reactive";
 import { createStore, OBJECT_PATH_DELIMITER, pathStartsWith  } from "@speedform/reactive";
@@ -392,9 +392,9 @@ export type FormProps<State extends Dict = Dict,Scope extends Dict = State> = Re
 	enctype?  : FormEnctypeType;										// 表单编码加密方式			
 	method?   : 'get' | 'post' | 'dialog'  								// 表单提交方式
 	action?   : string;													// 表单提交地址
-	scope?    : string | string[]										// 提交范围
+	scope?    : string | string[]										// 提交范围， 默认是整个表单fields,也可以指定某个字段或字段组
 	valid?    : boolean													// 是否进行校验
-	indicator?: FormIndicatorRender							    // 提交指示器
+	indicator?: FormIndicatorRender							   			// 提交指示器
 	onSubmit? : (value: RequiredComputedState<Scope>) => void;
 	onReset?  : (value: RequiredComputedState<State>) => void;
 }>;
@@ -403,8 +403,7 @@ export type FormProps<State extends Dict = Dict,Scope extends Dict = State> = Re
  * 创建表单组件
  * 
  * 当使用标准的表单提交模式时,使用该组件
- * 
- * 简单用法:
+ *  
  *  <Network.Form 
  * 		scope="wifi" 
  * 		action="/api/wifi"
@@ -421,23 +420,12 @@ export type FormProps<State extends Dict = Dict,Scope extends Dict = State> = Re
  * 	<Network.Field name="username"></Network.Field>
  * 	<Network.Field name="password"></Network.Field>
  * 	<Network.Submit>提交</Network.Submit> 
- *  </Network.Form>
+ *  </Network.Form> 
  * 
- * 高级用法：
- * 完全控制表单提交的超时，loading状态，倒计时等
- * <Network.Form 
- * 		scope="wifi"    提交范围,默认是整个表单fields
- * 		format="json"   提交数据
- * 		onSubmit={(data)=>{....}}
- * >
- * {({timeout,loading})=>{
- * 			return <>
- * 				<Network.Field name="username"></Network.Field>
- * 				<Network.Field name="password"></Network.Field>
- * 				<Network.Submit>
- * 			</>
- * }}
- * </Network.Form>
+ * 
+ * 两种提交方式：
+ *  标准提交方式：使用form.submit方式提交
+ *  AJAX提交方式：AJAX提交，需要自行处理提交逻辑
  * 
  * 
  * @param this 
@@ -458,7 +446,7 @@ function createFormComponent<State extends FormDefine>(store: FormStore<State>,f
 
 
 		// 动态创建一个Action
-		const actionId =  getId()
+		const actionId =  useId()
 		const actionArgs = useAction(async (data:any,params)=>{ 	
 			// 运行表单校验
 			if(formOptions.validAt==='submit' || props.valid!==false){
@@ -471,6 +459,10 @@ function createFormComponent<State extends FormDefine>(store: FormStore<State>,f
 				}else{  // 全局提交
 					await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP,undefined,{wait:true})	
 				}
+				// 检查校验结果
+
+
+
 			}
 
 		},{name: actionId,scope})	
