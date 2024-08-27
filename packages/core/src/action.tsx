@@ -257,11 +257,13 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
      * @param props 
      * @returns 
      */
-    function Action<State extends FormActionState=FormActionState,Scope extends Dict=Dict>(props: ActionProps<State,Scope>):ReactNode{
+    function Action<ActionState extends FormActionState=FormActionState,Scope extends Dict=Dict>(props: ActionProps<ActionState,Scope>):ReactNode{
         const [state] = store.useState()          
         let { name:actionKey } = props  
+
         // 如果动作是声明在actions里面可以省略actions前缀
         if(!actionKey.includes(".")) actionKey = `actions.${actionKey}` 
+
         const actionState = getValueByPath(state,actionKey)        
 
         if(actionState==null){
@@ -274,7 +276,7 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
         // 用来引用当前动作
         const ref = useRef<HTMLElement>(null)
         // 创建动作组件的Props
-        const actionRenderProps = createActionRenderProps(actionState,actionRunner,actionCanceller,ref)        
+        const actionRenderProps = createActionRenderProps<ActionState>(actionState,actionRunner,actionCanceller,ref)        
         // 执行渲染动作组件
         if(typeof(props.render)==='function'){
             return <ActionChildren {...{actionProps:actionRenderProps,children:props.render}} />
@@ -299,53 +301,25 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
 
 
 
-export type ActionComputedGetter<R> = AsyncComputedGetter<R> & { getFormData: (scope:Dict)=>Dict }
 
-
-/**
- * 
- * 该函数实现以下功能:
- * - 从store中获取动作的状态数据传递给Action的getter函数 
- * - 从scope中获取表单数据
- * 
- * { 
- * 
- *      execute:action(async (scope,{getFormData})=>{
- *          data = getFormData(scope)
- *  
- *     })
- * }
- * 
- * 
- * @param getter 
- * @param options 
- */
-export function action2<Values extends Dict=Dict,R=any>(getter: AsyncComputedGetter<R,Values>,options?: ComputedOptions<R>){
-    return computed<R>(async (scope:any,opts)=>{ 
-        const data = getFormData(Object.assign({},scope))        
-        return await (getter as unknown as ActionComputedGetter<R>)(data,opts)
-    },[],Object.assign({},options,{
-        scope    : options?.scope,
-        async    : true,
-        immediate: false
-    }))
-}
-
-export type FormActionOptions<Scope extends Dict> = 
-    Omit<FormActionDefine<Scope>,'execute'> & Omit<ComputedOptions,'enable'>
+export type FormActionOptions<Scope extends Dict> = Omit<FormActionDefine<Scope>,'execute'> 
+                                                    & Omit<ComputedOptions,'enable'>
 
 /**
+ * 
  * 用来声明一个动作
  * 
- * 该函数实现以下功能:
+ * @description 
  * 
- * {
- *      
+ * 在声明表单时，可以通过action来声明一个动作
+
+ * @example
+
+ * {   
  *     actions:{
  *        submit:action<T>(async (scope:T,{getFormData})=>{         
  *              const data = getFormData(scope)
- *        }),
- *        ping:action(()=>{},{
+ *        },{
  *          title  : "",
  *          help   : "",
  *          tips   : "",
@@ -354,9 +328,7 @@ export type FormActionOptions<Scope extends Dict> =
  *          scope  : "fields"
  *        })
  *     }
- *  
- * }
- * 
+ *  }
  * 
  * 
  * @param getter 

@@ -426,11 +426,9 @@ function createFormComponent<State extends FormDefine>(store: FormStore<State>,f
 		
 		// 正在提交中的状态
 		const [submiting,setSubmiting] = useState(false) 
-
-
-		// 动态创建一个Action
+ 
 		const actionId =  useId()
-		const actionArgs = useAction(async (data:Dict,params)=>{ 	
+		const actionArgs = useAction<Scope>(async (data:Scope)=>{ 	
 			// 运行表单校验
 			if(formOptions.validAt==='submit' || props.valid!==false){
 				if(scope && scope.length>0){  // 指定了提交范围			
@@ -441,15 +439,22 @@ function createFormComponent<State extends FormDefine>(store: FormStore<State>,f
 						}
 						return pathStartsWith(scopeValue,cobj.path)
 					},undefined,{wait:true})	
-
+					// 
+					if('validate' in data && data.validate===false){
+						throw new ValidationError()
+					}
 
 				}else{  // 全局提交
 					await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP,undefined,{wait:true})	
+					// 表单的validate计算属性=校验表单数据是否有效
 					if(!store.state.validate){
 						throw new ValidationError()
 					}
 				}
 				// 检查校验结果
+
+
+				data
 			}
 
 		},{id: actionId,scope})	

@@ -127,7 +127,6 @@ const NetworkForm = ()=>{
                 <Network.Action<typeof Network.actions.ping> name="ping" >
                     {({title,visible,loading,enable,run,error,progress})=>{ 
                         return <>
-                       enable= {String(enable)}
                         <Button disabled={!enable} loading={loading} progress={progress} visible={visible} enable={enable}  error={error} onClick={run()}>{title}</Button>
                         </>
                     }}

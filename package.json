@@ -6,7 +6,8 @@
   "scripts": {
     "docs:dev": "cd docs && pnpm dev",
     "docs:build": "cd docs && pnpm build",
-    "storybook":"cd storybook && pnpm storybook"
+    "storybook":"cd storybook && pnpm storybook",
+    "lint":"oxlint"
   },
   "keywords": [],
   "author": "",
