@@ -83,7 +83,7 @@ export const Field:ReactFC<FieldProps> = (props)=>{
                 flexDirection:'row',
                 alignItems:'center',
                 color: enable===false ? 'gray' : 'inherit'
-            }}>{typeof(children)=='function' ? '' : children}{memo && <span style={{color:'gray'}}>{memo}</span>}</span>  
+            }}>{typeof(children) === 'function' ? '' : children}{memo && <span style={{color:'gray'}}>{memo}</span>}</span>  
             
             <ValidResult {...props}/>
             {/* <ColorBlock style={{

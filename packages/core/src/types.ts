@@ -1,4 +1,4 @@
-import { AsyncComputedObject,ComputedDescriptor } from "@speedform/reactive";
+import { ComputedDescriptor } from "@speedform/reactive";
 
 
 // 用来声明表单定义中的动态计算属性

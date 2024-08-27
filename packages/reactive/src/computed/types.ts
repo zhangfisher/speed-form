@@ -253,7 +253,7 @@ export type ComputedDescriptorDefine<R=any,Scope extends Dict = Dict> = {
 
 
 export  interface ComputedDescriptor<R=any,Scope extends Dict = Dict>  {
-  ():ComputedDescriptorDefine<R>
+  ():ComputedDescriptorDefine<R,Scope>
   __COMPUTED__: 'sync' | 'async' | 'watch' 
 } 
 

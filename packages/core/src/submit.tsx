@@ -94,7 +94,7 @@ function createBehaviorRenderProps<State extends FormBehaviorState=FormBehaviorS
 
 const BehaviorChildren = React.memo((props:{submitProps:BehaviorRenderProps<any>,children:any})=>{
     return <>{
-      typeof(props.children)=='function' && props.children(props.submitProps as any)  
+      typeof(props.children) === 'function' && props.children(props.submitProps as any)  
     }</>
   },(oldProps, newProps)=>{  
     return  Object.entries(oldProps.submitProps).every(([key,value]:[key:string,value:any])=>{

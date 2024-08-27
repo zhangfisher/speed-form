@@ -46,7 +46,7 @@ export function getRelValuePath(curPath:string[],relPath:'self' | 'root' | 'pare
             relPath = relPath.replace(/^(\/)*/,"") 
             return relPath.split(OBJECT_PATH_DELIMITER)
         }else{
-            return isRelPath ?  [...curPath.slice(0,-1),...relPath.split(OBJECT_PATH_DELIMITER)] : [...relPath.split(OBJECT_PATH_DELIMITER)]
+            return isRelPath ?  [...curPath.slice(0,-1),...relPath.split(OBJECT_PATH_DELIMITER)] : relPath.split(OBJECT_PATH_DELIMITER)
         }
     }else if(Array.isArray(relPath)){
         return relPath

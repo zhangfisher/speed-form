@@ -69,7 +69,7 @@ export const Button:React.FC<ButtonProps> = (props)=>{
                     }}>{props.error}</span> : ''
                 }
             {/* 显示取消按钮 */}
-            {props.loading && typeof(cancel)=='function' ? 
+            {props.loading && typeof(cancel) === 'function' ? 
                 <button onClick={cancel} style={{            
                         padding:"4px",
                         color:"red",

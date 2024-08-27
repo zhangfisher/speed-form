@@ -5,5 +5,5 @@
  * @returns 
  */
 export function isAsyncComputedObject(obj:any){
-    return typeof(obj)=='object' && ["result","loading","timeout","retry","run"].every(s=>obj.hasOwnProperty(s))
+    return typeof(obj) === 'object' && ["result","loading","timeout","retry","run"].every(s=>obj.hasOwnProperty(s))
 }

@@ -17,7 +17,7 @@ export function forEachObject<T extends Dict>(obj:T,callback?:(params:{key:strin
     function _forEachObject(obj:T,key:string[]){
         for(let k in obj){
             const value = obj[k]
-            if(typeof(callback)=='function'){
+            if(typeof(callback) === 'function'){
                 callback({value,key:k,parent:obj,path:key.concat(k)})
             }
             if(typeof(value)==='object'){

@@ -14,7 +14,7 @@ function getBookShop(opts?: {listener?:watchParams[0],depends?:watchParams[1],op
                 total:watch<number,number>((path,value,watchObj)=>{  
                     return listener(path,value,watchObj) as number
                 },(path:string[],value:any)=>{
-                    return typeof(depends)=='function' ? depends!(path,value) : path[path.length-1]=='count'
+                    return typeof(depends) === 'function' ? depends!(path,value) : path[path.length-1]=='count'
                 },{              
                     id:"total",  
                     initial:1,

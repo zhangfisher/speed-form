@@ -1,6 +1,0 @@
-{
-    "rules": {
-        "eqeqeq": ["warn"]
-    },
-    "ignore": ["node_modules","dist","__tests__"]
-}

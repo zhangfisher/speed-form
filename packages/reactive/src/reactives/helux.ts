@@ -69,18 +69,18 @@ export class HeluxReactiveable<State extends Dict =Dict> extends Reactiveable<St
         this._stateCtx.mutate({            
             // 收集依赖
             deps: (state: any) =>{
-              return typeof(depends)=='function' ? depends(state) : null
+              return typeof(depends) === 'function' ? depends(state) : null
             },
             // 初始化计算属性
             fn: (draft, params) => {
               if (params.isFirstCall) {   
-                if(typeof(initial)=='function') initial(draft, params)  
+                if(typeof(initial) === 'function') initial(draft, params)  
               }
             },
             //  此函数在依赖变化时执行，用来异步计算
             // extraArgs是在调用run方法时传入的额外计算参数，可用来覆盖计算参数
             task: async ({ draft, setState, input, extraArgs }) => {                
-                if(typeof(onComputed)=='function'){// @ts-ignore
+                if(typeof(onComputed) === 'function'){// @ts-ignore
                     return onComputed({draft,setState,values:input,options:Object.assign({},extraArgs)})              
                 }                
             },

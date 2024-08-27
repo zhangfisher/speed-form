@@ -6,8 +6,8 @@
   "scripts": {
     "docs:dev": "cd docs && pnpm dev",
     "docs:build": "cd docs && pnpm build",
-    "storybook":"cd storybook && pnpm storybook",
-    "lint":"oxlint"
+    "storybook": "cd storybook && pnpm storybook",
+    "lint": "oxlint --fix -c=.oxlintrc.json"
   },
   "keywords": [],
   "author": "",
@@ -25,6 +25,7 @@
     "@types/react": "^18.3.4",
     "@vitejs/plugin-react": "^4.3.1",
     "jsdom": "^23.0.1",
+    "oxlint": "^0.9.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "ts-node": "^10.9.2",

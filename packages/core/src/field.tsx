@@ -102,12 +102,12 @@ function useFieldUpdater(valuePath:string[],setState:any){
       if(debounceValue!==debounce && debounce>0) setDebounce(debounce)
       const updateFn = (updater:any)=>{
         return (ev:any)=>{
-          if(typeof(updater)=="function"){
+          if(typeof(updater) === "function"){
             setState((draft:any)=>updater.call(draft,draft.fields))
           }else{
             setState((draft:any)=>setVal(draft,valuePath,updater))
           }  
-          if(typeof(ev.preventDefault)=='function'){
+          if(typeof(ev.preventDefault) === 'function'){
             ev.preventDefault()
           }
         }               
@@ -125,7 +125,7 @@ function useFieldUpdater(valuePath:string[],setState:any){
  */
 export const FieldChildren = React.memo((props: {fieldProps:FieldRenderProps<any>  ,children:any})=>{
   return <>{
-    typeof(props.children)=='function' && props.children(props.fieldProps as any)  
+    typeof(props.children) === 'function' && props.children(props.fieldProps as any)  
   }</>
 },(oldProps, newProps)=>{  
   return  Object.entries(oldProps.fieldProps).every(([key,value]:[key:string,value:any])=>{

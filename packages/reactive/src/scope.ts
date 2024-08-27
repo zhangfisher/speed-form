@@ -40,7 +40,7 @@ import { Dict } from "./types";
 */
 function getScopeOptions(state: any,valuePath:string[],computedScope?: ComputedScope,storeScope?: ComputedScope) {
   let scope = computedScope == undefined ? storeScope : computedScope;
-  if (typeof scope == "function") {
+  if (typeof scope === "function") {
     try { scope = scope.call(state, state) } catch { }
   }
   return scope == undefined ? (storeScope == undefined ? ComputedScopeRef.Current: storeScope) : scope;
@@ -71,7 +71,7 @@ export function getComputedScope<T extends Dict = Dict>(store:IStore<T>,computed
 
     let rootDraft = draft;
       // 1. 执行hook：可以在hook函数中修改计算函数的根上下文以及相关配置参数
-    if (typeof store.options.getRootScope == "function") {
+    if (typeof store.options.getRootScope === "function") {
       const newDraft = store.options.getRootScope.call(draft,draft,{computedType,valuePath});
       if (newDraft !== undefined) {
         rootDraft = newDraft;
@@ -93,9 +93,9 @@ export function getComputedScope<T extends Dict = Dict>(store:IStore<T>,computed
       }else if (scopeRef === ComputedScopeRef.Root) {
         scope = rootDraft;
       }else if (scopeRef === ComputedScopeRef.Depends) {      // 异步计算的依赖值      
-        scope = Array.isArray(dependValues) ? dependValues.map(dep=>typeof(dep)=='function' ? dep() : dep) : [];
+        scope = Array.isArray(dependValues) ? dependValues.map(dep=>typeof(dep) === 'function' ? dep() : dep) : [];
       }else{
-       if (typeof scopeRef == "string") {       
+       if (typeof scopeRef === "string") {       
           // 当scope是以@开头的字符串时，代表是一个路径指向，如：@./user，代表其scope是由user属性值指向的对象路径
           if(scopeRef.startsWith("@")){ // 
             scope = getComputedScope(store,{

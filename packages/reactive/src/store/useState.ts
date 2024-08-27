@@ -34,7 +34,7 @@ export function createUseState<T extends Dict>(store:IStore<T>){
         const value = getter(state as StateType)
         // @ts-ignore
         let setValue = setState
-        if( typeof(setter)=='function' ){
+        if( typeof(setter) === 'function' ){
             // @ts-ignore
             setValue=(value:SetValue)=>{
                 // @ts-ignore

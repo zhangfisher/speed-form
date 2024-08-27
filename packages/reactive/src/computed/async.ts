@@ -119,7 +119,7 @@ async function executeComputedGetter<T extends Dict>(draft:any,computedRunContex
         if(timeoutValue>0){        
           timerId = setTimeout(()=>{                    
             hasTimeout=true
-            if(typeof(timeoutCallback)=='function') timeoutCallback()
+            if(typeof(timeoutCallback) === 'function') timeoutCallback()
             if(!hasError){  
               clearInterval(countdownId)   
               updateAsyncComputedState(setState,resultPath,{loading:false,error:"TIMEOUT",timeout:0})            
@@ -302,7 +302,7 @@ export function asyncComputedObject<T extends Dict =Dict>(initial:AsyncComputedO
     error   : null,
     result  : undefined,
     progress: 0,
-    run     : markRaw(skipComputed((args:Dict) => {})),
+    run     : markRaw(skipComputed(() => {})),
     cancel  : markRaw(skipComputed(() => {}))
   },initial) as AsyncComputedObject<T>
 }

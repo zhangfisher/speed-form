@@ -28,7 +28,7 @@ export function normalizedWatchFilter(on:WatchDependParams=[]): WatchDepends{
         if(on.length===0) return ()=>true
         return (path:string[])=>{
             return on.map(item=>
-                typeof(item)=='string' ? 
+                typeof(item) === 'string' ? 
                     item.split(OBJECT_PATH_DELIMITER) 
                     : (Array.isArray(item) ? item : [String(item)])
                 ).some(item=>joinValuePath(path)==joinValuePath(item))

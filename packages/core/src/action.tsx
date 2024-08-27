@@ -187,7 +187,7 @@ function useActionRunner<State extends FormActionState=FormActionState>(actionSt
         const run = getAction<State>(actionState,opts)
         return (event:any)=>{
             run()          
-            if(event && opts.preventDefault && typeof(event.preventDefault)=='function'){
+            if(event && opts.preventDefault && typeof(event.preventDefault) === 'function'){
                 event.preventDefault()
             }
         }
@@ -200,7 +200,7 @@ function useActionCanceller<State>(state:State,valuePath:string | string[]){
     return useCallback((event:any)=>{  
         const execute = getValueByPath(state,[...Array.isArray(valuePath) ? valuePath : valuePath.split(".") ,'execute'])      
         execute.cancel()
-        if(event && typeof(event.preventDefault)=='function'){
+        if(event && typeof(event.preventDefault) === 'function'){
             event.preventDefault()
         }
     },[])
@@ -225,7 +225,7 @@ function createActionRenderProps<State extends FormActionState=FormActionState>(
 
 export const ActionChildren = React.memo((props: {actionProps:ActionRenderProps<any>,children:any})=>{
     return <>{
-      typeof(props.children)=='function' && props.children(props.actionProps as any)  
+      typeof(props.children) === 'function' && props.children(props.actionProps as any)  
     }</>
   },(oldProps, newProps)=>{  
     return  Object.entries(oldProps.actionProps).every(([key,value]:[key:string,value:any])=>{

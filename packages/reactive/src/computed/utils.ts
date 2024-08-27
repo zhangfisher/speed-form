@@ -12,10 +12,10 @@ import { skipComputed } from "../utils";
  */
 export function executeStoreHooks<T extends Dict>(valuePath:string[],getter:any,store:IStore<T>,computedOptions:ComputedOptions){
     const { onCreateComputed } = store.options;     
-    if (typeof onCreateComputed == "function" && typeof getter === "function") {
+    if (typeof onCreateComputed === "function" && typeof getter === "function") {
       const newGetter = onCreateComputed.call(store,valuePath, getter, computedOptions);
       if(!computedOptions.scope) computedOptions.scope = ComputedScopeRef.Current
-      if (typeof newGetter == "function") getter = newGetter 
+      if (typeof newGetter === "function") getter = newGetter 
     }
 }
  

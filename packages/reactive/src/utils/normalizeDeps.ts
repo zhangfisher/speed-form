@@ -17,7 +17,7 @@ export function normalizeDeps(arg:ComputedDepends | undefined):(string | string[
     return (arg || []).map((dep: any) =>{
         if(Array.isArray(dep)){
             return dep
-        }else if(typeof(dep)=='string'){
+        }else if(typeof(dep) === 'string'){
             if(['/',"./","../"].some(c=>dep.startsWith(c))){
                 return dep
             }else{

@@ -231,7 +231,7 @@ function createActionHook(valuePath:string[],options:ComputedOptions){
 					if(options.scope.length>0 && options.scope[0]!=FIELDS_STATE_KEY){
 						options.scope.unshift(FIELDS_STATE_KEY)
 					}				
-				}else if(typeof(options.scope)=='string'){
+				}else if(typeof(options.scope) === 'string'){
 					if(!options.scope.startsWith(FIELDS_STATE_KEY)){
 						options.scope = `${FIELDS_STATE_KEY}.${options.scope}`
 					}
@@ -256,7 +256,7 @@ function createDepsHook(valuePath:string[],options:ComputedOptions){
 		options.depends.forEach((depend,i)=>{
 			if(Array.isArray(depend) && (depend.length>0 && depend[0]!=FIELDS_STATE_KEY)){
 				options.depends![i] = [FIELDS_STATE_KEY,...depend]
-			}else if(typeof(depend)=='string' && !depend.startsWith(`${FIELDS_STATE_KEY}.`)){
+			}else if(typeof(depend) === 'string' && !depend.startsWith(`${FIELDS_STATE_KEY}.`)){
 				options.depends![i] = `${FIELDS_STATE_KEY}.${depend}`
 			}
 		})
@@ -432,7 +432,7 @@ function createFormComponent<State extends FormDefine>(store: FormStore<State>,f
 			// 运行表单校验
 			if(formOptions.validAt==='submit' || props.valid!==false){
 				if(scope && scope.length>0){  // 指定了提交范围			
-					const scopeValue = typeof(scope)=='string' ? scope.split(OBJECT_PATH_DELIMITER) : scope
+					const scopeValue = typeof(scope) === 'string' ? scope.split(OBJECT_PATH_DELIMITER) : scope
 					await store.computedObjects.run((cobj)=>{
 						if(cobj.path.length>1 && cobj.path[0]==FIELDS_STATE_KEY && cobj.path[cobj.path.length-1]==='validate'){
 

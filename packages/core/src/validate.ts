@@ -60,7 +60,7 @@ export function validate(options?:ValidateOptions){
         // 只侦听entry下的所有字段
         if(!pathStartsWith(entry ? entry : watchObject.path,path)) return   
         // validate属性是一个boolean
-        if(typeof(value)=='boolean'){
+        if(typeof(value) === 'boolean'){
             const srcKey = path.join(OBJECT_PATH_DELIMITER)
             if(value){
                 delete watchObject.cache[srcKey]
@@ -82,9 +82,9 @@ export function validate(options?:ValidateOptions){
  * @param tips 
  */
 export function assert(condition:boolean | ((...args:any[])=>boolean),tips:string | (()=>string)){
-    const cond = typeof(condition)=='function' ? condition() : condition
+    const cond = typeof(condition) === 'function' ? condition() : condition
     if(!cond){
-        throw new ValidationError(typeof(tips)=='function' ? tips() : tips)
+        throw new ValidationError(typeof(tips) === 'function' ? tips() : tips)
     }
 }
 

@@ -19,7 +19,7 @@ import React from "react"
 }
 export const Tips:React.FC<RichLabelProps> =(props:RichLabelProps)=>{
     const {text,color='#ff6c00' } = props
-    const colors:Record<string,string> = typeof(color)=='string' ? {default:color} :  Object.assign({default:""},color)
+    const colors:Record<string,string> = typeof(color) === 'string' ? {default:color} :  Object.assign({default:""},color)
     const html = text.replace(/\{\s?(.*?)\s?\}/gm,(match,word)=>{
         return `<span style='color: ${ word in colors ? colors[word] : colors.default}'>${word}</span>`
     }).replaceAll("undefined","空值")

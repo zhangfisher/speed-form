@@ -23,7 +23,7 @@ export function computed<R = any,Scope=any,ExtraAttrs extends Dict = {}>( getter
 export function computed<R = any,Scope=any,ExtraAttrs extends Dict = {}>( getter: ComputedGetter<R,Scope>, options?: ComputedOptions<R,ExtraAttrs>): R
 export function computed<R = any,Scope=any,ExtraAttrs extends Dict = {}>( getter: any,depends?:any, options?: ComputedOptions<R,ExtraAttrs>):any {
 	
-  if (typeof getter != "function")  throw new Error("computed getter must be a function");
+  if (typeof getter !== "function")  throw new Error("computed getter must be a function");
   
   // 解析参数：同时支持同步和异步计算函数两种方式声明
   let deps:ComputedDepends = []
@@ -42,7 +42,7 @@ export function computed<R = any,Scope=any,ExtraAttrs extends Dict = {}>( getter
   }else if(arguments.length==2){
     if(Array.isArray(arguments[1])){
       deps = arguments[1]
-    }else if(typeof(arguments[1])=='object'){
+    }else if(typeof(arguments[1]) === 'object'){
       Object.assign(opts,arguments[1])
     }else{
       throw new Error("invalid arguments")

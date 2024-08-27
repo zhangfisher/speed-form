@@ -74,12 +74,12 @@ function createFieldProps(name:string,value:any,syncer:any,filedUpdater:any){
         if(debounceValue!==debounce && debounce>0) setDebounce(debounce)
         const updateFn = (updater:any)=>{
           return (ev:any)=>{
-            if(typeof(updater)=="function"){
+            if(typeof(updater) === "function"){
               setState((draft:any)=>updater.call(draft,draft.fields))
             }else{
               setState((draft:any)=>setVal(draft,valuePath,updater))
             }  
-            if(typeof(ev.preventDefault)=='function'){
+            if(typeof(ev.preventDefault) === 'function'){
               ev.preventDefault()
             }
           }               
