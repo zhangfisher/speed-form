@@ -41,19 +41,20 @@ import React, { ReactNode, useId, useRef, useState } from 'react'
 import  { useCallback } from "react";
 import type {  Dict,RequiredComputedState, ComputedOptions, IStore, StoreOptions, ComputedState } from "@speedform/reactive";
 import { createStore, OBJECT_PATH_DELIMITER, pathStartsWith  } from "@speedform/reactive";
-import type { ReactFC,  ComputedAttr } from "./types";
+import type { ReactFC,  ComputableAttr } from "./types";
 import { createFieldComponent, FormFields  } from './field'; 
 import { createFieldGroupComponent } from "./fieldGroup";
 import { assignObject } from "flex-tools/object/assignObject";
-import { ActionRenderProps,  FormActions, UseActionType, createActionComponent, createUseAction, getAction } from './action';
+import { ActionRenderProps,  FormActions, createActionComponent, createUseAction, getAction } from './action';
 import { FIELDS_STATE_KEY, VALIDATE_COMPUTED_GROUP } from './consts';
 import { defaultObject } from "flex-tools/object/defaultObject";
-import { createObjectProxy, getId } from "./utils";
+import { createObjectProxy } from "./utils";
 import { createLoadApi, createGetValuesApi } from "./serialize"; 
 import { createValidator, isValidateField, validate } from "./validate";
 import { createSubmitComponent } from './submit';
 import { $reset, createResetComponent } from "./reset"; 
 import { dirty } from "./dirty"; 
+import { ValidationError } from './errors';
 
 export const defaultFormProps =  {
     name     : "SpeedForm",
@@ -86,16 +87,16 @@ export type FormStore<State extends Dict> = IStore<typeof defaultFormProps & Sta
 export type FormComponent<State extends Record<string, any>> = ReactFC<FormProps<State>>;
 
 export type FormSchemaBase = {
-	name   	: ComputedAttr<string>							    
-	title   : ComputedAttr<string>							    
-    help 	: ComputedAttr<string>							    
-    tips 	: ComputedAttr<string>							    
- 	visible : ComputedAttr<boolean>					
-    url 	: ComputedAttr<string>					    		
-	enable  : ComputedAttr<boolean>					
-	validate: ComputedAttr<boolean>
-	readonly: ComputedAttr<boolean>			
-	dirty   : ComputedAttr<boolean>	 
+	name   	: ComputableAttr<string>							    
+	title   : ComputableAttr<string>							    
+    help 	: ComputableAttr<string>							    
+    tips 	: ComputableAttr<string>							    
+ 	visible : ComputableAttr<boolean>					
+    url 	: ComputableAttr<string>					    		
+	enable  : ComputableAttr<boolean>					
+	validate: ComputableAttr<boolean>
+	readonly: ComputableAttr<boolean>			
+	dirty   : ComputableAttr<boolean>	 
 }
 
 export type FormDefine = Partial<FormSchemaBase> & {
@@ -282,27 +283,7 @@ export function getFieldName(valuePath:string[]){
 			valuePath.slice(0,-1).join(".") : valuePath.join(".") : ''
 }
 
-export type FormObject<State extends FormDefine=FormDefine> = {
-	state: FormState<State['fields']>,
-	useState: (fn: (state: FormState<State['fields']>) => any) => any,
-	setState: (fn: (draft: FormState<State['fields']>) => void) => void,
-	Form: FormComponent<State['fields']>,
-	Field: ReactFC<any>,
-	Group: ReactFC<any>,
-	Action: ReactFC<any>,
-	Submit: ReactFC<any>,
-	Reset: ReactFC<any>,
-	useAction: UseActionType,
-	fields: State['fields'],
-	actions: State['actions'],
-	getAction: (name: string) => any,
-	freeze: (value?: boolean) => void,
-	load: (data: Dict) => void,
-	getValues: () => Dict,
-	computedObjects: Dict,
-	watchObjects: Dict,
-	validate: (value?: Dict) => Promise<boolean>
-}
+
 /**
  * 创建声明表单
  * 
@@ -357,6 +338,7 @@ export function createForm<State extends FormDefine=FormDefine>(schema: State,op
 	type StoreType = FormStore<State>
 	type FieldsType = StateType['fields'] 
 	type ActionsType = StateType['actions'] 
+	type UseActionType = ReturnType<typeof createUseAction>
 	// 将store强制转换为FormStore，因为表单的根元数据如dirty等属性需要提供默认类型提示
 	const formStore = store as unknown as StoreType
 	 
@@ -394,6 +376,7 @@ export type FormProps<State extends Dict = Dict,Scope extends Dict = State> = Re
 	action?   : string;													// 表单提交地址
 	scope?    : string | string[]										// 提交范围， 默认是整个表单fields,也可以指定某个字段或字段组
 	valid?    : boolean													// 是否进行校验
+	mode?     : 'ajax' | 'standard'										// 提交模式
 	indicator?: FormIndicatorRender							   			// 提交指示器
 	onSubmit? : (value: RequiredComputedState<Scope>) => void;
 	onReset?  : (value: RequiredComputedState<State>) => void;
@@ -447,25 +430,29 @@ function createFormComponent<State extends FormDefine>(store: FormStore<State>,f
 
 		// 动态创建一个Action
 		const actionId =  useId()
-		const actionArgs = useAction(async (data:any,params)=>{ 	
+		const actionArgs = useAction(async (data:Dict,params)=>{ 	
 			// 运行表单校验
 			if(formOptions.validAt==='submit' || props.valid!==false){
 				if(scope && scope.length>0){  // 指定了提交范围			
 					const scopeValue = typeof(scope)=='string' ? scope.split(OBJECT_PATH_DELIMITER) : scope
 					await store.computedObjects.run((cobj)=>{
+						if(cobj.path.length>1 && cobj.path[0]==FIELDS_STATE_KEY && cobj.path[cobj.path.length-1]==='validate'){
+
+						}
 						return pathStartsWith(scopeValue,cobj.path)
 					},undefined,{wait:true})	
 
+
 				}else{  // 全局提交
 					await store.computedObjects.runGroup(VALIDATE_COMPUTED_GROUP,undefined,{wait:true})	
+					if(!store.state.validate){
+						throw new ValidationError()
+					}
 				}
 				// 检查校验结果
-
-
-
 			}
 
-		},{name: actionId,scope})	
+		},{id: actionId,scope})	
 		
 		// 提交表单
 		const onSubmitCallback = useCallback(async (ev: React.FormEvent<HTMLFormElement>) => {

@@ -35,7 +35,7 @@ const Network = createForm({
 		ip: {
 			value: "1.1.1.1",
 			title: "IP地址",
-			validate: computed(async (value: any) => {
+			validate: computed(async (value) => {
 				await delay(2000);
 				return validator.isIP(String(value));
 			},[],{async:true}),
@@ -57,7 +57,7 @@ const Network = createForm({
 				title: "起始地址",
 				value: "192.168.1.1",
 				enable: computed<boolean>((dhcp: any) => {
-						return dhcp.enable.value;
+					return dhcp.enable.value;
 				},{
 					scope: ComputedScopeRef.Parent
 				}),
@@ -100,148 +100,129 @@ const Network = createForm({
 				help: "密码长度应不小于6位",
 				validate: (value: string) => value.length >= 6,
 			},
-			submit: { // 这是一个动作,
+			submit: action(async (wifi:any)=>{
+				await delay(2000)
+				console.log("提交wifi=",wifi)
+			},{
 				title: "提交wifi",
-				enable: (net: any) => net.interface.value === "wifi",
-				// validate: (value: string) => value.length > 6,
-				execute:async (wifi:any)=>{
-					await delay(2000)
-					console.log("提交wifi=",wifi)
-				}
-			},
-			timeoutSubmit: { // 这是一个动作,
+				enable: (net: any) => net.interface.value === "wifi"
+			}),
+			timeoutSubmit: action(async (wifi:any)=>{
+				await delay(6000)
+				console.log("提交wifi=",wifi)
+			},{
 				title: "提交超时",
-				execute:computed(async (wifi:any)=>{
-					await delay(6000)
-					console.log("提交wifi=",wifi)
-				},[],{
-					timeout:[5 * 1000,5]
-				})
-			},
-			progressSubmit: { // 这是一个动作,
-				title: "提交进度",
-				execute:computed(async (fields:any,{getProgressbar,getSnap})=>{
-					const bar = getProgressbar()
-					console.log("submit fields=",getSnap(fields))
-					return new Promise<void>((resolve)=>{
-						let count = 0 , tmId = 0
-						tmId = setInterval(()=>{
-							if(count==100){
-								clearInterval(tmId)
-								resolve()
-							}
-							bar.value(count++)							
-						},200)
-					})					
-				},[])
-			},
-			retrySubmit: { // 这是一个动作,
-				title: "提交出错重试",
-				execute:computed(async ()=>{
-					throw new Error("ERROR"+count++)
-				},[],{
-					retry:[5,1000]	// 重试5次，每次间隔1秒
-				})
-			},
-			progressSubmit2: { // 这是一个动作,
-				title: "提交进度2",
-				execute:action(async (fields,{getProgressbar})=>{
-					console.log("submit fields=",fields)
-					const bar = getProgressbar()
-					return new Promise<void>((resolve)=>{
-						let count = 0 , tmId = 0
-						tmId = setInterval(()=>{
-							if(count==100){
-								clearInterval(tmId)
-								resolve()
-							}
-							bar.value(count++)							
-						},200)
-					})					
-				})
-			},
-			standardSubmit: { // 这是一个动作,
-				title: "标准提交",
-				execute:action(async (fields)=>{
-					console.log("formData=",fields)
-				})
-			},
-			cancelableSubmit: { // 这是一个动作,
-				title: "可取消的提交", 
-				execute:action(async (fields,{abortSignal})=>{
-					console.log("formData=",fields)	
-					return new Promise<void>((resolve,reject)=>{
-						setTimeout(()=>{
+				timeout:[5 * 1000,5]					
+			}),
+			progressSubmit: action(async (fields:any,{getProgressbar,getSnap})=>{
+				const bar = getProgressbar()
+				console.log("submit fields=",getSnap(fields))
+				return new Promise<void>((resolve)=>{
+					let count = 0 , tmId = 0
+					tmId = setInterval(()=>{
+						if(count==100){
+							clearInterval(tmId)
 							resolve()
-						},10* 1000)
-						abortSignal.addEventListener("abort",()=>{
-							console.log("已取消：cancelled")
-							reject("cancelled")
-						})
-					})					
-				},{
-					scope:["dhcp"]
-				})
-			}
+						}
+						bar.value(count++)							
+					},200)
+				})					
+			},{title: "提交进度"}),
+			retrySubmit: action(async ()=>{
+				throw new Error("ERROR"+count++)
+			},{					
+				title: "提交出错重试",
+				retry:[5,1000]	// 重试5次，每次间隔1秒					
+			}),
+			progressSubmit2: action(async (fields,{getProgressbar})=>{
+				console.log("submit fields=",fields)
+				const bar = getProgressbar()
+				return new Promise<void>((resolve)=>{
+					let count = 0 , tmId = 0
+					tmId = setInterval(()=>{
+						if(count==100){
+							clearInterval(tmId)
+							resolve()
+						}
+						bar.value(count++)							
+					},200)
+				})					
+			},{
+				title: "提交进度2"
+			}),
+			standardSubmit: action(async (fields)=>{
+				console.log("formData=",fields)
+			},{
+				title: "标准提交"				
+			}),
+			cancelableSubmit:action(async (fields,{abortSignal})=>{
+				console.log("formData=",fields)	
+				return new Promise<void>((resolve,reject)=>{
+					setTimeout(()=>{
+						resolve()
+					},10* 1000)
+					abortSignal.addEventListener("abort",()=>{
+						console.log("已取消：cancelled")
+						reject("cancelled")
+					})
+				})					
+			},{
+				title: "可取消的提交", 
+				scope:["dhcp"],
+			}) 
 		}
 	},
 	actions: {
-		submit: {
+		submit: action(async (_:any,{abortSignal}) => {		
+			return new Promise<number>((resolve,reject)=>{
+				setTimeout(()=>{
+					resolve(count++)
+				},2000)
+				abortSignal.addEventListener("abort",()=>{
+					reject("cancelled")
+				})
+			})			 
+		},{
 			title: "提交",
 			enable: (root: any) => {
 				return root.fields.wifi.ssid.value.length > 3
-			},
-			execute: action(async (_:any,{abortSignal}) => {		
-				return new Promise<number>((resolve,reject)=>{
-					setTimeout(()=>{
-						resolve(count++)
-					},2000)
-					abortSignal.addEventListener("abort",()=>{
-						reject("cancelled")
-					})
-				})			 
-			}),
-		},
-		errorSubmit: {
-			title: "提交错误", 
-			execute: async () => {
-				await delay(1000);
-				throw new Error("提交错误"+count++);
-			},
-		},		
-		timeoutSubmit: {
-			title: "提交超时倒计时", 
-			execute: computed(async (scope: Dict) => {
-				console.log("ping=",Object.assign({},scope));
-				await delay(5000);								
-			},[],{timeout:2000}),
-		},
-		ping: {
+			}
+		}),
+		errorSubmit: action(async () => {
+			await delay(1000);
+			throw new Error("提交错误"+count++);
+		},{
+			title: "提交错误" 
+		}),		
+		timeoutSubmit: action(async (scope: Dict) => {
+			console.log("ping=",Object.assign({},scope));
+			await delay(5000);								
+		},{title: "提交超时倒计时",timeout:2000}),
+		ping: action(async (a: Dict) => {
+			await delay(1000);
+			console.log("ping=",Object.assign({},a));
+		},{
 			title: "测试网络连通性",
 			enable: computed((wifi: any) => {
 				return wifi.ssid.value.length > 0
-			},{scope:"fields.wifi"}),
-			execute: async (a: Dict) => {
-				await delay(1000);
-				console.log("ping=",Object.assign({},a));
-			},
-		},		
+			},{
+				scope:"fields.wifi"
+			})
+		}),		
         // 向导表单:上一步
-        previous:{
-            enable: (wifi: any) => wifi.ssid.value.length > 0,
-			execute:async ()=>{
-				return 1
-			}
-        },
+        previous:action<Dict>(async (scope)=>{
+			return scope
+		},{
+			enable: (wifi: any) => wifi.ssid.value.length > 0
+		}),
         // 向导表单:下一步        
-        next:{
-            enable: (wifi: any) => wifi.ssid.value.length > 0,
+        next:action(async () => {
+			await delay(1000)
+			return 2
+		},{
+			enable: (wifi: any) => wifi.ssid.value.length > 0,
 			visible:(scope:any)=>scope.orders.length<10,
-            execute: async () => {
-				await delay(1000)
-                return 2
-            }
-        }
+		})
 	},
 },{debug:true});
 

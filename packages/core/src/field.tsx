@@ -1,7 +1,7 @@
 import React from 'react'
 import {	 ChangeEventHandler, ReactNode, useCallback,useRef,useState  } from "react";  
 import { debounce as debounceWrapper } from './utils';
-import { ComputedAttr } from "./types";   
+import { ComputableAttr } from "./types";   
 import type { FormStore, RequiredFormOptions } from "./form";
 import { FIELDS_STATE_KEY } from "./consts"; 
 import {  Dict,getVal, setVal } from "@speedform/reactive";  
@@ -191,17 +191,17 @@ export interface IFieldProps<T=any>{
 
 export interface FormField<T>{
   value        : T;
-  title?       : ComputedAttr<string>;                       // 标题
-  initial?     : ComputedAttr<T>;                            // 默认值
-  oldValue?    : ComputedAttr<T>;                            // 默认值
-  help?        : ComputedAttr<string>;                       // 提示信息
-  placeholder? : ComputedAttr<string>;                       // 占位符
-  required?    : ComputedAttr<boolean>;                      // 是否必填
-  readonly?    : ComputedAttr<boolean>;                      // 是否只读
-  visible?     : ComputedAttr<boolean>;                      // 是否可见
-  enable?      : ComputedAttr<boolean>;                      // 是否可用
-  validate?    : ComputedAttr<boolean>;                   // 验证
-  select?      : ComputedAttr<any[]>                         // 枚举值  
+  title?       : ComputableAttr<string>;                       // 标题
+  initial?     : ComputableAttr<T>;                            // 默认值
+  oldValue?    : ComputableAttr<T>;                            // 默认值
+  help?        : ComputableAttr<string>;                       // 提示信息
+  placeholder? : ComputableAttr<string>;                       // 占位符
+  required?    : ComputableAttr<boolean>;                      // 是否必填
+  readonly?    : ComputableAttr<boolean>;                      // 是否只读
+  visible?     : ComputableAttr<boolean>;                      // 是否可见
+  enable?      : ComputableAttr<boolean>;                      // 是否可用
+  validate?    : ComputableAttr<boolean>;                   // 验证
+  select?      : ComputableAttr<any[]>                         // 枚举值  
 }
 
 export type FormFieldBase<T=any> = {

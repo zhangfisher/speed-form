@@ -34,17 +34,14 @@
 import { ReactNode, useCallback, useRef, RefObject,useState} from "react";
 import React from "react";
 import type { FormDefine, FormStore } from "./form";
-import {  AsyncComputedDefine, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict,  RuntimeComputedOptions, computed, getVal, getValueByPath} from '@speedform/reactive'; 
+import {  AsyncComputedDefine, AsyncComputedGetter, AsyncComputedObject, ComputedDescriptorDefine, ComputedOptions, ComputedParams,  Dict,  RuntimeComputedOptions, computed, getValueByPath} from '@speedform/reactive'; 
 import { omit } from "flex-tools/object/omit"; 
-import { getFormData } from "./serialize"; 
+import { getFormData } from './serialize'; 
 import { getId } from "./utils";
 import { FIELDS_STATE_KEY } from "./consts";
+import { ComputableAttr } from "./types";
 
-export type ActionComputedAttr<R=unknown,Fields=any> = ((fields:Fields)=>R)  
-  | ((fields:Fields)=>Promise<R>) 
-  | ComputedDescriptorDefine<R>
-  | R  
-
+ 
 
 export type DefaultActionRenderProps={
     title  : string
@@ -71,13 +68,13 @@ export type FormActionExecutor<Scope extends Dict=Dict,Result =any> = (scope:Sco
  */
 export interface FormActionDefine<Scope extends Dict=Dict>{
     scope?  : string | string[]                                             // 动作提交范围
-    title?  : ActionComputedAttr<string,Scope>					            // 动作标题    
-    help?   : ActionComputedAttr<string,Scope>					            // 动作帮助
-    tips?   : ActionComputedAttr<string,Scope>					            // 动作提示
-    visible?: ActionComputedAttr<boolean,Scope>					            // 是否可见
-    enable? : ActionComputedAttr<boolean,Scope>					            // 是否可用	            
-    count?  : number                                                        // 动作执行次数
-    execute : AsyncComputedDefine                              // 执行动作，用来对表单数据进行处理
+    title?  : ComputableAttr<string>					            // 动作标题    
+    help?   : ComputableAttr<string>					            // 动作帮助
+    tips?   : ComputableAttr<string>					            // 动作提示
+    visible?: ComputableAttr<boolean>					            // 是否可见
+    enable? : ComputableAttr<boolean>					            // 是否可用	            
+    count?  : number                                                        // 动作执行次数,每次执行时递增
+    execute : AsyncComputedDefine<any,Scope>                                // 执行动作，用来对表单数据进行处理
 } 
 
 export type FormAction<T extends FormActionDefine> = {
@@ -300,21 +297,33 @@ export function createActionComponent<State extends Dict = Dict>(store:FormStore
 }
  
 
+
+
+export type ActionComputedGetter<R> = AsyncComputedGetter<R> & { getFormData: (scope:Dict)=>Dict }
+
+
 /**
- * 使用action来声明一个动作
  * 
  * 该函数实现以下功能:
- * - 从store中获取动作的状态数据传递给Action的getter函数 * 
+ * - 从store中获取动作的状态数据传递给Action的getter函数 
+ * - 从scope中获取表单数据
+ * 
+ * { 
+ * 
+ *      execute:action(async (scope,{getFormData})=>{
+ *          data = getFormData(scope)
+ *  
+ *     })
+ * }
  * 
  * 
  * @param getter 
  * @param options 
  */
-export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGetter<R,Values>,options?: ComputedOptions<R>){
-
+export function action2<Values extends Dict=Dict,R=any>(getter: AsyncComputedGetter<R,Values>,options?: ComputedOptions<R>){
     return computed<R>(async (scope:any,opts)=>{ 
         const data = getFormData(Object.assign({},scope))        
-        return await (getter as unknown as AsyncComputedGetter<R>)(data,opts)
+        return await (getter as unknown as ActionComputedGetter<R>)(data,opts)
     },[],Object.assign({},options,{
         scope    : options?.scope,
         async    : true,
@@ -322,12 +331,53 @@ export function action<Values extends Dict=Dict,R=any>(getter: AsyncComputedGett
     }))
 }
 
+export type FormActionOptions<Scope extends Dict> = 
+    Omit<FormActionDefine<Scope>,'execute'> & Omit<ComputedOptions,'enable'>
 
-
-
-
-
-export type UseActionType = <Scope extends Dict=Dict,R=any>(executor:AsyncComputedGetter<R,Scope>,options?:ComputedOptions<R> & {name?:string})=>FormActionState['execute']
+/**
+ * 用来声明一个动作
+ * 
+ * 该函数实现以下功能:
+ * 
+ * {
+ *      
+ *     actions:{
+ *        submit:action<T>(async (scope:T,{getFormData})=>{         
+ *              const data = getFormData(scope)
+ *        }),
+ *        ping:action(()=>{},{
+ *          title  : "",
+ *          help   : "",
+ *          tips   : "",
+ *          visible: true,
+ *          enable : true
+ *          scope  : "fields"
+ *        })
+ *     }
+ *  
+ * }
+ * 
+ * 
+ * 
+ * @param getter 
+ * @param options 
+ * @returns 
+ */
+export function action<Scope extends Dict=Dict,R=any>(getter: AsyncComputedGetter<R,Scope>,options?: FormActionOptions<Scope>){
+    const opts  = Object.assign({},options)
+    return {        
+        execute: computed<R>(async (scope:any,opts)=>{ 
+            const data = getFormData(Object.assign({},scope))        
+            return await (getter as unknown as AsyncComputedGetter<R>)(data,opts)
+        },[],Object.assign({},opts,{
+            enable   : true,
+            scope    : opts.scope,
+            async    : true,
+            immediate: false
+        })),
+        ...omit(opts,["title","help","tips","visible","enable"])
+    }
+}
 
 
 /**
@@ -346,23 +396,21 @@ export type UseActionType = <Scope extends Dict=Dict,R=any>(executor:AsyncComput
  */
 export function createUseAction<State extends FormDefine = FormDefine>(store:FormStore<State>) {
     // useAction本质上就是创建一个计算属性
-    return function useAction<Scope extends Dict=Dict,R=any>(executor:AsyncComputedGetter<R,Scope>,options?:ComputedOptions<R> & {name?:string}){
+    return function useAction<Scope extends Dict=Dict,R=any>(executor:AsyncComputedGetter<R,Scope>,options?:FormActionOptions<Scope>){
         const ref = useRef<string | null>()
         const [state,setState] = store.useState()        
-        const [actionName] = useState(()=>options?.name ?  options?.name : getId())
+        const [actionId] = useState(()=>options?.id ?  options?.id : getId())
         if(!ref.current){
-            if(!(actionName in state.actions)){
+            if(!(actionId in state.actions)){
                 setState((draft:any)=>{
-                    draft.actions[actionName] = {
-                        execute:action(executor,options)
-                    }                       
+                    draft.actions[actionId] = action(executor,options)         
                 })
                 // 读取一次以触发计算属性对象的创建
-                getValueByPath(state,['actions',actionName])
+                getValueByPath(state,['actions',actionId])
             }
-            ref.current = actionName
+            ref.current = actionId
         } 
-        return getValueByPath(state,['actions',actionName]).execute as FormActionState['execute']
+        return getValueByPath(state,['actions',actionId]).execute as FormActionState['execute']
     }
 
 }

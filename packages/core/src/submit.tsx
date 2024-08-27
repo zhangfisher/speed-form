@@ -207,7 +207,7 @@ export function createSubmitComponent<State extends Dict = Dict>(store: FormStor
 }
  
 
-export type SubmitAsyncComputedGetter<R> = AsyncComputedGetter<R,FormData>
+export type SubmitAsyncComputedGetter<R> = AsyncComputedGetter<FormData,R>
 export type SubmitActionOptions<R> =  ComputedOptions<R> 
 
 

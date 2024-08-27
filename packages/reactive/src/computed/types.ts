@@ -5,18 +5,17 @@
 import type { ComputedScope, IStore } from "../store/types";
 import { Dict } from "../types"
 import { WatchDescriptor } from "../watch";
-import { Reactiveable } from "../reactives/types";
-import { ComputedObject } from "./computedObject";
+import { Reactiveable } from "../reactives/types"; 
 
 
 // 指向helux的IOperateParams类型，但是我们只用到其是的部分类型
 // Pick<IOperateParams,'keyPath' | 'fullKeyPath' | 'value' | 'parent' | 'replaceValue'>;
 export type IComputeParams = {
-  keyPath:string[]              // 路径
-  fullKeyPath:string[]          // 完整路径，包括自身
-  value:any
-  parent?:any
-  replaceValue:(newValue: any) => void;
+  keyPath     : string[]              // 路径
+  fullKeyPath : string[]          // 完整路径，包括自身
+  value       : any
+  parent?     : any
+  replaceValue: (newValue: any) => void;
 }
 
  
@@ -207,7 +206,7 @@ export interface ComputedProgressbar{
   
   export type ComputedDepends =Array<string | Array<string>> 
   export type ComputedGetter<R,Scope=any> = (scopeDraft: Scope) => Exclude<R,Promise<any>>
-  export type AsyncComputedGetter<R,Scope=any> = (scopeDraft:Scope,options:Required<ComputedParams>) => Promise<R>
+  export type AsyncComputedGetter<R,Scope=any,P extends Dict = Dict> = (scopeDraft:Scope,options:Required<ComputedParams> & P) => Promise<R>
   
   // 当调用run方法时，用来传参覆盖原始的计算参数
   export type RuntimeComputedOptions = Pick<ComputedOptions,'onDone' | 'scope' | 'abortSignal' | 'noReentry' | 'retry' | 'onError' | 'timeout' | 'extras'>
@@ -220,7 +219,7 @@ export interface ComputedProgressbar{
     retry   : number                 // 重试次数，当执行重试操作时，会进行倒计时，每次重试-1，直到为0时停止重试
     result  : Result;                // 计算结果保存到此处
     run     : (options?:RuntimeComputedOptions) => {};        // 重新执行任务
-    cancel  : ()=>void                                         // 中止正在执行的异步计算
+    cancel  : ()=>void                                        // 中止正在执行的异步计算
   } & ExtAttrs
   
   
@@ -244,16 +243,16 @@ export interface StateValueDescriptorParams<Fn extends Function,Options extends 
 
 
 // 用在声明一个计算属性
-export type AsyncComputedDefine<R=any> = AsyncComputedGetter<R> | ComputedDescriptor<R>
+export type AsyncComputedDefine<R=any,Scope extends Dict = Dict> = AsyncComputedGetter<R,Scope> | ComputedDescriptor<R,Scope>
 
 
-export type ComputedDescriptorDefine<R=any> = {
-  getter: AsyncComputedGetter<R> | ComputedGetter<R>;
+export type ComputedDescriptorDefine<R=any,Scope extends Dict = Dict> = {
+  getter: AsyncComputedGetter<R,Scope> | ComputedGetter<R,Scope>;
   options: ComputedOptions<R>;
 }
 
 
-export  interface ComputedDescriptor<R=any>  {
+export  interface ComputedDescriptor<R=any,Scope extends Dict = Dict>  {
   ():ComputedDescriptorDefine<R>
   __COMPUTED__: 'sync' | 'async' | 'watch' 
 } 

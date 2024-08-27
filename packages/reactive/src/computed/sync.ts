@@ -108,6 +108,6 @@ export  function createComputedMutate<State extends Dict,R=any>(computedParams:I
     
     // 5. 创建计算对象实例
     const computedObject = new ComputedObject<State,R>(store,selfReactiveable,valuePath,computedOptions) 
-    if(computedOptions.save) store.computedObjects.set(computedId,computedObject)
+    if(computedOptions.objectify) store.computedObjects.set(computedId,computedObject)
     return  computedObject
   }
