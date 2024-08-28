@@ -249,8 +249,7 @@ export type AsyncComputedDefine<R=any,Scope extends Dict = Dict> = AsyncComputed
 export type ComputedDescriptorDefine<R=any,Scope extends Dict = Dict> = {
   getter: AsyncComputedGetter<R,Scope> | ComputedGetter<R,Scope>;
   options: ComputedOptions<R>;
-}
-
+} 
 
 export  interface ComputedDescriptor<R=any,Scope extends Dict = Dict>  {
   ():ComputedDescriptorDefine<R,Scope>
