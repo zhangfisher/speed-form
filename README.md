@@ -1,8 +1,5 @@
-# SpeedForm
+本项目已重新迁移重命名为`AutoStore`,
 
-无以伦比的的`React`表单开发库
-Disrupting React form development
+[autostore](https://github.com/zhangfisher/autostore)
 
-
-
-建设中....
+ 
